@@ -5,6 +5,13 @@ All notable changes to WSL UI will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.1](https://github.com/octasoft-ltd/wsl-ui/compare/wsl-ui-v0.2.0...wsl-ui-v0.2.1) (2026-01-10)
+
+
+### Bug Fixes
+
+* Correct MSIX build paths and executable name ([d92831d](https://github.com/octasoft-ltd/wsl-ui/commit/d92831dd56bc8b9bc652dfa439f1aab5ae500b1c))
+
 ## [0.2.0](https://github.com/octasoft-ltd/wsl-ui/compare/wsl-ui-v0.1.0...wsl-ui-v0.2.0) (2026-01-10)
 
 
