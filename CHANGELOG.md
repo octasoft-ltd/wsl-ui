@@ -5,6 +5,18 @@ All notable changes to WSL UI will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0](https://github.com/octasoft-ltd/wsl-ui/compare/v0.3.0...v0.4.0) (2026-01-10)
+
+
+### Features
+
+* Smaller installers and portable exe in releases ([e799e54](https://github.com/octasoft-ltd/wsl-ui/commit/e799e54d69d61b5a92505f4e72b27716c6f440f3))
+
+
+### Bug Fixes
+
+* Consistent naming for MSIX output file ([db36688](https://github.com/octasoft-ltd/wsl-ui/commit/db36688d09ab0a5d6969967c17c38d549d8a3bc5))
+
 ## [0.3.0](https://github.com/octasoft-ltd/wsl-ui/compare/v0.2.1...v0.3.0) (2026-01-10)
 
 
