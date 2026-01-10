@@ -28,7 +28,7 @@ $ExePath = Join-Path $ProjectRoot "src-tauri\target\x86_64-pc-windows-msvc\relea
 $IconsDir = Join-Path $ProjectRoot "src-tauri\icons"
 $OutputDir = Join-Path $ProjectRoot "dist"
 $StagingDir = Join-Path $OutputDir "msix-staging"
-$MsixOutput = Join-Path $OutputDir "${PackageName}_${Version}_x64.msix"
+$MsixOutput = Join-Path $OutputDir "WSL.UI_${Version}_x64.msix"
 
 # Find Windows SDK tools by searching for makeappx.exe
 $MakeAppx = Get-ChildItem "C:\Program Files (x86)\Windows Kits\10\bin" -Recurse -Filter "makeappx.exe" -ErrorAction SilentlyContinue |
