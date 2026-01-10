@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<MsixPackagingToolTemplate xmlns="http://schemas.microsoft.com/msix/msixpackagingtool/template/2018">
+  <Settings AllowTelemetry="false" ApplyAllPrepareComputerFixes="true" GenerateCommandLineFile="false" AllowPromptForPassword="false" EnforceMicrosoftStoreVersioningRequirements="true" />
+  <ExclusionItems>
+    <ExclusionItem ExclusionType="Registry" Name="REGISTRY\USER\[{AppVCurrentUserSID}]\Software\Microsoft\Windows\CurrentVersion\Uninstall" />
+    <ExclusionItem ExclusionType="File" Name="[{DesktopFolder}]\Thumbs.db" />
+  </ExclusionItems>
+  <Installer Path="src-tauri\target\release\bundle\msi\WSL UI_0.1.0_x64_en-US.msi" Arguments="" />
+  <SaveLocation Path="dist" />
+  <PackageInformation PackageName="OctasoftLtd.wslui" PackageDisplayName="WSL UI" PublisherName="CN=8AC4B328-845D-4C1C-B1FC-CE52C08F4693" PublisherDisplayName="Octasoft Ltd" Version="0.1.0.0" PackageDescription="A modern WSL2 distribution manager" MainPackageNameForModificationPackage="" />
+  <Applications>
+    <Application Id="WSLTwoUI" DisplayName="WSL UI" Description="WSL UI" ExecutableName="wsl2-ui.exe" />
+  </Applications>
+</MsixPackagingToolTemplate>

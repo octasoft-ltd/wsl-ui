@@ -1,0 +1,104 @@
+name: Release Please
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    outputs:
+      release_created: ${{ steps.release.outputs.release_created }}
+      tag_name: ${{ steps.release.outputs.tag_name }}
+    steps:
+      - name: Run release-please
+        id: release
+        uses: googleapis/release-please-action@v4
+        with:
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+
+  build-release:
+    needs: release-please
+    if: ${{ needs.release-please.outputs.release_created }}
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Rust cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: |
+            src-tauri
+            crates/wsl-core
+          cache-on-failure: true
+
+      - name: Install npm dependencies
+        run: npm ci
+
+      - name: Build Tauri app
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tagName: ${{ needs.release-please.outputs.tag_name }}
+          releaseName: "WSL UI ${{ needs.release-please.outputs.tag_name }}"
+          releaseBody: |
+            See the [CHANGELOG](https://github.com/${{ github.repository }}/blob/main/CHANGELOG.md) for details.
+
+            ## Installation
+
+            **Standard Installation:** Download the `.msi` installer below and run it.
+
+            **Microsoft Store:** Also available on the [Microsoft Store](https://apps.microsoft.com/detail/9P8548KNJ2M9).
+          releaseDraft: false
+          prerelease: false
+          includeDebug: false
+          args: --target x86_64-pc-windows-msvc
+
+      - name: Generate store icons
+        shell: pwsh
+        run: .\scripts\generate-store-icons.ps1
+
+      - name: Convert version to MSIX format
+        id: msix-version
+        shell: pwsh
+        run: |
+          # Convert semver tag (v1.2.3) to MSIX 4-part version (1.2.3.0)
+          $tag = "${{ needs.release-please.outputs.tag_name }}"
+          $version = $tag -replace '^v', ''
+          $parts = $version.Split('.')
+          # Ensure we have exactly 4 parts (MSIX requirement)
+          while ($parts.Count -lt 4) {
+            $parts += "0"
+          }
+          $msixVersion = ($parts[0..3]) -join '.'
+          Write-Host "MSIX Version: $msixVersion"
+          "msix_version=$msixVersion" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+
+      - name: Build MSIX package
+        shell: pwsh
+        run: |
+          .\scripts\build-msix.ps1 -Version "${{ steps.msix-version.outputs.msix_version }}"
+
+      - name: Upload MSIX to release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ needs.release-please.outputs.tag_name }}
+          files: dist/*.msix

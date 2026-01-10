@@ -1,0 +1,38 @@
+{
+  "ideCommand": "code",
+  "terminalCommand": "auto",
+  "closeAction": "ask",
+  "savedCustomIdeCommand": "",
+  "savedCustomTerminalCommand": "",
+  "usePreReleaseUpdates": false,
+  "pollingEnabled": true,
+  "pollingIntervals": {
+    "distros": 10000,
+    "resources": 5000,
+    "health": 10000
+  },
+  "wslTimeouts": {
+    "quickSecs": 10,
+    "defaultSecs": 30,
+    "longSecs": 600,
+    "shellSecs": 30,
+    "sudoShellSecs": 120
+  },
+  "executablePaths": {
+    "wsl": "wsl",
+    "powershell": "powershell",
+    "cmd": "cmd",
+    "explorer": "explorer",
+    "windowsTerminal": "wt",
+    "wslUncPrefix": "\\\\wsl$"
+  },
+  "distributionSources": {
+    "lxcEnabled": true,
+    "lxcBaseUrl": "https://images.linuxcontainers.org",
+    "cacheDurationHours": 24,
+    "showUnstableReleases": false
+  },
+  "containerRuntime": "builtin",
+  "defaultInstallBasePath": null,
+  "debugLogging": false
+}

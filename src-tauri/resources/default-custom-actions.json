@@ -1,0 +1,32 @@
+[
+  {
+    "id": "update-system",
+    "name": "Update System",
+    "icon": "refresh",
+    "command": "sudo apt-get update && sudo apt-get upgrade -y",
+    "scope": {
+      "type": "pattern",
+      "pattern": "Ubuntu|Debian"
+    },
+    "confirmBeforeRun": true,
+    "showOutput": false,
+    "requiresSudo": true,
+    "requiresStopped": false,
+    "runInTerminal": true,
+    "order": 0
+  },
+  {
+    "id": "disk-usage",
+    "name": "Check Disk Usage",
+    "icon": "database",
+    "command": "df -h",
+    "scope": {
+      "type": "all"
+    },
+    "confirmBeforeRun": false,
+    "showOutput": true,
+    "requiresSudo": false,
+    "requiresStopped": false,
+    "order": 1
+  }
+]

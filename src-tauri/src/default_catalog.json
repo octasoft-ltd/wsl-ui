@@ -1,0 +1,125 @@
+{
+  "version": "1.0",
+  "msStoreDistros": {
+    "Ubuntu": { "description": "Latest Ubuntu LTS" },
+    "Ubuntu-24.04": { "description": "Noble Numbat" },
+    "Ubuntu-22.04": { "description": "Jammy Jellyfish" },
+    "Ubuntu-20.04": { "description": "Focal Fossa" },
+    "Ubuntu-18.04": { "description": "Bionic Beaver" },
+    "Debian": { "description": "Stable and reliable" },
+    "kali-linux": { "description": "Security testing" },
+    "archlinux": { "description": "Rolling release" },
+    "FedoraLinux-42": { "description": "Fedora 42" },
+    "FedoraLinux-43": { "description": "Fedora 43" },
+    "FedoraLinux-41": { "description": "Fedora 41" },
+    "FedoraLinux-40": { "description": "Fedora 40" },
+    "openSUSE-Leap-15.5": { "description": "Leap 15.5" },
+    "openSUSE-Leap-15.6": { "description": "Leap 15.6" },
+    "openSUSE-Leap-16.0": { "description": "Leap 16.0" },
+    "openSUSE-Tumbleweed": { "description": "Rolling release" },
+    "SUSE-Linux-Enterprise-15-SP5": { "description": "Enterprise SP5" },
+    "SUSE-Linux-Enterprise-15-SP6": { "description": "Enterprise SP6" },
+    "SUSE-Linux-Enterprise-15-SP7": { "description": "Enterprise SP7" },
+    "SUSE-Linux-Enterprise-16.0": { "description": "Enterprise 16.0" },
+    "OracleLinux_7_9": { "description": "Oracle Linux 7.9" },
+    "OracleLinux_8_7": { "description": "Oracle Linux 8.7" },
+    "OracleLinux_8_9": { "description": "Oracle Linux 8.9" },
+    "OracleLinux_8_10": { "description": "Oracle Linux 8.10" },
+    "OracleLinux_9_1": { "description": "Oracle Linux 9.1" },
+    "OracleLinux_9_3": { "description": "Oracle Linux 9.3" },
+    "OracleLinux_9_4": { "description": "Oracle Linux 9.4" },
+    "OracleLinux_9_5": { "description": "Oracle Linux 9.5" },
+    "AlmaLinux-8": { "description": "RHEL 8 compatible" },
+    "AlmaLinux-9": { "description": "RHEL 9 compatible" },
+    "AlmaLinux-10": { "description": "RHEL 10 compatible" },
+    "AlmaLinux-Kitten-10": { "description": "AlmaLinux Kitten 10" }
+  },
+  "downloadDistros": [
+    {
+      "id": "Ubuntu-24.04",
+      "name": "Ubuntu 24.04 LTS",
+      "description": "Noble Numbat - Latest LTS",
+      "url": "https://cdimages.ubuntu.com/ubuntu-wsl/noble/daily-live/current/noble-wsl-amd64.wsl",
+      "size": "~370 MB",
+      "enabled": true
+    },
+    {
+      "id": "Alpine",
+      "name": "Alpine Linux",
+      "description": "Lightweight, security-focused",
+      "url": "https://dl-cdn.alpinelinux.org/alpine/v3.21/releases/x86_64/alpine-minirootfs-3.21.0-x86_64.tar.gz",
+      "size": "~3 MB",
+      "enabled": true
+    },
+    {
+      "id": "NixOS",
+      "name": "NixOS",
+      "description": "Declarative Linux (run 'wsl -d <name>' for first boot)",
+      "url": "https://github.com/nix-community/NixOS-WSL/releases/download/2405.5.4/nixos-wsl.tar.gz",
+      "size": "~1 GB",
+      "enabled": true
+    },
+    {
+      "id": "VoidLinux",
+      "name": "Void Linux",
+      "description": "Independent, rolling release",
+      "url": "https://repo-default.voidlinux.org/live/current/void-x86_64-ROOTFS-20250202.tar.xz",
+      "size": "~130 MB",
+      "enabled": true
+    },
+    {
+      "id": "ArchLinux",
+      "name": "Arch Linux",
+      "description": "Rolling release, DIY",
+      "url": "https://geo.mirror.pkgbuild.com/iso/latest/archlinux-bootstrap-x86_64.tar.zst",
+      "size": "~170 MB",
+      "enabled": true
+    }
+  ],
+  "containerImages": [
+    {
+      "id": "ubuntu-24.04",
+      "name": "Ubuntu 24.04 LTS",
+      "description": "Noble Numbat - Latest LTS",
+      "image": "docker.io/library/ubuntu:24.04",
+      "enabled": true
+    },
+    {
+      "id": "debian-bookworm",
+      "name": "Debian 12 (Bookworm)",
+      "description": "Rock-solid stable",
+      "image": "docker.io/library/debian:bookworm",
+      "enabled": true
+    },
+    {
+      "id": "fedora-40",
+      "name": "Fedora 40",
+      "description": "Cutting-edge features",
+      "image": "docker.io/library/fedora:40",
+      "enabled": true
+    },
+    {
+      "id": "archlinux",
+      "name": "Arch Linux",
+      "description": "Rolling release",
+      "image": "docker.io/library/archlinux:latest",
+      "enabled": true
+    },
+    {
+      "id": "alpine",
+      "name": "Alpine Linux",
+      "description": "Tiny (~5MB)",
+      "image": "docker.io/library/alpine:latest",
+      "enabled": true
+    },
+    {
+      "id": "almalinux-9",
+      "name": "AlmaLinux 9",
+      "description": "RHEL-compatible",
+      "image": "docker.io/library/almalinux:9",
+      "enabled": true
+    }
+  ]
+}
+
+
