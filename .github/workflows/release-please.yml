@@ -13,8 +13,8 @@ jobs:
   release-please:
     runs-on: ubuntu-latest
     outputs:
-      release_created: ${{ steps.release.outputs.release_created }}
-      tag_name: ${{ steps.release.outputs.tag_name }}
+      release_created: ${{ steps.release.outputs['wsl-ui--release_created'] }}
+      tag_name: ${{ steps.release.outputs['wsl-ui--tag_name'] }}
     steps:
       - name: Run release-please
         id: release

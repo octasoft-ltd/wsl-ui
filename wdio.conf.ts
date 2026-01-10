@@ -7,6 +7,9 @@ import { spawn, spawnSync, type ChildProcess } from "child_process";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// Verbose mode - set VERBOSE=1 to see full debug output
+const isVerbose = process.env.VERBOSE === "1";
+
 // Store tauri-driver process reference
 let tauriDriver: ChildProcess | null = null;
 
@@ -118,7 +121,7 @@ export const config: Options.Testrunner = {
   // ===================
   // Test Configurations
   // ===================
-  logLevel: "info",
+  logLevel: isVerbose ? "info" : "error",
   bail: 0,
   waitforTimeout: 10000,
   connectionRetryTimeout: 120000,
@@ -133,7 +136,8 @@ export const config: Options.Testrunner = {
   // =========
   framework: "mocha",
   reporters: [
-    "spec",
+    // Only show spec reporter (console test tree) in verbose mode
+    ...(isVerbose ? ["spec" as const] : []),
     [
       "junit",
       {
@@ -167,7 +171,9 @@ export const config: Options.Testrunner = {
       });
     }
 
-    console.log("Starting tauri-driver...");
+    if (isVerbose) {
+      console.log("Starting tauri-driver...");
+    }
 
     // Path to msedgedriver in project directory
     const msedgedriverPath = path.join(__dirname, "msedgedriver.exe");
@@ -186,24 +192,31 @@ export const config: Options.Testrunner = {
       env,
     });
 
-    tauriDriver.stdout?.on("data", (data) => {
-      console.log(`[tauri-driver] ${data}`);
-    });
+    // Only forward tauri-driver output in verbose mode
+    if (isVerbose) {
+      tauriDriver.stdout?.on("data", (data) => {
+        console.log(`[tauri-driver] ${data}`);
+      });
 
-    tauriDriver.stderr?.on("data", (data) => {
-      console.error(`[tauri-driver] ${data}`);
-    });
+      tauriDriver.stderr?.on("data", (data) => {
+        console.error(`[tauri-driver] ${data}`);
+      });
+    }
 
     // Wait for tauri-driver to be ready
     await new Promise((resolve) => setTimeout(resolve, 2000));
-    console.log("tauri-driver started");
+    if (isVerbose) {
+      console.log("tauri-driver started");
+    }
   },
 
   /**
    * Gets executed after all workers have shut down.
    */
   onComplete: async function () {
-    console.log("Stopping tauri-driver...");
+    if (isVerbose) {
+      console.log("Stopping tauri-driver...");
+    }
     if (tauriDriver && tauriDriver.pid) {
       killProcessTree(tauriDriver.pid);
       tauriDriver = null;
