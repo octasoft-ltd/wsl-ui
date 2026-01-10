@@ -80,16 +80,23 @@ jobs:
         id: msix-version
         shell: pwsh
         run: |
-          # Convert semver tag (v1.2.3) to MSIX 4-part version (1.2.3.0)
+          # Convert semver tag to MSIX 4-part version (1.2.3.0)
+          # Handles tags like "v1.2.3", "wsl-ui-v1.2.3", etc.
           $tag = "${{ needs.release-please.outputs.tag_name }}"
-          $version = $tag -replace '^v', ''
+          # Extract just the version numbers (strips any prefix like "wsl-ui-v" or just "v")
+          if ($tag -match '(\d+\.\d+\.\d+)') {
+            $version = $matches[1]
+          } else {
+            Write-Host "ERROR: Could not extract version from tag: $tag"
+            exit 1
+          }
           $parts = $version.Split('.')
           # Ensure we have exactly 4 parts (MSIX requirement)
           while ($parts.Count -lt 4) {
             $parts += "0"
           }
           $msixVersion = ($parts[0..3]) -join '.'
-          Write-Host "MSIX Version: $msixVersion"
+          Write-Host "Tag: $tag -> MSIX Version: $msixVersion"
           "msix_version=$msixVersion" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
 
       - name: Build MSIX package
