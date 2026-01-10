@@ -1,0 +1,15 @@
+<svg width="220" height="60" viewBox="0 0 220 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="orangeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#d97706"/>
+      <stop offset="100%" style="stop-color:#b45309"/>
+    </linearGradient>
+  </defs>
+  <!-- Icon -->
+  <rect x="0" y="5" width="50" height="50" rx="12" fill="url(#orangeGrad)"/>
+  <path d="M14 20 L26 30 L14 40" stroke="#ffffff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="29" y="36" width="12" height="3" rx="1.5" fill="#ffffff"/>
+  <!-- Text -->
+  <text x="65" y="40" fill="#1a1a1a" font-family="Segoe UI, system-ui, sans-serif" font-size="28" font-weight="600">WSL</text>
+  <text x="130" y="40" fill="#d97706" font-family="Segoe UI, system-ui, sans-serif" font-size="28" font-weight="300">UI</text>
+</svg>

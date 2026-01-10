@@ -1,0 +1,4 @@
+{
+  "src-tauri": "0.1.0",
+  "crates/wsl-core": "0.1.0"
+}

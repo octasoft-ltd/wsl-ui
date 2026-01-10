@@ -1,0 +1,3 @@
+# This directory is used to store auto-generated screenshots
+# Run `npm run screenshots` to generate documentation screenshots (1280x800)
+# Run `npm run screenshots:store` to generate Microsoft Store screenshots (1920x1080)

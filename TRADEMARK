@@ -1,0 +1,64 @@
+# Trademark Policy
+
+## Trademarks
+
+The following are trademarks of Octasoft Ltd:
+
+- "WSL UI" (the product name)
+- "Octasoft" (the company name)
+- The WSL UI logo and associated branding assets
+
+## Usage Guidelines
+
+### Permitted Uses
+
+You may:
+
+- Refer to this project by name when discussing or reviewing it
+- State that your project is "based on WSL UI" or "forked from WSL UI"
+- Use the name in academic or journalistic contexts
+
+### Required Changes for Forks
+
+If you create a fork or derivative work, you MUST:
+
+1. **Remove or replace all Octasoft branding** - including logos, icons, and
+   splash screens
+2. **Choose a different product name** - your fork cannot be called "WSL UI" or
+   any confusingly similar name
+3. **Update all references** - ensure package names, window titles, and
+   documentation reflect your new branding
+4. **Not imply endorsement** - do not suggest that Octasoft Ltd endorses or is
+   affiliated with your fork
+
+### Prohibited Uses
+
+You may NOT:
+
+- Use "WSL UI" or "Octasoft" as the name of your fork or derivative
+- Use our trademarks in a way that suggests official status or endorsement
+- Register domain names or social media accounts using our trademarks
+- Use our logos or branding assets in your fork
+
+## Rationale
+
+This policy exists to:
+
+- Prevent user confusion about which version they are using
+- Ensure users can identify official releases from Octasoft Ltd
+- Protect the reputation of the original project
+- Allow the open source community to freely fork and modify the code
+
+## Questions
+
+For trademark inquiries or permission requests, please open an issue on the
+GitHub repository or contact Octasoft Ltd directly.
+
+---
+
+This trademark policy applies alongside the BUSL-1.1 license. The license
+grants you rights to the code; this policy governs use of our trademarks.
+
+
+
+
