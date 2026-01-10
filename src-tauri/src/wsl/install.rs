@@ -305,6 +305,7 @@ pub fn create_from_oci_image(
 }
 
 /// Parse WSL online distributions output (extracted for testability)
+#[cfg(test)]
 fn parse_online_distros_output(output: &str) -> Vec<String> {
     let mut distros = Vec::new();
     let mut found_header = false;
@@ -333,6 +334,7 @@ fn parse_online_distros_output(output: &str) -> Vec<String> {
 }
 
 /// Normalize a distro name for comparison (extracted for testability)
+#[cfg(test)]
 fn normalize_distro_name(name: &str) -> String {
     name.to_lowercase()
         .chars()
@@ -341,6 +343,7 @@ fn normalize_distro_name(name: &str) -> String {
 }
 
 /// Check if a normalized line contains a normalized distro name
+#[cfg(test)]
 fn line_contains_distro(line: &str, distro_normalized: &str) -> bool {
     let line_normalized: String = line
         .to_lowercase()

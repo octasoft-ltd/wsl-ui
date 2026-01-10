@@ -243,6 +243,7 @@ impl RegistryClient {
 }
 
 /// Parse WWW-Authenticate Bearer header into parameters (extracted for testing)
+#[cfg(test)]
 fn parse_www_authenticate(www_auth: &str) -> Option<std::collections::HashMap<String, String>> {
     if !www_auth.starts_with("Bearer ") {
         return None;
@@ -262,6 +263,7 @@ fn parse_www_authenticate(www_auth: &str) -> Option<std::collections::HashMap<St
 }
 
 /// Get registry URL for API calls (extracted for testing)
+#[cfg(test)]
 fn get_registry_url(registry: &str) -> String {
     if registry == "docker.io" {
         "https://registry-1.docker.io".to_string()

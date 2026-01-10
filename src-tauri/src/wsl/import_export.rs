@@ -132,6 +132,7 @@ pub fn clone_distribution(source: &str, new_name: &str, install_location: Option
 
 /// Helper to extract error message from WSL command output
 /// WSL often writes errors to stdout instead of stderr
+#[cfg(test)]
 fn extract_error_message(output: &super::executor::wsl_command::CommandOutput, default_msg: &str) -> String {
     if !output.stderr.trim().is_empty() {
         output.stderr.clone()
