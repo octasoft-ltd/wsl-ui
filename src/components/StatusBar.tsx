@@ -281,7 +281,12 @@ export function StatusBar() {
         </div>
 
         {/* Right: Status - fixed width to prevent jumping */}
-        <div className="relative z-10 flex items-center gap-3 shrink-0 justify-end bg-theme-bg-primary pl-3 w-60">
+        <div
+          role="status"
+          aria-live="polite"
+          aria-atomic="true"
+          className="relative z-10 flex items-center gap-3 shrink-0 justify-end bg-theme-bg-primary pl-3 w-60"
+        >
           {displayedStatus ? (
             <div className="flex items-center gap-2 min-w-0">
               <div className="w-3 h-3 shrink-0 border-2 border-theme-accent-primary border-t-transparent rounded-full animate-spin" />

@@ -74,7 +74,7 @@
 
   --text-primary: #f0f0f5;
   --text-secondary: #a0a0b0;
-  --text-muted: #606070;
+  --text-muted: #8585a0;
   --text-accent: #00f0ff;
 
   --border-primary: #1e1e28;
@@ -86,7 +86,7 @@
   --accent-glow: rgba(0, 240, 255, 0.15);
 
   --status-running: #00ff87;
-  --status-stopped: #404050;
+  --status-stopped: #6a6a80;
   --status-warning: #ffb800;
   --status-error: #ff3366;
   --status-success: #00ff87;
@@ -106,13 +106,13 @@
   --accent-primary-rgb: 0, 240, 255;
   --accent-secondary-rgb: 0, 168, 179;
   --status-running-rgb: 0, 255, 135;
-  --status-stopped-rgb: 64, 64, 80;
+  --status-stopped-rgb: 106, 106, 128;
   --status-warning-rgb: 255, 184, 0;
   --status-error-rgb: 255, 51, 102;
   --status-success-rgb: 0, 255, 135;
   --text-primary-rgb: 240, 240, 245;
   --text-secondary-rgb: 160, 160, 176;
-  --text-muted-rgb: 96, 96, 112;
+  --text-muted-rgb: 133, 133, 160;
 }
 
 body {
@@ -533,4 +533,57 @@ body::before {
 
 @keyframes spin {
   to { transform: rotate(360deg); }
+}
+
+/* ============================================
+   ACCESSIBILITY
+   ============================================ */
+
+/* Reduced motion support - respects user's system preference */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Visible focus indicators for keyboard navigation */
+:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
+}
+
+/* Remove outline for mouse users (when focus-visible is supported) */
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* Ensure buttons and interactive elements have clear focus states */
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[role="button"]:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(var(--accent-primary-rgb), 0.2);
+}
+
+/* Screen reader only utility class */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }

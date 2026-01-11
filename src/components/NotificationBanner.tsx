@@ -103,8 +103,15 @@ export function NotificationBanner({
 
   const isExpanded = isVisible && !isClosing;
 
+  // Accessibility: Use assertive for errors/warnings, polite for info/success
+  const ariaLive = type === "error" || type === "warning" ? "assertive" : "polite";
+  const role = type === "error" || type === "warning" ? "alert" : "status";
+
   return (
     <div
+      role={role}
+      aria-live={ariaLive}
+      aria-atomic="true"
       className="grid transition-[grid-template-rows,margin] duration-300 ease-out"
       style={{ gridTemplateRows: isExpanded ? "1fr" : "0fr", marginTop: isExpanded ? 24 : 0, marginBottom: isExpanded ? 20 : 0 }}
     >
@@ -135,6 +142,7 @@ export function NotificationBanner({
           <button
             onClick={handleDismiss}
             data-testid={dismissTestId}
+            aria-label="Dismiss notification"
             className={`p-2 text-theme-text-muted rounded-lg border border-transparent transition-all flex-shrink-0 ${style.button}`}
             title="Dismiss"
           >

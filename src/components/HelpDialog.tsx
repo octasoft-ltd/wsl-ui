@@ -283,11 +283,38 @@ export function HelpDialog({ onClose }: HelpDialogProps) {
               icon={<PaletteIcon size="md" />}
             >
               <HelpItem title="Built-in Themes">
-                Choose from 15 professionally designed themes including dark, light, and middle-ground options.
+                Choose from 17 professionally designed themes including dark, light, and middle-ground options.
                 Popular themes include Obsidian, Dracula, Nord, and Solarized.
+              </HelpItem>
+              <HelpItem title="Accessibility Themes">
+                Two high contrast themes are available for users with low vision: High Contrast (dark) and High Contrast Light.
               </HelpItem>
               <HelpItem title="Custom Theme">
                 Create your own theme with full control over 29 color variables including backgrounds, text, borders, accents, and more.
+              </HelpItem>
+            </HelpSection>
+
+            {/* Keyboard Shortcuts */}
+            <HelpSection
+              title="Keyboard Shortcuts"
+              icon={<SettingsIcon size="md" />}
+            >
+              <div className="space-y-2">
+                <div className="grid grid-cols-2 gap-2 text-sm">
+                  <div><kbd className="px-2 py-0.5 bg-theme-bg-tertiary rounded text-xs">Tab</kbd></div>
+                  <div>Next element</div>
+                  <div><kbd className="px-2 py-0.5 bg-theme-bg-tertiary rounded text-xs">Shift+Tab</kbd></div>
+                  <div>Previous element</div>
+                  <div><kbd className="px-2 py-0.5 bg-theme-bg-tertiary rounded text-xs">Enter</kbd></div>
+                  <div>Activate / Submit</div>
+                  <div><kbd className="px-2 py-0.5 bg-theme-bg-tertiary rounded text-xs">Escape</kbd></div>
+                  <div>Close dialog or menu</div>
+                  <div><kbd className="px-2 py-0.5 bg-theme-bg-tertiary rounded text-xs">Space</kbd></div>
+                  <div>Toggle checkbox</div>
+                </div>
+              </div>
+              <HelpItem title="Accessibility">
+                WSL UI supports screen readers, keyboard navigation, and respects system preferences for reduced motion.
               </HelpItem>
             </HelpSection>
 

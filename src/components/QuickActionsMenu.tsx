@@ -399,12 +399,16 @@ export function QuickActionsMenu({ distro, disabled, onOpenChange }: QuickAction
         className="btn-cyber"
         onClick={handleToggleMenu}
         disabled={isDisabled}
+        aria-haspopup="menu"
+        aria-expanded={isOpen}
         data-testid="quick-actions-button"
       />
 
       {isOpen && (
         <div
           data-testid="quick-actions-menu"
+          role="menu"
+          aria-label={`Actions for ${distro.name}`}
           className="absolute right-0 top-full mt-2 w-56 bg-theme-bg-secondary border border-theme-border-secondary rounded-xl shadow-xl shadow-black/70 z-[100] overflow-hidden"
         >
           {/* Top accent line */}
@@ -414,6 +418,7 @@ export function QuickActionsMenu({ distro, disabled, onOpenChange }: QuickAction
             {builtInActions.map((action) => (
               <button
                 key={action.id}
+                role="menuitem"
                 onClick={action.action}
                 disabled={action.disabled}
                 data-testid={`quick-action-${action.id}`}

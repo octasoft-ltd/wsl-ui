@@ -74,20 +74,20 @@ function Label({ htmlFor, children }: { htmlFor: string; children: ReactNode }) 
   );
 }
 
-function HelperText({ children }: { children: ReactNode }) {
-  return <p className={HELPER_CLASSES}>{children}</p>;
+function HelperText({ children, id }: { children: ReactNode; id?: string }) {
+  return <p id={id} className={HELPER_CLASSES}>{children}</p>;
 }
 
-function ErrorText({ children, showIcon, testId }: { children: ReactNode; showIcon?: boolean; testId?: string }) {
+function ErrorText({ children, showIcon, testId, id }: { children: ReactNode; showIcon?: boolean; testId?: string; id?: string }) {
   if (showIcon) {
     return (
-      <p data-testid={testId} className="mt-2 text-xs text-theme-status-error flex items-center gap-1.5">
+      <p id={id} data-testid={testId} role="alert" className="mt-2 text-xs text-theme-status-error flex items-center gap-1.5">
         <ErrorCircleIcon size="sm" className="flex-shrink-0" />
         {children}
       </p>
     );
   }
-  return <p data-testid={testId} className={ERROR_CLASSES}>{children}</p>;
+  return <p id={id} data-testid={testId} role="alert" className={ERROR_CLASSES}>{children}</p>;
 }
 
 // ==================== Components ====================
@@ -109,6 +109,11 @@ export function Input({
 }: InputProps) {
   const generatedId = useId();
   const inputId = id || generatedId;
+  const errorId = `${inputId}-error`;
+  const helperId = `${inputId}-helper`;
+
+  // Build aria-describedby based on what's shown
+  const describedBy = error ? errorId : helperText ? helperId : undefined;
 
   const inputClasses = [
     BASE_INPUT_CLASSES,
@@ -125,6 +130,13 @@ export function Input({
   ].filter(Boolean).join(' ');
 
   const hasAddons = leftAddon || rightAddon;
+  const inputProps = {
+    id: inputId,
+    className: inputClasses,
+    'aria-invalid': error ? true : undefined,
+    'aria-describedby': describedBy,
+    ...props,
+  };
 
   return (
     <div>
@@ -136,7 +148,7 @@ export function Input({
               {leftAddon}
             </span>
           )}
-          <input id={inputId} className={inputClasses} {...props} />
+          <input {...inputProps} />
           {rightAddon && (
             <span className="inline-flex items-center px-3 text-sm text-theme-text-secondary bg-theme-bg-hover border border-l-0 border-theme-border-secondary rounded-r-lg">
               {rightAddon}
@@ -144,14 +156,14 @@ export function Input({
           )}
         </div>
       ) : (
-        <input id={inputId} className={inputClasses} {...props} />
+        <input {...inputProps} />
       )}
       {reserveErrorSpace ? (
         <div className="min-h-[2rem] mt-2">
-          {error ? <ErrorText showIcon={showErrorIcon} testId={errorTestId}>{error}</ErrorText> : helperText && <HelperText>{helperText}</HelperText>}
+          {error ? <ErrorText id={errorId} showIcon={showErrorIcon} testId={errorTestId}>{error}</ErrorText> : helperText && <HelperText id={helperId}>{helperText}</HelperText>}
         </div>
       ) : (
-        error ? <ErrorText showIcon={showErrorIcon} testId={errorTestId}>{error}</ErrorText> : helperText && <HelperText>{helperText}</HelperText>
+        error ? <ErrorText id={errorId} showIcon={showErrorIcon} testId={errorTestId}>{error}</ErrorText> : helperText && <HelperText id={helperId}>{helperText}</HelperText>
       )}
     </div>
   );
@@ -169,6 +181,10 @@ export function TextArea({
 }: TextAreaProps) {
   const generatedId = useId();
   const textareaId = id || generatedId;
+  const errorId = `${textareaId}-error`;
+  const helperId = `${textareaId}-helper`;
+
+  const describedBy = error ? errorId : helperText ? helperId : undefined;
 
   const textareaClasses = [
     BASE_INPUT_CLASSES,
@@ -181,8 +197,15 @@ export function TextArea({
   return (
     <div>
       {label && <Label htmlFor={textareaId}>{label}</Label>}
-      <textarea id={textareaId} className={textareaClasses} rows={rows} {...props} />
-      {error ? <ErrorText>{error}</ErrorText> : helperText && <HelperText>{helperText}</HelperText>}
+      <textarea
+        id={textareaId}
+        className={textareaClasses}
+        rows={rows}
+        aria-invalid={error ? true : undefined}
+        aria-describedby={describedBy}
+        {...props}
+      />
+      {error ? <ErrorText id={errorId}>{error}</ErrorText> : helperText && <HelperText id={helperId}>{helperText}</HelperText>}
     </div>
   );
 }
@@ -323,6 +346,10 @@ export function PathInput({
 }: PathInputProps) {
   const generatedId = useId();
   const inputId = id || generatedId;
+  const errorId = `${inputId}-error`;
+  const helperId = `${inputId}-helper`;
+
+  const describedBy = error ? errorId : helperText ? helperId : undefined;
 
   return (
     <div>
@@ -337,6 +364,8 @@ export function PathInput({
           id={inputId}
           type="text"
           disabled={disabled}
+          aria-invalid={error ? true : undefined}
+          aria-describedby={describedBy}
           className={[
             'flex-1',
             BASE_INPUT_CLASSES,
@@ -353,6 +382,7 @@ export function PathInput({
           type="button"
           onClick={onBrowse}
           disabled={disabled || browseDisabled}
+          aria-label="Browse for file"
           className="px-3 py-2 bg-theme-bg-tertiary hover:bg-theme-bg-hover border border-theme-border-secondary text-theme-text-secondary rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           title="Browse"
           data-testid="browse-button"
@@ -362,10 +392,10 @@ export function PathInput({
       </div>
       {reserveErrorSpace ? (
         <div className="min-h-[2rem] mt-2">
-          {error ? <ErrorText showIcon={showErrorIcon} testId={errorTestId}>{error}</ErrorText> : helperText && <HelperText>{helperText}</HelperText>}
+          {error ? <ErrorText id={errorId} showIcon={showErrorIcon} testId={errorTestId}>{error}</ErrorText> : helperText && <HelperText id={helperId}>{helperText}</HelperText>}
         </div>
       ) : (
-        error ? <ErrorText showIcon={showErrorIcon} testId={errorTestId}>{error}</ErrorText> : helperText && <HelperText>{helperText}</HelperText>
+        error ? <ErrorText id={errorId} showIcon={showErrorIcon} testId={errorTestId}>{error}</ErrorText> : helperText && <HelperText id={helperId}>{helperText}</HelperText>
       )}
     </div>
   );
@@ -384,6 +414,10 @@ export function Select({
 }: SelectProps) {
   const generatedId = useId();
   const selectId = id || generatedId;
+  const errorId = `${selectId}-error`;
+  const helperId = `${selectId}-helper`;
+
+  const describedBy = error ? errorId : helperText ? helperId : undefined;
 
   const selectClasses = [
     BASE_INPUT_CLASSES,
@@ -403,7 +437,13 @@ export function Select({
   return (
     <div>
       {label && <Label htmlFor={selectId}>{label}</Label>}
-      <select id={selectId} className={selectClasses} {...props}>
+      <select
+        id={selectId}
+        className={selectClasses}
+        aria-invalid={error ? true : undefined}
+        aria-describedby={describedBy}
+        {...props}
+      >
         {placeholder && (
           <option value="" disabled>
             {placeholder}
@@ -415,7 +455,7 @@ export function Select({
           </option>
         ))}
       </select>
-      {error ? <ErrorText>{error}</ErrorText> : helperText && <HelperText>{helperText}</HelperText>}
+      {error ? <ErrorText id={errorId}>{error}</ErrorText> : helperText && <HelperText id={helperId}>{helperText}</HelperText>}
     </div>
   );
 }

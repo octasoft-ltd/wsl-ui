@@ -16,7 +16,7 @@ const missionControlColors: ThemeColors = {
 
   textPrimary: "#f0f0f5",
   textSecondary: "#a0a0b0",
-  textMuted: "#606070",
+  textMuted: "#8585a0",      // Brightened for WCAG AA contrast (4.5:1)
   textAccent: "#00f0ff",
 
   borderPrimary: "#1e1e28",
@@ -28,7 +28,7 @@ const missionControlColors: ThemeColors = {
   accentGlow: "rgba(0, 240, 255, 0.2)",
 
   statusRunning: "#00ff87",    // Bright green
-  statusStopped: "#404050",
+  statusStopped: "#6a6a80",  // Brightened for WCAG AA contrast (3:1)
   statusWarning: "#ffb800",    // Amber
   statusError: "#ff3366",      // Pink-red
   statusSuccess: "#00ff87",
@@ -56,7 +56,7 @@ const obsidianColors: ThemeColors = {
 
   textPrimary: "#fafaf9",    // stone-50
   textSecondary: "#d6d3d1",  // stone-300
-  textMuted: "#78716c",      // stone-500
+  textMuted: "#9a938e",      // Brightened stone for WCAG AA (4.5:1)
   textAccent: "#f59e0b",     // amber-500 (logo color)
 
   borderPrimary: "#292524",  // stone-800 (main borders)
@@ -68,7 +68,7 @@ const obsidianColors: ThemeColors = {
   accentGlow: "rgba(245, 158, 11, 0.2)",
 
   statusRunning: "#22c55e",  // emerald-500
-  statusStopped: "#57534e",  // stone-600
+  statusStopped: "#78736e",  // Brightened stone for WCAG AA (3:1)
   statusWarning: "#fbbf24",  // amber-400
   statusError: "#f472b6",    // pink-400 (softer pink-red)
   statusSuccess: "#10b981",  // emerald-500
@@ -419,7 +419,7 @@ const githubDarkColors: ThemeColors = {
   accentGlow: "rgba(88, 166, 255, 0.2)",
 
   statusRunning: "#3fb950",
-  statusStopped: "#484f58",
+  statusStopped: "#6e7681",  // Brightened for WCAG AA (3:1)
   statusWarning: "#d29922",
   statusError: "#f85149",
   statusSuccess: "#3fb950",
@@ -600,6 +600,85 @@ const oceanFogColors: ThemeColors = {
   scrollbarThumbHover: "#687680",
 };
 
+// High Contrast theme - Maximum accessibility for low vision users
+// Pure black/white with bright saturated colors, no subtle grays
+const highContrastColors: ThemeColors = {
+  bgPrimary: "#000000",       // Pure black
+  bgSecondary: "#0a0a0a",     // Near black
+  bgTertiary: "#1a1a1a",      // Dark gray for elevation
+  bgHover: "#333333",         // Visible hover state
+  bgSelected: "#0066cc",      // Bright blue selection
+
+  textPrimary: "#ffffff",     // Pure white
+  textSecondary: "#ffffff",   // White (no subtle grays)
+  textMuted: "#cccccc",       // Light gray but still high contrast
+  textAccent: "#00ffff",      // Bright cyan
+
+  borderPrimary: "#666666",   // Visible borders
+  borderSecondary: "#888888", // More visible borders
+  borderAccent: "#00ffff",    // Bright cyan accent
+
+  accentPrimary: "#00ffff",   // Bright cyan
+  accentSecondary: "#00cccc",
+  accentGlow: "rgba(0, 255, 255, 0.3)",
+
+  statusRunning: "#00ff00",   // Bright green
+  statusStopped: "#888888",   // Visible gray
+  statusWarning: "#ffff00",   // Bright yellow
+  statusError: "#ff0000",     // Bright red
+  statusSuccess: "#00ff00",
+
+  buttonPrimary: "#0066cc",   // Bright blue
+  buttonPrimaryHover: "#0088ff",
+  buttonSecondary: "#333333",
+  buttonSecondaryHover: "#444444",
+  buttonDanger: "#cc0000",
+  buttonDangerHover: "#ff0000",
+
+  scrollbarTrack: "#1a1a1a",
+  scrollbarThumb: "#666666",
+  scrollbarThumbHover: "#888888",
+};
+
+// High Contrast Light - For users who prefer light backgrounds with high contrast
+const highContrastLightColors: ThemeColors = {
+  bgPrimary: "#ffffff",       // Pure white
+  bgSecondary: "#f5f5f5",     // Near white
+  bgTertiary: "#eeeeee",      // Light gray
+  bgHover: "#dddddd",         // Visible hover
+  bgSelected: "#0066cc",      // Bright blue selection
+
+  textPrimary: "#000000",     // Pure black
+  textSecondary: "#000000",   // Black (no subtle grays)
+  textMuted: "#333333",       // Dark gray but readable
+  textAccent: "#0000cc",      // Dark blue
+
+  borderPrimary: "#666666",   // Dark visible borders
+  borderSecondary: "#444444", // Even darker borders
+  borderAccent: "#0000cc",    // Dark blue accent
+
+  accentPrimary: "#0000cc",   // Dark blue (visible on white)
+  accentSecondary: "#0000aa",
+  accentGlow: "rgba(0, 0, 204, 0.2)",
+
+  statusRunning: "#008800",   // Dark green
+  statusStopped: "#666666",   // Dark gray
+  statusWarning: "#cc8800",   // Dark orange/amber
+  statusError: "#cc0000",     // Dark red
+  statusSuccess: "#008800",
+
+  buttonPrimary: "#0000cc",
+  buttonPrimaryHover: "#0000ff",
+  buttonSecondary: "#dddddd",
+  buttonSecondaryHover: "#cccccc",
+  buttonDanger: "#cc0000",
+  buttonDangerHover: "#ff0000",
+
+  scrollbarTrack: "#eeeeee",
+  scrollbarThumb: "#888888",
+  scrollbarThumbHover: "#666666",
+};
+
 // Default custom theme template (starts as a copy of obsidian)
 export const defaultCustomColors: ThemeColors = { ...obsidianColors };
 
@@ -708,6 +787,21 @@ export const BUILT_IN_THEMES: Theme[] = [
     name: "Obsidian Light",
     description: "Light theme with amber accents",
     colors: obsidianLightColors,
+    isBuiltIn: true,
+  },
+  // Accessibility themes
+  {
+    id: "high-contrast",
+    name: "High Contrast",
+    description: "Maximum contrast for accessibility (dark)",
+    colors: highContrastColors,
+    isBuiltIn: true,
+  },
+  {
+    id: "high-contrast-light",
+    name: "High Contrast Light",
+    description: "Maximum contrast for accessibility (light)",
+    colors: highContrastLightColors,
     isBuiltIn: true,
   },
 ];

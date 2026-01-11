@@ -5,7 +5,7 @@
  * Mission Control aesthetic with cyber styling.
  */
 
-import type { ReactNode } from 'react';
+import { type ReactNode, useEffect, useRef, useId } from 'react';
 import { CloseIcon, WarningIcon } from '../icons';
 import { Button } from './Button';
 import { Portal } from './Portal';
@@ -22,6 +22,8 @@ export interface ModalProps {
   size?: ModalSize;
   closeOnBackdrop?: boolean;
   className?: string;
+  /** ID of the element that labels this modal (for aria-labelledby) */
+  labelledBy?: string;
 }
 
 export interface ModalHeaderProps {
@@ -29,6 +31,8 @@ export interface ModalHeaderProps {
   subtitle?: string;
   onClose: () => void;
   showCloseButton?: boolean;
+  /** ID for the title element (for aria-labelledby connection) */
+  titleId?: string;
 }
 
 export interface ModalBodyProps {
@@ -71,7 +75,36 @@ export function Modal({
   size = 'md',
   closeOnBackdrop = true,
   className = '',
+  labelledBy,
 }: ModalProps) {
+  const modalRef = useRef<HTMLDivElement>(null);
+  const previousActiveElement = useRef<HTMLElement | null>(null);
+
+  // Store the previously focused element and focus the modal when opened
+  useEffect(() => {
+    if (isOpen) {
+      previousActiveElement.current = document.activeElement as HTMLElement;
+      // Focus the modal container for keyboard navigation
+      modalRef.current?.focus();
+    } else if (previousActiveElement.current) {
+      // Return focus when closed
+      previousActiveElement.current.focus();
+      previousActiveElement.current = null;
+    }
+  }, [isOpen]);
+
+  // Handle Escape key
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
   const handleBackdropClick = () => {
@@ -91,7 +124,7 @@ export function Modal({
 
   return (
     <Portal>
-      <div className="fixed inset-0 z-[100] flex items-center justify-center" role="dialog" aria-modal="true">
+      <div className="fixed inset-0 z-[100] flex items-center justify-center" role="dialog" aria-modal="true" aria-labelledby={labelledBy}>
         {/* Backdrop with grid pattern */}
         <div
           className="absolute inset-0 bg-theme-bg-primary/90 backdrop-blur-sm"
@@ -99,7 +132,7 @@ export function Modal({
         />
 
         {/* Modal */}
-        <div className={modalClasses}>
+        <div ref={modalRef} tabIndex={-1} className={modalClasses}>
           {/* Top accent line */}
           <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-theme-accent-primary/50 to-transparent" />
 
@@ -125,18 +158,19 @@ export function ModalHeader({
   subtitle,
   onClose,
   showCloseButton = true,
+  titleId,
 }: ModalHeaderProps) {
   return (
     <div className="flex items-start justify-between p-6 border-b border-theme-border-primary">
       <div>
-        <h2 className="text-xl font-semibold text-theme-text-primary">{title}</h2>
+        <h2 id={titleId} className="text-xl font-semibold text-theme-text-primary">{title}</h2>
         {subtitle && <p className="text-sm text-theme-text-muted mt-1 font-mono">{subtitle}</p>}
       </div>
       {showCloseButton && (
         <button
           onClick={onClose}
           className="p-1.5 text-theme-text-muted hover:text-theme-accent-primary transition-colors rounded-lg hover:bg-theme-bg-tertiary border border-transparent hover:border-theme-border-secondary"
-          aria-label="Close"
+          aria-label="Close dialog"
         >
           <CloseIcon size="md" />
         </button>
@@ -176,13 +210,40 @@ export function Dialog({
   variant = 'default',
   loading = false,
 }: DialogProps) {
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const previousActiveElement = useRef<HTMLElement | null>(null);
+  const titleId = useId();
+
+  // Store the previously focused element and focus the dialog when opened
+  useEffect(() => {
+    if (isOpen) {
+      previousActiveElement.current = document.activeElement as HTMLElement;
+      dialogRef.current?.focus();
+    } else if (previousActiveElement.current) {
+      previousActiveElement.current.focus();
+      previousActiveElement.current = null;
+    }
+  }, [isOpen]);
+
+  // Handle Escape key
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onCancel();
+      }
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onCancel]);
+
   if (!isOpen) return null;
 
   const isDanger = variant === 'danger';
 
   return (
     <Portal>
-      <div className="fixed inset-0 z-[100] flex items-center justify-center" role="dialog" aria-modal="true">
+      <div className="fixed inset-0 z-[100] flex items-center justify-center" role="alertdialog" aria-modal="true" aria-labelledby={titleId}>
         {/* Backdrop */}
         <div
           className="absolute inset-0 bg-theme-bg-primary/90 backdrop-blur-sm"
@@ -190,7 +251,7 @@ export function Dialog({
         />
 
         {/* Dialog */}
-        <div className="relative bg-theme-bg-secondary border border-theme-border-secondary rounded-xl shadow-2xl shadow-black/70 max-w-md w-full mx-4 p-6 animate-fade-slide-in">
+        <div ref={dialogRef} tabIndex={-1} className="relative bg-theme-bg-secondary border border-theme-border-secondary rounded-xl shadow-2xl shadow-black/70 max-w-md w-full mx-4 p-6 animate-fade-slide-in">
           {/* Top accent line */}
           <div className={`absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent ${isDanger ? 'via-theme-status-error/50' : 'via-theme-accent-primary/50'} to-transparent`} />
 
@@ -201,11 +262,12 @@ export function Dialog({
                   ? 'bg-[rgba(var(--status-error-rgb),0.1)] text-theme-status-error border border-[rgba(var(--status-error-rgb),0.3)]'
                   : 'bg-[rgba(var(--status-warning-rgb),0.1)] text-theme-status-warning border border-[rgba(var(--status-warning-rgb),0.3)]'
               }`}
+              aria-hidden="true"
             >
               <WarningIcon size="md" />
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-theme-text-primary">{title}</h3>
+              <h3 id={titleId} className="text-lg font-semibold text-theme-text-primary">{title}</h3>
               <p className="text-sm text-theme-text-secondary mt-1.5 leading-relaxed">{message}</p>
             </div>
           </div>

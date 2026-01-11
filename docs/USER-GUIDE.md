@@ -12,6 +12,7 @@ A complete guide to managing your WSL distributions with WSL UI.
 - [Custom Actions](#custom-actions)
 - [Settings](#settings)
 - [Themes](#themes)
+- [Keyboard Shortcuts & Accessibility](#keyboard-shortcuts--accessibility)
 
 ---
 
@@ -212,7 +213,7 @@ Mount VHD files or physical disks into WSL.
 
 ## Themes
 
-WSL UI includes 15 built-in themes with full customization support.
+WSL UI includes 17 built-in themes with full customization support.
 
 ### Built-in Themes
 
@@ -223,6 +224,8 @@ WSL UI includes 15 built-in themes with full customization support.
 **Light Themes:** Daylight, Mission Control Light, Obsidian Light
 
 **Middle-Ground:** Slate Dusk, Forest Mist, Rose Quartz, Ocean Fog
+
+**Accessibility:** High Contrast (dark), High Contrast Light - Maximum contrast themes for low vision users
 
 ### Theme Example
 
@@ -235,12 +238,43 @@ Create your own theme with the custom editor. Adjust 29 color variables across b
 
 ---
 
-## Keyboard Shortcuts
+## Keyboard Shortcuts & Accessibility
 
-- **Ctrl+N** - New distribution
-- **Ctrl+I** - Import distribution
-- **Ctrl+,** - Open settings
-- **Escape** - Close dialogs
+WSL UI is designed to be fully accessible with keyboard navigation and screen readers.
+
+### Navigation
+
+| Key | Action |
+|-----|--------|
+| **Tab** | Move to next interactive element |
+| **Shift+Tab** | Move to previous interactive element |
+| **Enter** | Activate buttons, submit forms |
+| **Space** | Toggle checkboxes, activate buttons |
+| **Arrow Keys** | Navigate within menus and lists |
+
+### Dialogs & Menus
+
+| Key | Action |
+|-----|--------|
+| **Escape** | Close any open dialog or menu |
+| **Enter** | Submit dialog form (when valid) |
+| **Tab** | Navigate between dialog fields |
+
+### Quick Actions Menu
+
+| Key | Action |
+|-----|--------|
+| **Enter** or **Space** | Open menu from trigger button |
+| **Escape** | Close menu |
+| **Arrow Down/Up** | Navigate menu items |
+
+### Accessibility Features
+
+- **Screen Reader Support** - All dialogs announce their title, status changes are announced via ARIA live regions
+- **Focus Management** - Focus is trapped within dialogs and returns to the trigger element when closed
+- **High Contrast Themes** - Two high contrast themes available (dark and light) for low vision users
+- **Reduced Motion** - Animations are disabled when system prefers reduced motion
+- **Keyboard Navigation** - All features accessible without a mouse
 
 ---
 
