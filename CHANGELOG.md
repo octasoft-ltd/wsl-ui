@@ -5,6 +5,15 @@ All notable changes to WSL UI will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.0](https://github.com/octasoft-ltd/wsl-ui/compare/v0.6.0...v0.7.0) (2026-01-11)
+
+
+### Features
+
+* Add 300x300 icon for Microsoft Store ([6c7fc55](https://github.com/octasoft-ltd/wsl-ui/commit/6c7fc556be8f9ca11b4dc5e01667a407246e66fd))
+* screenshots for distros ([225cc13](https://github.com/octasoft-ltd/wsl-ui/commit/225cc132b1efca353cdbeb0aeabf9820e5816c2b))
+* screenshots for distros ([3220832](https://github.com/octasoft-ltd/wsl-ui/commit/32208326f5558601478ba3a9909bc1ceb74e0f27))
+
 ## [0.6.0](https://github.com/octasoft-ltd/wsl-ui/compare/v0.5.0...v0.6.0) (2026-01-11)
 
 
