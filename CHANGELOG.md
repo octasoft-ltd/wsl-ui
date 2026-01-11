@@ -5,6 +5,18 @@ All notable changes to WSL UI will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.0](https://github.com/octasoft-ltd/wsl-ui/compare/v0.5.0...v0.6.0) (2026-01-11)
+
+
+### Features
+
+* Add support for arm64 ([687e721](https://github.com/octasoft-ltd/wsl-ui/commit/687e72161e6f938a3e4f1f1d55685be8c70f605b))
+
+
+### Bug Fixes
+
+* msi installer image justified to left ([7f21e99](https://github.com/octasoft-ltd/wsl-ui/commit/7f21e99671966d95244d72a09684d0e6806c7cea))
+
 ## [0.5.0](https://github.com/octasoft-ltd/wsl-ui/compare/v0.4.0...v0.5.0) (2026-01-11)
 
 
