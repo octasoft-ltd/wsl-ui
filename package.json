@@ -2,7 +2,7 @@
   "name": "wsl-ui",
   "private": true,
   "license": "BUSL-1.1",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
