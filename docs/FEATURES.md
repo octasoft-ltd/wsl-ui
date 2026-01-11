@@ -155,7 +155,7 @@ This document provides a comprehensive list of all features in WSL UI.
 
 ## 7. Theming & Appearance
 
-### Built-in Themes (15 themes)
+### Built-in Themes (17 themes)
 
 **Dark Themes:**
 - Mission Control (Default) - Cyan accents
@@ -177,6 +177,10 @@ This document provides a comprehensive list of all features in WSL UI.
 - Daylight - Clean bright theme
 - Mission Control Light
 - Obsidian Light
+
+**Accessibility Themes:**
+- High Contrast - Maximum contrast (dark)
+- High Contrast Light - Maximum contrast (light)
 
 ### Custom Theme Editor
 - Full color customization with 29 configurable colors
@@ -473,4 +477,4 @@ This document provides a comprehensive list of all features in WSL UI.
 
 ---
 
-*This document is auto-generated from codebase analysis. Last updated: 2026-01-04*
+*This document is auto-generated from codebase analysis. Last updated: 2026-01-11*
