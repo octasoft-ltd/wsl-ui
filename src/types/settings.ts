@@ -97,6 +97,10 @@ export interface AppSettings {
   terminalCommand: string;
   /** What to do when the user clicks the window close button */
   closeAction: CloseAction;
+  /** Whether anonymous usage telemetry is enabled */
+  telemetryEnabled: boolean;
+  /** Whether the user has seen the telemetry opt-in prompt */
+  telemetryPromptSeen: boolean;
   /** Saved custom IDE command (persisted even when a preset is active) */
   savedCustomIdeCommand: string;
   /** Saved custom terminal command (persisted even when a preset is active) */
@@ -124,6 +128,8 @@ export const DEFAULT_SETTINGS: AppSettings = {
   ideCommand: "code",
   terminalCommand: "auto",
   closeAction: "ask",
+  telemetryEnabled: false,
+  telemetryPromptSeen: false,
   savedCustomIdeCommand: "",
   savedCustomTerminalCommand: "",
   usePreReleaseUpdates: false,

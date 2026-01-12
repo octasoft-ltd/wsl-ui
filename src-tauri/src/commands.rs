@@ -1586,3 +1586,32 @@ pub fn get_log_path() -> String {
     utils::get_config_dir().join("logs").to_string_lossy().to_string()
 }
 
+// Telemetry commands
+
+/// Track an analytics event via Aptabase (only if telemetry is enabled)
+/// Event names should be simple, e.g. "app_started", "distro_created"
+/// Properties should be minimal and anonymous
+#[tauri::command]
+pub fn track_event(app: AppHandle, event: String, properties: Option<serde_json::Value>) {
+    use tauri_plugin_aptabase::EventTracker;
+
+    // Check if telemetry is enabled before tracking
+    let app_settings = settings::get_settings();
+    if !app_settings.telemetry_enabled {
+        return;
+    }
+
+    // Track via Aptabase (ignore result - telemetry should never break the app)
+    let _ = match properties {
+        Some(props) => app.track_event(&event, Some(props)),
+        None => app.track_event(&event, None),
+    };
+}
+
+/// Get current telemetry status
+#[tauri::command]
+pub fn get_telemetry_status() -> (bool, bool) {
+    let settings = settings::get_settings();
+    (settings.telemetry_enabled, settings.telemetry_prompt_seen)
+}
+

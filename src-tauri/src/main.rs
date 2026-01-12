@@ -41,6 +41,8 @@ use commands::{
     open_wsl_settings,
     // Logging commands
     set_debug_logging, get_log_path,
+    // Telemetry commands
+    track_event, get_telemetry_status,
 };
 use std::sync::Mutex;
 use tauri::{
@@ -256,7 +258,8 @@ mod tests {
     }
 }
 
-fn main() {
+#[tokio::main]
+async fn main() {
     // Get the log directory path to match our config directory structure
     let log_dir = utils::get_config_dir().join("logs");
 
@@ -282,6 +285,9 @@ fn main() {
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
+        .plugin(tauri_plugin_aptabase::Builder::new(
+            option_env!("APTABASE_APP_KEY").unwrap_or("")
+        ).build())
         .manage(TrayState {
             tray: Mutex::new(None),
         })
@@ -548,6 +554,9 @@ fn main() {
             // Logging commands
             set_debug_logging,
             get_log_path,
+            // Telemetry commands
+            track_event,
+            get_telemetry_status,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

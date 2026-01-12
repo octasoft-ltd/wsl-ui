@@ -17,20 +17,24 @@ import { Button } from "./components/ui/Button";
 import { DiskMountDialog } from "./components/DiskMountDialog";
 import { ConfirmDialog } from "./components/ConfirmDialog";
 import { CloseActionDialog } from "./components/CloseActionDialog";
+import { TelemetryOptInDialog } from "./components/TelemetryOptInDialog";
 import { wslService } from "./services/wslService";
+import { trackAppStarted } from "./services/telemetryService";
 import { info, debug } from "./utils/logger";
 
 type AppPage = "main" | "settings";
 
 function App() {
-  const { fetchDistros, error, isTimeoutError, clearError, forceKillWsl, actionInProgress } = useDistroStore();
+  const { distributions, fetchDistros, error, isTimeoutError, clearError, forceKillWsl, actionInProgress } = useDistroStore();
   const { showMountDialog, closeMountDialog, loadMountedDisks } = useMountStore();
-  const { loadSettings, updateSetting } = useSettingsStore();
+  const { settings, loadSettings, updateSetting } = useSettingsStore();
   const { notifications, removeNotification } = useNotificationStore();
   const { checkPreflight, isReady: wslReady } = usePreflightStore();
   const [currentPage, setCurrentPage] = useState<AppPage>("main");
   const [showForceRestartConfirm, setShowForceRestartConfirm] = useState(false);
   const [showCloseDialog, setShowCloseDialog] = useState(false);
+  const [showTelemetryOptIn, setShowTelemetryOptIn] = useState(false);
+  const telemetryTrackedRef = useRef(false);
   const timeoutRef = useRef<number | null>(null);
   const mainContentRef = useRef<HTMLElement>(null);
 
@@ -54,6 +58,22 @@ function App() {
     updateSetting("closeAction", action);
   }, [updateSetting]);
 
+  // Telemetry opt-in handlers
+  const handleTelemetryAccept = useCallback(async () => {
+    // Must await settings save before tracking, as Rust checks telemetry_enabled from disk
+    await updateSetting("telemetryEnabled", true);
+    await updateSetting("telemetryPromptSeen", true);
+    setShowTelemetryOptIn(false);
+    // Track app started now that settings are saved
+    trackAppStarted(distributions.length);
+  }, [updateSetting, distributions.length]);
+
+  const handleTelemetryDecline = useCallback(async () => {
+    await updateSetting("telemetryEnabled", false);
+    await updateSetting("telemetryPromptSeen", true);
+    setShowTelemetryOptIn(false);
+  }, [updateSetting]);
+
   // Load settings and run preflight check on app start (before polling starts)
   useEffect(() => {
     info("[App] Application starting");
@@ -61,6 +81,25 @@ function App() {
     // Run preflight check to verify WSL is installed
     checkPreflight();
   }, [loadSettings, checkPreflight]);
+
+  // Show telemetry opt-in dialog if user hasn't seen it yet
+  useEffect(() => {
+    if (settings && !settings.telemetryPromptSeen) {
+      // Delay slightly so user sees the app first
+      const timer = setTimeout(() => {
+        setShowTelemetryOptIn(true);
+      }, 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [settings]);
+
+  // Track app_started event (once per session, if telemetry enabled)
+  useEffect(() => {
+    if (settings?.telemetryEnabled && settings?.telemetryPromptSeen && !telemetryTrackedRef.current) {
+      telemetryTrackedRef.current = true;
+      trackAppStarted(distributions.length);
+    }
+  }, [settings?.telemetryEnabled, settings?.telemetryPromptSeen, distributions.length]);
 
   // Scroll to top when error appears so user can see the error banner
   useEffect(() => {
@@ -131,6 +170,12 @@ function App() {
           onMinimize={handleMinimize}
           onQuit={handleQuit}
           onRememberChoice={handleRememberChoice}
+        />
+        {/* Telemetry opt-in dialog */}
+        <TelemetryOptInDialog
+          isOpen={showTelemetryOptIn}
+          onAccept={handleTelemetryAccept}
+          onDecline={handleTelemetryDecline}
         />
       </ErrorBoundary>
     );
@@ -205,6 +250,13 @@ function App() {
           onMinimize={handleMinimize}
           onQuit={handleQuit}
           onRememberChoice={handleRememberChoice}
+        />
+
+        {/* Telemetry opt-in dialog */}
+        <TelemetryOptInDialog
+          isOpen={showTelemetryOptIn}
+          onAccept={handleTelemetryAccept}
+          onDecline={handleTelemetryDecline}
         />
       </div>
     </ErrorBoundary>

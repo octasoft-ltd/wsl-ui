@@ -104,6 +104,12 @@ pub struct AppSettings {
     /// What to do when the user clicks the window close button
     #[serde(default)]
     pub close_action: CloseAction,
+    /// Whether anonymous usage telemetry is enabled
+    #[serde(default)]
+    pub telemetry_enabled: bool,
+    /// Whether the user has seen the telemetry opt-in prompt
+    #[serde(default)]
+    pub telemetry_prompt_seen: bool,
     /// Saved custom IDE command (persisted even when a preset is active)
     #[serde(default)]
     pub saved_custom_ide_command: String,

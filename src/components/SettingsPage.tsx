@@ -29,6 +29,7 @@ import {
   RefreshIcon,
   ClockIcon,
   WindowIcon,
+  ShieldIcon,
 } from "./icons";
 import {
   SettingSection,
@@ -40,6 +41,7 @@ import {
   ExecutablePathsSettings,
   DistributionSourcesSettings,
   ContainerRuntimeSettings,
+  PrivacySettings,
   IDE_PRESETS,
   TERMINAL_PRESETS,
   SETTINGS_TABS,
@@ -64,6 +66,7 @@ const ICON_MAP: Record<SettingsIconName, React.FC<{ size?: "sm" | "md" | "lg"; c
   play: PlayIcon,
   grid: GridIcon,
   download: DownloadIcon,
+  shield: ShieldIcon,
   info: InfoIcon,
 };
 
@@ -411,6 +414,8 @@ export function SettingsPage({ onBack }: SettingsPageProps) {
                 <DistributionSourcesSettings />
               </div>
             )}
+
+            {activeTab === "privacy" && <PrivacySettings />}
 
             {activeTab === "about" && (
               <div className="space-y-6">

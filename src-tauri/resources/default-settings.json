@@ -2,6 +2,8 @@
   "ideCommand": "code",
   "terminalCommand": "auto",
   "closeAction": "ask",
+  "telemetryEnabled": false,
+  "telemetryPromptSeen": false,
   "savedCustomIdeCommand": "",
   "savedCustomTerminalCommand": "",
   "usePreReleaseUpdates": false,
