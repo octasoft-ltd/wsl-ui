@@ -46,7 +46,8 @@ let currentFetchId = 0;
 // Helper to detect timeout errors from backend
 const isTimeoutErrorMessage = (error: string): boolean => {
   return error.toLowerCase().includes("timed out") ||
-         error.toLowerCase().includes("timeout");
+         error.toLowerCase().includes("timeout") ||
+         error.toLowerCase().includes("taking too long");
 };
 
 export const useDistroStore = create<DistroStore>((set, get) => ({
