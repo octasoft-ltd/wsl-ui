@@ -18,7 +18,7 @@ Built with [Tauri](https://tauri.app/) (Rust) and [React](https://react.dev/)
 - **Backup & Restore** - Export, import, and clone distributions
 - **Custom Actions** - Define reusable commands with variable substitution
 - **WSL Settings** - Edit `.wslconfig` and `wsl.conf` from a visual interface
-- **15 Themes** - Dark, light, and custom themes with live preview
+- **17 Themes** - Dark, light, and custom themes with live preview
 - **System Tray** - Minimize to tray for quick access
 - **Disk Mounting** - Mount VHD files and physical disks into WSL
 
