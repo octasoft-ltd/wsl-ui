@@ -5,6 +5,14 @@ All notable changes to WSL UI will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.8.0](https://github.com/octasoft-ltd/wsl-ui/compare/v0.7.0...v0.8.0) (2026-01-12)
+
+
+### Features
+
+* add lightweight tracking and update privacy policy ([1c49cc2](https://github.com/octasoft-ltd/wsl-ui/commit/1c49cc29d5032ea327305e37625000577b3e9dd9))
+* add lightweight tracking and update privacy policy ([7e5903f](https://github.com/octasoft-ltd/wsl-ui/commit/7e5903f5493478faf54c7aa20226b9ada5c39804))
+
 ## [0.7.0](https://github.com/octasoft-ltd/wsl-ui/compare/v0.6.0...v0.7.0) (2026-01-11)
 
 
