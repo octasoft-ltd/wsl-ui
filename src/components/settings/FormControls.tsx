@@ -4,6 +4,8 @@
  * Reusable toggle and input components for settings.
  */
 
+import { useState, useEffect, useRef } from "react";
+
 // Toggle component for boolean settings
 export function Toggle({
   label,
@@ -121,6 +123,7 @@ export function SettingInput({
 }
 
 // Path input component with folder browse button
+// Uses local state to prevent cursor jumping during async saves
 export function SettingPathInput({
   label,
   description,
@@ -140,6 +143,35 @@ export function SettingPathInput({
   className?: string;
   testId?: string;
 }) {
+  const [localValue, setLocalValue] = useState(value);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Sync local state when external value changes (e.g., from browse button or reset)
+  useEffect(() => {
+    setLocalValue(value);
+  }, [value]);
+
+  const handleChange = (newValue: string) => {
+    setLocalValue(newValue);
+
+    // Debounce the onChange to avoid saving on every keystroke
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current);
+    }
+    debounceRef.current = setTimeout(() => {
+      onChange(newValue);
+    }, 300);
+  };
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (debounceRef.current) {
+        clearTimeout(debounceRef.current);
+      }
+    };
+  }, []);
+
   return (
     <div className="py-3" data-testid={testId ? `${testId}-container` : undefined}>
       <label className="block text-sm font-medium text-theme-text-primary mb-1" data-testid={testId ? `${testId}-label` : undefined}>{label}</label>
@@ -147,8 +179,8 @@ export function SettingPathInput({
       <div className="flex gap-2">
         <input
           type="text"
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
+          value={localValue}
+          onChange={(e) => handleChange(e.target.value)}
           placeholder={placeholder}
           data-testid={testId ? `${testId}-input` : undefined}
           className={`flex-1 px-3 py-2 bg-theme-bg-secondary border border-theme-border-secondary rounded-lg text-theme-text-primary placeholder-theme-text-muted focus:outline-hidden focus:border-theme-accent-primary ${className}`}
