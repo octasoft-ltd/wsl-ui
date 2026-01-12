@@ -25,7 +25,7 @@ import { info, debug } from "./utils/logger";
 type AppPage = "main" | "settings";
 
 function App() {
-  const { distributions, fetchDistros, error, isTimeoutError, clearError, forceKillWsl, actionInProgress } = useDistroStore();
+  const { distributions, fetchDistros, error, isTimeoutError, clearError, forceKillWsl, actionInProgress, isLoading: distrosLoading } = useDistroStore();
   const { showMountDialog, closeMountDialog, loadMountedDisks } = useMountStore();
   const { settings, loadSettings, updateSetting } = useSettingsStore();
   const { notifications, removeNotification } = useNotificationStore();
@@ -65,8 +65,8 @@ function App() {
     await updateSetting("telemetryPromptSeen", true);
     setShowTelemetryOptIn(false);
     // Track app started now that settings are saved
-    trackAppStarted(distributions.length);
-  }, [updateSetting, distributions.length]);
+    trackAppStarted(distributions);
+  }, [updateSetting, distributions]);
 
   const handleTelemetryDecline = useCallback(async () => {
     await updateSetting("telemetryEnabled", false);
@@ -93,13 +93,13 @@ function App() {
     }
   }, [settings]);
 
-  // Track app_started event (once per session, if telemetry enabled)
+  // Track app_started event (once per session, if telemetry enabled and distros loaded)
   useEffect(() => {
-    if (settings?.telemetryEnabled && settings?.telemetryPromptSeen && !telemetryTrackedRef.current) {
+    if (settings?.telemetryEnabled && settings?.telemetryPromptSeen && !distrosLoading && !telemetryTrackedRef.current) {
       telemetryTrackedRef.current = true;
-      trackAppStarted(distributions.length);
+      trackAppStarted(distributions);
     }
-  }, [settings?.telemetryEnabled, settings?.telemetryPromptSeen, distributions.length]);
+  }, [settings?.telemetryEnabled, settings?.telemetryPromptSeen, distrosLoading, distributions]);
 
   // Scroll to top when error appears so user can see the error banner
   useEffect(() => {

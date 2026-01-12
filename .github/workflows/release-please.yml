@@ -66,6 +66,7 @@ jobs:
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VITE_APTABASE_KEY: ${{ secrets.VITE_APTABASE_KEY }}
         with:
           tagName: ${{ needs.release-please.outputs.tag_name }}
           releaseName: "WSL UI ${{ needs.release-please.outputs.tag_name }}"

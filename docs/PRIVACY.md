@@ -18,7 +18,7 @@ If you opt in to analytics, we collect:
 |------|---------|
 | App version | Understand which versions are in use |
 | Windows version | Ensure compatibility |
-| Number of distributions | Understand typical usage patterns |
+| Distribution counts by source | Understand how users install distributions (e.g., 2 from Store, 1 container) |
 
 ### What We Never Collect
 

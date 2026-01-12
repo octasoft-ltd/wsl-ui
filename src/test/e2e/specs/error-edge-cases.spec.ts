@@ -137,8 +137,17 @@ describe("Error Scenarios & Edge Cases", () => {
       const errorBanner = await waitForErrorBanner(10000);
       await expect(errorBanner).toBeDisplayed();
 
-      // Verify error message contains timeout indication (check for either "timeout" or "timed out")
+      // Wait for error message to have text (DOM may need time to render)
       const errorMessage = await errorBanner.$(selectors.errorMessage);
+      await browser.waitUntil(
+        async () => {
+          const text = await errorMessage.getText().catch(() => "");
+          return text.length > 0;
+        },
+        { timeout: 3000, timeoutMsg: "Error message did not get text" }
+      );
+
+      // Verify error message contains timeout indication (check for either "timeout" or "timed out")
       const errorText = await errorMessage.getText();
       const lowerText = errorText.toLowerCase();
       expect(lowerText.includes("timeout") || lowerText.includes("timed out")).toBe(true);
@@ -294,16 +303,40 @@ describe("Error Scenarios & Edge Cases", () => {
       const errorBanner = await waitForErrorBanner(10000);
       await expect(errorBanner).toBeDisplayed();
 
+      // Wait for error message to have text (DOM may need time to render)
+      const errorMessage = await errorBanner.$(selectors.errorMessage);
+      await browser.waitUntil(
+        async () => {
+          const text = await errorMessage.getText().catch(() => "");
+          return text.length > 0;
+        },
+        { timeout: 3000, timeoutMsg: "Error message did not get text" }
+      );
+
+      // Wait for Force Shutdown button to appear (React needs to recognize timeout error)
+      await browser.waitUntil(
+        async () => {
+          const forceShutdownButton = await errorBanner.$(selectors.forceShutdownButton);
+          return await forceShutdownButton.isDisplayed().catch(() => false);
+        },
+        { timeout: 3000, timeoutMsg: "Force Shutdown button did not appear for timeout error" }
+      );
+
       // Verify Force Shutdown button appears for timeout errors
       const forceShutdownButton = await errorBanner.$(selectors.forceShutdownButton);
       await expect(forceShutdownButton).toBeDisplayed();
 
       // Verify tip text about terminal windows is displayed
       const tipText = await errorBanner.$(".text-xs");
-      if (await tipText.isDisplayed().catch(() => false)) {
-        const tipContent = await tipText.getText();
-        expect(tipContent.toLowerCase()).toContain("terminal");
-      }
+      await browser.waitUntil(
+        async () => {
+          const text = await tipText.getText().catch(() => "");
+          return text.length > 0;
+        },
+        { timeout: 3000, timeoutMsg: "Tip text did not get content" }
+      );
+      const tipContent = await tipText.getText();
+      expect(tipContent.toLowerCase()).toContain("terminal");
     });
 
     it("should NOT show Force Shutdown button for non-timeout errors", async () => {
@@ -332,6 +365,24 @@ describe("Error Scenarios & Edge Cases", () => {
 
       // Wait for error banner
       const errorBanner = await waitForErrorBanner(10000);
+
+      // Wait for error message and Force Shutdown button to appear
+      const errorMessage = await errorBanner.$(selectors.errorMessage);
+      await browser.waitUntil(
+        async () => {
+          const text = await errorMessage.getText().catch(() => "");
+          return text.length > 0;
+        },
+        { timeout: 3000, timeoutMsg: "Error message did not get text" }
+      );
+
+      await browser.waitUntil(
+        async () => {
+          const forceShutdownButton = await errorBanner.$(selectors.forceShutdownButton);
+          return await forceShutdownButton.isDisplayed().catch(() => false);
+        },
+        { timeout: 3000, timeoutMsg: "Force Shutdown button did not appear" }
+      );
 
       // Click Force Shutdown button
       const forceShutdownButton = await errorBanner.$(selectors.forceShutdownButton);
