@@ -5,6 +5,18 @@ All notable changes to WSL UI will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.12.0](https://github.com/octasoft-ltd/wsl-ui/compare/v0.11.0...v0.12.0) (2026-01-12)
+
+
+### Features
+
+* Add force stop when stopping distro is taking too long. ([206ec06](https://github.com/octasoft-ltd/wsl-ui/commit/206ec06a515b7b036496f2cacc04d37a1603f4c9))
+* Fix editing of fields halfway through pinging user to end of the line after single keypress. ([25b4346](https://github.com/octasoft-ltd/wsl-ui/commit/25b4346080b80d595413465add8c308d66a64cc7))
+* New video at 1280 x 720 ([93e1da8](https://github.com/octasoft-ltd/wsl-ui/commit/93e1da8cc204e15c1edead27ed2ba9ada2a6348e))
+* Reduce vertical spacing to fit 1280 x 720 ([93e1da8](https://github.com/octasoft-ltd/wsl-ui/commit/93e1da8cc204e15c1edead27ed2ba9ada2a6348e))
+* Remove startup actions and replace with custom actions that run on startup ([93e1da8](https://github.com/octasoft-ltd/wsl-ui/commit/93e1da8cc204e15c1edead27ed2ba9ada2a6348e))
+* Start app in 1280 x 720 ([93e1da8](https://github.com/octasoft-ltd/wsl-ui/commit/93e1da8cc204e15c1edead27ed2ba9ada2a6348e))
+
 ## [0.11.0](https://github.com/octasoft-ltd/wsl-ui/compare/v0.10.0...v0.11.0) (2026-01-12)
 
 
