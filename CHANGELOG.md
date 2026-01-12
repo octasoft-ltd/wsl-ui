@@ -5,6 +5,13 @@ All notable changes to WSL UI will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.0](https://github.com/octasoft-ltd/wsl-ui/compare/v0.8.0...v0.9.0) (2026-01-12)
+
+
+### Features
+
+* Use frontend tracking only. Fix e2e tests ([d548bb7](https://github.com/octasoft-ltd/wsl-ui/commit/d548bb7a5fbd5e50c945656817285eef58124174))
+
 ## [0.8.0](https://github.com/octasoft-ltd/wsl-ui/compare/v0.7.0...v0.8.0) (2026-01-12)
 
 
