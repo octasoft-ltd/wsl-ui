@@ -441,13 +441,6 @@ describe("Screenshot Capture", () => {
       await saveScreenshot("settings-custom-actions");
     });
 
-    it("captures Startup Actions settings", async () => {
-      await goToSettings();
-      await switchToTab("startup");
-      await browser.pause(300);
-      await saveScreenshot("settings-startup");
-    });
-
     it("captures Distro Catalog settings", async () => {
       await goToSettings();
       await switchToTab("distros");
