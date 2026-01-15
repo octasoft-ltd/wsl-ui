@@ -28,7 +28,7 @@ See the [User Guide](docs/USER-GUIDE.md) for detailed features and screenshots.
 
 ### From Microsoft Store
 
-Coming soon.
+[![Get it from Microsoft Store](https://get.microsoft.com/images/en-us%20dark.svg)](https://apps.microsoft.com/detail/9p8548knj2m9)
 
 ### From Releases
 
