@@ -60,6 +60,10 @@ function App() {
     updateSetting("closeAction", action);
   }, [updateSetting]);
 
+  const handleCloseDialogCancel = useCallback(() => {
+    setShowCloseDialog(false);
+  }, []);
+
   // Telemetry opt-in handlers
   const handleTelemetryAccept = useCallback(async () => {
     // Must await settings save before tracking, as Rust checks telemetry_enabled from disk
@@ -178,6 +182,7 @@ function App() {
           isOpen={showCloseDialog}
           onMinimize={handleMinimize}
           onQuit={handleQuit}
+          onCancel={handleCloseDialogCancel}
           onRememberChoice={handleRememberChoice}
         />
         {/* Telemetry opt-in dialog */}
@@ -289,6 +294,7 @@ function App() {
           isOpen={showCloseDialog}
           onMinimize={handleMinimize}
           onQuit={handleQuit}
+          onCancel={handleCloseDialogCancel}
           onRememberChoice={handleRememberChoice}
         />
 
