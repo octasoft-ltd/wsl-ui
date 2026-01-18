@@ -12,6 +12,7 @@ interface DistroStore {
   error: string | null;
   isTimeoutError: boolean;
   actionInProgress: string | null;
+  compactingDistro: string | null;
 
   // Actions
   fetchDistros: (silent?: boolean) => Promise<void>;
@@ -35,6 +36,7 @@ interface DistroStore {
     updateShortcut: boolean
   ) => Promise<string | null>;
   setActionInProgress: (action: string | null) => void;
+  setCompactingDistro: (name: string | null) => void;
   clearError: () => void;
   clearDistributions: () => void;
 
@@ -58,6 +60,7 @@ export const useDistroStore = create<DistroStore>((set, get) => ({
   error: null,
   isTimeoutError: false,
   actionInProgress: null,
+  compactingDistro: null,
 
   fetchDistros: async (silent?: boolean) => {
     // Increment fetch ID to invalidate any pending background requests
@@ -508,6 +511,10 @@ export const useDistroStore = create<DistroStore>((set, get) => ({
 
   setActionInProgress: (action: string | null) => {
     set({ actionInProgress: action });
+  },
+
+  setCompactingDistro: (name: string | null) => {
+    set({ compactingDistro: name });
   },
 
   clearError: () => {

@@ -85,6 +85,14 @@ pub trait ResourceMonitor: Send + Sync {
     /// Get the VHDX file size for a distribution (queries registry then filesystem)
     fn get_distro_vhdx_size(&self, name: &str) -> Option<u64>;
 
+    /// Get the full path to a distribution's VHDX file
+    fn get_distro_vhdx_path(&self, name: &str) -> Option<String>;
+
+    /// Compact a VHDX file to reclaim unused space
+    /// Uses Optimize-VHD (if Hyper-V available) with diskpart fallback
+    /// Requires WSL to be fully shutdown and admin privileges (UAC prompt)
+    fn compact_vhdx(&self, vhdx_path: &str) -> Result<(), WslError>;
+
     // === Disk Information ===
 
     /// List all physical disks available on the system

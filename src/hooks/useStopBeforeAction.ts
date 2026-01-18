@@ -81,32 +81,42 @@ const initialState: StopBeforeActionState = {
  */
 export function useStopBeforeAction(): UseStopBeforeActionReturn {
   const [state, setState] = useState<StopBeforeActionState>(initialState);
-  const { stopDistro, shutdownAll, fetchDistros } = useDistroStore();
+  const { distributions, stopDistro, shutdownAll, fetchDistros } = useDistroStore();
 
   /**
    * Execute an action, checking if stop is required first.
    * If the distro is running, shows the stop dialog.
    * If the distro is stopped, executes the action immediately.
    *
-   * @param options.requiresShutdown - If true, will shutdown all WSL instead of just stopping the distro
+   * @param options.requiresShutdown - If true, will shutdown all WSL instead of just stopping the distro.
+   *        When requiresShutdown is true, checks if ANY distro is running (not just the target),
+   *        because VHDX operations require the WSL VM to be fully stopped.
    */
   const executeWithStopCheck = useCallback(
     (distro: Distribution, actionName: string, action: () => void, options?: ExecuteOptions) => {
-      if (distro.state === "Running") {
+      const requiresShutdown = options?.requiresShutdown ?? false;
+
+      // For shutdown-requiring actions, check if ANY distro is running
+      // (VHDX is locked while any WSL distro is active)
+      const anyRunning = requiresShutdown
+        ? distributions.some(d => d.state === "Running")
+        : distro.state === "Running";
+
+      if (anyRunning) {
         // Show stop dialog
         setState({
           showStopDialog: true,
           actionName,
           distro,
           pendingAction: action,
-          requiresShutdown: options?.requiresShutdown ?? false,
+          requiresShutdown,
         });
       } else {
         // Execute immediately
         action();
       }
     },
-    []
+    [distributions]
   );
 
   /**

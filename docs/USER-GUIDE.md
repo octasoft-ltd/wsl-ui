@@ -75,10 +75,30 @@ Advanced management options are in the Manage submenu:
 
 - **Move** - Relocate to a different drive
 - **Resize Disk** - Expand the virtual disk
+- **Compact Disk** - Reclaim unused space from the virtual disk
 - **Set Default User** - Change the login user
 - **Rename** - Change the distribution name
 - **Sparse Mode** - Enable automatic disk reclamation
 - **Set WSL Version** - Convert between WSL 1 and 2
+
+### Compact Disk
+
+Reclaim unused disk space from a distribution's virtual disk (VHDX):
+
+![Compact Disk Dialog](screenshots/dialog-compact-disk.png)
+
+This operation performs three steps automatically:
+1. **fstrim** - Zeros unused blocks inside the Linux filesystem
+2. **WSL Shutdown** - Fully shuts down WSL to release file locks
+3. **VHDX Compact** - Shrinks the virtual disk file on Windows
+
+**Important notes:**
+- Requires administrator privileges (UAC prompt will appear)
+- WSL will be completely shut down during this operation
+- Do not close the app or shut down your computer while compacting
+- The operation typically takes 1-2 minutes depending on disk size
+
+After completion, a notification shows how much space was reclaimed.
 
 ### Distribution Info
 

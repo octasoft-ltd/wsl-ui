@@ -740,6 +740,18 @@ export const selectors = {
   forceShutdownButton: 'button*=Force Shutdown WSL',
   timeoutErrorTip: '[data-testid="error-banner"] .text-xs', // Tip text for timeout errors
 
+  // Compact Dialog
+  compactAction: '[data-testid="manage-action-compact"]',
+  compactDialog: '[role="dialog"]', // Uses role="dialog" from Modal component
+  compactVirtualSize: '[data-testid="compact-virtual-size"]',
+  compactFileSize: '[data-testid="compact-file-size"]',
+  compactProgress: '[data-testid="compact-progress"]',
+  compactElapsedTime: '[data-testid="compact-elapsed-time"]',
+  compactError: '[data-testid="compact-error"]',
+  compactCancelButton: '[data-testid="compact-cancel-button"]',
+  compactConfirmButton: '[data-testid="compact-confirm-button"]',
+  compactingBadge: '[data-testid="compacting-badge"]',
+
   // Clone Dialog
   cloneAction: '[data-testid="quick-action-clone"]',
   cloneDialog: '[data-testid="clone-dialog"]',

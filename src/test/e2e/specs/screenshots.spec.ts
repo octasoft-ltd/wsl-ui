@@ -266,6 +266,24 @@ describe("Screenshot Capture", () => {
       await moveAction.click();
       await waitForDialog('[role="dialog"]');
       await browser.pause(300);
+
+      // If shutdown dialog appeared (distro was running), click through it
+      const stopDialog = await $(selectors.stopAndActionDialog);
+      if (await stopDialog.isExisting()) {
+        const stopAndContinueButton = await $(selectors.stopAndContinueButton);
+        await stopAndContinueButton.click();
+        // Wait for shutdown to complete and move dialog to appear
+        await browser.waitUntil(
+          async () => {
+            const dialog = await $(selectors.stopAndActionDialog);
+            return !(await dialog.isExisting());
+          },
+          { timeout: 30000, timeoutMsg: "Stop dialog did not close" }
+        );
+        await waitForDialog('[role="dialog"]');
+        await browser.pause(300);
+      }
+
       await saveScreenshot("dialog-move");
 
       await browser.keys("Escape");
@@ -283,7 +301,43 @@ describe("Screenshot Capture", () => {
       await resizeAction.click();
       await waitForDialog('[role="dialog"]');
       await browser.pause(300);
+
+      // If shutdown dialog appeared (distro was running), click through it
+      const stopDialog = await $(selectors.stopAndActionDialog);
+      if (await stopDialog.isExisting()) {
+        const stopAndContinueButton = await $(selectors.stopAndContinueButton);
+        await stopAndContinueButton.click();
+        // Wait for shutdown to complete and resize dialog to appear
+        await browser.waitUntil(
+          async () => {
+            const dialog = await $(selectors.stopAndActionDialog);
+            return !(await dialog.isExisting());
+          },
+          { timeout: 30000, timeoutMsg: "Stop dialog did not close" }
+        );
+        await waitForDialog('[role="dialog"]');
+        await browser.pause(300);
+      }
+
       await saveScreenshot("dialog-resize");
+
+      await browser.keys("Escape");
+      await browser.pause(300);
+    });
+
+    it("captures Compact Disk dialog", async () => {
+      await openQuickActions("Debian");
+
+      const manageAction = await $(selectors.manageSubmenu);
+      await manageAction.click();
+      await browser.pause(200);
+
+      const compactAction = await $(selectors.compactAction);
+      await compactAction.click();
+      await waitForDialog('[role="dialog"]');
+      // Wait for size info to load
+      await browser.pause(500);
+      await saveScreenshot("dialog-compact-disk");
 
       await browser.keys("Escape");
       await browser.pause(300);

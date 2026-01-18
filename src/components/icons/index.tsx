@@ -765,6 +765,19 @@ const SOURCE_ICON_COMPONENTS: Record<InstallSource, React.ComponentType<IconProp
   unknown: UnknownSourceIcon,
 };
 
+export function CompressIcon(props: IconProps) {
+  return (
+    <svg {...getSvgProps(props)}>
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5v-4m0 4h-4m4 0l-5-5"
+      />
+    </svg>
+  );
+}
+
 interface SourceIconProps extends IconProps {
   source: InstallSource;
 }

@@ -555,6 +555,19 @@ export const wslService = {
   },
 
   /**
+   * Compact a distribution's virtual disk to reclaim unused space
+   * This operation:
+   * - Requires WSL to be fully shutdown (not just the distro stopped)
+   * - May take several minutes for large disks (~1 minute per GB)
+   * - Requires administrator privileges (UAC prompt will appear)
+   * @returns CompactResult with size before and after
+   */
+  async compactDistribution(name: string): Promise<CompactResult> {
+    info(`[wslService] Compacting distribution disk: ${name}`);
+    return invoke<CompactResult>("compact_distribution", { name });
+  },
+
+  /**
    * Set the WSL version for a distribution (1 or 2)
    * This converts the distribution between WSL 1 and WSL 2.
    * Note: This operation can take several minutes.
@@ -741,6 +754,18 @@ export const wslService = {
 export interface VhdSizeInfo {
   fileSize: number;
   virtualSize: number;
+}
+
+/**
+ * Result of a VHDX compact operation
+ */
+export interface CompactResult {
+  sizeBefore: number;
+  sizeAfter: number;
+  /** Bytes trimmed by fstrim (if available) */
+  fstrimBytes: number | null;
+  /** Message from fstrim (success output or failure reason) */
+  fstrimMessage: string | null;
 }
 
 /**

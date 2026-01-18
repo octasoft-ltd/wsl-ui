@@ -15,14 +15,15 @@ interface DistroCardProps {
 }
 
 function DistroCardComponent({ distro, index = 0 }: DistroCardProps) {
-  const { startDistro, stopDistro, deleteDistro, openTerminal, actionInProgress } = useDistroStore();
+  const { startDistro, stopDistro, deleteDistro, openTerminal, actionInProgress, compactingDistro } = useDistroStore();
   const { getDistroResources } = useResourceStore();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showInfoDialog, setShowInfoDialog] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
 
   const isRunning = distro.state === "Running";
-  const isDisabled = !!actionInProgress;
+  const isCompacting = compactingDistro === distro.name;
+  const isDisabled = !!actionInProgress || isCompacting;
 
   // Get resource stats for this distro (only available when running)
   const resources = isRunning ? getDistroResources(distro.name) : undefined;
@@ -55,7 +56,7 @@ function DistroCardComponent({ distro, index = 0 }: DistroCardProps) {
     <>
       <div
         data-testid={`distro-card-${distro.name}`}
-        className={`module-card p-4 animate-fade-slide-in ${staggerClass} ${menuOpen ? 'z-50' : ''}`}
+        className={`module-card p-4 animate-fade-slide-in ${staggerClass} ${menuOpen ? 'z-50' : ''} ${isCompacting ? 'opacity-75' : ''}`}
       >
         {/* Badges row: WSL (left) + Primary + State (right) */}
         <div className="flex items-center justify-between mb-3">
@@ -85,16 +86,29 @@ function DistroCardComponent({ distro, index = 0 }: DistroCardProps) {
                 Primary
               </span>
             )}
-            <span
-              data-testid="state-badge"
-              className={`text-[10px] font-mono font-semibold px-3 py-1 rounded uppercase tracking-wider ${
-                isRunning
-                  ? "bg-[rgba(var(--status-running-rgb),0.1)] text-theme-status-running border border-[rgba(var(--status-running-rgb),0.3)]"
-                  : "bg-theme-bg-tertiary text-theme-text-muted border border-theme-border-secondary"
-              }`}
-            >
-              {isRunning ? 'Online' : 'Offline'}
-            </span>
+            {isCompacting ? (
+              <span
+                data-testid="compacting-badge"
+                className="text-[10px] font-mono font-semibold px-3 py-1 rounded uppercase tracking-wider bg-[rgba(var(--accent-primary-rgb),0.15)] text-theme-accent-primary border border-[rgba(var(--accent-primary-rgb),0.4)] flex items-center gap-1.5"
+              >
+                <svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                </svg>
+                Compacting
+              </span>
+            ) : (
+              <span
+                data-testid="state-badge"
+                className={`text-[10px] font-mono font-semibold px-3 py-1 rounded uppercase tracking-wider ${
+                  isRunning
+                    ? "bg-[rgba(var(--status-running-rgb),0.1)] text-theme-status-running border border-[rgba(var(--status-running-rgb),0.3)]"
+                    : "bg-theme-bg-tertiary text-theme-text-muted border border-theme-border-secondary"
+                }`}
+              >
+                {isRunning ? 'Online' : 'Offline'}
+              </span>
+            )}
           </div>
         </div>
 

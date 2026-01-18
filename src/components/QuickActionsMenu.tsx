@@ -7,6 +7,7 @@ import { wslService } from "../services/wslService";
 import { CloneDialog } from "./CloneDialog";
 import { MoveDistroDialog } from "./MoveDistroDialog";
 import { ResizeDistroDialog } from "./ResizeDistroDialog";
+import { CompactDistroDialog } from "./CompactDistroDialog";
 import { SetDefaultUserDialog } from "./SetDefaultUserDialog";
 import { SetVersionDialog } from "./SetVersionDialog";
 import { RenameDialog } from "./RenameDialog";
@@ -37,6 +38,7 @@ import {
   PauseIcon,
   PowerIcon,
   InfoIcon,
+  CompressIcon,
 } from "./icons";
 
 interface QuickActionsMenuProps {
@@ -67,6 +69,7 @@ export function QuickActionsMenu({ distro, disabled, onOpenChange }: QuickAction
   const [showCloneDialog, setShowCloneDialog] = useState(false);
   const [showMoveDialog, setShowMoveDialog] = useState(false);
   const [showResizeDialog, setShowResizeDialog] = useState(false);
+  const [showCompactDialog, setShowCompactDialog] = useState(false);
   const [showSetUserDialog, setShowSetUserDialog] = useState(false);
   const [showSetVersionDialog, setShowSetVersionDialog] = useState(false);
   const [showRenameDialog, setShowRenameDialog] = useState(false);
@@ -465,52 +468,74 @@ export function QuickActionsMenu({ distro, disabled, onOpenChange }: QuickAction
 
               {showManageSubmenu && (
                 <div className="bg-theme-bg-primary/50 border-y border-theme-border-primary">
-                  <button
-                    onClick={() => {
-                      executeWithStopCheck(distro, "Move Distribution", () => {
-                        setShowMoveDialog(true);
-                      }, { requiresShutdown: true });
-                      setIsOpen(false);
-                      setShowManageSubmenu(false);
-                    }}
-                    data-testid="manage-action-move"
-                    className="w-full flex items-center gap-3 px-6 py-2 text-sm text-left text-theme-text-secondary hover:bg-theme-bg-tertiary hover:text-theme-text-primary transition-all"
-                  >
-                    <span className="text-theme-text-muted"><FolderIcon size="sm" /></span>
-                    Move Distribution...
-                    {distro.state === "Running" && (
-                      <span
-                        data-testid="requires-shutdown-indicator"
-                        className="ml-auto text-theme-status-error"
-                        title="Requires WSL shutdown"
-                      >
-                        <PowerIcon size="sm" />
-                      </span>
-                    )}
-                  </button>
-                  <button
-                    onClick={() => {
-                      executeWithStopCheck(distro, "Resize Disk", () => {
-                        setShowResizeDialog(true);
-                      }, { requiresShutdown: true });
-                      setIsOpen(false);
-                      setShowManageSubmenu(false);
-                    }}
-                    data-testid="manage-action-resize"
-                    className="w-full flex items-center gap-3 px-6 py-2 text-sm text-left text-theme-text-secondary hover:bg-theme-bg-tertiary hover:text-theme-text-primary transition-all"
-                  >
-                    <span className="text-theme-text-muted"><ServerIcon size="sm" /></span>
-                    Resize Disk...
-                    {distro.state === "Running" && (
-                      <span
-                        data-testid="requires-shutdown-indicator"
-                        className="ml-auto text-theme-status-error"
-                        title="Requires WSL shutdown"
-                      >
-                        <PowerIcon size="sm" />
-                      </span>
-                    )}
-                  </button>
+                  {/* Move only available for WSL2 (uses VHDX) */}
+                  {distro.version === 2 && (
+                    <button
+                      onClick={() => {
+                        executeWithStopCheck(distro, "Move Distribution", () => {
+                          setShowMoveDialog(true);
+                        }, { requiresShutdown: true });
+                        setIsOpen(false);
+                        setShowManageSubmenu(false);
+                      }}
+                      data-testid="manage-action-move"
+                      className="w-full flex items-center gap-3 px-6 py-2 text-sm text-left text-theme-text-secondary hover:bg-theme-bg-tertiary hover:text-theme-text-primary transition-all"
+                    >
+                      <span className="text-theme-text-muted"><FolderIcon size="sm" /></span>
+                      Move Distribution...
+                      {distro.state === "Running" && (
+                        <span
+                          data-testid="requires-shutdown-indicator"
+                          className="ml-auto text-theme-status-error"
+                          title="Requires WSL shutdown"
+                        >
+                          <PowerIcon size="sm" />
+                        </span>
+                      )}
+                    </button>
+                  )}
+                  {/* Resize Disk only available for WSL2 (uses VHDX) */}
+                  {distro.version === 2 && (
+                    <button
+                      onClick={() => {
+                        executeWithStopCheck(distro, "Resize Disk", () => {
+                          setShowResizeDialog(true);
+                        }, { requiresShutdown: true });
+                        setIsOpen(false);
+                        setShowManageSubmenu(false);
+                      }}
+                      data-testid="manage-action-resize"
+                      className="w-full flex items-center gap-3 px-6 py-2 text-sm text-left text-theme-text-secondary hover:bg-theme-bg-tertiary hover:text-theme-text-primary transition-all"
+                    >
+                      <span className="text-theme-text-muted"><ServerIcon size="sm" /></span>
+                      Resize Disk...
+                      {distro.state === "Running" && (
+                        <span
+                          data-testid="requires-shutdown-indicator"
+                          className="ml-auto text-theme-status-error"
+                          title="Requires WSL shutdown"
+                        >
+                          <PowerIcon size="sm" />
+                        </span>
+                      )}
+                    </button>
+                  )}
+                  {/* Compact Disk only available for WSL2 (uses VHDX) */}
+                  {distro.version === 2 && (
+                    <button
+                      onClick={() => {
+                        // Compact handles its own start/fstrim/shutdown flow - no pre-check needed
+                        setShowCompactDialog(true);
+                        setIsOpen(false);
+                        setShowManageSubmenu(false);
+                      }}
+                      data-testid="manage-action-compact"
+                      className="w-full flex items-center gap-3 px-6 py-2 text-sm text-left text-theme-text-secondary hover:bg-theme-bg-tertiary hover:text-theme-text-primary transition-all"
+                    >
+                      <span className="text-theme-text-muted"><CompressIcon size="sm" /></span>
+                      Compact Disk...
+                    </button>
+                  )}
                   <button
                     onClick={() => {
                       setShowSetUserDialog(true);
@@ -553,31 +578,34 @@ export function QuickActionsMenu({ distro, disabled, onOpenChange }: QuickAction
                       </span>
                     )}
                   </button>
-                  <button
-                    onClick={() => handleSparseWithStopCheck()}
-                    disabled={isTogglingSprase}
-                    data-testid="manage-action-sparse"
-                    className="w-full flex items-center justify-between px-6 py-2 text-sm text-left text-theme-text-secondary hover:bg-theme-bg-tertiary hover:text-theme-text-primary transition-all disabled:opacity-50"
-                  >
-                    <span className="flex items-center gap-3">
-                      <span className="text-theme-text-muted"><SparklesIcon size="sm" /></span>
-                      Sparse Mode
-                    </span>
-                    <div className="flex items-center gap-2">
-                      {distro.state === "Running" && (
-                        <span
-                          data-testid="requires-shutdown-indicator"
-                          className="text-theme-status-error"
-                          title="Requires WSL shutdown"
-                        >
-                          <PowerIcon size="sm" />
-                        </span>
-                      )}
-                      <span className={`text-xs px-2 py-0.5 rounded ${sparseEnabled ? "bg-[rgba(var(--status-running-rgb),0.1)] text-theme-status-running border border-[rgba(var(--status-running-rgb),0.3)]" : "bg-theme-bg-tertiary text-theme-text-muted border border-theme-border-secondary"}`}>
-                        {sparseEnabled ? "On" : "Off"}
+                  {/* Sparse Mode only available for WSL2 (uses VHDX) */}
+                  {distro.version === 2 && (
+                    <button
+                      onClick={() => handleSparseWithStopCheck()}
+                      disabled={isTogglingSprase}
+                      data-testid="manage-action-sparse"
+                      className="w-full flex items-center justify-between px-6 py-2 text-sm text-left text-theme-text-secondary hover:bg-theme-bg-tertiary hover:text-theme-text-primary transition-all disabled:opacity-50"
+                    >
+                      <span className="flex items-center gap-3">
+                        <span className="text-theme-text-muted"><SparklesIcon size="sm" /></span>
+                        Sparse Mode
                       </span>
-                    </div>
-                  </button>
+                      <div className="flex items-center gap-2">
+                        {distro.state === "Running" && (
+                          <span
+                            data-testid="requires-shutdown-indicator"
+                            className="text-theme-status-error"
+                            title="Requires WSL shutdown"
+                          >
+                            <PowerIcon size="sm" />
+                          </span>
+                        )}
+                        <span className={`text-xs px-2 py-0.5 rounded ${sparseEnabled ? "bg-[rgba(var(--status-running-rgb),0.1)] text-theme-status-running border border-[rgba(var(--status-running-rgb),0.3)]" : "bg-theme-bg-tertiary text-theme-text-muted border border-theme-border-secondary"}`}>
+                          {sparseEnabled ? "On" : "Off"}
+                        </span>
+                      </div>
+                    </button>
+                  )}
                   <button
                     onClick={() => {
                       executeWithStopCheck(distro, "Set WSL Version", () => {
@@ -688,6 +716,12 @@ export function QuickActionsMenu({ distro, disabled, onOpenChange }: QuickAction
         isOpen={showResizeDialog}
         distro={distro}
         onClose={() => setShowResizeDialog(false)}
+      />
+
+      <CompactDistroDialog
+        isOpen={showCompactDialog}
+        distro={distro}
+        onClose={() => setShowCompactDialog(false)}
       />
 
       <SetDefaultUserDialog

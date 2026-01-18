@@ -157,6 +157,30 @@ impl ResourceMonitor for MockResourceMonitor {
         Some(size)
     }
 
+    fn get_distro_vhdx_path(&self, name: &str) -> Option<String> {
+        debug!("Mock: get_distro_vhdx_path for '{}'", name);
+
+        // Check if distro exists in mock state
+        if let Some(ref wsl_mock) = self.wsl_mock {
+            if !wsl_mock.distro_exists(name) {
+                return None;
+            }
+        }
+
+        // Return mock VHDX path
+        Some(format!(r"C:\Users\MockUser\AppData\Local\Packages\{}\ext4.vhdx", name))
+    }
+
+    fn compact_vhdx(&self, vhdx_path: &str) -> Result<(), WslError> {
+        debug!("Mock: compact_vhdx for '{}'", vhdx_path);
+
+        // Simulate the compact operation taking some time
+        std::thread::sleep(std::time::Duration::from_millis(2000));
+
+        // In mock mode, always succeed
+        Ok(())
+    }
+
     fn list_physical_disks(&self) -> Result<Vec<PhysicalDisk>, WslError> {
         debug!("Mock: list_physical_disks");
 

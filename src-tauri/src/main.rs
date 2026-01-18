@@ -27,7 +27,7 @@ use commands::{
     import_distribution, install_from_rootfs_url, is_mock_mode_cmd, list_distributions,
     list_downloadable_distributions, list_online_distributions, move_distribution, open_file_explorer, open_folder, open_ide,
     get_distribution_location, get_default_distro_path, parse_image_reference,
-    open_terminal, open_system_terminal, run_action_in_terminal, quick_install_distribution, quit_app, refresh_tray_menu, rename_distribution, resize_distribution,
+    open_terminal, open_system_terminal, run_action_in_terminal, quick_install_distribution, quit_app, refresh_tray_menu, rename_distribution, resize_distribution, compact_distribution,
     reset_distro_catalog, reset_download_distros, reset_container_images, reset_ms_store_distros, reset_mock_state_cmd, set_mock_error_cmd, clear_mock_errors_cmd, set_stubborn_shutdown_cmd, was_force_shutdown_used_cmd, set_mock_download_cmd, reset_mock_download_cmd, set_mock_update_result_cmd, get_installed_terminals, restart_distribution, save_settings,
     save_wsl_conf, save_wsl_config, set_default_distribution, set_distro_default_user, set_distro_version, set_sparse, shutdown_all, force_kill_wsl, start_distribution,
     stop_distribution, force_stop_distribution, update_container_image, update_custom_action, update_download_distro,
@@ -514,6 +514,7 @@ fn main() {
             set_distro_default_user,
             set_distro_version,
             resize_distribution,
+            compact_distribution,
             rename_distribution,
             // Disk Mount commands
             mount_disk,

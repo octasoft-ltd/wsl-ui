@@ -6,7 +6,7 @@
 use super::executor::wsl_executor;
 use super::info::{VhdSizeInfo, WslVersionInfo};
 use super::resources::{self, DistroResourceUsage, WslResourceUsage};
-use super::types::{Distribution, WslError, WslPreflightStatus, MountedDisk, MountDiskOptions, PhysicalDisk};
+use super::types::{CompactResult, Distribution, WslError, WslPreflightStatus, MountedDisk, MountDiskOptions, PhysicalDisk};
 use super::{core, import_export, info, install, terminal};
 
 /// WSL Service - facade for all WSL operations
@@ -289,6 +289,16 @@ impl WslService {
     /// Size should be a string like "50GB" or "1TB"
     pub fn resize_distribution(name: &str, size: &str) -> Result<(), WslError> {
         core::resize_distribution(name, size)
+    }
+
+    /// Compact a distribution's virtual disk to reclaim unused space
+    ///
+    /// This operation:
+    /// - Requires WSL to be fully shutdown (not just the distro stopped)
+    /// - May take several minutes for large disks (~1 minute per GB)
+    /// - Requires administrator privileges (UAC prompt will appear)
+    pub fn compact_distribution(name: &str) -> Result<CompactResult, WslError> {
+        core::compact_distribution(name)
     }
 
     /// Set the WSL version for a distribution (1 or 2)

@@ -62,8 +62,14 @@ export function NotificationBanner({
   const [isVisible, setIsVisible] = useState(false); // Start hidden for enter animation
   const [isClosing, setIsClosing] = useState(false);
   const dismissTimerRef = useRef<number | null>(null);
+  const onDismissRef = useRef(onDismiss); // Store onDismiss in ref to avoid effect re-runs
   const style = styles[type];
   const Icon = icons[type];
+
+  // Keep the ref updated with the latest onDismiss
+  useEffect(() => {
+    onDismissRef.current = onDismiss;
+  }, [onDismiss]);
 
   // Derive child testIds from the main testId (e.g., "error-banner" -> "error-message", "error-dismiss-button")
   const testIdPrefix = testId.replace(/-banner$/, "");
@@ -83,13 +89,14 @@ export function NotificationBanner({
     setIsClosing(true);
     // Wait for animation to complete before calling onDismiss
     setTimeout(() => {
-      onDismiss?.();
+      onDismissRef.current?.();
     }, 300);
   };
 
   // Auto-dismiss after specified time (with animation)
+  // Only depends on autoDismiss - onDismiss is accessed via ref
   useEffect(() => {
-    if (autoDismiss && autoDismiss > 0 && onDismiss) {
+    if (autoDismiss && autoDismiss > 0 && onDismissRef.current) {
       dismissTimerRef.current = window.setTimeout(() => {
         handleDismiss();
       }, autoDismiss);
@@ -99,7 +106,7 @@ export function NotificationBanner({
         clearTimeout(dismissTimerRef.current);
       }
     };
-  }, [autoDismiss, onDismiss]);
+  }, [autoDismiss]);
 
   const isExpanded = isVisible && !isClosing;
 

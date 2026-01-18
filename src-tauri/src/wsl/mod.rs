@@ -21,7 +21,7 @@ mod terminal;
 mod types;
 
 // Re-export types
-pub use types::{Distribution, DistroState, WslError, MountedDisk, MountDiskOptions, PhysicalDisk, WslPreflightStatus};
+pub use types::{CompactResult, Distribution, DistroState, WslError, MountedDisk, MountDiskOptions, PhysicalDisk, WslPreflightStatus};
 
 // Re-export resource types
 pub use resources::{DistroResourceUsage, WslResourceUsage};

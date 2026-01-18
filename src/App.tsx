@@ -60,6 +60,10 @@ function App() {
     updateSetting("closeAction", action);
   }, [updateSetting]);
 
+  const handleCloseDialogCancel = useCallback(() => {
+    setShowCloseDialog(false);
+  }, []);
+
   // Telemetry opt-in handlers
   const handleTelemetryAccept = useCallback(async () => {
     // Must await settings save before tracking, as Rust checks telemetry_enabled from disk
@@ -109,6 +113,13 @@ function App() {
       mainContentRef.current.scrollTo({ top: 0, behavior: "smooth" });
     }
   }, [error]);
+
+  // Scroll to top when notifications appear so user can see them
+  useEffect(() => {
+    if (notifications.length > 0 && mainContentRef.current) {
+      mainContentRef.current.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  }, [notifications.length]);
 
   // Initialize centralized polling (handles distros, resources, health)
   usePolling();
@@ -171,6 +182,7 @@ function App() {
           isOpen={showCloseDialog}
           onMinimize={handleMinimize}
           onQuit={handleQuit}
+          onCancel={handleCloseDialogCancel}
           onRememberChoice={handleRememberChoice}
         />
         {/* Telemetry opt-in dialog */}
@@ -282,6 +294,7 @@ function App() {
           isOpen={showCloseDialog}
           onMinimize={handleMinimize}
           onQuit={handleQuit}
+          onCancel={handleCloseDialogCancel}
           onRememberChoice={handleRememberChoice}
         />
 

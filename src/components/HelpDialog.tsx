@@ -199,6 +199,11 @@ export function HelpDialog({ onClose }: HelpDialogProps) {
               <HelpItem title="Sparse Mode">
                 Enable automatic disk space reclamation. The virtual disk will shrink as you delete files inside the distribution.
               </HelpItem>
+              <HelpItem title="Compact Disk">
+                One-click optimization to reclaim unused space from a distribution's virtual disk.
+                Automatically runs fstrim, shuts down WSL, and compacts the VHDX file.
+                Requires administrator privileges and takes 1-2 minutes.
+              </HelpItem>
             </HelpSection>
 
             {/* Creating Distributions */}

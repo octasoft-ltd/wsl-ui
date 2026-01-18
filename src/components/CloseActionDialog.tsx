@@ -14,6 +14,7 @@ interface CloseActionDialogProps {
   isOpen: boolean;
   onMinimize: () => void;
   onQuit: () => void;
+  onCancel: () => void;
   onRememberChoice: (action: "minimize" | "quit") => void;
 }
 
@@ -21,6 +22,7 @@ export function CloseActionDialog({
   isOpen,
   onMinimize,
   onQuit,
+  onCancel,
   onRememberChoice,
 }: CloseActionDialogProps) {
   const [rememberChoice, setRememberChoice] = useState(false);
@@ -46,23 +48,19 @@ export function CloseActionDialog({
     onQuit();
   }, [rememberChoice, onQuit, onRememberChoice]);
 
-  const handleCancel = useCallback(() => {
-    onMinimize();
-  }, [onMinimize]);
-
-  // Handle Escape key to close dialog (same as minimize)
+  // Handle Escape key to cancel dialog
   useEffect(() => {
     if (!isOpen) return;
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
-        handleCancel();
+        onCancel();
       }
     };
 
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [isOpen, handleCancel]);
+  }, [isOpen, onCancel]);
 
   if (!isOpen) return null;
 
@@ -72,7 +70,7 @@ export function CloseActionDialog({
         {/* Backdrop */}
         <div
           className="absolute inset-0 bg-theme-bg-primary/80 backdrop-blur-xs"
-          onClick={handleCancel}
+          onClick={onCancel}
         />
 
         {/* Dialog */}

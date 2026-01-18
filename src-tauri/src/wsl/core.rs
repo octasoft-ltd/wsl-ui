@@ -10,8 +10,36 @@ use winreg::RegKey;
 use wsl_core::parse_wsl_list_output;
 
 use super::executor::{resource_monitor, wsl_executor};
-use super::types::{Distribution, DistroState, WslError, MountedDisk, MountDiskOptions, PhysicalDisk, WSL_REGISTRY_PATH};
+use super::types::{CompactResult, Distribution, DistroState, WslError, MountedDisk, MountDiskOptions, PhysicalDisk, WSL_REGISTRY_PATH};
 use crate::metadata;
+
+/// Parse bytes trimmed from fstrim output
+/// Handles formats like:
+/// - util-linux: "/: 1.2 TiB (1288557195264 bytes) trimmed on /dev/sdd"
+/// - BusyBox: "/: 123456789 bytes"
+fn parse_fstrim_bytes(output: &str) -> Option<u64> {
+    // Look for "(N bytes)" pattern first (util-linux verbose format)
+    if let Some(start) = output.find('(') {
+        if let Some(end) = output[start..].find(" bytes)") {
+            let num_str = &output[start + 1..start + end];
+            if let Ok(bytes) = num_str.parse::<u64>() {
+                return Some(bytes);
+            }
+        }
+    }
+
+    // Look for "N bytes" pattern (BusyBox format)
+    for part in output.split_whitespace() {
+        if let Ok(bytes) = part.parse::<u64>() {
+            // Check if next word is "bytes"
+            if output.contains(&format!("{} bytes", bytes)) {
+                return Some(bytes);
+            }
+        }
+    }
+
+    None
+}
 
 /// List all WSL distributions with their status
 pub fn list_distributions() -> Result<Vec<Distribution>, WslError> {
@@ -415,6 +443,149 @@ pub fn resize_distribution(name: &str, size: &str) -> Result<(), WslError> {
 
     info!("Distribution resized successfully");
     Ok(())
+}
+
+/// Compact a distribution's virtual disk to reclaim unused space
+///
+/// This operation:
+/// 1. Starts the distro (if not running) to run fstrim
+/// 2. Runs `fstrim -av` to zero unused blocks (required for compaction to work)
+/// 3. Shuts down WSL completely
+/// 4. Compacts the VHDX using Optimize-VHD or diskpart
+///
+/// Requirements:
+/// - May take several minutes for large disks
+/// - Requires administrator privileges (UAC prompt will appear)
+pub fn compact_distribution(name: &str) -> Result<CompactResult, WslError> {
+    info!("Compacting distribution disk for '{}'", name);
+
+    // Verify distro exists and check WSL version
+    let distros = list_distributions()?;
+    let distro = distros
+        .iter()
+        .find(|d| d.name == name)
+        .ok_or_else(|| WslError::DistroNotFound(name.to_string()))?;
+
+    // WSL1 doesn't use VHDX - files are stored directly in a folder
+    if distro.version == 1 {
+        return Err(WslError::CommandFailed(
+            "Compact is only available for WSL2 distributions. WSL1 does not use virtual disk files.".to_string()
+        ));
+    }
+
+    let vhdx_path = resource_monitor()
+        .get_distro_vhdx_path(name)
+        .ok_or_else(|| {
+            WslError::CommandFailed(format!(
+                "Could not locate VHDX file for distribution: {}",
+                name
+            ))
+        })?;
+
+    info!("Found VHDX at: {}", vhdx_path);
+
+    // Get size before compact
+    let size_before = resource_monitor()
+        .get_distro_vhdx_size(name)
+        .unwrap_or(0);
+
+    info!("Size before compact: {} bytes", size_before);
+
+    // Step 1: Run fstrim to zero unused blocks (this is essential for compaction to work)
+    // The distro needs to be running for this, and we need root privileges
+    info!("Running fstrim to prepare disk for compaction...");
+
+    // Run fstrim as root using wsl -u root (no sudo password needed)
+    // Try util-linux syntax first (-av), fall back to BusyBox syntax (-v /) for Alpine
+    let fstrim_result = wsl_executor().exec_as_root(
+        name,
+        distro.id.as_deref(),
+        "fstrim -av 2>/dev/null || fstrim -v / 2>&1 || echo 'fstrim not available'"
+    );
+
+    // Parse fstrim output to extract bytes trimmed
+    let (fstrim_bytes, fstrim_message) = match fstrim_result {
+        Ok(output) => {
+            let stdout = output.stdout.trim();
+            info!("fstrim output: {}", stdout);
+
+            if stdout.contains("not available") {
+                (None, Some("fstrim not available on this distribution".to_string()))
+            } else {
+                // Try to parse bytes from output like "1.2 TiB (1288557195264 bytes) trimmed"
+                // or BusyBox format "/: 123456789 bytes"
+                let bytes = parse_fstrim_bytes(stdout);
+                if bytes.is_some() {
+                    (bytes, Some(stdout.to_string()))
+                } else {
+                    (None, Some(stdout.to_string()))
+                }
+            }
+        }
+        Err(e) => {
+            warn!("fstrim command failed (continuing anyway): {}", e);
+            (None, Some(format!("fstrim failed: {}", e)))
+        }
+    };
+
+    // Step 2: Shutdown WSL completely (VHDX must not be in use for compaction)
+    info!("Shutting down WSL to release VHDX lock...");
+    let shutdown_result = wsl_executor().shutdown();
+    if let Err(e) = shutdown_result {
+        warn!("WSL shutdown returned error (may already be stopped): {}", e);
+    }
+
+    // Verify WSL is actually stopped (up to 10 seconds)
+    let verify_timeout = std::time::Duration::from_secs(10);
+    let verify_start = std::time::Instant::now();
+    loop {
+        if let Ok(distros) = list_distributions() {
+            let running_count = distros.iter().filter(|d| d.state == DistroState::Running).count();
+            if running_count == 0 {
+                info!("WSL shutdown verified - all distros stopped");
+                break;
+            }
+            debug!("{} distributions still running, waiting...", running_count);
+        }
+
+        if verify_start.elapsed() > verify_timeout {
+            warn!("WSL distros may still be running after shutdown wait");
+            break;
+        }
+
+        std::thread::sleep(std::time::Duration::from_secs(1));
+    }
+
+    // Additional wait for filesystem to release VHDX lock
+    std::thread::sleep(std::time::Duration::from_millis(1000));
+
+    // Step 3: Run the compact operation
+    info!("Starting VHDX compact operation...");
+    resource_monitor().compact_vhdx(&vhdx_path)?;
+
+    // Give filesystem a moment to update metadata
+    std::thread::sleep(std::time::Duration::from_millis(500));
+
+    // Get size after compact
+    let size_after = resource_monitor()
+        .get_distro_vhdx_size(name)
+        .unwrap_or(0);
+
+    let result = CompactResult {
+        size_before,
+        size_after,
+        fstrim_bytes,
+        fstrim_message,
+    };
+
+    info!(
+        "Compact completed. Size: {} -> {} (saved {} bytes)",
+        size_before,
+        size_after,
+        result.space_saved()
+    );
+
+    Ok(result)
 }
 
 /// Set the WSL version for a distribution (1 or 2)

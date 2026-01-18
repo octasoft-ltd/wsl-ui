@@ -148,6 +148,29 @@ pub struct MountDiskOptions {
     pub bare: bool,
 }
 
+// ==================== Compact Types ====================
+
+/// Result of a VHDX compact operation
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CompactResult {
+    /// Size before compacting (in bytes)
+    pub size_before: u64,
+    /// Size after compacting (in bytes)
+    pub size_after: u64,
+    /// Bytes trimmed by fstrim (if available)
+    pub fstrim_bytes: Option<u64>,
+    /// Message from fstrim (success or failure reason)
+    pub fstrim_message: Option<String>,
+}
+
+impl CompactResult {
+    /// Calculate the space saved by compacting
+    pub fn space_saved(&self) -> u64 {
+        self.size_before.saturating_sub(self.size_after)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

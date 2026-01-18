@@ -11,7 +11,7 @@ use crate::validation::{
     validate_wsl_version,
 };
 use crate::wsl::resources::parse_memory_string;
-use crate::wsl::{reset_mock_state, set_mock_error, clear_mock_errors, set_stubborn_shutdown, was_force_shutdown_used, MockErrorType, Distribution, DistroResourceUsage, VhdSizeInfo, WslResourceUsage, WslService, WslVersionInfo, WslPreflightStatus, MountedDisk, MountDiskOptions, PhysicalDisk, InstalledTerminal};
+use crate::wsl::{reset_mock_state, set_mock_error, clear_mock_errors, set_stubborn_shutdown, was_force_shutdown_used, MockErrorType, CompactResult, Distribution, DistroResourceUsage, VhdSizeInfo, WslResourceUsage, WslService, WslVersionInfo, WslPreflightStatus, MountedDisk, MountDiskOptions, PhysicalDisk, InstalledTerminal};
 use crate::wsl::executor::terminal_executor;
 use crate::{build_tray_menu, TrayState};
 use tauri::{AppHandle, Emitter, Manager};
@@ -1149,6 +1149,16 @@ pub async fn resize_distribution(name: String, size: String) -> Result<(), Strin
     validate_distro_name(&name).map_err(|e| e.to_string())?;
     tokio::task::spawn_blocking(move || {
         WslService::resize_distribution(&name, &size).map_err(|e| e.to_string())
+    })
+    .await
+    .map_err(|e| format!("Task failed: {}", e))?
+}
+
+#[tauri::command]
+pub async fn compact_distribution(name: String) -> Result<CompactResult, String> {
+    validate_distro_name(&name).map_err(|e| e.to_string())?;
+    tokio::task::spawn_blocking(move || {
+        WslService::compact_distribution(&name).map_err(|e| e.to_string())
     })
     .await
     .map_err(|e| format!("Task failed: {}", e))?

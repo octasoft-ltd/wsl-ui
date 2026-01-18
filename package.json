@@ -21,6 +21,8 @@
     "demo": "cross-env WSL_MOCK=1 INCLUDE_ALL_SPECS=1 RECORD_VIDEO=1 wdio run wdio.conf.ts --spec src/test/e2e/specs/demo.spec.ts",
     "demo:hd": "cross-env WSL_MOCK=1 INCLUDE_ALL_SPECS=1 RECORD_VIDEO=1 DEMO_WIDTH=1920 DEMO_HEIGHT=1080 wdio run wdio.conf.ts --spec src/test/e2e/specs/demo.spec.ts",
     "demo:slow": "cross-env WSL_MOCK=1 INCLUDE_ALL_SPECS=1 DEMO_WIDTH=1280 DEMO_HEIGHT=720 RECORD_VIDEO=1 VIDEO_SPEED=1 wdio run wdio.conf.ts --spec src/test/e2e/specs/demo.spec.ts",
+    "tauri:dev": "tauri dev",
+    "tauri:dev:diskpart": "cross-env FORCE_DISKPART=1 tauri dev",
     "tauri:build": "tauri build",
     "tauri:build:debug": "tauri build --debug --no-bundle",
     "tauri:build:debugBundles": "tauri build --debug",
