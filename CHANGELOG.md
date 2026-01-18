@@ -5,6 +5,19 @@ All notable changes to WSL UI will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.15.0](https://github.com/octasoft-ltd/wsl-ui/compare/v0.14.0...v0.15.0) (2026-01-18)
+
+
+### Features
+
+* Compact vhdx support - invokes UAC as elevated permission required. ([a5601a0](https://github.com/octasoft-ltd/wsl-ui/commit/a5601a0486e28f0d0af54f4f2c2ddac2184d0ed0))
+* Remove some functions from WSL 1 distros as not supported (clone, compact, sparse mode, resize) ([1b81015](https://github.com/octasoft-ltd/wsl-ui/commit/1b81015c3340ee1d130d6dcf53048e2787061139))
+
+
+### Bug Fixes
+
+* Closing app and then clicking off close dialog should take user back to UI - not minimise app to tray. ([0ab99b4](https://github.com/octasoft-ltd/wsl-ui/commit/0ab99b4d88d537d49dbc10e09785434daefdb7e8))
+
 ## [0.14.0](https://github.com/octasoft-ltd/wsl-ui/compare/v0.13.0...v0.14.0) (2026-01-12)
 
 
