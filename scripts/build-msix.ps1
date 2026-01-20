@@ -84,20 +84,35 @@ if (Test-Path $WebView2Loader) {
 # Copy icons/assets - these must be exact sizes per Microsoft Store requirements
 # Run generate-store-icons.ps1 first to ensure correct sizes
 $RequiredAssets = @(
-    "Square44x44Logo.png",   # 44x44
-    "Square71x71Logo.png",   # 71x71
-    "Square150x150Logo.png", # 150x150
-    "Square310x310Logo.png", # 310x310
-    "StoreLogo.png",         # 50x50
-    "Wide310x150Logo.png"    # 310x150
+    # Base tile icons (referenced in AppxManifest.xml)
+    "Square44x44Logo.png",   # 44x44 - required
+    "Square71x71Logo.png",   # 71x71 - small tile
+    "Square150x150Logo.png", # 150x150 - required
+    "Square310x310Logo.png", # 310x310 - large tile
+    "StoreLogo.png",         # 50x50 - required
+    "Wide310x150Logo.png",   # 310x150 - wide tile
+    # Target-size unplated variants (taskbar, jumplists - icon without background)
+    "Square44x44Logo.targetsize-16_altform-unplated.png",
+    "Square44x44Logo.targetsize-24_altform-unplated.png",
+    "Square44x44Logo.targetsize-32_altform-unplated.png",
+    "Square44x44Logo.targetsize-48_altform-unplated.png",
+    "Square44x44Logo.targetsize-256_altform-unplated.png"
 )
 
+$missingAssets = @()
 foreach ($asset in $RequiredAssets) {
     $srcPath = Join-Path $IconsDir $asset
     if (Test-Path $srcPath) {
         Copy-Item $srcPath (Join-Path "$StagingDir\Assets" $asset)
     } else {
-        Write-Host "WARNING: Missing icon $asset - run generate-store-icons.ps1 first" -ForegroundColor Yellow
+        $missingAssets += $asset
+    }
+}
+
+if ($missingAssets.Count -gt 0) {
+    Write-Host "WARNING: Missing $($missingAssets.Count) icon(s) - run generate-store-icons.ps1 first" -ForegroundColor Yellow
+    foreach ($missing in $missingAssets) {
+        Write-Host "  - $missing" -ForegroundColor Yellow
     }
 }
 

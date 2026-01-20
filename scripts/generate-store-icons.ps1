@@ -1,5 +1,6 @@
 # Generate correctly-sized icons for Microsoft Store / MSIX
 # Uses System.Drawing to resize the high-resolution icon.png
+# Includes target-size and scale variants for proper taskbar display
 
 param(
     [switch]$Check  # Only check current sizes, don't regenerate
@@ -11,15 +12,59 @@ $ProjectRoot = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Pa
 $IconsDir = Join-Path $ProjectRoot "src-tauri\icons"
 $SourceIcon = Join-Path $IconsDir "icon.png"
 
-# Required icon sizes for MSIX/Store
+# Required icon sizes for MSIX/Store - base icons
 $RequiredIcons = @{
     "Square44x44Logo.png" = @{ Width = 44; Height = 44 }
     "Square71x71Logo.png" = @{ Width = 71; Height = 71 }
     "Square150x150Logo.png" = @{ Width = 150; Height = 150 }
-    "Square300x300Logo.png" = @{ Width = 300; Height = 300 }
     "Square310x310Logo.png" = @{ Width = 310; Height = 310 }
     "StoreLogo.png" = @{ Width = 50; Height = 50 }
     "Wide310x150Logo.png" = @{ Width = 310; Height = 150 }
+}
+
+# Target-size variants for Square44x44Logo (taskbar, jumplists)
+# Only unplated variants - these show the icon without a tile background
+$TargetSizeVariants = @(16, 24, 32, 48, 256)
+
+# Helper function to create a square icon
+function New-SquareIcon {
+    param(
+        [System.Drawing.Image]$Source,
+        [string]$OutputPath,
+        [int]$Size
+    )
+
+    $newImg = New-Object System.Drawing.Bitmap($Size, $Size)
+    $graphics = [System.Drawing.Graphics]::FromImage($newImg)
+
+    $graphics.InterpolationMode = [System.Drawing.Drawing2D.InterpolationMode]::HighQualityBicubic
+    $graphics.SmoothingMode = [System.Drawing.Drawing2D.SmoothingMode]::HighQuality
+    $graphics.PixelOffsetMode = [System.Drawing.Drawing2D.PixelOffsetMode]::HighQuality
+    $graphics.CompositingQuality = [System.Drawing.Drawing2D.CompositingQuality]::HighQuality
+
+    $graphics.DrawImage($Source, 0, 0, $Size, $Size)
+    $graphics.Dispose()
+
+    $newImg.Save($OutputPath, [System.Drawing.Imaging.ImageFormat]::Png)
+    $newImg.Dispose()
+}
+
+# Helper function to check if icon needs regeneration
+function Test-IconNeedsRegen {
+    param(
+        [string]$Path,
+        [int]$RequiredWidth,
+        [int]$RequiredHeight
+    )
+
+    if (-not (Test-Path $Path)) {
+        return $true
+    }
+
+    $img = [System.Drawing.Image]::FromFile($Path)
+    $needsRegen = ($img.Width -ne $RequiredWidth -or $img.Height -ne $RequiredHeight)
+    $img.Dispose()
+    return $needsRegen
 }
 
 Write-Host "=== Store Icon Generator ===" -ForegroundColor Cyan
@@ -35,10 +80,27 @@ $sourceImg = [System.Drawing.Image]::FromFile($SourceIcon)
 Write-Host "Source: icon.png ($($sourceImg.Width)x$($sourceImg.Height))" -ForegroundColor Gray
 Write-Host ""
 
-$needsUpdate = $false
+# Build complete list of all icons to generate
+$AllIcons = @{}
 
-foreach ($iconName in $RequiredIcons.Keys) {
-    $required = $RequiredIcons[$iconName]
+# Add base icons
+foreach ($key in $RequiredIcons.Keys) {
+    $AllIcons[$key] = $RequiredIcons[$key]
+}
+
+# Add target-size unplated variants (for taskbar)
+foreach ($size in $TargetSizeVariants) {
+    $AllIcons["Square44x44Logo.targetsize-${size}_altform-unplated.png"] = @{ Width = $size; Height = $size }
+}
+
+Write-Host "Checking icons..." -ForegroundColor Yellow
+Write-Host ""
+
+$needsUpdate = $false
+$iconStatus = @{}
+
+foreach ($iconName in $AllIcons.Keys | Sort-Object) {
+    $required = $AllIcons[$iconName]
     $iconPath = Join-Path $IconsDir $iconName
     $status = "MISSING"
     $currentSize = ""
@@ -58,6 +120,7 @@ foreach ($iconName in $RequiredIcons.Keys) {
         $needsUpdate = $true
     }
 
+    $iconStatus[$iconName] = $status
     $requiredSize = "$($required.Width)x$($required.Height)"
 
     switch ($status) {
@@ -76,13 +139,14 @@ foreach ($iconName in $RequiredIcons.Keys) {
 Write-Host ""
 
 if ($Check) {
+    $sourceImg.Dispose()
     if ($needsUpdate) {
         Write-Host "Run without -Check to regenerate icons" -ForegroundColor Yellow
+        exit 1
     } else {
         Write-Host "All icons are correctly sized!" -ForegroundColor Green
+        exit 0
     }
-    $sourceImg.Dispose()
-    exit 0
 }
 
 if (-not $needsUpdate) {
@@ -91,66 +155,54 @@ if (-not $needsUpdate) {
     exit 0
 }
 
-Write-Host "Generating correctly-sized icons..." -ForegroundColor Yellow
+Write-Host "Generating icons..." -ForegroundColor Yellow
 Write-Host ""
 
-foreach ($iconName in $RequiredIcons.Keys) {
-    $required = $RequiredIcons[$iconName]
+foreach ($iconName in $AllIcons.Keys | Sort-Object) {
+    if ($iconStatus[$iconName] -eq "OK") {
+        continue
+    }
+
+    $required = $AllIcons[$iconName]
     $iconPath = Join-Path $IconsDir $iconName
+    $targetWidth = $required.Width
+    $targetHeight = $required.Height
 
-    # Check if regeneration needed
-    $needsRegen = $false
-    if (-not (Test-Path $iconPath)) {
-        $needsRegen = $true
+    Write-Host "  Generating $iconName (${targetWidth}x${targetHeight})..." -ForegroundColor Gray
+
+    $newImg = New-Object System.Drawing.Bitmap($targetWidth, $targetHeight)
+    $graphics = [System.Drawing.Graphics]::FromImage($newImg)
+
+    $graphics.InterpolationMode = [System.Drawing.Drawing2D.InterpolationMode]::HighQualityBicubic
+    $graphics.SmoothingMode = [System.Drawing.Drawing2D.SmoothingMode]::HighQuality
+    $graphics.PixelOffsetMode = [System.Drawing.Drawing2D.PixelOffsetMode]::HighQuality
+    $graphics.CompositingQuality = [System.Drawing.Drawing2D.CompositingQuality]::HighQuality
+
+    # For wide logo, center the icon
+    if ($iconName -eq "Wide310x150Logo.png") {
+        $iconSize = [Math]::Min($targetHeight - 20, 130)
+        $x = ($targetWidth - $iconSize) / 2
+        $y = ($targetHeight - $iconSize) / 2
+        $graphics.Clear([System.Drawing.Color]::Transparent)
+        $graphics.DrawImage($sourceImg, $x, $y, $iconSize, $iconSize)
     } else {
-        $img = [System.Drawing.Image]::FromFile($iconPath)
-        if ($img.Width -ne $required.Width -or $img.Height -ne $required.Height) {
-            $needsRegen = $true
-        }
-        $img.Dispose()
+        $graphics.DrawImage($sourceImg, 0, 0, $targetWidth, $targetHeight)
     }
 
-    if ($needsRegen) {
-        Write-Host "  Generating $iconName ($($required.Width)x$($required.Height))..." -ForegroundColor Gray
+    $graphics.Dispose()
+    $newImg.Save($iconPath, [System.Drawing.Imaging.ImageFormat]::Png)
+    $newImg.Dispose()
 
-        # Create a new bitmap with the target size
-        $targetWidth = $required.Width
-        $targetHeight = $required.Height
-        $newImg = New-Object System.Drawing.Bitmap($targetWidth, $targetHeight)
-        $graphics = [System.Drawing.Graphics]::FromImage($newImg)
-
-        # High quality settings
-        $graphics.InterpolationMode = [System.Drawing.Drawing2D.InterpolationMode]::HighQualityBicubic
-        $graphics.SmoothingMode = [System.Drawing.Drawing2D.SmoothingMode]::HighQuality
-        $graphics.PixelOffsetMode = [System.Drawing.Drawing2D.PixelOffsetMode]::HighQuality
-        $graphics.CompositingQuality = [System.Drawing.Drawing2D.CompositingQuality]::HighQuality
-
-        # For wide logo, center the icon
-        if ($iconName -eq "Wide310x150Logo.png") {
-            # Wide tile: put the icon in center, leave space on sides
-            $iconSize = [Math]::Min($targetHeight - 20, 130)  # Leave some padding
-            $x = ($targetWidth - $iconSize) / 2
-            $y = ($targetHeight - $iconSize) / 2
-            $graphics.Clear([System.Drawing.Color]::Transparent)
-            $graphics.DrawImage($sourceImg, $x, $y, $iconSize, $iconSize)
-        } else {
-            # Square icons: fill the entire space
-            $graphics.DrawImage($sourceImg, 0, 0, $targetWidth, $targetHeight)
-        }
-
-        $graphics.Dispose()
-
-        # Save as PNG
-        $newImg.Save($iconPath, [System.Drawing.Imaging.ImageFormat]::Png)
-        $newImg.Dispose()
-
-        Write-Host "  Created: $iconName" -ForegroundColor Green
-    }
+    Write-Host "  Created: $iconName" -ForegroundColor Green
 }
 
 $sourceImg.Dispose()
 
 Write-Host ""
 Write-Host "=== Icon Generation Complete ===" -ForegroundColor Cyan
+Write-Host ""
+Write-Host "Generated icons for:" -ForegroundColor Gray
+Write-Host "  - Base tile icons (44x44 to 310x310)" -ForegroundColor Gray
+Write-Host "  - Unplated target-size variants for taskbar (16, 24, 32, 48, 256px)" -ForegroundColor Gray
 Write-Host ""
 Write-Host "Run with -Check to verify all sizes" -ForegroundColor Gray
