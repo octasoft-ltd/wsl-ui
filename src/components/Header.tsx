@@ -77,16 +77,16 @@ export function Header({ onOpenSettings }: HeaderProps) {
             {/* Cyber-styled logo */}
             <div className="relative group">
               <div className="absolute inset-0 bg-[#f97316]/20 blur-xl rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-              <svg width="44" height="44" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg" className="relative drop-shadow-lg">
+              <svg width="33" height="33" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg" className="relative drop-shadow-lg">
                 <defs>
                   <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
                     <stop offset="0%" stopColor="#f59e0b"/>
                     <stop offset="100%" stopColor="#d97706"/>
                   </linearGradient>
                 </defs>
-                <rect x="15" y="15" width="90" height="90" rx="16" fill="url(#logoGrad)"/>
-                <path d="M38 48 L58 60 L38 72" stroke="#1a1a1a" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round"/>
-                <rect x="64" y="68" width="22" height="4" rx="2" fill="#1a1a1a"/>
+                <rect x="0" y="0" width="512" height="512" rx="76" fill="url(#logoGrad)"/>
+                <path d="M128 179 L256 256 L128 333" stroke="#1a1a1a" strokeWidth="32" strokeLinecap="round" strokeLinejoin="round"/>
+                <rect x="288" y="307" width="140" height="26" rx="13" fill="#1a1a1a"/>
               </svg>
             </div>
 
