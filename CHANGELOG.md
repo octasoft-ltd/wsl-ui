@@ -5,6 +5,15 @@ All notable changes to WSL UI will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.15.1](https://github.com/octasoft-ltd/wsl-ui/compare/v0.15.0...v0.15.1) (2026-01-21)
+
+
+### Bug Fixes
+
+* Fix microsoft store icons to be correct size - ([9db2048](https://github.com/octasoft-ltd/wsl-ui/commit/9db204803b1382d41754c485fbffff7b6b4fe51b))
+* Fix microsoft store icons to be correct size - remove unused variants. ([18f3cc5](https://github.com/octasoft-ltd/wsl-ui/commit/18f3cc51354c95141783c2d3f97da1c4bb153ffc))
+* tidy up icons. Use single canonical svg for generation ([d512564](https://github.com/octasoft-ltd/wsl-ui/commit/d5125644567112064f4da3bd40f4ec5db8646e9b))
+
 ## [0.15.0](https://github.com/octasoft-ltd/wsl-ui/compare/v0.14.0...v0.15.0) (2026-01-18)
 
 
