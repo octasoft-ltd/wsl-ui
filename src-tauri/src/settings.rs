@@ -95,6 +95,21 @@ pub enum CloseAction {
     Quit,
 }
 
+/// Review prompt state for tracking Microsoft Store review requests
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
+#[serde(rename_all = "lowercase")]
+pub enum ReviewPromptState {
+    /// User hasn't been prompted yet (will show after first install)
+    #[default]
+    Pending,
+    /// User clicked "Maybe Later", will show again after 3 launches
+    Reminded,
+    /// User clicked "Leave a Review"
+    Completed,
+    /// User clicked "No Thanks" or dismissed twice
+    Declined,
+}
+
 /// Application settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -129,6 +144,15 @@ pub struct AppSettings {
     pub default_install_base_path: Option<String>,
     /// Enable debug logging (more verbose logs for troubleshooting)
     pub debug_logging: bool,
+    /// Current state of the review prompt workflow
+    #[serde(default)]
+    pub review_prompt_state: ReviewPromptState,
+    /// Number of app launches since user clicked "Maybe Later"
+    #[serde(default)]
+    pub review_prompt_launch_count: u32,
+    /// Whether user has completed at least one distro installation
+    #[serde(default)]
+    pub has_completed_first_install: bool,
 }
 
 /// WSL2 Global Configuration (.wslconfig)
