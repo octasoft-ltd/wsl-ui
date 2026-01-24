@@ -34,14 +34,15 @@ export interface UseReviewPromptReturn {
 }
 
 export function useReviewPrompt(): UseReviewPromptReturn {
-  const { settings, updateSetting } = useSettingsStore();
+  const { settings, updateSetting, hasLoaded } = useSettingsStore();
   const { distributions } = useDistroStore();
   const [shouldShowPrompt, setShouldShowPrompt] = useState(false);
   const hasProcessedLaunch = useRef(false);
 
-  // Process launch logic once when settings are loaded
+  // Process launch logic once when settings are loaded from disk
   useEffect(() => {
-    if (!settings || hasProcessedLaunch.current) return;
+    // Wait until settings have actually been loaded from disk
+    if (!hasLoaded || !settings || hasProcessedLaunch.current) return;
     hasProcessedLaunch.current = true;
 
     const {
@@ -94,7 +95,7 @@ export function useReviewPrompt(): UseReviewPromptReturn {
         updateSetting("reviewPromptLaunchCount", newCount);
       }
     }
-  }, [settings, distributions.length, updateSetting]);
+  }, [hasLoaded, settings, distributions.length, updateSetting]);
 
   // Handle "Leave a Review" click
   const handleReview = useCallback(async () => {
