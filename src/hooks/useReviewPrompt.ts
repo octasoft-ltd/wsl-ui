@@ -104,11 +104,14 @@ export function useReviewPrompt(): UseReviewPromptReturn {
 
     // Open Microsoft Store to review page
     const storeUrl = `ms-windows-store://review/?ProductId=${STORE_PRODUCT_ID}`;
+    info("[ReviewPrompt] Opening Store URL:", storeUrl);
     try {
       await open(storeUrl);
-      info("[ReviewPrompt] Opened Store review page");
+      info("[ReviewPrompt] Opened Store review page successfully");
     } catch (err) {
-      console.error("Failed to open Store:", err);
+      // Log full error details for debugging
+      console.error("[ReviewPrompt] Failed to open Store:", err);
+      info("[ReviewPrompt] Error opening Store:", String(err));
     }
 
     // Mark as completed - never show again
