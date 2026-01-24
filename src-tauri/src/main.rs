@@ -40,6 +40,8 @@ use commands::{
     open_wsl_settings,
     // Logging commands
     set_debug_logging, get_log_path,
+    // URL opening
+    open_url,
 };
 use std::sync::Mutex;
 use tauri::{
@@ -543,6 +545,8 @@ fn main() {
             // Logging commands
             set_debug_logging,
             get_log_path,
+            // URL opening
+            open_url,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

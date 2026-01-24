@@ -1562,3 +1562,34 @@ pub fn get_log_path() -> String {
     utils::get_config_dir().join("logs").to_string_lossy().to_string()
 }
 
+/// Open a URL using the system shell (supports custom protocols like ms-windows-store://)
+#[tauri::command]
+pub fn open_url(url: String) -> Result<(), String> {
+    // Only allow specific safe protocols
+    let allowed_protocols = ["https://", "http://", "ms-windows-store://", "mailto:"];
+    let is_allowed = allowed_protocols.iter().any(|p| url.starts_with(p));
+
+    if !is_allowed {
+        return Err(format!("URL protocol not allowed: {}", url));
+    }
+
+    #[cfg(target_os = "windows")]
+    {
+        std::process::Command::new("cmd")
+            .args(["/c", "start", "", &url])
+            .spawn()
+            .map_err(|e| format!("Failed to open URL: {}", e))?;
+    }
+
+    #[cfg(not(target_os = "windows"))]
+    {
+        // Fallback for non-Windows (shouldn't happen for this app)
+        std::process::Command::new("xdg-open")
+            .arg(&url)
+            .spawn()
+            .map_err(|e| format!("Failed to open URL: {}", e))?;
+    }
+
+    Ok(())
+}
+

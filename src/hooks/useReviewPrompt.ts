@@ -9,7 +9,7 @@
  */
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { open } from "@tauri-apps/plugin-shell";
+import { invoke } from "@tauri-apps/api/core";
 import { useSettingsStore } from "../store/settingsStore";
 import { useDistroStore } from "../store/distroStore";
 import { debug, info } from "../utils/logger";
@@ -106,7 +106,7 @@ export function useReviewPrompt(): UseReviewPromptReturn {
     const storeUrl = `ms-windows-store://review/?ProductId=${STORE_PRODUCT_ID}`;
     info("[ReviewPrompt] Opening Store URL:", storeUrl);
     try {
-      await open(storeUrl);
+      await invoke("open_url", { url: storeUrl });
       info("[ReviewPrompt] Opened Store review page successfully");
     } catch (err) {
       // Log full error details for debugging
