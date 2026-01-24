@@ -93,13 +93,15 @@ export function useReviewPrompt(): UseReviewPromptReturn
 ```
 
 **Responsibilities:**
-- Read settings on mount
+- Read settings on mount (waits for `hasLoaded` flag to ensure settings are loaded from disk)
 - Determine if prompt should show (based on state machine)
 - Increment launch counter when in `reminded` state
 - Provide handlers that update settings appropriately
-- Open Store via `@tauri-apps/plugin-shell` `open()` function
+- Open Store via custom `open_store_review` Tauri command (see note below)
 - Expose `markFirstInstallComplete()` for install success handlers
 - On mount, check if user has existing distros and set `hasCompletedFirstInstall` accordingly
+
+**Note on Store URL:** Tauri's shell plugin (`@tauri-apps/plugin-shell`) only allows `http(s)://`, `mailto:`, and `tel://` protocols. The `ms-windows-store://` protocol required for the Store review page is not supported. A dedicated Rust command `open_store_review` was implemented that uses the Windows shell directly to open the hardcoded Store review URL.
 
 #### `src/components/dialogs/ReviewPromptDialog.tsx`
 
@@ -124,16 +126,22 @@ interface ReviewPromptDialogProps {
 ### Modified Files
 
 #### `src/types/settings.ts`
-- Add 3 new fields to `AppSettings` interface
+- Add `ReviewPromptState` type and 3 new fields to `AppSettings` interface
 
 #### `src-tauri/src/settings.rs`
-- Add corresponding Rust fields with serde defaults
+- Add corresponding Rust enum and fields with serde defaults
+
+#### `src/store/settingsStore.ts`
+- Add `hasLoaded` flag to track when settings are loaded from disk
+
+#### `src-tauri/src/commands.rs`
+- Add `open_store_review` command to open Microsoft Store review page
 
 #### `src/App.tsx`
 - Import `useReviewPrompt` hook
 - Render `ReviewPromptDialog` component (~5 lines)
 
-#### `src/components/dialogs/NewDistroDialog.tsx`
+#### `src/components/NewDistroDialog.tsx`
 - Call `markFirstInstallComplete()` after successful installations
 - Affects ~4 success handlers (quick install, custom install, container, import)
 

@@ -1562,34 +1562,46 @@ pub fn get_log_path() -> String {
     utils::get_config_dir().join("logs").to_string_lossy().to_string()
 }
 
-/// Open a URL using the system shell (supports custom protocols like ms-windows-store://)
+/// Microsoft Store Product ID for WSL UI
+const STORE_PRODUCT_ID: &str = "9p8548knj2m9";
+
+/// Open the Microsoft Store review page for WSL UI
+///
+/// This is a dedicated command for opening the Store review page because
+/// Tauri's shell plugin only allows http(s)://, mailto:, and tel:// protocols.
+/// The ms-windows-store:// protocol requires using the Windows shell directly.
 #[tauri::command]
-pub fn open_url(url: String) -> Result<(), String> {
-    // Only allow specific safe protocols
-    let allowed_protocols = ["https://", "http://", "ms-windows-store://", "mailto:"];
-    let is_allowed = allowed_protocols.iter().any(|p| url.starts_with(p));
+pub fn open_store_review() -> Result<(), String> {
+    let url = format!("ms-windows-store://review/?ProductId={}", STORE_PRODUCT_ID);
 
-    if !is_allowed {
-        return Err(format!("URL protocol not allowed: {}", url));
-    }
+    log::info!("Opening Microsoft Store review page");
 
-    #[cfg(target_os = "windows")]
-    {
-        std::process::Command::new("cmd")
-            .args(["/c", "start", "", &url])
-            .spawn()
-            .map_err(|e| format!("Failed to open URL: {}", e))?;
-    }
-
-    #[cfg(not(target_os = "windows"))]
-    {
-        // Fallback for non-Windows (shouldn't happen for this app)
-        std::process::Command::new("xdg-open")
-            .arg(&url)
-            .spawn()
-            .map_err(|e| format!("Failed to open URL: {}", e))?;
-    }
+    std::process::Command::new("cmd")
+        .args(["/c", "start", "", &url])
+        .spawn()
+        .map_err(|e| format!("Failed to open Store review page: {}", e))?;
 
     Ok(())
+}
+
+#[cfg(test)]
+mod store_review_tests {
+    use super::*;
+
+    #[test]
+    fn store_product_id_is_correct() {
+        // Verify the Store Product ID matches what's in README.md
+        // https://apps.microsoft.com/detail/9p8548knj2m9
+        assert_eq!(STORE_PRODUCT_ID, "9p8548knj2m9");
+    }
+
+    #[test]
+    fn store_url_format_is_correct() {
+        let url = format!("ms-windows-store://review/?ProductId={}", STORE_PRODUCT_ID);
+        assert_eq!(url, "ms-windows-store://review/?ProductId=9p8548knj2m9");
+        assert!(url.starts_with("ms-windows-store://"));
+        assert!(url.contains("review"));
+        assert!(url.contains("ProductId="));
+    }
 }
 

@@ -14,9 +14,6 @@ import { useSettingsStore } from "../store/settingsStore";
 import { useDistroStore } from "../store/distroStore";
 import { debug, info } from "../utils/logger";
 
-/** Microsoft Store Product ID for WSL UI */
-const STORE_PRODUCT_ID = "9p8548knj2m9";
-
 /** Number of launches to wait after "Maybe Later" before showing again */
 const REMINDER_LAUNCH_COUNT = 3;
 
@@ -102,16 +99,11 @@ export function useReviewPrompt(): UseReviewPromptReturn {
     info("[ReviewPrompt] User clicked Leave a Review");
     setShouldShowPrompt(false);
 
-    // Open Microsoft Store to review page
-    const storeUrl = `ms-windows-store://review/?ProductId=${STORE_PRODUCT_ID}`;
-    info("[ReviewPrompt] Opening Store URL:", storeUrl);
     try {
-      await invoke("open_url", { url: storeUrl });
+      await invoke("open_store_review");
       info("[ReviewPrompt] Opened Store review page successfully");
     } catch (err) {
-      // Log full error details for debugging
       console.error("[ReviewPrompt] Failed to open Store:", err);
-      info("[ReviewPrompt] Error opening Store:", String(err));
     }
 
     // Mark as completed - never show again
