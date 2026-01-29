@@ -12,7 +12,7 @@ use crate::validation::{
 };
 use crate::wsl::resources::parse_memory_string;
 use crate::wsl::{reset_mock_state, set_mock_error, clear_mock_errors, set_stubborn_shutdown, was_force_shutdown_used, MockErrorType, CompactResult, Distribution, DistroResourceUsage, VhdSizeInfo, WslResourceUsage, WslService, WslVersionInfo, WslPreflightStatus, MountedDisk, MountDiskOptions, PhysicalDisk, InstalledTerminal};
-use crate::wsl::executor::terminal_executor;
+use crate::wsl::executor::{terminal_executor, wsl_executor};
 use crate::{build_tray_menu, TrayState};
 use tauri::{AppHandle, Emitter, Manager};
 
@@ -22,6 +22,25 @@ use tauri::{AppHandle, Emitter, Manager};
 pub struct ResourceStats {
     pub global: WslResourceUsage,
     pub per_distro: Vec<DistroResourceUsage>,
+}
+
+/// RDP detection result
+#[derive(Debug, Clone, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct RdpDetectionResult {
+    /// Type of RDP server detected: "xrdp" or "none"
+    #[serde(rename = "type")]
+    pub detection_type: String,
+    /// Port number (only for xrdp)
+    pub port: Option<u16>,
+}
+
+/// WSL config timeout status
+#[derive(Debug, Clone, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WslConfigStatus {
+    /// Whether both timeout settings are configured
+    pub timeouts_configured: bool,
 }
 
 #[tauri::command]
@@ -195,6 +214,164 @@ pub async fn run_action_in_terminal(action_id: String, distro: String, id: Optio
     .await
     .map_err(|e| format!("Task failed: {}", e))?
 }
+
+// ==================== RDP Commands ====================
+
+/// Detect RDP server availability in a distribution
+#[tauri::command]
+pub async fn detect_rdp(name: String, id: Option<String>) -> Result<RdpDetectionResult, String> {
+    validate_distro_name(&name).map_err(|e| e.to_string())?;
+
+    tokio::task::spawn_blocking(move || {
+        // Check if xrdp is running
+        if let Some(port) = check_xrdp_listening(&name, id.as_deref())? {
+            return Ok(RdpDetectionResult {
+                detection_type: "xrdp".to_string(),
+                port: Some(port),
+            });
+        }
+
+        // Nothing detected
+        Ok(RdpDetectionResult {
+            detection_type: "none".to_string(),
+            port: None,
+        })
+    })
+    .await
+    .map_err(|e| format!("Task failed: {}", e))?
+}
+
+/// Check if xrdp is listening and return port
+/// Uses only universal POSIX tools: ps, grep, cut, tr
+fn check_xrdp_listening(name: &str, id: Option<&str>) -> Result<Option<u16>, String> {
+    // Single command: check if xrdp process is running, if so get port from config
+    // - ps aux: POSIX standard, works on all Linux
+    // - grep 'xrdp$': matches process names ending in "xrdp"
+    // - /etc/xrdp/xrdp.ini: standardized config path for xrdp
+    let output = wsl_executor()
+        .exec(
+            name,
+            id,
+            r#"ps aux 2>/dev/null | grep -v grep | grep -q 'xrdp$' && grep -i '^port=' /etc/xrdp/xrdp.ini 2>/dev/null | head -1 | cut -d'=' -f2 | tr -d ' ' || echo ''"#
+        )
+        .map_err(|e| e.to_string())?;
+
+    let result = output.stdout.trim();
+
+    // Empty means xrdp not running or config not found
+    if result.is_empty() {
+        return Ok(None);
+    }
+
+    // Parse port from config
+    if let Ok(port) = result.parse::<u16>() {
+        return Ok(Some(port));
+    }
+
+    // xrdp running but couldn't parse port, use default
+    Ok(Some(3389))
+}
+
+/// Check if WSL config has timeouts set for RDP use
+#[tauri::command]
+pub fn check_wsl_config_timeouts() -> WslConfigStatus {
+    use std::fs;
+
+    let wslconfig_path = utils::get_user_profile().join(".wslconfig");
+
+    let content = fs::read_to_string(&wslconfig_path).unwrap_or_default();
+
+    // Check for uncommented timeout settings with -1 value
+    // Lines starting with # are comments and should be ignored
+    let has_instance_timeout = content.lines().any(|line| {
+        let trimmed = line.trim();
+        !trimmed.starts_with('#')
+            && trimmed.to_lowercase().contains("instanceidletimeout")
+            && (trimmed.contains("=-1") || trimmed.contains("= -1"))
+    });
+
+    let has_vm_timeout = content.lines().any(|line| {
+        let trimmed = line.trim();
+        !trimmed.starts_with('#')
+            && trimmed.to_lowercase().contains("vmidletimeout")
+            && (trimmed.contains("=-1") || trimmed.contains("= -1"))
+    });
+
+    WslConfigStatus {
+        timeouts_configured: has_instance_timeout && has_vm_timeout,
+    }
+}
+
+/// Open RDP connection using mstsc.exe
+#[tauri::command]
+pub async fn open_rdp(port: u16) -> Result<(), String> {
+    tokio::task::spawn_blocking(move || {
+        use crate::utils::hidden_command;
+
+        let connection = format!("localhost:{}", port);
+
+        hidden_command("mstsc.exe")
+            .arg("/v")
+            .arg(&connection)
+            .spawn()
+            .map_err(|e| format!("Failed to open Remote Desktop: {}", e))?;
+
+        Ok(())
+    })
+    .await
+    .map_err(|e| format!("Task failed: {}", e))?
+}
+
+/// Open a keep-alive terminal for RDP sessions with an informational message
+#[tauri::command]
+pub async fn open_terminal_with_message(name: String, id: Option<String>, message: String) -> Result<(), String> {
+    validate_distro_name(&name).map_err(|e| e.to_string())?;
+
+    tokio::task::spawn_blocking(move || {
+        use crate::utils::hidden_command;
+        #[cfg(windows)]
+        use std::os::windows::process::CommandExt;
+
+        let paths = settings::get_executable_paths();
+
+        // Build distro args
+        let distro_args = match &id {
+            Some(guid) => format!("--distribution-id {}", guid),
+            None => format!("-d {}", name),
+        };
+
+        // Escape single quotes in message for bash
+        let escaped_message = message.replace('\'', "'\\''");
+
+        // Build bash command: echo message, then exec login shell to keep terminal open
+        // Using && to chain commands (WT treats ; as tab separator)
+        let bash_cmd = format!("echo '' && echo '{}' && echo '' && exec bash -l", escaped_message);
+
+        // Escape for the command line
+        let bash_cmd_escaped = bash_cmd.replace('\\', "\\\\").replace('"', "\\\"");
+
+        // Build the full WT argument string
+        let wt_args = format!(
+            "{} {} --cd ~ -- bash -c \"{}\"",
+            paths.wsl,
+            distro_args,
+            bash_cmd_escaped
+        );
+
+        log::debug!("Opening terminal with message: {} {}", paths.windows_terminal, wt_args);
+
+        hidden_command(&paths.windows_terminal)
+            .raw_arg(&wt_args)
+            .spawn()
+            .map_err(|e| format!("Failed to open terminal: {}", e))?;
+
+        Ok(())
+    })
+    .await
+    .map_err(|e| format!("Task failed: {}", e))?
+}
+
+// ==================== End RDP Commands ====================
 
 #[tauri::command]
 pub async fn open_file_explorer(name: String) -> Result<(), String> {

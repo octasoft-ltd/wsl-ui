@@ -42,6 +42,8 @@ use commands::{
     set_debug_logging, get_log_path,
     // Store review
     open_store_review,
+    // RDP commands
+    detect_rdp, check_wsl_config_timeouts, open_rdp, open_terminal_with_message,
 };
 use std::sync::Mutex;
 use tauri::{
@@ -547,6 +549,11 @@ fn main() {
             get_log_path,
             // Store review
             open_store_review,
+            // RDP commands
+            detect_rdp,
+            check_wsl_config_timeouts,
+            open_rdp,
+            open_terminal_with_message,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
