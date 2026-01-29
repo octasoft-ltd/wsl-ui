@@ -1,10 +1,18 @@
 import { create } from "zustand";
 import type { Distribution, WslStatus } from "../types/distribution";
+import type { RdpDetectionResult } from "../types/rdp";
 import { wslService } from "../services/wslService";
 import { actionsService } from "../services/actionsService";
 import { useActionsStore } from "./actionsStore";
 import { parseError, logError, formatError } from "../utils/errors";
 import { logger, info, warn } from "../utils/logger";
+
+/** Result of opening remote desktop */
+export type RdpOpenResult = {
+  success: boolean;
+  type?: RdpDetectionResult["type"];
+  error?: string;
+};
 
 interface DistroStore {
   distributions: Distribution[];
@@ -23,6 +31,7 @@ interface DistroStore {
   forceKillWsl: () => Promise<void>;
   setDefault: (name: string) => Promise<void>;
   openTerminal: (name: string, id?: string) => Promise<void>;
+  openRemoteDesktop: (name: string, id?: string) => Promise<RdpOpenResult>;
   openSystemTerminal: () => Promise<void>;
   openFileExplorer: (name: string) => Promise<void>;
   openIDE: (name: string) => Promise<void>;
@@ -351,6 +360,70 @@ export const useDistroStore = create<DistroStore>((set, get) => ({
       const appError = parseError(error);
       logError(appError, "distroStore.openTerminal");
       set({ error: formatError(appError) });
+    } finally {
+      set({ actionInProgress: null });
+    }
+  },
+
+  openRemoteDesktop: async (name: string, id?: string): Promise<RdpOpenResult> => {
+    const distro = get().distributions.find(d => d.name === name);
+    const wasRunning = distro?.state === "Running";
+
+    set({ actionInProgress: `Connecting to ${name}...` });
+
+    try {
+      // 1. Start distro if needed
+      if (!wasRunning) {
+        set({ actionInProgress: `Starting ${name}...` });
+        await wslService.startDistribution(name, id);
+        // Wait for distro to be ready
+        await new Promise(resolve => setTimeout(resolve, 2000));
+      }
+
+      // 2. Detect RDP availability
+      set({ actionInProgress: "Detecting desktop environment..." });
+      const detection = await wslService.detectRdp(name, id);
+
+      // 3. If nothing detected, return early
+      if (detection.type === "none") {
+        return {
+          success: false,
+          type: "none",
+          error: "No desktop environment detected. You'll need to set up xrdp first.",
+        };
+      }
+
+      // 4. Check WSL config timeouts
+      const configStatus = await wslService.checkWslConfigTimeouts();
+
+      // 5. Open terminal for keep-alive if timeouts not configured
+      if (!configStatus.timeoutsConfigured) {
+        const message = [
+          "This terminal keeps your WSL distro running during the RDP session.",
+          "To avoid this, see: https://wsl-ui.octasoft.co.uk/docs/troubleshooting#issue-9-rdp-session-disconnects-immediately"
+        ].join("\n");
+        await wslService.openTerminalWithMessage(name, id, message);
+        // Brief delay to let terminal launch before RDP, so RDP gets focus
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
+
+      // 6. Launch RDP (opens last so it gets focus)
+      set({ actionInProgress: "Opening Remote Desktop..." });
+      await wslService.openRdp(detection.port ?? 3389);
+
+      // Refresh distro list
+      setTimeout(() => {
+        get().fetchDistros(true);
+      }, 1000);
+
+      return { success: true, type: detection.type };
+    } catch (error) {
+      const appError = parseError(error);
+      logError(appError, "distroStore.openRemoteDesktop");
+      return {
+        success: false,
+        error: formatError(appError),
+      };
     } finally {
       set({ actionInProgress: null });
     }

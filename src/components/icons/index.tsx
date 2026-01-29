@@ -633,6 +633,22 @@ export function WindowIcon(props: IconProps) {
   );
 }
 
+export function MonitorIcon(props: IconProps) {
+  return (
+    <svg {...getSvgProps(props)}>
+      {/* Monitor screen */}
+      <rect x="2" y="3" width="20" height="14" rx="2" strokeWidth={2} />
+      {/* Stand */}
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M8 21h8m-4-4v4"
+      />
+    </svg>
+  );
+}
+
 export function ChartBarIcon(props: IconProps) {
   return (
     <svg {...getSvgProps(props)}>

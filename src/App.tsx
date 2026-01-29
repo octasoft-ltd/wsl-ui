@@ -7,6 +7,7 @@ import { useNotificationStore } from "./store/notificationStore";
 import { usePreflightStore } from "./store/preflightStore";
 import { useActionsStore } from "./store/actionsStore";
 import { usePolling } from "./hooks/usePolling";
+import { useReviewPrompt } from "./hooks/useReviewPrompt";
 import { Header } from "./components/Header";
 import { DistroList } from "./components/DistroList";
 import { StatusBar } from "./components/StatusBar";
@@ -19,6 +20,7 @@ import { DiskMountDialog } from "./components/DiskMountDialog";
 import { ConfirmDialog } from "./components/ConfirmDialog";
 import { CloseActionDialog } from "./components/CloseActionDialog";
 import { TelemetryOptInDialog } from "./components/TelemetryOptInDialog";
+import { ReviewPromptDialog } from "./components/ReviewPromptDialog";
 import { wslService } from "./services/wslService";
 import { trackAppStarted } from "./services/telemetryService";
 import { info, debug } from "./utils/logger";
@@ -37,6 +39,12 @@ function App() {
   const [showCloseDialog, setShowCloseDialog] = useState(false);
   const [showTelemetryOptIn, setShowTelemetryOptIn] = useState(false);
   const telemetryTrackedRef = useRef(false);
+  const {
+    shouldShowPrompt: showReviewPrompt,
+    handleReview,
+    handleMaybeLater,
+    handleNoThanks,
+  } = useReviewPrompt();
   const timeoutRef = useRef<number | null>(null);
   const mainContentRef = useRef<HTMLElement>(null);
 
@@ -191,6 +199,13 @@ function App() {
           onAccept={handleTelemetryAccept}
           onDecline={handleTelemetryDecline}
         />
+        {/* Review prompt dialog */}
+        <ReviewPromptDialog
+          isOpen={showReviewPrompt}
+          onReview={handleReview}
+          onMaybeLater={handleMaybeLater}
+          onNoThanks={handleNoThanks}
+        />
         {/* Startup action output dialog */}
         {startupActionOutput && (
           <div className="fixed inset-0 z-50 flex items-center justify-center">
@@ -303,6 +318,14 @@ function App() {
           isOpen={showTelemetryOptIn}
           onAccept={handleTelemetryAccept}
           onDecline={handleTelemetryDecline}
+        />
+
+        {/* Review prompt dialog */}
+        <ReviewPromptDialog
+          isOpen={showReviewPrompt}
+          onReview={handleReview}
+          onMaybeLater={handleMaybeLater}
+          onNoThanks={handleNoThanks}
         />
 
         {/* Startup action output dialog */}

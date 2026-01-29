@@ -92,6 +92,15 @@ const DEFAULT_CONTAINER_RUNTIME: ContainerRuntime = "builtin";
  */
 export type CloseAction = 'ask' | 'minimize' | 'quit';
 
+/**
+ * Review prompt state for tracking Microsoft Store review requests
+ * - 'pending': User hasn't been prompted yet (will show after first install)
+ * - 'reminded': User clicked "Maybe Later", will show again after 3 launches
+ * - 'completed': User clicked "Leave a Review"
+ * - 'declined': User clicked "No Thanks" or dismissed twice
+ */
+export type ReviewPromptState = 'pending' | 'reminded' | 'completed' | 'declined';
+
 export interface AppSettings {
   ideCommand: string;
   terminalCommand: string;
@@ -122,6 +131,13 @@ export interface AppSettings {
   defaultInstallBasePath: string;
   // Enable debug logging (more verbose logs for troubleshooting)
   debugLogging: boolean;
+  // Review prompt tracking
+  /** Current state of the review prompt workflow */
+  reviewPromptState: ReviewPromptState;
+  /** Number of app launches since user clicked "Maybe Later" */
+  reviewPromptLaunchCount: number;
+  /** Whether user has completed at least one distro installation */
+  hasCompletedFirstInstall: boolean;
 }
 
 export const DEFAULT_SETTINGS: AppSettings = {
@@ -141,6 +157,9 @@ export const DEFAULT_SETTINGS: AppSettings = {
   containerRuntime: DEFAULT_CONTAINER_RUNTIME,
   defaultInstallBasePath: "",
   debugLogging: false,
+  reviewPromptState: "pending",
+  reviewPromptLaunchCount: 0,
+  hasCompletedFirstInstall: false,
 };
 
 // WSL2 Global Configuration (.wslconfig)

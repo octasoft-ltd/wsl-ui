@@ -3,6 +3,7 @@ import { listen, type UnlistenFn } from "@tauri-apps/api/event";
 import { save, open } from "@tauri-apps/plugin-dialog";
 import type { DistroCatalog, DownloadDistro, ContainerImage, MsStoreDistroInfo } from "../types/catalog";
 import type { Distribution, DistroMetadata } from "../types/distribution";
+import type { RdpDetectionResult, WslConfigStatus } from "../types/rdp";
 import type { WslConfig, WslConf, InstalledTerminal } from "../types/settings";
 import { debug, info } from "../utils/logger";
 
@@ -99,6 +100,42 @@ export const wslService = {
     info(`[wslService] Opening terminal for: ${name}`);
     await invoke("open_terminal", { name, id });
   },
+
+  // ==================== RDP Methods ====================
+
+  /**
+   * Detect RDP server availability in a distribution
+   */
+  async detectRdp(name: string, id?: string): Promise<RdpDetectionResult> {
+    debug(`[wslService] Detecting RDP for: ${name}`);
+    return await invoke<RdpDetectionResult>("detect_rdp", { name, id });
+  },
+
+  /**
+   * Check if WSL config has timeouts configured for RDP
+   */
+  async checkWslConfigTimeouts(): Promise<WslConfigStatus> {
+    debug("[wslService] Checking WSL config timeouts");
+    return await invoke<WslConfigStatus>("check_wsl_config_timeouts");
+  },
+
+  /**
+   * Open RDP connection using mstsc.exe
+   */
+  async openRdp(port: number): Promise<void> {
+    info(`[wslService] Opening RDP on port: ${port}`);
+    await invoke("open_rdp", { port });
+  },
+
+  /**
+   * Open terminal with a message displayed
+   */
+  async openTerminalWithMessage(name: string, id: string | undefined, message: string): Promise<void> {
+    info(`[wslService] Opening terminal with message for: ${name}`);
+    await invoke("open_terminal_with_message", { name, id, message });
+  },
+
+  // ==================== End RDP Methods ====================
 
   async openSystemTerminal(): Promise<void> {
     info("[wslService] Opening system terminal");

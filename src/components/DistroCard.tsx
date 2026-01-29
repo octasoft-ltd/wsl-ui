@@ -5,9 +5,10 @@ import { useDistroStore } from "../store/distroStore";
 import { useResourceStore } from "../store/resourceStore";
 import { ConfirmDialog } from "./ConfirmDialog";
 import { DistroInfoDialog } from "./DistroInfoDialog";
+import { NoRdpDetectedDialog } from "./NoRdpDetectedDialog";
 import { QuickActionsMenu } from "./QuickActionsMenu";
 import { IconButton } from "./ui/Button";
-import { PlayIcon, StopIcon, TrashIcon, SourceIcon, TerminalWindowIcon } from "./icons";
+import { PlayIcon, StopIcon, TrashIcon, SourceIcon, TerminalWindowIcon, MonitorIcon } from "./icons";
 
 interface DistroCardProps {
   distro: Distribution;
@@ -15,11 +16,12 @@ interface DistroCardProps {
 }
 
 function DistroCardComponent({ distro, index = 0 }: DistroCardProps) {
-  const { startDistro, stopDistro, deleteDistro, openTerminal, actionInProgress, compactingDistro } = useDistroStore();
+  const { startDistro, stopDistro, deleteDistro, openTerminal, openRemoteDesktop, actionInProgress, compactingDistro } = useDistroStore();
   const { getDistroResources } = useResourceStore();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showInfoDialog, setShowInfoDialog] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [showNoRdpDialog, setShowNoRdpDialog] = useState(false);
 
   const isRunning = distro.state === "Running";
   const isCompacting = compactingDistro === distro.name;
@@ -38,6 +40,14 @@ function DistroCardComponent({ distro, index = 0 }: DistroCardProps) {
 
   const handleDelete = () => {
     setShowDeleteConfirm(true);
+  };
+
+  const handleOpenRemoteDesktop = async () => {
+    const result = await openRemoteDesktop(distro.name, distro.id);
+    if (!result.success && result.type === "none") {
+      // Show the "no RDP detected" dialog
+      setShowNoRdpDialog(true);
+    }
   };
 
   const confirmDelete = () => {
@@ -201,6 +211,17 @@ function DistroCardComponent({ distro, index = 0 }: DistroCardProps) {
             data-testid="terminal-button"
           />
 
+          <IconButton
+            icon={<MonitorIcon size="sm" className="text-blue-500" />}
+            label="Open Remote Desktop"
+            variant="secondary"
+            colorScheme="blue"
+            className="btn-cyber"
+            onClick={handleOpenRemoteDesktop}
+            disabled={isDisabled}
+            data-testid="rdp-button"
+          />
+
           <QuickActionsMenu distro={distro} disabled={isDisabled} onOpenChange={setMenuOpen} />
 
           <IconButton
@@ -234,6 +255,11 @@ function DistroCardComponent({ distro, index = 0 }: DistroCardProps) {
         isOpen={showInfoDialog}
         distro={distro}
         onClose={() => setShowInfoDialog(false)}
+      />
+
+      <NoRdpDetectedDialog
+        isOpen={showNoRdpDialog}
+        onClose={() => setShowNoRdpDialog(false)}
       />
     </>
   );

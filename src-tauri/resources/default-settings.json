@@ -36,5 +36,8 @@
   },
   "containerRuntime": "builtin",
   "defaultInstallBasePath": null,
-  "debugLogging": false
+  "debugLogging": false,
+  "reviewPromptState": "pending",
+  "reviewPromptLaunchCount": 0,
+  "hasCompletedFirstInstall": false
 }

@@ -544,6 +544,162 @@ If you see permission errors:
 
 ---
 
+## Issue #9: RDP session disconnects immediately
+
+### Symptoms
+- You click the Remote Desktop button for a distro with xrdp running
+- The RDP connection opens but disconnects within seconds
+- The distro appears to shut down shortly after connecting
+- A keep-alive terminal opens automatically (this is expected behavior)
+
+### Root Cause
+WSL has default timeout settings that automatically shut down idle distributions:
+
+- **instanceIdleTimeout**: Shuts down a distro after 15 seconds of no active console connections (default in recent WSL versions)
+- **vmIdleTimeout**: Shuts down the entire WSL VM after all distros are idle
+
+When you connect via RDP, there's no terminal/console session keeping the distro alive. Without the timeout settings configured, WSL considers the distro "idle" and shuts it down, even though you're actively using the graphical desktop.
+
+### Diagnosis
+1. Check your `.wslconfig` file:
+   ```powershell
+   notepad $env:USERPROFILE\.wslconfig
+   ```
+
+2. Look for these settings (they should NOT be commented out with `#`):
+   ```ini
+   [general]
+   instanceIdleTimeout=-1
+
+   [wsl2]
+   vmIdleTimeout=-1
+   ```
+
+3. If these lines are missing or commented out, that's the issue.
+
+### Solution
+**Option 1: Configure WSL timeouts (recommended)**
+
+Add these settings to your `.wslconfig` file to disable the idle timeouts:
+
+1. Open or create the file:
+   ```powershell
+   notepad $env:USERPROFILE\.wslconfig
+   ```
+
+2. Add or uncomment these lines:
+   ```ini
+   [general]
+   instanceIdleTimeout=-1
+
+   [wsl2]
+   vmIdleTimeout=-1
+   ```
+
+3. Restart WSL for changes to take effect:
+   ```cmd
+   wsl --shutdown
+   ```
+
+4. The Remote Desktop button will now connect without needing a keep-alive terminal.
+
+**Option 2: Keep the terminal open (automatic workaround)**
+
+If you don't want to modify your `.wslconfig`, the app automatically opens a keep-alive terminal when it detects timeouts aren't configured. Simply leave this terminal open during your RDP session. When you're done with RDP, you can close the terminal.
+
+### Why -1?
+Setting the timeout values to `-1` disables the timeout entirely. You can also set specific values in milliseconds if you prefer a longer timeout rather than disabling it completely:
+- `instanceIdleTimeout=300000` = 5 minutes
+- `vmIdleTimeout=600000` = 10 minutes
+
+### Files Changed
+- `src-tauri/src/commands.rs`: `check_wsl_config_timeouts()` function checks for these settings
+- `src/store/distroStore.ts`: Opens keep-alive terminal when timeouts not configured
+
+### Related
+- WSL configuration documentation: https://learn.microsoft.com/en-us/windows/wsl/wsl-config#wslconfig
+- The `.wslconfig` file is located at `%USERPROFILE%\.wslconfig`
+- These settings apply globally to all WSL distributions
+
+---
+
+## Issue #10: RDP connection fails or connects to wrong distro
+
+### Symptoms
+- Clicking Remote Desktop connects to a different distro than expected
+- RDP connection fails with "unable to connect" error
+- xrdp appears to be running but RDP won't connect
+- Only one of multiple distros with xrdp works
+
+### Root Cause
+Multiple WSL distributions are configured to use the same xrdp port (typically 3389 or 3390). Since all WSL2 distros share the same network namespace and localhost, only one distro can bind to a given port at a time.
+
+When two distros both have xrdp configured on port 3390:
+- Whichever distro starts xrdp **first** claims the port
+- The second distro's xrdp fails to start (port already in use)
+- Connecting to `localhost:3390` always reaches the first distro
+
+### Diagnosis
+1. Check which process owns the port from within WSL:
+   ```bash
+   # Run this in the distro you expect to be using the port
+   sudo ss -tlnp | grep 3390
+   ```
+
+2. Check xrdp configuration in each distro:
+   ```bash
+   grep "^port=" /etc/xrdp/xrdp.ini
+   ```
+
+3. If multiple distros show the same port, that's the conflict.
+
+### Solution
+**Assign unique ports to each distro's xrdp:**
+
+1. Edit `/etc/xrdp/xrdp.ini` in each distro:
+   ```bash
+   sudo nano /etc/xrdp/xrdp.ini
+   ```
+
+2. Change the `port=` line to a unique value for each distro:
+   ```ini
+   ; Distro 1 (e.g., Ubuntu)
+   port=3390
+
+   ; Distro 2 (e.g., Kali)
+   port=3391
+
+   ; Distro 3 (e.g., Debian)
+   port=3392
+   ```
+
+3. Restart xrdp in each distro:
+   ```bash
+   sudo service xrdp restart
+   ```
+
+4. WSL UI will automatically detect the correct port for each distro when you click the Remote Desktop button.
+
+### Suggested port allocation
+| Distro | Port |
+|--------|------|
+| Primary distro | 3390 |
+| Secondary distro | 3391 |
+| Third distro | 3392 |
+| ... | 3393+ |
+
+Avoid using port 3389 as it's the Windows default RDP port and may conflict with Windows Remote Desktop services.
+
+### Files Changed
+- N/A - This is a configuration issue in the individual distros
+
+### Related
+- xrdp configuration: The `/etc/xrdp/xrdp.ini` file controls xrdp settings
+- WSL UI reads the port from each distro's xrdp.ini to connect to the correct port
+- All WSL2 distros share localhost - this is by design in WSL2's networking model
+
+---
+
 ## Template for New Issues
 
 ```markdown
