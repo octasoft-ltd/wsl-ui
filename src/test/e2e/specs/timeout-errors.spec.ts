@@ -10,26 +10,26 @@
  */
 
 import {
-  waitForAppReady,
-  resetMockState,
   setMockError,
   clearMockErrors,
   selectors,
-  safeRefresh,
   waitForErrorBanner,
   waitForErrorBannerToDisappear,
   waitForDistroState,
   waitForElementClickable,
+  verifyErrorBanner,
+  verifyAndDismissError,
+  EXPECTED_ERRORS,
+  captureDistroStates,
+  verifyStatesUnchanged,
 } from "../utils";
+import { setupHooks, isElementDisplayed } from "../base";
 
 describe("Timeout and Error Scenarios", () => {
+  setupHooks.standard();
+
   beforeEach(async () => {
-    await safeRefresh();
-    await browser.pause(500);
-    await resetMockState();
     await clearMockErrors();
-    await waitForAppReady();
-    await browser.pause(500);
   });
 
   afterEach(async () => {
@@ -39,6 +39,9 @@ describe("Timeout and Error Scenarios", () => {
 
   describe("Start Distribution Timeout", () => {
     it("should show timeout error in error banner when start operation times out", async () => {
+      // Capture state before operation
+      const snapshot = await captureDistroStates();
+
       // Configure mock to return timeout error for start operation
       await setMockError("start", "timeout", 200);
 
@@ -47,18 +50,15 @@ describe("Timeout and Error Scenarios", () => {
       const startButton = await debianCard.$(selectors.startButton);
       await startButton.click();
 
-      // Wait for error banner to appear (allow more time for React to re-render)
-      const errorBanner = await waitForErrorBanner(10000);
-      await expect(errorBanner).toBeDisplayed();
+      // Verify error banner with comprehensive checks
+      await verifyErrorBanner({
+        expectedPatterns: EXPECTED_ERRORS.TIMEOUT.patterns,
+        shouldHaveTip: true,
+        timeout: 10000,
+      });
 
-      // Verify error message content includes timeout indication (check for either "timeout" or "timed out")
-      const errorMessage = await errorBanner.$(selectors.errorMessage);
-      const errorText = await errorMessage.getText();
-      const lowerText = errorText.toLowerCase();
-      expect(lowerText.includes("timeout") || lowerText.includes("timed out")).toBe(true);
-
-      // Verify distro state hasn't changed (operation failed)
-      await waitForDistroState("Debian", "OFFLINE", 2000);
+      // Verify distro states haven't changed (operation failed, no side effects)
+      await verifyStatesUnchanged(snapshot);
     });
 
     it("should allow retry after timeout error", async () => {
@@ -69,17 +69,11 @@ describe("Timeout and Error Scenarios", () => {
       const startButton = await debianCard.$(selectors.startButton);
       await startButton.click();
 
-      // Wait for error banner
-      await waitForErrorBanner(5000);
+      // Verify error and dismiss using convenience helper
+      await verifyAndDismissError(EXPECTED_ERRORS.TIMEOUT.patterns, 5000);
 
       // Clear the error configuration
       await clearMockErrors();
-
-      // Dismiss the error banner
-      const errorBanner = await $(selectors.errorBanner);
-      const dismissButton = await errorBanner.$(selectors.errorDismissButton);
-      await dismissButton.click();
-      await waitForErrorBannerToDisappear(3000);
 
       // Wait for button to be clickable again
       await waitForElementClickable(startButton, 5000);
@@ -116,10 +110,10 @@ describe("Timeout and Error Scenarios", () => {
         { timeout: 3000, timeoutMsg: "Error message text did not appear" }
       );
 
-      // Verify error message content (check for error indication)
+      // Verify error message content - should indicate command failure
       const errorMessage = await errorBanner.$(selectors.errorMessage);
       const errorText = await errorMessage.getText();
-      expect(errorText.toLowerCase()).toMatch(/fail|error|simulated/);
+      expect(errorText.toLowerCase()).toContain("failed");
 
       // Distribution should still be running (operation failed)
       await waitForDistroState("Ubuntu", "ONLINE", 2000);
@@ -158,11 +152,11 @@ describe("Timeout and Error Scenarios", () => {
         { timeout: 3000, timeoutMsg: "Error message text did not appear" }
       );
 
-      // Verify error message contains timeout indication (check for either "timeout" or "timed out")
+      // Verify error message contains timeout indication
       const errorMessage = await errorBanner.$(selectors.errorMessage);
       const errorText = await errorMessage.getText();
       const lowerText = errorText.toLowerCase();
-      expect(lowerText.includes("timeout") || lowerText.includes("timed out")).toBe(true);
+      expect(lowerText).toContain("timed out");
 
       // Distribution should still exist (delete failed)
       const alpineCardAfter = await $(selectors.distroCardByName("Alpine"));
@@ -206,7 +200,7 @@ describe("Timeout and Error Scenarios", () => {
       const errorMessage = await errorBanner.$(selectors.errorMessage);
       const errorText = await errorMessage.getText();
       const lowerText = errorText.toLowerCase();
-      expect(lowerText.includes("timeout") || lowerText.includes("timed out")).toBe(true);
+      expect(lowerText).toContain("timed out");
 
       // Running distributions should still be running (shutdown failed)
       await waitForDistroState("Ubuntu", "ONLINE", 2000);
@@ -236,10 +230,10 @@ describe("Timeout and Error Scenarios", () => {
         { timeout: 3000, timeoutMsg: "Error message text did not appear" }
       );
 
-      // Verify error message contains relevant information
+      // Verify error message indicates failure
       const errorMessage = await errorBanner.$(selectors.errorMessage);
       const errorText = await errorMessage.getText();
-      expect(errorText.toLowerCase()).toMatch(/fail|error/);
+      expect(errorText.toLowerCase()).toContain("failed");
     });
 
     it("should allow dismissing error messages", async () => {
@@ -263,9 +257,8 @@ describe("Timeout and Error Scenarios", () => {
       await waitForErrorBannerToDisappear(3000);
 
       // Verify error banner is no longer displayed
-      const errorBannerAfter = await $(selectors.errorBanner);
-      const isDisplayed = await errorBannerAfter.isDisplayed().catch(() => false);
-      expect(isDisplayed).toBe(false);
+      const errorBannerGone = !(await isElementDisplayed(selectors.errorBanner));
+      expect(errorBannerGone).toBe(true);
     });
   });
 

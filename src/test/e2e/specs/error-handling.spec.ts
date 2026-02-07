@@ -9,8 +9,6 @@
  */
 
 import {
-  waitForAppReady,
-  resetMockState,
   selectors,
   confirmDialog,
   safeRefresh,
@@ -18,23 +16,68 @@ import {
   waitForDialogToDisappear,
   waitForButtonDisabled,
   waitForDistroState,
+  clearConfigPendingState,
+  waitForButtonEnabled,
+  resetMockState,
+  waitForAppReady,
 } from "../utils";
+import { setupHooks } from "../base";
 
 /**
  * Find open dialog using role attribute
  */
 async function findDialog(): Promise<WebdriverIO.Element> {
-  return $('[role="dialog"]');
+  return await $('[role="dialog"]') as unknown as WebdriverIO.Element;
+}
+
+/**
+ * Handle "Shutdown WSL?" dialog if it appears
+ * Some operations (resize, move, sparse) require ALL distros to be stopped.
+ * This clicks "Shutdown & Continue" to proceed past the dialog.
+ */
+async function handleShutdownDialogIfPresent(): Promise<void> {
+  // Wait for potential dialog to appear
+  try {
+    await browser.waitUntil(
+      async () => {
+        const dialog = await findDialog();
+        return await dialog.isDisplayed();
+      },
+      { timeout: 1000 }
+    );
+  } catch {
+    // No dialog appeared, that's okay
+    return;
+  }
+
+  const dialog = await findDialog();
+  const isDisplayed = await dialog.isDisplayed();
+  if (!isDisplayed) return;
+
+  const dialogText = await dialog.getText();
+  if (!dialogText.toLowerCase().includes("shutdown wsl")) return;
+
+  const shutdownButton = await dialog.$("button*=Shutdown & Continue");
+  const buttonDisplayed = await shutdownButton.isDisplayed();
+  if (!buttonDisplayed) return;
+
+  await shutdownButton.click();
+
+  // Wait for the shutdown dialog to transition - the next dialog will appear quickly
+  // We don't wait for all dialogs to disappear because the actual action dialog opens next
+  await browser.waitUntil(
+    async () => {
+      const currentDialog = await findDialog();
+      const text = await currentDialog.getText().catch(() => "");
+      // Dialog transitioned when it no longer shows "shutdown wsl"
+      return !text.toLowerCase().includes("shutdown wsl");
+    },
+    { timeout: 5000, timeoutMsg: "Shutdown dialog did not transition" }
+  );
 }
 
 describe("Error Handling and Failure Scenarios", () => {
-  beforeEach(async () => {
-    await safeRefresh();
-    await browser.pause(500);
-    await resetMockState();
-    await waitForAppReady();
-    await browser.pause(500);
-  });
+  setupHooks.withCleanNotifications();
 
   describe("Confirmation Dialogs", () => {
     describe("Delete Distribution", () => {
@@ -42,9 +85,8 @@ describe("Error Handling and Failure Scenarios", () => {
         const alpineCard = await $(selectors.distroCardByName("Alpine"));
         const deleteButton = await alpineCard.$('[data-testid="delete-button"]');
         await deleteButton.click();
-        await browser.pause(300);
 
-        const dialog = await findDialog();
+        const dialog = await waitForDialog('[role="dialog"]');
         await expect(dialog).toBeDisplayed();
 
         const dialogText = await dialog.getText();
@@ -55,11 +97,12 @@ describe("Error Handling and Failure Scenarios", () => {
         const alpineCard = await $(selectors.distroCardByName("Alpine"));
         const deleteButton = await alpineCard.$('[data-testid="delete-button"]');
         await deleteButton.click();
-        await browser.pause(300);
+
+        await waitForDialog('[role="dialog"]');
 
         // Click cancel
         await confirmDialog(false);
-        await browser.pause(300);
+        await waitForDialogToDisappear('[role="dialog"]');
 
         // Alpine should still exist
         const alpineCardAfter = await $(selectors.distroCardByName("Alpine"));
@@ -70,16 +113,20 @@ describe("Error Handling and Failure Scenarios", () => {
         const alpineCard = await $(selectors.distroCardByName("Alpine"));
         const deleteButton = await alpineCard.$('[data-testid="delete-button"]');
         await deleteButton.click();
-        await browser.pause(300);
+
+        await waitForDialog('[role="dialog"]');
 
         // Click delete to confirm
         await confirmDialog(true);
-        await browser.pause(500);
 
-        // Alpine should be removed
-        const alpineCardAfter = await $(selectors.distroCardByName("Alpine"));
-        const exists = await alpineCardAfter.isDisplayed().catch(() => false);
-        expect(exists).toBe(false);
+        // Alpine should be removed - wait for it to disappear
+        await browser.waitUntil(
+          async () => {
+            const card = await $(selectors.distroCardByName("Alpine"));
+            return !(await card.isDisplayed());
+          },
+          { timeout: 5000, timeoutMsg: "Alpine card was not removed after delete" }
+        );
       });
     });
 
@@ -87,13 +134,10 @@ describe("Error Handling and Failure Scenarios", () => {
       it("should show confirmation when clicking Shutdown All", async () => {
         const shutdownAllButton = await $(selectors.shutdownAllButton);
 
-        // Wait for button to be clickable
         await shutdownAllButton.waitForClickable({ timeout: 5000 });
         await shutdownAllButton.click();
 
-        // Wait for dialog to appear
-        const dialog = await findDialog();
-        await dialog.waitForDisplayed({ timeout: 5000 });
+        const dialog = await waitForDialog('[role="dialog"]');
 
         const dialogText = await dialog.getText();
         expect(dialogText.toLowerCase()).toContain("shutdown");
@@ -102,129 +146,131 @@ describe("Error Handling and Failure Scenarios", () => {
       it("should cancel shutdown when Cancel is clicked", async () => {
         const shutdownAllButton = await $(selectors.shutdownAllButton);
 
-        // Wait for button to be clickable
         await shutdownAllButton.waitForClickable({ timeout: 5000 });
         await shutdownAllButton.click();
 
-        // Wait for dialog to appear
-        const dialog = await findDialog();
-        await dialog.waitForDisplayed({ timeout: 5000 });
+        const dialog = await waitForDialog('[role="dialog"]');
 
         const cancelButton = await dialog.$('button*=Cancel');
         await cancelButton.click();
-        await browser.pause(300);
+        await waitForDialogToDisappear('[role="dialog"]');
 
         // Ubuntu should still be running
         const ubuntuCard = await $(selectors.distroCardByName("Ubuntu"));
         const badge = await ubuntuCard.$('[data-testid="state-badge"]');
         const state = await badge.getText();
-        expect(state).toContain("ONLINE");
+        expect(state).toBe("ONLINE");
       });
     });
   });
 
   describe("Validation Errors", () => {
     describe("Set Default User Dialog", () => {
-      async function openSetUserDialog(): Promise<void> {
+      async function openSetUserDialog(): Promise<WebdriverIO.Element> {
         const ubuntuCard = await $(selectors.distroCardByName("Ubuntu"));
         const quickActionsButton = await ubuntuCard.$('[data-testid="quick-actions-button"]');
         await quickActionsButton.click();
-        await browser.pause(300);
 
         const manageButton = await $('[data-testid="quick-action-manage"]');
+        await manageButton.waitForDisplayed({ timeout: 3000 });
         await manageButton.click();
-        await browser.pause(200);
 
         const userAction = await $('[data-testid="manage-action-user"]');
+        await userAction.waitForDisplayed({ timeout: 3000 });
         await userAction.click();
-        await browser.pause(300);
+
+        return waitForDialog('[role="dialog"]');
       }
 
       it("should not allow empty username", async () => {
-        await openSetUserDialog();
-
-        const dialog = await findDialog();
+        const dialog = await openSetUserDialog();
         const setUserButton = await dialog.$('button*=Set User');
 
         // Button should be disabled with empty username
         const isDisabled = await setUserButton.getAttribute("disabled");
-        expect(isDisabled).toBeTruthy();
+        expect(isDisabled).not.toBeNull();
       });
 
       it("should sanitize username input to lowercase", async () => {
-        await openSetUserDialog();
-
-        const dialog = await findDialog();
+        const dialog = await openSetUserDialog();
         const usernameInput = await dialog.$('input[type="text"]');
 
         // Try to enter uppercase letters
         await usernameInput.setValue("TestUser");
-        await browser.pause(100);
 
-        // Should be converted to lowercase
-        const value = await usernameInput.getValue();
-        expect(value).toBe("testuser");
+        // Wait for input to be processed and sanitized
+        await browser.waitUntil(
+          async () => (await usernameInput.getValue()) === "testuser",
+          { timeout: 2000, timeoutMsg: "Username was not converted to lowercase" }
+        );
       });
 
       it("should remove invalid characters from username", async () => {
-        await openSetUserDialog();
-
-        const dialog = await findDialog();
+        const dialog = await openSetUserDialog();
         const usernameInput = await dialog.$('input[type="text"]');
 
         // Try to enter special characters
         await usernameInput.setValue("test@user!");
-        await browser.pause(100);
 
-        // Should only contain valid characters
-        const value = await usernameInput.getValue();
-        expect(value).not.toContain("@");
-        expect(value).not.toContain("!");
+        // Wait for input to be processed and sanitized
+        await browser.waitUntil(
+          async () => {
+            const value = await usernameInput.getValue();
+            return !value.includes("@") && !value.includes("!");
+          },
+          { timeout: 2000, timeoutMsg: "Invalid characters were not removed from username" }
+        );
       });
     });
 
     describe("Resize Dialog Validation", () => {
-      async function openResizeDialog(): Promise<void> {
+      async function openResizeDialog(): Promise<WebdriverIO.Element> {
         const debianCard = await $(selectors.distroCardByName("Debian"));
         const quickActionsButton = await debianCard.$('[data-testid="quick-actions-button"]');
         await quickActionsButton.click();
-        await browser.pause(300);
 
         const manageButton = await $('[data-testid="quick-action-manage"]');
+        await manageButton.waitForDisplayed({ timeout: 3000 });
         await manageButton.click();
-        await browser.pause(200);
 
         const resizeAction = await $('[data-testid="manage-action-resize"]');
+        await resizeAction.waitForDisplayed({ timeout: 3000 });
         await resizeAction.click();
-        await browser.pause(300);
+
+        // Resize requires ALL distros stopped - handle shutdown dialog
+        await handleShutdownDialogIfPresent();
+
+        return waitForDialog('[role="dialog"]');
       }
 
       it("should show invalid when size is too small", async () => {
-        await openResizeDialog();
-
-        const dialog = await findDialog();
+        const dialog = await openResizeDialog();
         const sizeInput = await dialog.$('input[type="number"]');
 
         // Clear and enter very small value
         await sizeInput.setValue("0");
-        await browser.pause(200);
 
-        const dialogText = await dialog.getText();
-        expect(dialogText).toContain("Invalid");
+        // Wait for validation message to appear
+        await browser.waitUntil(
+          async () => {
+            const text = await dialog.getText();
+            return text.includes("Invalid");
+          },
+          { timeout: 3000, timeoutMsg: "Invalid validation message did not appear" }
+        );
       });
 
       it("should show current size in resize dialog", async () => {
-        await openResizeDialog();
+        const dialog = await openResizeDialog();
 
-        const dialog = await findDialog();
-
-        // Wait for current size to load
-        await browser.pause(500);
-
-        // The dialog should show the current size information
-        const dialogText = await dialog.getText();
-        // Dialog shows "VIRTUAL SIZE (MAX)" and "FILE SIZE (ACTUAL)" labels
-        expect(dialogText).toContain("VIRTUAL SIZE");
+        // Wait for current size info to load
+        await browser.waitUntil(
+          async () => {
+            const text = await dialog.getText();
+            return text.includes("VIRTUAL SIZE");
+          },
+          { timeout: 5000, timeoutMsg: "Virtual size info did not load" }
+        );
       });
     });
 
@@ -233,63 +279,66 @@ describe("Error Handling and Failure Scenarios", () => {
         const debianCard = await $(selectors.distroCardByName("Debian"));
         const quickActionsButton = await debianCard.$('[data-testid="quick-actions-button"]');
         await quickActionsButton.click();
-        await browser.pause(300);
 
         const manageButton = await $('[data-testid="quick-action-manage"]');
+        await manageButton.waitForDisplayed({ timeout: 3000 });
         await manageButton.click();
-        await browser.pause(200);
 
         const moveAction = await $('[data-testid="manage-action-move"]');
+        await moveAction.waitForDisplayed({ timeout: 3000 });
         await moveAction.click();
-        await browser.pause(300);
 
-        const dialog = await findDialog();
+        // Move requires ALL distros stopped - handle shutdown dialog
+        await handleShutdownDialogIfPresent();
+
+        const dialog = await waitForDialog('[role="dialog"]');
         const moveButton = await dialog.$('button*=Move');
 
         const isDisabled = await moveButton.getAttribute("disabled");
-        expect(isDisabled).toBeTruthy();
+        expect(isDisabled).not.toBeNull();
       });
     });
   });
 
   describe("Running Distribution Dialogs", () => {
-    it("should show shutdown dialog when trying to move running distribution", async () => {
-      // Ubuntu is running
+    it("should open move dialog for running distribution (handles shutdown internally)", async () => {
+      // Ubuntu is running - Move dialog now opens directly and handles shutdown internally
       const ubuntuCard = await $(selectors.distroCardByName("Ubuntu"));
       const quickActionsButton = await ubuntuCard.$('[data-testid="quick-actions-button"]');
       await quickActionsButton.click();
-      await browser.pause(300);
 
       const manageButton = await $('[data-testid="quick-action-manage"]');
+      await manageButton.waitForDisplayed({ timeout: 3000 });
       await manageButton.click();
-      await browser.pause(200);
 
       const moveAction = await $('[data-testid="manage-action-move"]');
+      await moveAction.waitForDisplayed({ timeout: 3000 });
       await moveAction.click();
-      await browser.pause(300);
 
-      const dialog = await findDialog();
+      // Handle shutdown dialog if shown (for ALL distros shutdown)
+      await handleShutdownDialogIfPresent();
+
+      const dialog = await waitForDialog('[role="dialog"]');
       const dialogText = await dialog.getText();
 
-      // Dialog should show shutdown confirmation for running distro
-      expect(dialogText.toLowerCase()).toContain("shutdown");
+      // Move dialog should be displayed (handles shutdown internally)
+      expect(dialogText.toLowerCase()).toContain("move");
     });
 
     it("should show shutdown dialog when trying to resize running distribution", async () => {
       const ubuntuCard = await $(selectors.distroCardByName("Ubuntu"));
       const quickActionsButton = await ubuntuCard.$('[data-testid="quick-actions-button"]');
       await quickActionsButton.click();
-      await browser.pause(300);
 
       const manageButton = await $('[data-testid="quick-action-manage"]');
+      await manageButton.waitForDisplayed({ timeout: 3000 });
       await manageButton.click();
-      await browser.pause(200);
 
       const resizeAction = await $('[data-testid="manage-action-resize"]');
+      await resizeAction.waitForDisplayed({ timeout: 3000 });
       await resizeAction.click();
-      await browser.pause(300);
 
-      const dialog = await findDialog();
+      const dialog = await waitForDialog('[role="dialog"]');
       const dialogText = await dialog.getText();
 
       // Dialog should show shutdown confirmation for running distro
@@ -300,22 +349,19 @@ describe("Error Handling and Failure Scenarios", () => {
       const ubuntuCard = await $(selectors.distroCardByName("Ubuntu"));
       const quickActionsButton = await ubuntuCard.$('[data-testid="quick-actions-button"]');
       await quickActionsButton.click();
-      await browser.pause(300);
 
       const manageButton = await $('[data-testid="quick-action-manage"]');
+      await manageButton.waitForDisplayed({ timeout: 3000 });
       await manageButton.click();
-      await browser.pause(200);
 
       const sparseAction = await $('[data-testid="manage-action-sparse"]');
+      await sparseAction.waitForDisplayed({ timeout: 3000 });
       await sparseAction.click();
-      await browser.pause(500);
 
-      // Should show error dialog about stopping first
-      const dialog = await findDialog();
-      if (await dialog.isDisplayed()) {
-        const dialogText = await dialog.getText();
-        expect(dialogText.toLowerCase()).toContain("shutdown");
-      }
+      // Should show shutdown dialog
+      const dialog = await waitForDialog('[role="dialog"]');
+      const dialogText = await dialog.getText();
+      expect(dialogText.toLowerCase()).toContain("shutdown");
     });
   });
 
@@ -334,6 +380,9 @@ describe("Error Handling and Failure Scenarios", () => {
       await sparseAction.waitForDisplayed({ timeout: 3000 });
       await sparseAction.click();
 
+      // Sparse mode requires ALL distros stopped - handle shutdown dialog
+      await handleShutdownDialogIfPresent();
+
       return waitForDialog('[role="dialog"]', 5000);
     }
 
@@ -345,16 +394,8 @@ describe("Error Handling and Failure Scenarios", () => {
       // Must show sparse mode in dialog
       expect(lowerText).toContain("sparse");
 
-      // Must warn about risk (corruption OR risk OR warning)
-      const hasRiskWarning =
-        lowerText.includes("corruption") ||
-        lowerText.includes("risk") ||
-        lowerText.includes("warning") ||
-        lowerText.includes("data loss");
-
-      if (!hasRiskWarning) {
-        throw new Error(`Sparse mode dialog should warn about risks. Dialog text: "${dialogText}"`);
-      }
+      // Must warn about data loss risk - this is the canonical warning text
+      expect(lowerText).toContain("data loss");
 
       // Cancel to clean up
       const cancelButton = await dialog.$('button*=Cancel');
@@ -385,16 +426,17 @@ describe("Error Handling and Failure Scenarios", () => {
 
       // Wait for dialog to close
       await waitForDialogToDisappear('[role="dialog"]', 3000);
-
-      // Verify dialog is closed
-      const dialogAfter = await $('[role="dialog"]');
-      const isDisplayed = await dialogAfter.isDisplayed().catch(() => false);
-      expect(isDisplayed).toBe(false);
     });
 
     it("should require stopping running distribution before sparse mode", async () => {
-      // Ubuntu is running
-      await waitForDistroState("Ubuntu", "ONLINE", 2000);
+      // Fully reset to ensure Ubuntu is running
+      await safeRefresh();
+      await resetMockState();
+      await clearConfigPendingState();
+      await waitForAppReady();
+
+      // Wait for Ubuntu to be online
+      await waitForDistroState("Ubuntu", "ONLINE", 10000);
 
       const ubuntuCard = await $(selectors.distroCardByName("Ubuntu"));
       const quickActionsButton = await ubuntuCard.$('[data-testid="quick-actions-button"]');
@@ -408,7 +450,7 @@ describe("Error Handling and Failure Scenarios", () => {
       await sparseAction.waitForDisplayed({ timeout: 3000 });
       await sparseAction.click();
 
-      // Should show stop confirmation dialog
+      // Should show stop confirmation dialog (requires ALL distros stopped)
       const dialog = await waitForDialog('[role="dialog"]', 5000);
       const dialogText = await dialog.getText();
       expect(dialogText.toLowerCase()).toContain("shutdown");
@@ -426,17 +468,19 @@ describe("Error Handling and Failure Scenarios", () => {
       const debianCard = await $(selectors.distroCardByName("Debian"));
       const quickActionsButton = await debianCard.$('[data-testid="quick-actions-button"]');
       await quickActionsButton.click();
-      await browser.pause(300);
 
       const manageButton = await $('[data-testid="quick-action-manage"]');
+      await manageButton.waitForDisplayed({ timeout: 3000 });
       await manageButton.click();
-      await browser.pause(200);
 
       const moveAction = await $('[data-testid="manage-action-move"]');
+      await moveAction.waitForDisplayed({ timeout: 3000 });
       await moveAction.click();
-      await browser.pause(300);
 
-      const dialog = await findDialog();
+      // Move requires ALL distros stopped - handle shutdown dialog
+      await handleShutdownDialogIfPresent();
+
+      const dialog = await waitForDialog('[role="dialog"]');
 
       // Dialog should have Cancel and action buttons
       const cancelButton = await dialog.$("button*=Cancel");
@@ -448,7 +492,7 @@ describe("Error Handling and Failure Scenarios", () => {
   });
 
   describe("Dialog Interaction During Operations", () => {
-    async function openSetUserDialog(): Promise<WebdriverIO.Element> {
+    async function openSetUserDialogForDebian(): Promise<WebdriverIO.Element> {
       const debianCard = await $(selectors.distroCardByName("Debian"));
       const quickActionsButton = await debianCard.$('[data-testid="quick-actions-button"]');
       await quickActionsButton.click();
@@ -465,7 +509,7 @@ describe("Error Handling and Failure Scenarios", () => {
     }
 
     it("should disable form inputs during operation", async () => {
-      const dialog = await openSetUserDialog();
+      const dialog = await openSetUserDialogForDebian();
       const usernameInput = await dialog.$('input[type="text"]');
       await usernameInput.setValue("testuser");
 
@@ -474,14 +518,10 @@ describe("Error Handling and Failure Scenarios", () => {
 
       // During operation, button should be disabled
       await waitForButtonDisabled(setUserButton, 2000);
-
-      // Verify button is actually disabled
-      const isDisabled = await setUserButton.getAttribute("disabled");
-      expect(isDisabled).not.toBeNull();
     });
 
     it("should prevent closing dialog during operation", async () => {
-      const dialog = await openSetUserDialog();
+      const dialog = await openSetUserDialogForDebian();
       const usernameInput = await dialog.$('input[type="text"]');
       await usernameInput.setValue("testuser");
 
@@ -491,10 +531,6 @@ describe("Error Handling and Failure Scenarios", () => {
       // Check cancel button is disabled during operation
       const cancelButton = await dialog.$('button*=Cancel');
       await waitForButtonDisabled(cancelButton, 2000);
-
-      // Cancel should be disabled during operation
-      const isCancelDisabled = await cancelButton.getAttribute("disabled");
-      expect(isCancelDisabled).not.toBeNull();
     });
   });
 
@@ -510,10 +546,6 @@ describe("Error Handling and Failure Scenarios", () => {
       // Quick actions button should be disabled during operation
       await waitForButtonDisabled(quickActionsButton, 2000);
 
-      // Verify it's actually disabled
-      const isDisabled = await quickActionsButton.getAttribute("disabled");
-      expect(isDisabled).not.toBeNull();
-
       // Wait for operation to complete
       await waitForDistroState("Debian", "ONLINE", 10000);
     });
@@ -525,7 +557,6 @@ describe("Error Handling and Failure Scenarios", () => {
       if (await stopButton.isExisting()) {
         await stopButton.click();
         await waitForDistroState("Debian", "OFFLINE", 10000);
-        await browser.pause(300);
       }
 
       // Now find the start button
@@ -539,16 +570,7 @@ describe("Error Handling and Failure Scenarios", () => {
       await waitForDistroState("Debian", "ONLINE", 10000);
 
       // Quick actions button should be re-enabled
-      await browser.waitUntil(
-        async () => {
-          const disabled = await quickActionsButton.getAttribute("disabled");
-          return disabled === null;
-        },
-        {
-          timeout: 5000,
-          timeoutMsg: "Quick actions button was not re-enabled after operation",
-        }
-      );
+      await waitForButtonEnabled(quickActionsButton, 5000);
 
       // Verify it's clickable
       const isClickable = await quickActionsButton.isClickable();

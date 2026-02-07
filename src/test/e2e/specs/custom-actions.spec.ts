@@ -7,30 +7,25 @@
  * - Import/Export buttons
  */
 
-import {
-  waitForAppReady,
-  resetMockState,
-  selectors,
-  byText,
-  safeRefresh,
-} from "../utils";
+import { selectors, byText } from "../utils";
+import { setupHooks, actions, isElementDisplayed } from "../base";
 
 describe("Custom Actions Settings", () => {
-  beforeEach(async () => {
-    await safeRefresh();
-    await browser.pause(500);
-    await resetMockState();
-    await waitForAppReady();
-    await browser.pause(500);
+  setupHooks.standard();
 
+  beforeEach(async () => {
     // Navigate to settings > custom actions
-    const settingsButton = await $(selectors.settingsButton);
-    await settingsButton.click();
-    await browser.pause(500);
+    await actions.goToSettings();
 
     const actionsTab = await $(selectors.settingsTab("actions"));
+    await actionsTab.waitForClickable({ timeout: 5000 });
     await actionsTab.click();
-    await browser.pause(500);
+
+    // Wait for actions tab content to be displayed
+    await browser.waitUntil(
+      async () => isElementDisplayed('[data-testid="new-action-button"]'),
+      { timeout: 5000, timeoutMsg: "Actions tab content did not appear" }
+    );
   });
 
   describe("Actions Header", () => {
@@ -53,8 +48,14 @@ describe("Custom Actions Settings", () => {
   describe("Create Action Form", () => {
     beforeEach(async () => {
       const newActionButton = await $('[data-testid="new-action-button"]');
+      await newActionButton.waitForClickable({ timeout: 5000 });
       await newActionButton.click();
-      await browser.pause(500);
+
+      // Wait for action editor form to appear
+      await browser.waitUntil(
+        async () => isElementDisplayed('[data-testid="action-name-input"]'),
+        { timeout: 5000, timeoutMsg: "Action editor form did not appear" }
+      );
     });
 
     it("should show action editor form", async () => {
@@ -92,9 +93,13 @@ describe("Custom Actions Settings", () => {
     it("should close form when Cancel is clicked", async () => {
       const cancelButton = await $("button*=Cancel");
       await cancelButton.click();
-      await browser.pause(300);
 
-      // Form should be closed, New Action button should be visible again
+      // Wait for form to close and New Action button to be visible again
+      await browser.waitUntil(
+        async () => isElementDisplayed('[data-testid="new-action-button"]'),
+        { timeout: 5000, timeoutMsg: "Form did not close after Cancel" }
+      );
+
       const newActionButton = await $('[data-testid="new-action-button"]');
       await expect(newActionButton).toBeDisplayed();
     });
@@ -125,17 +130,19 @@ describe("Custom Actions Settings", () => {
   describe("Empty State", () => {
     it("should show empty state message when no actions", async () => {
       // If no custom actions exist, should show empty message
-      const emptyState = await $(byText("No custom actions"));
-      const isDisplayed = await emptyState.isDisplayed().catch(() => false);
-      
+      let emptyStateDisplayed = false;
+      try {
+        const emptyState = await $(byText("No custom actions"));
+        emptyStateDisplayed = await emptyState.isDisplayed();
+      } catch {
+        emptyStateDisplayed = false;
+      }
+
       // Either we have actions or we have empty state - both are valid
-      if (isDisplayed) {
+      if (emptyStateDisplayed) {
+        const emptyState = await $(byText("No custom actions"));
         await expect(emptyState).toBeDisplayed();
       }
     });
   });
 });
-
-
-
-

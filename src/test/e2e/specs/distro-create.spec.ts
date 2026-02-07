@@ -10,27 +10,16 @@
  */
 
 import {
-  waitForAppReady,
-  resetMockState,
   selectors,
-  safeRefresh,
   getDistroCardCount,
   mockDistributions,
   waitForDialog,
   waitForDialogToDisappear,
 } from "../utils";
+import { setupHooks } from "../base";
 
 describe("Distribution Creation", () => {
-  beforeEach(async () => {
-    // Refresh the page to ensure clean state
-    await safeRefresh();
-    await browser.pause(300);
-    await resetMockState();
-    // Refresh again to load the clean mock data
-    await safeRefresh();
-    await waitForAppReady();
-    await browser.pause(500);
-  });
+  setupHooks.standard();
 
   describe("New Distribution Dialog", () => {
     it("should open new distribution dialog when New button is clicked", async () => {
@@ -94,7 +83,15 @@ describe("Distribution Creation", () => {
       // Click Download tab
       const downloadTab = await dialog.$("button*=Download");
       await downloadTab.click();
-      await browser.pause(300);
+
+      // Wait for tab to become active
+      await browser.waitUntil(
+        async () => {
+          const classes = await downloadTab.getAttribute("class");
+          return classes.includes("bg-");
+        },
+        { timeout: 3000, timeoutMsg: "Tab did not become active" }
+      );
 
       // Tab should be active (verify it was clicked successfully)
       const classes = await downloadTab.getAttribute("class");
@@ -114,7 +111,15 @@ describe("Distribution Creation", () => {
       // Switch to Download tab
       const downloadTab = await dialog.$("button*=Download");
       await downloadTab.click();
-      await browser.pause(500);
+
+      // Wait for tab content to load
+      await browser.waitUntil(
+        async () => {
+          const classes = await downloadTab.getAttribute("class");
+          return classes.includes("bg-");
+        },
+        { timeout: 3000, timeoutMsg: "Download tab did not become active" }
+      );
     });
 
     it("should show distribution selection", async () => {
@@ -131,7 +136,19 @@ describe("Distribution Creation", () => {
       const customUrlOption = await dialog.$("button*=Custom URL");
       if (await customUrlOption.isExisting()) {
         await customUrlOption.click();
-        await browser.pause(300);
+
+        // Wait for name input to appear
+        await browser.waitUntil(
+          async () => {
+            const input = await dialog.$("input[placeholder*='Enter a unique name']");
+            try {
+              return await input.isDisplayed();
+            } catch {
+              return false;
+            }
+          },
+          { timeout: 3000, timeoutMsg: "Name input did not appear" }
+        );
 
         // Now name input should be visible
         const nameInput = await dialog.$("input[placeholder*='Enter a unique name']");
@@ -146,13 +163,33 @@ describe("Distribution Creation", () => {
       const customUrlOption = await dialog.$("button*=Custom URL");
       if (await customUrlOption.isExisting()) {
         await customUrlOption.click();
-        await browser.pause(300);
+
+        // Wait for name input to appear
+        await browser.waitUntil(
+          async () => {
+            const input = await dialog.$("input[placeholder*='Enter a unique name']");
+            try {
+              return await input.isDisplayed();
+            } catch {
+              return false;
+            }
+          },
+          { timeout: 3000, timeoutMsg: "Name input did not appear" }
+        );
 
         // Find the name input
         const nameInput = await dialog.$("input[placeholder*='Enter a unique name']");
         if (await nameInput.isExisting()) {
           await nameInput.setValue("MyCustomDistro");
-          await browser.pause(300);
+
+          // Wait for value to be set
+          await browser.waitUntil(
+            async () => {
+              const value = await nameInput.getValue();
+              return value === "MyCustomDistro";
+            },
+            { timeout: 3000, timeoutMsg: "Input value was not set" }
+          );
 
           const value = await nameInput.getValue();
           expect(value).toBe("MyCustomDistro");
@@ -166,14 +203,22 @@ describe("Distribution Creation", () => {
       const newButton = await $(selectors.newDistroButton);
       await newButton.waitForClickable({ timeout: 5000 });
       await newButton.click();
-      
+
       const dialog = await $(selectors.dialog);
       await dialog.waitForDisplayed({ timeout: 10000 });
 
       // Switch to Container tab
       const containerTab = await dialog.$("button*=Container");
       await containerTab.click();
-      await browser.pause(500);
+
+      // Wait for tab to become active
+      await browser.waitUntil(
+        async () => {
+          const classes = await containerTab.getAttribute("class");
+          return classes.includes("bg-");
+        },
+        { timeout: 3000, timeoutMsg: "Container tab did not become active" }
+      );
     });
 
     it("should switch to Container tab successfully", async () => {
@@ -220,12 +265,32 @@ describe("Distribution Creation", () => {
       // Switch to Download tab and enable Custom URL for name input
       const downloadTab = await dialog.$("button*=Download");
       await downloadTab.click();
-      await browser.pause(300);
+
+      // Wait for tab to become active
+      await browser.waitUntil(
+        async () => {
+          const classes = await downloadTab.getAttribute("class");
+          return classes.includes("bg-");
+        },
+        { timeout: 3000, timeoutMsg: "Download tab did not become active" }
+      );
 
       const customUrlOption = await dialog.$("button*=Custom URL");
       if (await customUrlOption.isExisting()) {
         await customUrlOption.click();
-        await browser.pause(300);
+
+        // Wait for name input to appear
+        await browser.waitUntil(
+          async () => {
+            const input = await dialog.$("input[placeholder*='Enter a unique name']");
+            try {
+              return await input.isDisplayed();
+            } catch {
+              return false;
+            }
+          },
+          { timeout: 3000 }
+        ).catch(() => {}); // Ignore if input doesn't appear
       }
     });
 
@@ -235,7 +300,15 @@ describe("Distribution Creation", () => {
 
       if (await nameInput.isExisting()) {
         await nameInput.clearValue();
-        await browser.pause(200);
+
+        // Wait for validation to run
+        await browser.waitUntil(
+          async () => {
+            const value = await nameInput.getValue();
+            return value === "";
+          },
+          { timeout: 3000, timeoutMsg: "Input was not cleared" }
+        );
 
         // Install button should be disabled with empty name
         const installButton = await dialog.$("button*=Install");
@@ -253,15 +326,29 @@ describe("Distribution Creation", () => {
       if (await nameInput.isExisting()) {
         // Try to use an existing distro name
         await nameInput.setValue("Ubuntu");
-        await browser.pause(300);
+
+        // Wait for validation to run
+        await browser.waitUntil(
+          async () => {
+            const value = await nameInput.getValue();
+            return value === "Ubuntu";
+          },
+          { timeout: 3000, timeoutMsg: "Input value was not set" }
+        );
 
         // Should show validation error or disable button
         const installButton = await dialog.$("button*=Install");
         if (await installButton.isExisting()) {
           const isDisabled = await installButton.getAttribute("disabled");
-          // Either button is disabled or validation error is shown
-          const validationError = await dialog.$('[data-testid*="error"], .text-red, .text-status-error');
-          const hasError = await validationError.isDisplayed().catch(() => false);
+          // Note: OR is intentional - validation UX can either disable the button or show an error message,
+          // both are valid approaches to prevent submission with duplicate names
+          let hasError = false;
+          try {
+            const validationError = await dialog.$('[data-testid*="error"], .text-red, .text-status-error');
+            hasError = await validationError.isDisplayed();
+          } catch {
+            hasError = false;
+          }
 
           expect(isDisabled !== null || hasError).toBe(true);
         }
@@ -274,7 +361,15 @@ describe("Distribution Creation", () => {
 
       if (await nameInput.isExisting()) {
         await nameInput.setValue("MyUniqueDistro");
-        await browser.pause(300);
+
+        // Wait for value to be set
+        await browser.waitUntil(
+          async () => {
+            const value = await nameInput.getValue();
+            return value === "MyUniqueDistro";
+          },
+          { timeout: 3000, timeoutMsg: "Input value was not set" }
+        );
 
         const value = await nameInput.getValue();
         expect(value).toBe("MyUniqueDistro");
@@ -355,13 +450,33 @@ describe("Distribution Creation", () => {
       // Switch to Download tab
       const downloadTab = await dialog.$("button*=Download");
       await downloadTab.click();
-      await browser.pause(300);
+
+      // Wait for tab to become active
+      await browser.waitUntil(
+        async () => {
+          const classes = await downloadTab.getAttribute("class");
+          return classes.includes("bg-");
+        },
+        { timeout: 3000, timeoutMsg: "Download tab did not become active" }
+      );
 
       // Enable Custom URL
       const customUrlOption = await dialog.$("button*=Custom URL");
       if (await customUrlOption.isExisting()) {
         await customUrlOption.click();
-        await browser.pause(300);
+
+        // Wait for custom URL fields to appear
+        await browser.waitUntil(
+          async () => {
+            const input = await dialog.$("input[placeholder*='Enter a unique name']");
+            try {
+              return await input.isDisplayed();
+            } catch {
+              return false;
+            }
+          },
+          { timeout: 3000 }
+        ).catch(() => {});
       }
 
       // Fill in required fields

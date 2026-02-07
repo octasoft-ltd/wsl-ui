@@ -43,7 +43,7 @@ use commands::{
     // Store review
     open_store_review,
     // RDP commands
-    detect_rdp, check_wsl_config_timeouts, open_rdp, open_terminal_with_message,
+    detect_rdp, check_wsl_config_timeouts, check_wsl_config_pending, open_rdp, open_terminal_with_message,
 };
 use std::sync::Mutex;
 use tauri::{
@@ -552,6 +552,7 @@ fn main() {
             // RDP commands
             detect_rdp,
             check_wsl_config_timeouts,
+            check_wsl_config_pending,
             open_rdp,
             open_terminal_with_message,
         ])

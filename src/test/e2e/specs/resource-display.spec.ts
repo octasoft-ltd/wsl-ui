@@ -5,22 +5,16 @@
  * Resource data is mocked in src-tauri/src/wsl/mock.rs
  */
 
+import { setupHooks } from "../base";
 import {
-  waitForAppReady,
-  resetMockState,
   mockDistributions,
-  mockResourceData,
   waitForResourceStats,
+  waitForDistroState,
   selectors,
 } from "../utils";
 
 describe("Resource Display", () => {
-  beforeEach(async () => {
-    await resetMockState();
-    await waitForAppReady();
-    // Wait extra time for resource stats to be fetched (polled every 5s)
-    await browser.pause(1000);
-  });
+  setupHooks.standard();
 
   describe("Running Distribution Resources", () => {
     it("should display memory usage for running distributions", async () => {
@@ -97,25 +91,41 @@ describe("Resource Display", () => {
 
   describe("Stopped Distribution Resources", () => {
     it("should show placeholder for memory on stopped distributions", async () => {
-      await browser.pause(2000); // Give time for any resources to load
-
       // Debian is stopped - should show placeholder (—) instead of actual value
       const debianCard = await $(selectors.distroCardByName("Debian"));
       await expect(debianCard).toBeDisplayed();
 
       const memoryLabel = await debianCard.$(selectors.memoryLabel);
+      await memoryLabel.waitForDisplayed({ timeout: 5000 });
+
+      // Wait for placeholder to be shown (stopped distributions show "—")
+      await browser.waitUntil(
+        async () => {
+          const text = await memoryLabel.getText();
+          return text === "—";
+        },
+        { timeout: 5000, timeoutMsg: "Memory placeholder did not appear for stopped distribution" }
+      );
+
       const memoryText = await memoryLabel.getText();
-      // Stopped distributions show "—" placeholder
       expect(memoryText).toBe("—");
     });
 
     it("should show placeholder for CPU on stopped distributions", async () => {
-      await browser.pause(2000);
-
       const debianCard = await $(selectors.distroCardByName("Debian"));
       const cpuLabel = await debianCard.$(selectors.cpuLabel);
+      await cpuLabel.waitForDisplayed({ timeout: 5000 });
+
+      // Wait for placeholder to be shown
+      await browser.waitUntil(
+        async () => {
+          const text = await cpuLabel.getText();
+          return text === "—";
+        },
+        { timeout: 5000, timeoutMsg: "CPU placeholder did not appear for stopped distribution" }
+      );
+
       const cpuText = await cpuLabel.getText();
-      // Stopped distributions show "—" placeholder
       expect(cpuText).toBe("—");
     });
   });
@@ -153,8 +163,8 @@ describe("Resource Display", () => {
       const startButton = await debianCard.$(selectors.startButton);
       await startButton.click();
 
-      // Wait for state change and resource fetch
-      await browser.pause(2000);
+      // Wait for distribution to be online
+      await waitForDistroState("Debian", "ONLINE", 10000);
 
       // Now Debian should show resources
       const memoryLabel = await debianCard.$(selectors.memoryLabel);
@@ -175,11 +185,21 @@ describe("Resource Display", () => {
       const stopButton = await ubuntuCard.$(selectors.stopButton);
       await stopButton.click();
 
-      // Wait for state change
-      await browser.pause(2000);
+      // Wait for distribution to be offline
+      await waitForDistroState("Ubuntu", "OFFLINE", 10000);
 
       // Now Ubuntu should show placeholder
       memoryLabel = await ubuntuCard.$(selectors.memoryLabel);
+
+      // Wait for memory text to become placeholder
+      await browser.waitUntil(
+        async () => {
+          const text = await memoryLabel.getText();
+          return text === "—";
+        },
+        { timeout: 10000, timeoutMsg: "Memory did not show placeholder after stop" }
+      );
+
       memoryText = await memoryLabel.getText();
       expect(memoryText).toBe("—");
     });

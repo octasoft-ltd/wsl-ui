@@ -8,69 +8,37 @@
  * - Should work directly when distro is already stopped
  */
 
-import {
-  waitForAppReady,
-  resetMockState,
-  selectors,
-  mockDistributions,
-  safeRefresh,
-} from "../utils";
+import { selectors, waitForDialogToDisappear } from "../utils";
+import { setupHooks, actions, isElementDisplayed } from "../base";
+
+/**
+ * Helper to wait for the stop-and-action dialog
+ */
+async function waitForStopDialog(): Promise<WebdriverIO.Element> {
+  await browser.waitUntil(
+    async () => {
+      const dialog = await $(selectors.stopAndActionDialog);
+      return await dialog.isDisplayed();
+    },
+    {
+      timeout: 5000,
+      timeoutMsg: "Stop and Action dialog did not appear within 5 seconds",
+    }
+  );
+  return (await $(selectors.stopAndActionDialog)) as unknown as WebdriverIO.Element;
+}
 
 describe("Stop Before Action Pattern", () => {
-  beforeEach(async () => {
-    await safeRefresh();
-    await browser.pause(300);
-    await resetMockState();
-    // Refresh again to load the clean mock data (Ubuntu running, Debian stopped)
-    await safeRefresh();
-    await waitForAppReady();
-    await browser.pause(500);
-  });
-
-  /**
-   * Helper to open the quick actions menu for a distribution
-   */
-  async function openQuickActionsMenu(distroName: string): Promise<void> {
-    const card = await $(selectors.distroCardByName(distroName));
-    const quickActionsButton = await card.$(selectors.quickActionsButton);
-    await quickActionsButton.click();
-    await browser.pause(300);
-  }
-
-  /**
-   * Helper to open the manage submenu
-   */
-  async function openManageSubmenu(): Promise<void> {
-    const manageButton = await $(selectors.manageSubmenu);
-    await manageButton.click();
-    await browser.pause(300);
-  }
-
-  /**
-   * Helper to wait for the stop-and-action dialog
-   */
-  async function waitForStopDialog(): Promise<WebdriverIO.Element> {
-    await browser.waitUntil(
-      async () => {
-        const dialog = await $('[data-testid="stop-and-action-dialog"]');
-        return dialog.isDisplayed();
-      },
-      {
-        timeout: 5000,
-        timeoutMsg: "Stop and Action dialog did not appear within 5 seconds",
-      }
-    );
-    return $('[data-testid="stop-and-action-dialog"]');
-  }
+  setupHooks.standard();
 
   describe("Export Action - Running Distribution", () => {
     it("should show stop dialog when exporting a running distribution", async () => {
       // Ubuntu is running by default
-      await openQuickActionsMenu("Ubuntu");
+      await actions.openQuickActionsMenu("Ubuntu");
 
       const exportAction = await $(selectors.quickAction("export"));
+      await exportAction.waitForClickable({ timeout: 5000 });
       await exportAction.click();
-      await browser.pause(300);
 
       // Should show the stop dialog
       const dialog = await waitForStopDialog();
@@ -83,36 +51,38 @@ describe("Stop Before Action Pattern", () => {
     });
 
     it("should have Stop & Continue and Cancel buttons", async () => {
-      await openQuickActionsMenu("Ubuntu");
+      await actions.openQuickActionsMenu("Ubuntu");
       const exportAction = await $(selectors.quickAction("export"));
+      await exportAction.waitForClickable({ timeout: 5000 });
       await exportAction.click();
-      await browser.pause(300);
 
       await waitForStopDialog();
 
-      const stopButton = await $('[data-testid="stop-and-continue-button"]');
-      const cancelButton = await $('[data-testid="stop-dialog-cancel-button"]');
+      const stopButton = await $(selectors.stopAndContinueButton);
+      const cancelButton = await $(selectors.stopDialogCancelButton);
 
       await expect(stopButton).toBeDisplayed();
       await expect(cancelButton).toBeDisplayed();
     });
 
     it("should close dialog and do nothing when Cancel is clicked", async () => {
-      await openQuickActionsMenu("Ubuntu");
+      await actions.openQuickActionsMenu("Ubuntu");
       const exportAction = await $(selectors.quickAction("export"));
+      await exportAction.waitForClickable({ timeout: 5000 });
       await exportAction.click();
-      await browser.pause(300);
 
       await waitForStopDialog();
 
-      const cancelButton = await $('[data-testid="stop-dialog-cancel-button"]');
+      const cancelButton = await $(selectors.stopDialogCancelButton);
+      await cancelButton.waitForClickable({ timeout: 5000 });
       await cancelButton.click();
-      await browser.pause(300);
+
+      // Wait for dialog to close
+      await waitForDialogToDisappear(selectors.stopAndActionDialog, 5000);
 
       // Dialog should be closed
-      const dialog = await $('[data-testid="stop-and-action-dialog"]');
-      const isDisplayed = await dialog.isDisplayed().catch(() => false);
-      expect(isDisplayed).toBe(false);
+      const dialogVisible = await isElementDisplayed(selectors.stopAndActionDialog);
+      expect(dialogVisible).toBe(false);
 
       // Ubuntu should still be running
       const ubuntuCard = await $(selectors.distroCardByName("Ubuntu"));
@@ -122,7 +92,7 @@ describe("Stop Before Action Pattern", () => {
     });
 
     it("should show stop indicator in the Export menu item for running distro", async () => {
-      await openQuickActionsMenu("Ubuntu");
+      await actions.openQuickActionsMenu("Ubuntu");
 
       const exportAction = await $(selectors.quickAction("export"));
       const hasIndicator = await exportAction.$('[data-testid="requires-stop-indicator"]');
@@ -134,26 +104,29 @@ describe("Stop Before Action Pattern", () => {
   describe("Export Action - Stopped Distribution", () => {
     it("should NOT show stop dialog for stopped distribution", async () => {
       // Debian is stopped by default
-      await openQuickActionsMenu("Debian");
+      await actions.openQuickActionsMenu("Debian");
 
       const exportAction = await $(selectors.quickAction("export"));
+      await exportAction.waitForClickable({ timeout: 5000 });
       await exportAction.click();
-      await browser.pause(500);
 
-      // Stop dialog should NOT appear
-      const dialog = await $('[data-testid="stop-and-action-dialog"]');
-      const isDisplayed = await dialog.isDisplayed().catch(() => false);
-      expect(isDisplayed).toBe(false);
+      // Wait briefly to ensure stop dialog would have appeared if it was going to
+      // Export opens a native file dialog, so we just verify the stop dialog doesn't appear
+      await browser.pause(1000);
+
+      // Stop dialog should NOT appear for stopped distributions
+      const dialogVisible = await isElementDisplayed(selectors.stopAndActionDialog);
+      expect(dialogVisible).toBe(false);
     });
   });
 
   describe("Clone Action - Running Distribution", () => {
     it("should show stop dialog when cloning a running distribution", async () => {
-      await openQuickActionsMenu("Ubuntu");
+      await actions.openQuickActionsMenu("Ubuntu");
 
       const cloneAction = await $(selectors.cloneAction);
+      await cloneAction.waitForClickable({ timeout: 5000 });
       await cloneAction.click();
-      await browser.pause(300);
 
       // Should show the stop dialog
       const dialog = await waitForStopDialog();
@@ -161,7 +134,7 @@ describe("Stop Before Action Pattern", () => {
     });
 
     it("should show stop indicator in the Clone menu item for running distro", async () => {
-      await openQuickActionsMenu("Ubuntu");
+      await actions.openQuickActionsMenu("Ubuntu");
 
       const cloneAction = await $(selectors.cloneAction);
       const hasIndicator = await cloneAction.$('[data-testid="requires-stop-indicator"]');
@@ -170,23 +143,21 @@ describe("Stop Before Action Pattern", () => {
     });
 
     it("should proceed to clone dialog after Stop & Continue", async () => {
-      await openQuickActionsMenu("Ubuntu");
+      await actions.openQuickActionsMenu("Ubuntu");
 
       const cloneAction = await $(selectors.cloneAction);
+      await cloneAction.waitForClickable({ timeout: 5000 });
       await cloneAction.click();
-      await browser.pause(300);
 
       await waitForStopDialog();
 
-      const stopButton = await $('[data-testid="stop-and-continue-button"]');
+      const stopButton = await $(selectors.stopAndContinueButton);
+      await stopButton.waitForClickable({ timeout: 5000 });
       await stopButton.click();
 
       // Wait for the clone dialog to appear
       await browser.waitUntil(
-        async () => {
-          const cloneDialog = await $(selectors.cloneDialog);
-          return cloneDialog.isDisplayed();
-        },
+        async () => isElementDisplayed(selectors.cloneDialog),
         {
           timeout: 10000,
           timeoutMsg: "Clone dialog did not appear after stopping",
@@ -201,11 +172,17 @@ describe("Stop Before Action Pattern", () => {
   describe("Clone Action - Stopped Distribution", () => {
     it("should open clone dialog directly for stopped distribution", async () => {
       // Debian is stopped by default
-      await openQuickActionsMenu("Debian");
+      await actions.openQuickActionsMenu("Debian");
 
       const cloneAction = await $(selectors.cloneAction);
+      await cloneAction.waitForClickable({ timeout: 5000 });
       await cloneAction.click();
-      await browser.pause(300);
+
+      // Wait for clone dialog to appear
+      await browser.waitUntil(
+        async () => isElementDisplayed(selectors.cloneDialog),
+        { timeout: 5000, timeoutMsg: "Clone dialog did not appear" }
+      );
 
       // Clone dialog should open directly
       const cloneDialog = await $(selectors.cloneDialog);
@@ -215,12 +192,11 @@ describe("Stop Before Action Pattern", () => {
 
   describe("Move Action - Running Distribution", () => {
     it("should show stop dialog when moving a running distribution", async () => {
-      await openQuickActionsMenu("Ubuntu");
-      await openManageSubmenu();
+      await actions.openManageSubmenu("Ubuntu");
 
       const moveAction = await $(selectors.moveAction);
+      await moveAction.waitForClickable({ timeout: 5000 });
       await moveAction.click();
-      await browser.pause(300);
 
       // Should show the stop dialog
       const dialog = await waitForStopDialog();
@@ -230,12 +206,11 @@ describe("Stop Before Action Pattern", () => {
 
   describe("Resize Action - Running Distribution", () => {
     it("should show stop dialog when resizing a running distribution", async () => {
-      await openQuickActionsMenu("Ubuntu");
-      await openManageSubmenu();
+      await actions.openManageSubmenu("Ubuntu");
 
       const resizeAction = await $(selectors.resizeAction);
+      await resizeAction.waitForClickable({ timeout: 5000 });
       await resizeAction.click();
-      await browser.pause(300);
 
       // Should show the stop dialog
       const dialog = await waitForStopDialog();
@@ -245,12 +220,11 @@ describe("Stop Before Action Pattern", () => {
 
   describe("Rename Action - Running Distribution", () => {
     it("should show stop dialog when renaming a running distribution", async () => {
-      await openQuickActionsMenu("Ubuntu");
-      await openManageSubmenu();
+      await actions.openManageSubmenu("Ubuntu");
 
       const renameAction = await $(selectors.renameAction);
+      await renameAction.waitForClickable({ timeout: 5000 });
       await renameAction.click();
-      await browser.pause(300);
 
       // Should show the stop dialog (instead of being disabled)
       const dialog = await waitForStopDialog();
@@ -258,24 +232,21 @@ describe("Stop Before Action Pattern", () => {
     });
 
     it("should proceed to rename dialog after Stop & Continue", async () => {
-      await openQuickActionsMenu("Ubuntu");
-      await openManageSubmenu();
+      await actions.openManageSubmenu("Ubuntu");
 
       const renameAction = await $(selectors.renameAction);
+      await renameAction.waitForClickable({ timeout: 5000 });
       await renameAction.click();
-      await browser.pause(300);
 
       await waitForStopDialog();
 
-      const stopButton = await $('[data-testid="stop-and-continue-button"]');
+      const stopButton = await $(selectors.stopAndContinueButton);
+      await stopButton.waitForClickable({ timeout: 5000 });
       await stopButton.click();
 
       // Wait for the rename dialog to appear
       await browser.waitUntil(
-        async () => {
-          const renameDialog = await $(selectors.renameDialog);
-          return renameDialog.isDisplayed();
-        },
+        async () => isElementDisplayed(selectors.renameDialog),
         {
           timeout: 10000,
           timeoutMsg: "Rename dialog did not appear after stopping",
@@ -289,12 +260,17 @@ describe("Stop Before Action Pattern", () => {
 
   describe("Rename Action - Stopped Distribution", () => {
     it("should open rename dialog directly for stopped distribution", async () => {
-      await openQuickActionsMenu("Debian");
-      await openManageSubmenu();
+      await actions.openManageSubmenu("Debian");
 
       const renameAction = await $(selectors.renameAction);
+      await renameAction.waitForClickable({ timeout: 5000 });
       await renameAction.click();
-      await browser.pause(300);
+
+      // Wait for rename dialog to appear
+      await browser.waitUntil(
+        async () => isElementDisplayed(selectors.renameDialog),
+        { timeout: 5000, timeoutMsg: "Rename dialog did not appear" }
+      );
 
       // Rename dialog should open directly
       const renameDialog = await $(selectors.renameDialog);
@@ -302,8 +278,7 @@ describe("Stop Before Action Pattern", () => {
     });
 
     it("should NOT be disabled for stopped distribution", async () => {
-      await openQuickActionsMenu("Debian");
-      await openManageSubmenu();
+      await actions.openManageSubmenu("Debian");
 
       const renameAction = await $(selectors.renameAction);
       const isDisabled = await renameAction.getAttribute("disabled");
@@ -313,12 +288,11 @@ describe("Stop Before Action Pattern", () => {
 
   describe("Sparse Mode - Running Distribution", () => {
     it("should show stop dialog when toggling sparse mode on running distribution", async () => {
-      await openQuickActionsMenu("Ubuntu");
-      await openManageSubmenu();
+      await actions.openManageSubmenu("Ubuntu");
 
       const sparseAction = await $(selectors.sparseAction);
+      await sparseAction.waitForClickable({ timeout: 5000 });
       await sparseAction.click();
-      await browser.pause(300);
 
       // Should show the stop dialog (instead of error dialog)
       const dialog = await waitForStopDialog();
@@ -328,24 +302,22 @@ describe("Stop Before Action Pattern", () => {
 
   describe("Stop Dialog During Operation", () => {
     it("should show loading state while stopping", async () => {
-      await openQuickActionsMenu("Ubuntu");
+      await actions.openQuickActionsMenu("Ubuntu");
 
       const exportAction = await $(selectors.quickAction("export"));
+      await exportAction.waitForClickable({ timeout: 5000 });
       await exportAction.click();
-      await browser.pause(300);
 
       await waitForStopDialog();
 
-      const stopButton = await $('[data-testid="stop-and-continue-button"]');
+      const stopButton = await $(selectors.stopAndContinueButton);
+      await stopButton.waitForClickable({ timeout: 5000 });
       await stopButton.click();
 
       // Check for loading state (may be brief)
       try {
         await browser.waitUntil(
-          async () => {
-            const loadingIndicator = await $('[data-testid="stop-dialog-loading"]');
-            return loadingIndicator.isDisplayed();
-          },
+          async () => isElementDisplayed(selectors.stopDialogLoading),
           {
             timeout: 2000,
             timeoutMsg: "Loading indicator not shown",
@@ -361,7 +333,7 @@ describe("Stop Before Action Pattern", () => {
     // This test is redundant - already covered by "should show stop indicator in the Export menu item for running distro"
     // above. By this point in the test run, Ubuntu may have been stopped by earlier tests.
     it.skip("should show stop-required indicator on Export for running distro", async () => {
-      await openQuickActionsMenu("Ubuntu");
+      await actions.openQuickActionsMenu("Ubuntu");
 
       const exportAction = await $(selectors.quickAction("export"));
       // Check for visual indicator (pause icon or different styling)
@@ -372,7 +344,7 @@ describe("Stop Before Action Pattern", () => {
     // This test is redundant - already covered by "should show stop indicator in the Clone menu item for running distro"
     // above. By this point in the test run, Ubuntu may have been stopped by earlier tests.
     it.skip("should show stop-required indicator on Clone for running distro", async () => {
-      await openQuickActionsMenu("Ubuntu");
+      await actions.openQuickActionsMenu("Ubuntu");
 
       const cloneAction = await $(selectors.cloneAction);
       const indicator = await cloneAction.$('[data-testid="requires-stop-indicator"]');
@@ -380,17 +352,22 @@ describe("Stop Before Action Pattern", () => {
     });
 
     it("should NOT show stop-required indicator for stopped distro", async () => {
-      await openQuickActionsMenu("Debian");
+      await actions.openQuickActionsMenu("Debian");
 
       const exportAction = await $(selectors.quickAction("export"));
-      const indicator = await exportAction.$('[data-testid="requires-stop-indicator"]');
-      const isDisplayed = await indicator.isDisplayed().catch(() => false);
-      expect(isDisplayed).toBe(false);
+      // Check if indicator exists and is displayed
+      let indicatorDisplayed = false;
+      try {
+        const indicator = await exportAction.$('[data-testid="requires-stop-indicator"]');
+        indicatorDisplayed = await indicator.isDisplayed();
+      } catch {
+        indicatorDisplayed = false;
+      }
+      expect(indicatorDisplayed).toBe(false);
     });
 
     it("should show stop-required indicator on Manage actions for running distro", async () => {
-      await openQuickActionsMenu("Ubuntu");
-      await openManageSubmenu();
+      await actions.openManageSubmenu("Ubuntu");
 
       const moveAction = await $(selectors.moveAction);
       // Move action uses requires-shutdown-indicator (not requires-stop-indicator)

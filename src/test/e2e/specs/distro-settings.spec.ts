@@ -11,16 +11,11 @@
  * - Save functionality
  */
 
-import {
-  waitForAppReady,
-  resetMockState,
-  selectors,
-  byText,
-  safeRefresh,
-} from "../utils";
+import { selectors, byText } from "../utils";
+import { setupHooks, isElementDisplayed } from "../base";
 
 const distroSettingsSelectors = {
-  settingsButton: '[data-testid="settings-button"]',
+  settingsButton: selectors.settingsButton,
   distroSettingsTab: '[data-testid="settings-tab-wsl-distro"]',
   distroSettings: '[data-testid="wsl-distro-settings"]',
   distroSelector: '[data-testid="distro-settings-selector"]',
@@ -49,25 +44,26 @@ async function navigateToDistroSettings(): Promise<void> {
   const settingsButton = await $(distroSettingsSelectors.settingsButton);
   await settingsButton.waitForClickable({ timeout: 5000 });
   await settingsButton.click();
-  await browser.pause(500);
+
+  // Wait for distro settings tab to appear
+  await browser.waitUntil(
+    async () => isElementDisplayed(distroSettingsSelectors.distroSettingsTab),
+    { timeout: 5000, timeoutMsg: "Distro settings tab did not appear" }
+  );
 
   const distroTab = await $(distroSettingsSelectors.distroSettingsTab);
   await distroTab.waitForClickable({ timeout: 5000 });
   await distroTab.click();
-  await browser.pause(500);
 
-  const settings = await $(distroSettingsSelectors.distroSettings);
-  await settings.waitForDisplayed({ timeout: 5000 });
+  // Wait for settings to load
+  await browser.waitUntil(
+    async () => isElementDisplayed(distroSettingsSelectors.distroSettings),
+    { timeout: 5000, timeoutMsg: "Distro settings did not load" }
+  );
 }
 
 describe("Distribution-Specific Settings", () => {
-  beforeEach(async () => {
-    await safeRefresh();
-    await browser.pause(500);
-    await resetMockState();
-    await waitForAppReady();
-    await browser.pause(500);
-  });
+  setupHooks.standard();
 
   describe("Navigation", () => {
     it("should navigate to WSL Distro settings tab", async () => {
@@ -108,10 +104,18 @@ describe("Distribution-Specific Settings", () => {
       const selector = await $(distroSettingsSelectors.distroSelector);
       const options = await selector.$$("option");
 
-      if (options.length > 1) {
+      if ((await options.length) > 1) {
         const secondOption = await options[1].getValue();
         await selector.selectByIndex(1);
-        await browser.pause(300);
+
+        // Wait for selection to change
+        await browser.waitUntil(
+          async () => {
+            const value = await selector.getValue();
+            return value === secondOption;
+          },
+          { timeout: 3000, timeoutMsg: "Distribution selection did not change" }
+        );
 
         const newValue = await selector.getValue();
         expect(newValue).toBe(secondOption);
@@ -147,7 +151,12 @@ describe("Distribution-Specific Settings", () => {
     it("should toggle automount setting", async () => {
       const toggle = await $(distroSettingsSelectors.automountEnabledToggle);
       await toggle.click();
-      await browser.pause(200);
+
+      // Wait for save button to appear
+      await browser.waitUntil(
+        async () => isElementDisplayed(distroSettingsSelectors.saveButton),
+        { timeout: 3000, timeoutMsg: "Save button did not appear after toggle" }
+      );
 
       const saveButton = await $(distroSettingsSelectors.saveButton);
       await expect(saveButton).toBeDisplayed();
@@ -156,7 +165,15 @@ describe("Distribution-Specific Settings", () => {
     it("should allow entering mount root path", async () => {
       const input = await $(distroSettingsSelectors.mountRootInput);
       await input.setValue("/custom/");
-      await browser.pause(200);
+
+      // Wait for input value to be set
+      await browser.waitUntil(
+        async () => {
+          const value = await input.getValue();
+          return value === "/custom/";
+        },
+        { timeout: 3000, timeoutMsg: "Input value was not set" }
+      );
 
       const value = await input.getValue();
       expect(value).toBe("/custom/");
@@ -186,7 +203,15 @@ describe("Distribution-Specific Settings", () => {
     it("should allow entering custom hostname", async () => {
       const input = await $(distroSettingsSelectors.hostnameInput);
       await input.setValue("my-wsl-host");
-      await browser.pause(200);
+
+      // Wait for input value to be set
+      await browser.waitUntil(
+        async () => {
+          const value = await input.getValue();
+          return value === "my-wsl-host";
+        },
+        { timeout: 3000, timeoutMsg: "Input value was not set" }
+      );
 
       const value = await input.getValue();
       expect(value).toBe("my-wsl-host");
@@ -211,7 +236,12 @@ describe("Distribution-Specific Settings", () => {
     it("should toggle Windows PATH interop", async () => {
       const toggle = await $(distroSettingsSelectors.appendPathToggle);
       await toggle.click();
-      await browser.pause(200);
+
+      // Wait for save button to appear
+      await browser.waitUntil(
+        async () => isElementDisplayed(distroSettingsSelectors.saveButton),
+        { timeout: 3000, timeoutMsg: "Save button did not appear after toggle" }
+      );
 
       const saveButton = await $(distroSettingsSelectors.saveButton);
       await expect(saveButton).toBeDisplayed();
@@ -236,7 +266,15 @@ describe("Distribution-Specific Settings", () => {
     it("should allow entering boot command", async () => {
       const input = await $(distroSettingsSelectors.bootCommandInput);
       await input.setValue("echo 'Hello WSL'");
-      await browser.pause(200);
+
+      // Wait for input value to be set
+      await browser.waitUntil(
+        async () => {
+          const value = await input.getValue();
+          return value === "echo 'Hello WSL'";
+        },
+        { timeout: 3000, timeoutMsg: "Input value was not set" }
+      );
 
       const value = await input.getValue();
       expect(value).toBe("echo 'Hello WSL'");
@@ -256,7 +294,15 @@ describe("Distribution-Specific Settings", () => {
     it("should allow entering default user", async () => {
       const input = await $(distroSettingsSelectors.defaultUserInput);
       await input.setValue("testuser");
-      await browser.pause(200);
+
+      // Wait for input value to be set
+      await browser.waitUntil(
+        async () => {
+          const value = await input.getValue();
+          return value === "testuser";
+        },
+        { timeout: 3000, timeoutMsg: "Input value was not set" }
+      );
 
       const value = await input.getValue();
       expect(value).toBe("testuser");
@@ -269,15 +315,19 @@ describe("Distribution-Specific Settings", () => {
     });
 
     it("should not show save button initially", async () => {
-      const saveButton = await $(distroSettingsSelectors.saveButton);
-      const isDisplayed = await saveButton.isDisplayed().catch(() => false);
-      expect(isDisplayed).toBe(false);
+      const saveButtonVisible = await isElementDisplayed(distroSettingsSelectors.saveButton);
+      expect(saveButtonVisible).toBe(false);
     });
 
     it("should show save button after making changes", async () => {
       const toggle = await $(distroSettingsSelectors.automountEnabledToggle);
       await toggle.click();
-      await browser.pause(200);
+
+      // Wait for save button to appear
+      await browser.waitUntil(
+        async () => isElementDisplayed(distroSettingsSelectors.saveButton),
+        { timeout: 3000, timeoutMsg: "Save button did not appear after toggle" }
+      );
 
       const saveButton = await $(distroSettingsSelectors.saveButton);
       await expect(saveButton).toBeDisplayed();
@@ -286,15 +336,24 @@ describe("Distribution-Specific Settings", () => {
     it("should hide save button after saving", async () => {
       const toggle = await $(distroSettingsSelectors.systemdToggle);
       await toggle.click();
-      await browser.pause(200);
+
+      // Wait for save button to appear
+      await browser.waitUntil(
+        async () => isElementDisplayed(distroSettingsSelectors.saveButton),
+        { timeout: 3000, timeoutMsg: "Save button did not appear after toggle" }
+      );
 
       const saveButton = await $(distroSettingsSelectors.saveButton);
       await saveButton.click();
-      await browser.pause(500);
 
-      const saveButtonAfter = await $(distroSettingsSelectors.saveButton);
-      const isDisplayed = await saveButtonAfter.isDisplayed().catch(() => false);
-      expect(isDisplayed).toBe(false);
+      // Wait for save button to disappear
+      await browser.waitUntil(
+        async () => !(await isElementDisplayed(distroSettingsSelectors.saveButton)),
+        { timeout: 5000, timeoutMsg: "Save button did not disappear after saving" }
+      );
+
+      const saveButtonVisible = await isElementDisplayed(distroSettingsSelectors.saveButton);
+      expect(saveButtonVisible).toBe(false);
     });
   });
 

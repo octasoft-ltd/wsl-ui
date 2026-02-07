@@ -54,6 +54,7 @@ export function SettingSelect({
   options,
   onChange,
   disabled,
+  testId,
 }: {
   label: string;
   description?: string;
@@ -61,9 +62,10 @@ export function SettingSelect({
   options: { value: string | number; label: string }[];
   onChange: (value: string | number) => void;
   disabled?: boolean;
+  testId?: string;
 }) {
   return (
-    <div className="py-3">
+    <div className="py-3" data-testid={testId ? `${testId}-container` : undefined}>
       <label className="block text-sm font-medium text-theme-text-primary mb-1">{label}</label>
       {description && <p className="text-xs text-theme-text-muted mb-2">{description}</p>}
       <select
@@ -74,6 +76,7 @@ export function SettingSelect({
           onChange(typeof value === 'number' ? Number(val) : val);
         }}
         disabled={disabled}
+        data-testid={testId}
         className="w-full px-3 py-2 bg-theme-bg-secondary border border-theme-border-secondary rounded-lg text-theme-text-primary focus:outline-hidden focus:border-theme-accent-primary disabled:opacity-50 disabled:cursor-not-allowed"
       >
         {options.map((option) => (

@@ -5,6 +5,7 @@ import { useHealthStore } from "../store/healthStore";
 import { useSettingsStore } from "../store/settingsStore";
 import { usePreflightStore } from "../store/preflightStore";
 import { useDistroStore } from "../store/distroStore";
+import { useConfigPendingStore } from "../store/configPendingStore";
 import { logger } from "../utils/logger";
 
 /**
@@ -39,19 +40,26 @@ export function usePolling() {
   // Get compacting status - pause polling during disk operations
   const compactingDistro = useDistroStore((state) => state.compactingDistro);
 
+  // Get config pending polling functions
+  const startConfigPendingPolling = useConfigPendingStore((state) => state.startPolling);
+  const stopConfigPendingPolling = useConfigPendingStore((state) => state.stopPolling);
+
   // Start polling on mount (polling itself checks preflight before each poll)
   useEffect(() => {
     if (!hasStarted.current) {
       hasStarted.current = true;
       logger.info("Initializing polling from usePolling hook", "usePolling");
       start();
+      // Also start config pending polling (longer interval, independent of main polling)
+      startConfigPendingPolling();
     }
 
     return () => {
       stop();
+      stopConfigPendingPolling();
       hasStarted.current = false;
     };
-  }, [start, stop]);
+  }, [start, stop, startConfigPendingPolling, stopConfigPendingPolling]);
 
   // Fetch version info once when WSL becomes ready
   const versionFetched = useRef(false);

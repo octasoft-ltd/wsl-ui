@@ -457,7 +457,21 @@ pub fn resize_distribution(name: &str, size: &str) -> Result<(), WslError> {
 /// - May take several minutes for large disks
 /// - Requires administrator privileges (UAC prompt will appear)
 pub fn compact_distribution(name: &str) -> Result<CompactResult, WslError> {
+    use crate::utils::is_mock_mode;
+
     info!("Compacting distribution disk for '{}'", name);
+
+    // In mock mode, return a successful mock result
+    if is_mock_mode() {
+        info!("Mock: Compacting distribution '{}'", name);
+        // Simulate a successful compact with realistic size reduction
+        return Ok(CompactResult {
+            size_before: 8_000_000_000,     // ~8 GB before
+            size_after: 6_500_000_000,      // ~6.5 GB after (1.5 GB saved)
+            fstrim_bytes: Some(1_200_000_000),
+            fstrim_message: Some("Mock: 1.2 GB trimmed".to_string()),
+        });
+    }
 
     // Verify distro exists and check WSL version
     let distros = list_distributions()?;

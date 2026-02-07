@@ -9,75 +9,16 @@
  * - Error handling
  */
 
-import {
-  waitForAppReady,
-  resetMockState,
-  selectors,
-  mockDistributions,
-  safeRefresh,
-} from "../utils";
+import { setupHooks, actions, isElementDisplayed } from "../base";
+import { selectors, waitForDialogToDisappear } from "../utils";
 
 describe("Rename Distribution", () => {
-  beforeEach(async () => {
-    await safeRefresh();
-    await browser.pause(500);
-    await resetMockState();
-    await waitForAppReady();
-    await browser.pause(500);
-  });
-
-  /**
-   * Helper to open the quick actions menu for a distribution
-   */
-  async function openQuickActionsMenu(distroName: string): Promise<void> {
-    const card = await $(selectors.distroCardByName(distroName));
-    const quickActionsButton = await card.$('[data-testid="quick-actions-button"]');
-    await quickActionsButton.click();
-    await browser.pause(300);
-  }
-
-  /**
-   * Helper to open the Manage submenu
-   */
-  async function openManageSubmenu(): Promise<void> {
-    const manageButton = await $(selectors.manageSubmenu);
-    await manageButton.click();
-    await browser.pause(200);
-  }
-
-  /**
-   * Helper to open rename dialog for a stopped distribution
-   */
-  async function openRenameDialog(distroName: string): Promise<void> {
-    await openQuickActionsMenu(distroName);
-    await openManageSubmenu();
-    const renameAction = await $(selectors.renameAction);
-    await renameAction.click();
-    await browser.pause(300);
-  }
-
-  /**
-   * Helper to wait for rename dialog to appear
-   */
-  async function waitForRenameDialog(): Promise<WebdriverIO.Element> {
-    await browser.waitUntil(
-      async () => {
-        const dialog = await $(selectors.renameDialog);
-        return dialog.isDisplayed();
-      },
-      {
-        timeout: 5000,
-        timeoutMsg: "Rename dialog did not appear within 5 seconds",
-      }
-    );
-    return $(selectors.renameDialog);
-  }
+  setupHooks.standard();
 
   describe("Dialog Access", () => {
     it("should have Rename option in manage submenu", async () => {
       // Use a stopped distribution (Debian)
-      await openQuickActionsMenu("Debian");
-      await openManageSubmenu();
+      await actions.openManageSubmenu("Debian");
 
       const renameAction = await $(selectors.renameAction);
       await expect(renameAction).toBeDisplayed();
@@ -88,13 +29,17 @@ describe("Rename Distribution", () => {
 
     it("should show stop dialog when renaming running distributions", async () => {
       // Ubuntu is running by default
-      await openQuickActionsMenu("Ubuntu");
-      await openManageSubmenu();
+      await actions.openManageSubmenu("Ubuntu");
 
       const renameAction = await $(selectors.renameAction);
       await expect(renameAction).toBeDisplayed();
       await renameAction.click();
-      await browser.pause(300);
+
+      // Wait for stop and action dialog to appear
+      await browser.waitUntil(
+        async () => isElementDisplayed(selectors.stopAndActionDialog),
+        { timeout: 5000, timeoutMsg: "Stop dialog did not appear" }
+      );
 
       // Stop and action dialog should appear for running distributions
       const stopDialog = await $(selectors.stopAndActionDialog);
@@ -103,19 +48,16 @@ describe("Rename Distribution", () => {
       // Close it for cleanup
       const cancelButton = await $(selectors.stopDialogCancelButton);
       await cancelButton.click();
-      await browser.pause(300);
+      await waitForDialogToDisappear(selectors.stopAndActionDialog, 5000);
     });
 
     it("should open Rename dialog when clicked on stopped distribution", async () => {
-      await openRenameDialog("Debian");
-
-      const dialog = await waitForRenameDialog();
+      const dialog = await actions.openRenameDialog("Debian");
       await expect(dialog).toBeDisplayed();
     });
 
     it("should display current distribution name in dialog", async () => {
-      await openRenameDialog("Debian");
-      await waitForRenameDialog();
+      await actions.openRenameDialog("Debian");
 
       const dialog = await $(selectors.renameDialog);
       const dialogText = await dialog.getText();
@@ -125,8 +67,7 @@ describe("Rename Distribution", () => {
 
   describe("Name Input", () => {
     it("should pre-populate input with current distribution name", async () => {
-      await openRenameDialog("Debian");
-      await waitForRenameDialog();
+      await actions.openRenameDialog("Debian");
 
       const input = await $(selectors.renameNameInput);
       const value = await input.getValue();
@@ -134,8 +75,7 @@ describe("Rename Distribution", () => {
     });
 
     it("should allow entering a new name", async () => {
-      await openRenameDialog("Debian");
-      await waitForRenameDialog();
+      await actions.openRenameDialog("Debian");
 
       const input = await $(selectors.renameNameInput);
       await input.clearValue();
@@ -146,8 +86,7 @@ describe("Rename Distribution", () => {
     });
 
     it("should disable Rename button when name is unchanged", async () => {
-      await openRenameDialog("Debian");
-      await waitForRenameDialog();
+      await actions.openRenameDialog("Debian");
 
       const confirmButton = await $(selectors.renameConfirmButton);
       const isDisabled = await confirmButton.getAttribute("disabled");
@@ -155,13 +94,21 @@ describe("Rename Distribution", () => {
     });
 
     it("should enable Rename button when valid new name is entered", async () => {
-      await openRenameDialog("Debian");
-      await waitForRenameDialog();
+      await actions.openRenameDialog("Debian");
 
       const input = await $(selectors.renameNameInput);
       await input.clearValue();
       await input.setValue("Debian-New");
-      await browser.pause(200);
+
+      // Wait for button state to update
+      await browser.waitUntil(
+        async () => {
+          const btn = await $(selectors.renameConfirmButton);
+          const disabled = await btn.getAttribute("disabled");
+          return !disabled;
+        },
+        { timeout: 3000, timeoutMsg: "Rename button did not enable" }
+      );
 
       const confirmButton = await $(selectors.renameConfirmButton);
       const isDisabled = await confirmButton.getAttribute("disabled");
@@ -169,12 +116,20 @@ describe("Rename Distribution", () => {
     });
 
     it("should disable Rename button when name is empty", async () => {
-      await openRenameDialog("Debian");
-      await waitForRenameDialog();
+      await actions.openRenameDialog("Debian");
 
       const input = await $(selectors.renameNameInput);
       await input.clearValue();
-      await browser.pause(200);
+
+      // Wait for button state to update
+      await browser.waitUntil(
+        async () => {
+          const btn = await $(selectors.renameConfirmButton);
+          const disabled = await btn.getAttribute("disabled");
+          return !!disabled;
+        },
+        { timeout: 3000, timeoutMsg: "Rename button did not disable" }
+      );
 
       const confirmButton = await $(selectors.renameConfirmButton);
       const isDisabled = await confirmButton.getAttribute("disabled");
@@ -184,14 +139,18 @@ describe("Rename Distribution", () => {
 
   describe("Name Validation", () => {
     it("should show error for duplicate name", async () => {
-      await openRenameDialog("Debian");
-      await waitForRenameDialog();
+      await actions.openRenameDialog("Debian");
 
       const input = await $(selectors.renameNameInput);
       await input.clearValue();
       // Ubuntu exists in mock distributions
       await input.setValue("Ubuntu");
-      await browser.pause(200);
+
+      // Wait for validation error to appear
+      await browser.waitUntil(
+        async () => isElementDisplayed(selectors.renameValidationError),
+        { timeout: 3000, timeoutMsg: "Validation error did not appear" }
+      );
 
       const validationError = await $(selectors.renameValidationError);
       await expect(validationError).toBeDisplayed();
@@ -201,13 +160,17 @@ describe("Rename Distribution", () => {
     });
 
     it("should show error for invalid characters", async () => {
-      await openRenameDialog("Debian");
-      await waitForRenameDialog();
+      await actions.openRenameDialog("Debian");
 
       const input = await $(selectors.renameNameInput);
       await input.clearValue();
       await input.setValue("Invalid Name With Spaces");
-      await browser.pause(200);
+
+      // Wait for validation error to appear
+      await browser.waitUntil(
+        async () => isElementDisplayed(selectors.renameValidationError),
+        { timeout: 3000, timeoutMsg: "Validation error did not appear" }
+      );
 
       const validationError = await $(selectors.renameValidationError);
       await expect(validationError).toBeDisplayed();
@@ -217,18 +180,25 @@ describe("Rename Distribution", () => {
     });
 
     it("should allow valid characters (letters, numbers, dots, underscores, hyphens)", async () => {
-      await openRenameDialog("Debian");
-      await waitForRenameDialog();
+      await actions.openRenameDialog("Debian");
 
       const input = await $(selectors.renameNameInput);
       await input.clearValue();
       await input.setValue("Valid_Name-123.test");
-      await browser.pause(200);
+
+      // Wait for button to become enabled (indicating valid name)
+      await browser.waitUntil(
+        async () => {
+          const btn = await $(selectors.renameConfirmButton);
+          const disabled = await btn.getAttribute("disabled");
+          return !disabled;
+        },
+        { timeout: 3000, timeoutMsg: "Button did not enable for valid name" }
+      );
 
       // Should not show validation error
-      const validationError = await $(selectors.renameValidationError);
-      const isDisplayed = await validationError.isDisplayed().catch(() => false);
-      expect(isDisplayed).toBe(false);
+      const errorDisplayed = await isElementDisplayed(selectors.renameValidationError);
+      expect(errorDisplayed).toBe(false);
 
       // Confirm button should be enabled
       const confirmButton = await $(selectors.renameConfirmButton);
@@ -237,14 +207,18 @@ describe("Rename Distribution", () => {
     });
 
     it("should be case-insensitive for duplicate detection", async () => {
-      await openRenameDialog("Debian");
-      await waitForRenameDialog();
+      await actions.openRenameDialog("Debian");
 
       const input = await $(selectors.renameNameInput);
       await input.clearValue();
       // ubuntu (lowercase) should match Ubuntu
       await input.setValue("ubuntu");
-      await browser.pause(200);
+
+      // Wait for validation error to appear
+      await browser.waitUntil(
+        async () => isElementDisplayed(selectors.renameValidationError),
+        { timeout: 3000, timeoutMsg: "Validation error did not appear" }
+      );
 
       const validationError = await $(selectors.renameValidationError);
       await expect(validationError).toBeDisplayed();
@@ -256,8 +230,7 @@ describe("Rename Distribution", () => {
 
   describe("Checkbox Options", () => {
     it("should have Windows Terminal profile checkbox checked by default", async () => {
-      await openRenameDialog("Debian");
-      await waitForRenameDialog();
+      await actions.openRenameDialog("Debian");
 
       const checkbox = await $(selectors.renameUpdateTerminal);
       const isChecked = await checkbox.isSelected();
@@ -265,8 +238,7 @@ describe("Rename Distribution", () => {
     });
 
     it("should have Start Menu shortcut checkbox checked by default", async () => {
-      await openRenameDialog("Debian");
-      await waitForRenameDialog();
+      await actions.openRenameDialog("Debian");
 
       const checkbox = await $(selectors.renameUpdateShortcut);
       const isChecked = await checkbox.isSelected();
@@ -274,32 +246,39 @@ describe("Rename Distribution", () => {
     });
 
     it("should allow toggling Windows Terminal profile checkbox", async () => {
-      await openRenameDialog("Debian");
-      await waitForRenameDialog();
+      await actions.openRenameDialog("Debian");
 
       const checkbox = await $(selectors.renameUpdateTerminal);
       await checkbox.click();
-      await browser.pause(100);
+
+      // Wait for checkbox to toggle
+      await browser.waitUntil(
+        async () => !(await checkbox.isSelected()),
+        { timeout: 3000, timeoutMsg: "Checkbox did not toggle" }
+      );
 
       const isChecked = await checkbox.isSelected();
       expect(isChecked).toBe(false);
     });
 
     it("should allow toggling Start Menu shortcut checkbox", async () => {
-      await openRenameDialog("Debian");
-      await waitForRenameDialog();
+      await actions.openRenameDialog("Debian");
 
       const checkbox = await $(selectors.renameUpdateShortcut);
       await checkbox.click();
-      await browser.pause(100);
+
+      // Wait for checkbox to toggle
+      await browser.waitUntil(
+        async () => !(await checkbox.isSelected()),
+        { timeout: 3000, timeoutMsg: "Checkbox did not toggle" }
+      );
 
       const isChecked = await checkbox.isSelected();
       expect(isChecked).toBe(false);
     });
 
     it("should display descriptive text for terminal option", async () => {
-      await openRenameDialog("Debian");
-      await waitForRenameDialog();
+      await actions.openRenameDialog("Debian");
 
       const option = await $(selectors.renameTerminalOption);
       const text = await option.getText();
@@ -307,8 +286,7 @@ describe("Rename Distribution", () => {
     });
 
     it("should display descriptive text for shortcut option", async () => {
-      await openRenameDialog("Debian");
-      await waitForRenameDialog();
+      await actions.openRenameDialog("Debian");
 
       const option = await $(selectors.renameShortcutOption);
       const text = await option.getText();
@@ -318,21 +296,18 @@ describe("Rename Distribution", () => {
 
   describe("Cancel Operation", () => {
     it("should close dialog when Cancel is clicked", async () => {
-      await openRenameDialog("Debian");
-      await waitForRenameDialog();
+      await actions.openRenameDialog("Debian");
 
       const cancelButton = await $(selectors.renameCancelButton);
       await cancelButton.click();
-      await browser.pause(300);
+      await waitForDialogToDisappear(selectors.renameDialog, 5000);
 
-      const dialog = await $(selectors.renameDialog);
-      const isDisplayed = await dialog.isDisplayed().catch(() => false);
-      expect(isDisplayed).toBe(false);
+      const dialogDisplayed = await isElementDisplayed(selectors.renameDialog);
+      expect(dialogDisplayed).toBe(false);
     });
 
     it("should close dialog when backdrop is clicked", async () => {
-      await openRenameDialog("Debian");
-      await waitForRenameDialog();
+      await actions.openRenameDialog("Debian");
 
       // Click on the backdrop (area outside dialog)
       // The backdrop has class "fixed inset-0" and is behind the dialog
@@ -342,16 +317,14 @@ describe("Rename Distribution", () => {
           (backdrop as HTMLElement).click();
         }
       });
-      await browser.pause(300);
+      await waitForDialogToDisappear(selectors.renameDialog, 5000);
 
-      const dialog = await $(selectors.renameDialog);
-      const isDisplayed = await dialog.isDisplayed().catch(() => false);
-      expect(isDisplayed).toBe(false);
+      const dialogDisplayed = await isElementDisplayed(selectors.renameDialog);
+      expect(dialogDisplayed).toBe(false);
     });
 
     it("should not rename distribution when cancelled", async () => {
-      await openRenameDialog("Debian");
-      await waitForRenameDialog();
+      await actions.openRenameDialog("Debian");
 
       const input = await $(selectors.renameNameInput);
       await input.clearValue();
@@ -359,7 +332,7 @@ describe("Rename Distribution", () => {
 
       const cancelButton = await $(selectors.renameCancelButton);
       await cancelButton.click();
-      await browser.pause(500);
+      await waitForDialogToDisappear(selectors.renameDialog, 5000);
 
       // Debian should still exist
       const debianCard = await $(selectors.distroCardByName("Debian"));
@@ -374,27 +347,29 @@ describe("Rename Distribution", () => {
 
   describe("Rename Operation", () => {
     it("should perform rename when Rename button is clicked", async () => {
-      await openRenameDialog("Debian");
-      await waitForRenameDialog();
+      await actions.openRenameDialog("Debian");
 
       const input = await $(selectors.renameNameInput);
       await input.clearValue();
       await input.setValue("Debian-Renamed");
-      await browser.pause(200);
+
+      // Wait for button to enable
+      await browser.waitUntil(
+        async () => {
+          const btn = await $(selectors.renameConfirmButton);
+          const disabled = await btn.getAttribute("disabled");
+          return !disabled;
+        },
+        { timeout: 3000, timeoutMsg: "Rename button did not enable" }
+      );
 
       const confirmButton = await $(selectors.renameConfirmButton);
       await confirmButton.click();
 
       // Wait for rename to complete and dialog to close
       await browser.waitUntil(
-        async () => {
-          const dialog = await $(selectors.renameDialog);
-          return !(await dialog.isDisplayed().catch(() => false));
-        },
-        {
-          timeout: 10000,
-          timeoutMsg: "Dialog did not close after rename",
-        }
+        async () => !(await isElementDisplayed(selectors.renameDialog)),
+        { timeout: 10000, timeoutMsg: "Dialog did not close after rename" }
       );
 
       // Old name should not exist
@@ -409,43 +384,52 @@ describe("Rename Distribution", () => {
 
     it("should close dialog after successful rename", async () => {
       // Use Alpine to avoid state pollution from previous rename tests
-      await openRenameDialog("Alpine");
-      await waitForRenameDialog();
+      await actions.openRenameDialog("Alpine");
 
       const input = await $(selectors.renameNameInput);
       await input.clearValue();
       await input.setValue("Alpine-Test");
-      await browser.pause(200);
+
+      // Wait for button to enable
+      await browser.waitUntil(
+        async () => {
+          const btn = await $(selectors.renameConfirmButton);
+          const disabled = await btn.getAttribute("disabled");
+          return !disabled;
+        },
+        { timeout: 3000, timeoutMsg: "Rename button did not enable" }
+      );
 
       const confirmButton = await $(selectors.renameConfirmButton);
       await confirmButton.click();
 
       // Wait for dialog to close
       await browser.waitUntil(
-        async () => {
-          const dialog = await $(selectors.renameDialog);
-          return !(await dialog.isDisplayed().catch(() => false));
-        },
-        {
-          timeout: 10000,
-          timeoutMsg: "Dialog did not close after rename",
-        }
+        async () => !(await isElementDisplayed(selectors.renameDialog)),
+        { timeout: 10000, timeoutMsg: "Dialog did not close after rename" }
       );
 
-      const dialog = await $(selectors.renameDialog);
-      const isDisplayed = await dialog.isDisplayed().catch(() => false);
-      expect(isDisplayed).toBe(false);
+      const dialogDisplayed = await isElementDisplayed(selectors.renameDialog);
+      expect(dialogDisplayed).toBe(false);
     });
 
     it("should show button text change during rename", async () => {
       // Use Fedora to avoid state pollution from previous rename tests
-      await openRenameDialog("Fedora");
-      await waitForRenameDialog();
+      await actions.openRenameDialog("Fedora");
 
       const input = await $(selectors.renameNameInput);
       await input.clearValue();
       await input.setValue("Fedora-Progress");
-      await browser.pause(200);
+
+      // Wait for button to enable
+      await browser.waitUntil(
+        async () => {
+          const btn = await $(selectors.renameConfirmButton);
+          const disabled = await btn.getAttribute("disabled");
+          return !disabled;
+        },
+        { timeout: 3000, timeoutMsg: "Rename button did not enable" }
+      );
 
       const confirmButton = await $(selectors.renameConfirmButton);
       const initialText = await confirmButton.getText();
@@ -460,41 +444,41 @@ describe("Rename Distribution", () => {
   describe("Keyboard Navigation", () => {
     it("should close dialog when Escape is pressed", async () => {
       // Use Alpine to avoid state pollution from previous tests
-      await openRenameDialog("Alpine");
-      await waitForRenameDialog();
+      await actions.openRenameDialog("Alpine");
 
       // Press Escape
       await browser.keys("Escape");
-      await browser.pause(300);
+      await waitForDialogToDisappear(selectors.renameDialog, 5000);
 
-      const dialog = await $(selectors.renameDialog);
-      const isDisplayed = await dialog.isDisplayed().catch(() => false);
-      expect(isDisplayed).toBe(false);
+      const dialogDisplayed = await isElementDisplayed(selectors.renameDialog);
+      expect(dialogDisplayed).toBe(false);
     });
 
     it("should submit rename when Enter is pressed with valid name", async () => {
       // Use Alpine to avoid state pollution from previous tests
-      await openRenameDialog("Alpine");
-      await waitForRenameDialog();
+      await actions.openRenameDialog("Alpine");
 
       const input = await $(selectors.renameNameInput);
       await input.clearValue();
       await input.setValue("Alpine-Enter");
-      await browser.pause(200);
+
+      // Wait for button to enable
+      await browser.waitUntil(
+        async () => {
+          const btn = await $(selectors.renameConfirmButton);
+          const disabled = await btn.getAttribute("disabled");
+          return !disabled;
+        },
+        { timeout: 3000, timeoutMsg: "Rename button did not enable" }
+      );
 
       // Press Enter
       await browser.keys("Enter");
 
       // Wait for rename to complete
       await browser.waitUntil(
-        async () => {
-          const dialog = await $(selectors.renameDialog);
-          return !(await dialog.isDisplayed().catch(() => false));
-        },
-        {
-          timeout: 10000,
-          timeoutMsg: "Dialog did not close after Enter key",
-        }
+        async () => !(await isElementDisplayed(selectors.renameDialog)),
+        { timeout: 10000, timeoutMsg: "Dialog did not close after Enter key" }
       );
 
       // New name should exist
@@ -504,8 +488,7 @@ describe("Rename Distribution", () => {
 
     it("should auto-focus the name input when dialog opens", async () => {
       // Use Fedora to avoid state pollution from previous rename tests
-      await openRenameDialog("Fedora");
-      await waitForRenameDialog();
+      await actions.openRenameDialog("Fedora");
 
       // The input should be focused
       const input = await $(selectors.renameNameInput);

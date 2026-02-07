@@ -4,6 +4,7 @@ import type { RdpDetectionResult } from "../types/rdp";
 import { wslService } from "../services/wslService";
 import { actionsService } from "../services/actionsService";
 import { useActionsStore } from "./actionsStore";
+import { useNotificationStore } from "./notificationStore";
 import { parseError, logError, formatError } from "../utils/errors";
 import { logger, info, warn } from "../utils/logger";
 
@@ -384,7 +385,22 @@ export const useDistroStore = create<DistroStore>((set, get) => ({
       set({ actionInProgress: "Detecting desktop environment..." });
       const detection = await wslService.detectRdp(name, id);
 
-      // 3. If nothing detected, return early
+      // 3. Handle detection results
+      if (detection.type === "port_conflict") {
+        // Port is in use by another distro
+        const port = detection.port ?? 3390;
+        useNotificationStore.getState().addNotification({
+          type: "error",
+          title: "RDP Port Conflict",
+          message: `Port ${port} is already in use by another WSL distro. Configure a unique port in /etc/xrdp/xrdp.ini for each distro.`,
+        });
+        return {
+          success: false,
+          type: "port_conflict",
+          error: `Port ${port} is already in use by another distro`,
+        };
+      }
+
       if (detection.type === "none") {
         return {
           success: false,

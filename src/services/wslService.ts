@@ -3,7 +3,7 @@ import { listen, type UnlistenFn } from "@tauri-apps/api/event";
 import { save, open } from "@tauri-apps/plugin-dialog";
 import type { DistroCatalog, DownloadDistro, ContainerImage, MsStoreDistroInfo } from "../types/catalog";
 import type { Distribution, DistroMetadata } from "../types/distribution";
-import type { RdpDetectionResult, WslConfigStatus } from "../types/rdp";
+import type { RdpDetectionResult, WslConfigStatus, WslConfigPendingStatus } from "../types/rdp";
 import type { WslConfig, WslConf, InstalledTerminal } from "../types/settings";
 import { debug, info } from "../utils/logger";
 
@@ -117,6 +117,14 @@ export const wslService = {
   async checkWslConfigTimeouts(): Promise<WslConfigStatus> {
     debug("[wslService] Checking WSL config timeouts");
     return await invoke<WslConfigStatus>("check_wsl_config_timeouts");
+  },
+
+  /**
+   * Check if .wslconfig has pending changes requiring WSL restart
+   */
+  async checkWslConfigPending(): Promise<WslConfigPendingStatus> {
+    debug("[wslService] Checking WSL config pending changes");
+    return await invoke<WslConfigPendingStatus>("check_wsl_config_pending");
   },
 
   /**
@@ -535,10 +543,11 @@ export const wslService = {
 
   /**
    * Get information about the WSL2 system distribution (CBL-Mariner/Azure Linux)
+   * Returns null if the system distro is not available (e.g., guiApplications=false in .wslconfig)
    */
-  async getSystemDistroInfo(): Promise<SystemDistroInfo> {
+  async getSystemDistroInfo(): Promise<SystemDistroInfo | null> {
     debug("[wslService] Getting system distro info");
-    return await invoke<SystemDistroInfo>("get_system_distro_info");
+    return await invoke<SystemDistroInfo | null>("get_system_distro_info");
   },
 
   /**

@@ -254,7 +254,8 @@ impl WslService {
     }
 
     /// Get information about the WSL2 system distribution (CBL-Mariner/Azure Linux)
-    pub fn get_system_distro_info() -> Result<info::SystemDistroInfo, WslError> {
+    /// Returns None if the system distro is not available (e.g., guiApplications=false)
+    pub fn get_system_distro_info() -> Result<Option<info::SystemDistroInfo>, WslError> {
         info::get_system_distro_info()
     }
 

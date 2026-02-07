@@ -11,15 +11,14 @@
  */
 
 import {
-  waitForAppReady,
-  resetMockState,
   selectors,
-  safeRefresh,
+  waitForDialog,
+  waitForDialogToDisappear,
 } from "../utils";
+import { setupHooks, actions } from "../base";
 
 const keyboardSelectors = {
   // Clone Dialog
-  cloneAction: '[data-testid="quick-action-clone"]',
   cloneDialog: '[data-testid="clone-dialog"]',
   cloneNameInput: '[data-testid="clone-name-input"]',
   cloneLocationInput: '[data-testid="clone-location-input"]',
@@ -30,42 +29,15 @@ const keyboardSelectors = {
   dialogCancelButton: '[data-testid="dialog-cancel-button"]',
   dialogConfirmButton: '[data-testid="dialog-confirm-button"]',
   // Quick Actions
-  quickActionsButton: '[data-testid="quick-actions-button"]',
   quickActionsMenu: '[data-testid="quick-actions-menu"]',
   // Delete button is on DistroCard, not in menu
   deleteButton: '[data-testid="delete-button"]',
-  // Settings
-  settingsButton: '[data-testid="settings-button"]',
-  backButton: '[data-testid="back-button"]',
 };
 
 const TEST_DISTRO = "Ubuntu";
 
-async function openQuickActionsForDistro(distroName: string): Promise<void> {
-  const card = await $(selectors.distroCardByName(distroName));
-  await card.waitForDisplayed({ timeout: 5000 });
-  const quickActionsButton = await card.$(keyboardSelectors.quickActionsButton);
-  await quickActionsButton.waitForClickable({ timeout: 5000 });
-  await quickActionsButton.click();
-  await browser.pause(300);
-}
-
 async function openCloneDialog(): Promise<void> {
-  await openQuickActionsForDistro(TEST_DISTRO);
-  const cloneAction = await $(keyboardSelectors.cloneAction);
-  await cloneAction.waitForClickable({ timeout: 5000 });
-  await cloneAction.click();
-  await browser.pause(300);
-
-  // Check if stop dialog appeared (for running distros like Ubuntu)
-  const stopDialog = await $(selectors.stopAndActionDialog);
-  if (await stopDialog.isDisplayed().catch(() => false)) {
-    // Click "Stop & Continue" to proceed
-    const stopButton = await $(selectors.stopAndContinueButton);
-    await stopButton.click();
-    // Wait for stop to complete and clone dialog to appear
-    await browser.pause(1000);
-  }
+  await actions.openCloneDialog(TEST_DISTRO);
 }
 
 async function openDeleteConfirmDialog(): Promise<void> {
@@ -75,17 +47,12 @@ async function openDeleteConfirmDialog(): Promise<void> {
   const deleteButton = await card.$(keyboardSelectors.deleteButton);
   await deleteButton.waitForClickable({ timeout: 5000 });
   await deleteButton.click();
-  await browser.pause(300);
+  // Wait for confirm dialog to appear
+  await waitForDialog(keyboardSelectors.confirmDialog, 5000);
 }
 
 describe("Keyboard Navigation", () => {
-  beforeEach(async () => {
-    await safeRefresh();
-    await browser.pause(500);
-    await resetMockState();
-    await waitForAppReady();
-    await browser.pause(500);
-  });
+  setupHooks.standard();
 
   describe("Clone Dialog - Escape Key", () => {
     it("should close clone dialog when Escape key is pressed", async () => {
@@ -95,10 +62,15 @@ describe("Keyboard Navigation", () => {
       await expect(dialog).toBeDisplayed();
 
       await browser.keys("Escape");
-      await browser.pause(300);
+      await waitForDialogToDisappear(keyboardSelectors.cloneDialog, 3000);
 
       const dialogAfter = await $(keyboardSelectors.cloneDialog);
-      const isDisplayed = await dialogAfter.isDisplayed().catch(() => false);
+      let isDisplayed = false;
+      try {
+        isDisplayed = await dialogAfter.isDisplayed();
+      } catch {
+        isDisplayed = false;
+      }
       expect(isDisplayed).toBe(false);
     });
 
@@ -107,10 +79,9 @@ describe("Keyboard Navigation", () => {
 
       const nameInput = await $(keyboardSelectors.cloneNameInput);
       await nameInput.setValue("test-name-that-should-be-cleared");
-      await browser.pause(200);
 
       await browser.keys("Escape");
-      await browser.pause(300);
+      await waitForDialogToDisappear(keyboardSelectors.cloneDialog, 3000);
 
       // Re-open dialog and check name is reset
       await openCloneDialog();
@@ -128,19 +99,49 @@ describe("Keyboard Navigation", () => {
       // Clear and set a unique name
       await nameInput.clearValue();
       await nameInput.setValue("Ubuntu-test-clone");
-      await browser.pause(200);
 
       await browser.keys("Enter");
-      await browser.pause(500);
+
+      // Wait for either progress to show or dialog to close
+      await browser.waitUntil(
+        async () => {
+          const dialog = await $(keyboardSelectors.cloneDialog);
+          const progress = await dialog.$('[data-testid="clone-progress"]');
+          let progressDisplayed = false;
+          let dialogDisplayed = false;
+          try {
+            progressDisplayed = await progress.isDisplayed();
+          } catch {
+            progressDisplayed = false;
+          }
+          try {
+            dialogDisplayed = await dialog.isDisplayed();
+          } catch {
+            dialogDisplayed = false;
+          }
+          return progressDisplayed || !dialogDisplayed;
+        },
+        { timeout: 5000, timeoutMsg: "Clone form did not submit" }
+      );
 
       // Dialog should close (or show progress)
       const dialog = await $(keyboardSelectors.cloneDialog);
-      // Check for progress or dialog closure
       const progress = await dialog.$('[data-testid="clone-progress"]');
-      const isProgressDisplayed = await progress.isDisplayed().catch(() => false);
-      const isDialogDisplayed = await dialog.isDisplayed().catch(() => false);
+      let isProgressDisplayed = false;
+      let isDialogDisplayed = false;
+      try {
+        isProgressDisplayed = await progress.isDisplayed();
+      } catch {
+        isProgressDisplayed = false;
+      }
+      try {
+        isDialogDisplayed = await dialog.isDisplayed();
+      } catch {
+        isDialogDisplayed = false;
+      }
 
-      // Either progress shown OR dialog closed
+      // Note: OR is intentional - form submission can show progress indicator OR close the dialog,
+      // both are valid outcomes indicating the submission was triggered
       expect(isProgressDisplayed || !isDialogDisplayed).toBe(true);
     });
   });
@@ -155,7 +156,15 @@ describe("Keyboard Navigation", () => {
 
       // Tab to next element
       await browser.keys("Tab");
-      await browser.pause(200);
+
+      // Wait for focus to move
+      await browser.waitUntil(
+        async () => {
+          const locationInput = await $(keyboardSelectors.cloneLocationInput);
+          return locationInput.isFocused();
+        },
+        { timeout: 3000, timeoutMsg: "Focus did not move to location input" }
+      );
 
       // Location input should be focused (or its browse button)
       const locationInput = await $(keyboardSelectors.cloneLocationInput);
@@ -171,18 +180,16 @@ describe("Keyboard Navigation", () => {
       await browser.keys("Tab"); // to location input
       await browser.keys("Tab"); // to browse button
       await browser.keys("Tab"); // to cancel button
-      await browser.pause(200);
 
       const cancelButton = await $(keyboardSelectors.cloneCancelButton);
       const isCancelFocused = await cancelButton.isFocused();
 
       await browser.keys("Tab"); // to confirm button
-      await browser.pause(200);
 
       const confirmButton = await $(keyboardSelectors.cloneConfirmButton);
       const isConfirmFocused = await confirmButton.isFocused();
 
-      // At least one of the buttons should have been focused
+      // Note: OR is intentional - focus order may vary, test verifies Tab navigates to dialog buttons
       expect(isCancelFocused || isConfirmFocused).toBe(true);
     });
 
@@ -192,13 +199,11 @@ describe("Keyboard Navigation", () => {
       // Tab to move forward
       await browser.keys("Tab");
       await browser.keys("Tab");
-      await browser.pause(200);
 
       // Shift+Tab to go back
       await browser.keys(["Shift", "Tab"]);
-      await browser.pause(200);
 
-      // Should be back to a previous element
+      // Note: OR is intentional - Shift+Tab moves focus backwards, either form field is a valid target
       const locationInput = await $(keyboardSelectors.cloneLocationInput);
       const nameInput = await $(keyboardSelectors.cloneNameInput);
       const isLocationFocused = await locationInput.isFocused();
@@ -219,10 +224,15 @@ describe("Keyboard Navigation", () => {
       await expect(dialog).toBeDisplayed();
 
       await browser.keys("Escape");
-      await browser.pause(300);
+      await waitForDialogToDisappear(keyboardSelectors.confirmDialog, 3000);
 
       const dialogAfter = await $(keyboardSelectors.confirmDialog);
-      const isDisplayed = await dialogAfter.isDisplayed().catch(() => false);
+      let isDisplayed = false;
+      try {
+        isDisplayed = await dialogAfter.isDisplayed();
+      } catch {
+        isDisplayed = false;
+      }
       expect(isDisplayed).toBe(false);
     });
   });
@@ -234,10 +244,15 @@ describe("Keyboard Navigation", () => {
       const cancelButton = await $(keyboardSelectors.dialogCancelButton);
       await cancelButton.waitForClickable({ timeout: 5000 });
       await cancelButton.click();
-      await browser.pause(300);
+      await waitForDialogToDisappear(keyboardSelectors.confirmDialog, 3000);
 
       const dialog = await $(keyboardSelectors.confirmDialog);
-      const isDisplayed = await dialog.isDisplayed().catch(() => false);
+      let isDisplayed = false;
+      try {
+        isDisplayed = await dialog.isDisplayed();
+      } catch {
+        isDisplayed = false;
+      }
       expect(isDisplayed).toBe(false);
     });
   });
@@ -249,7 +264,6 @@ describe("Keyboard Navigation", () => {
       // Tab many times - focus should cycle within dialog
       for (let i = 0; i < 10; i++) {
         await browser.keys("Tab");
-        await browser.pause(100);
       }
 
       // Active element should still be inside the dialog
@@ -264,90 +278,111 @@ describe("Keyboard Navigation", () => {
 
   describe("Focus Return After Dialog Close", () => {
     it("should return focus to trigger element after clone dialog closes", async () => {
-      // Get reference to the quick actions button
-      const card = await $(selectors.distroCardByName(TEST_DISTRO));
-      await card.waitForDisplayed({ timeout: 5000 });
-      const quickActionsButton = await card.$(keyboardSelectors.quickActionsButton);
-
-      // Open and close clone dialog
-      await quickActionsButton.click();
-      await browser.pause(300);
-
-      const cloneAction = await $(keyboardSelectors.cloneAction);
-      await cloneAction.click();
-      await browser.pause(300);
+      // Open clone dialog using helper
+      await openCloneDialog();
 
       // Close with Escape
       await browser.keys("Escape");
-      await browser.pause(300);
+
+      // Wait for dialog to close
+      await waitForDialogToDisappear(keyboardSelectors.cloneDialog, 5000);
 
       // Note: Focus return behavior depends on implementation
       // This test verifies the dialog is closed
       const dialog = await $(keyboardSelectors.cloneDialog);
-      const isDisplayed = await dialog.isDisplayed().catch(() => false);
+      let isDisplayed = false;
+      try {
+        isDisplayed = await dialog.isDisplayed();
+      } catch {
+        isDisplayed = false;
+      }
       expect(isDisplayed).toBe(false);
     });
   });
 
   describe("Quick Actions Menu Keyboard", () => {
     it("should close quick actions menu when Escape is pressed", async () => {
-      // Open quick actions menu
-      const card = await $(selectors.distroCardByName(TEST_DISTRO));
-      await card.waitForDisplayed({ timeout: 5000 });
-      const quickActionsButton = await card.$(keyboardSelectors.quickActionsButton);
-      await quickActionsButton.waitForClickable({ timeout: 5000 });
-      await quickActionsButton.click();
-      await browser.pause(500);
+      // Open quick actions menu using helper
+      await actions.openQuickActionsMenu(TEST_DISTRO);
 
       const menu = await $(keyboardSelectors.quickActionsMenu);
       await expect(menu).toBeDisplayed();
 
       await browser.keys("Escape");
-      await browser.pause(500);
+
+      // Wait for menu to close
+      await browser.waitUntil(
+        async () => {
+          const menuAfter = await $(keyboardSelectors.quickActionsMenu);
+          try {
+            return !(await menuAfter.isDisplayed());
+          } catch {
+            return true;
+          }
+        },
+        { timeout: 3000, timeoutMsg: "Quick actions menu did not close" }
+      );
 
       const menuAfter = await $(keyboardSelectors.quickActionsMenu);
-      const isDisplayed = await menuAfter.isDisplayed().catch(() => false);
+      let isDisplayed = false;
+      try {
+        isDisplayed = await menuAfter.isDisplayed();
+      } catch {
+        isDisplayed = false;
+      }
       expect(isDisplayed).toBe(false);
     });
   });
 
   describe("Settings Navigation", () => {
     it("should navigate to settings with keyboard activation", async () => {
-      const settingsButton = await $(keyboardSelectors.settingsButton);
+      const settingsButton = await $(selectors.settingsButton);
       await settingsButton.waitForClickable({ timeout: 5000 });
 
       // Focus the element using execute
       await browser.execute((el) => el.focus(), settingsButton);
-      await browser.pause(200);
 
       // Press Enter to activate
       await browser.keys("Enter");
-      await browser.pause(500);
+
+      // Wait for settings page to load
+      await browser.waitUntil(
+        async () => {
+          const backButton = await $(selectors.backButton);
+          return backButton.isDisplayed();
+        },
+        { timeout: 5000, timeoutMsg: "Settings page did not load" }
+      );
 
       // Back button should be visible (we're in settings)
-      const backButton = await $(keyboardSelectors.backButton);
+      const backButton = await $(selectors.backButton);
       await expect(backButton).toBeDisplayed();
     });
 
     it("should navigate back from settings with keyboard", async () => {
-      // Navigate to settings first
-      const settingsButton = await $(keyboardSelectors.settingsButton);
-      await settingsButton.click();
-      await browser.pause(500);
+      // Navigate to settings first using helper
+      await actions.goToSettings();
 
-      const backButton = await $(keyboardSelectors.backButton);
+      const backButton = await $(selectors.backButton);
       await backButton.waitForClickable({ timeout: 5000 });
 
       // Focus the element using execute
       await browser.execute((el) => el.focus(), backButton);
-      await browser.pause(200);
 
       // Press Enter to go back
       await browser.keys("Enter");
-      await browser.pause(500);
+
+      // Wait for main page to load
+      await browser.waitUntil(
+        async () => {
+          const settingsBtn = await $(selectors.settingsButton);
+          return settingsBtn.isDisplayed();
+        },
+        { timeout: 5000, timeoutMsg: "Main page did not load" }
+      );
 
       // Should be back on main page - settings button visible
-      const settingsButtonAfter = await $(keyboardSelectors.settingsButton);
+      const settingsButtonAfter = await $(selectors.settingsButton);
       await expect(settingsButtonAfter).toBeDisplayed();
     });
   });

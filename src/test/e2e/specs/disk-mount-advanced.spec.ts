@@ -12,7 +12,52 @@
  * - Shows physical disk requires admin privileges warning
  */
 
-import { waitForAppReady, resetMockState, safeRefresh } from "../utils";
+import { waitForDialog, waitForDialogToDisappear } from "../utils";
+import { setupHooks, isElementDisplayed } from "../base";
+
+/**
+ * Helper to wait for panel to be displayed
+ */
+async function waitForPanelDisplayed(selector: string): Promise<void> {
+  await browser.waitUntil(
+    async () => isElementDisplayed(selector),
+    { timeout: 5000, timeoutMsg: `Panel ${selector} did not appear` }
+  );
+}
+
+/**
+ * Helper to wait for panel to be hidden
+ */
+async function waitForPanelHidden(selector: string): Promise<void> {
+  await browser.waitUntil(
+    async () => !(await isElementDisplayed(selector)),
+    { timeout: 5000, timeoutMsg: `Panel ${selector} did not close` }
+  );
+}
+
+/**
+ * Helper to wait for input value to update
+ */
+async function waitForInputValue(selector: string, expectedValue: string): Promise<void> {
+  await browser.waitUntil(
+    async () => {
+      const input = await $(selector);
+      const value = await input.getValue();
+      return value === expectedValue;
+    },
+    { timeout: 3000, timeoutMsg: `Input ${selector} did not update to ${expectedValue}` }
+  );
+}
+
+/**
+ * Helper to wait for section to be displayed
+ */
+async function waitForSectionDisplayed(selector: string): Promise<void> {
+  await browser.waitUntil(
+    async () => isElementDisplayed(selector),
+    { timeout: 5000, timeoutMsg: `Section ${selector} did not appear` }
+  );
+}
 
 const selectors = {
   // Status bar
@@ -67,7 +112,7 @@ async function openMountedDisksPanel(): Promise<void> {
   const diskButton = await $(selectors.diskMountsButton);
   await diskButton.waitForClickable({ timeout: 5000 });
   await diskButton.click();
-  await browser.pause(300);
+  await waitForPanelDisplayed(selectors.mountedDisksPanel);
 }
 
 async function openDiskMountDialog(): Promise<void> {
@@ -75,17 +120,11 @@ async function openDiskMountDialog(): Promise<void> {
   const mountNewButton = await $(selectors.mountNewDiskButton);
   await mountNewButton.waitForClickable({ timeout: 5000 });
   await mountNewButton.click();
-  await browser.pause(300);
+  await waitForDialog(selectors.diskMountDialog, 5000);
 }
 
 describe("Disk Mount Advanced Scenarios", () => {
-  beforeEach(async () => {
-    await safeRefresh();
-    await browser.pause(500);
-    await resetMockState();
-    await waitForAppReady();
-    await browser.pause(500);
-  });
+  setupHooks.standard();
 
   describe("Mounted Disks Panel", () => {
     it("should open mounted disks panel when disk button is clicked", async () => {
@@ -103,12 +142,11 @@ describe("Disk Mount Advanced Scenarios", () => {
     it("should show empty state when no disks are mounted", async () => {
       await openMountedDisksPanel();
 
-      const emptyState = await $(selectors.mountedDisksEmpty);
       // May or may not show depending on mock data
-      const isDisplayed = await emptyState.isDisplayed().catch(() => false);
+      const emptyDisplayed = await isElementDisplayed(selectors.mountedDisksEmpty);
 
       // Either empty state or disk list should be shown
-      if (!isDisplayed) {
+      if (!emptyDisplayed) {
         const disksList = await $(selectors.mountedDisksList);
         await expect(disksList).toBeDisplayed();
       }
@@ -132,11 +170,11 @@ describe("Disk Mount Advanced Scenarios", () => {
         });
         document.dispatchEvent(event);
       }, statusBar);
-      await browser.pause(300);
 
-      const panelAfter = await $(selectors.mountedDisksPanel);
-      const isDisplayed = await panelAfter.isDisplayed().catch(() => false);
-      expect(isDisplayed).toBe(false);
+      await waitForPanelHidden(selectors.mountedDisksPanel);
+
+      const panelVisible = await isElementDisplayed(selectors.mountedDisksPanel);
+      expect(panelVisible).toBe(false);
     });
 
     it("should have mount new disk button", async () => {
@@ -194,7 +232,16 @@ describe("Disk Mount Advanced Scenarios", () => {
 
       const nameInput = await $(selectors.diskMountNameInput);
       await nameInput.setValue("mydata");
-      await browser.pause(200);
+
+      // Wait for hint to update
+      await browser.waitUntil(
+        async () => {
+          const hint = await $(selectors.diskMountPointHint);
+          const text = await hint.getText();
+          return text.includes("mydata");
+        },
+        { timeout: 3000, timeoutMsg: "Mount point hint did not update" }
+      );
 
       const hint = await $(selectors.diskMountPointHint);
       const hintText = await hint.getText();
@@ -217,7 +264,15 @@ describe("Disk Mount Advanced Scenarios", () => {
 
       const fsSelector = await $(selectors.diskMountFilesystemSelector);
       await fsSelector.selectByAttribute("value", "ext4");
-      await browser.pause(200);
+
+      // Wait for selection to apply
+      await browser.waitUntil(
+        async () => {
+          const value = await fsSelector.getValue();
+          return value === "ext4";
+        },
+        { timeout: 3000, timeoutMsg: "Filesystem selection did not apply" }
+      );
 
       const value = await fsSelector.getValue();
       expect(value).toBe("ext4");
@@ -230,7 +285,7 @@ describe("Disk Mount Advanced Scenarios", () => {
 
       const physicalTab = await $(selectors.diskMountTabPhysical);
       await physicalTab.click();
-      await browser.pause(300);
+      await waitForSectionDisplayed(selectors.diskMountPhysicalSection);
 
       const physicalSection = await $(selectors.diskMountPhysicalSection);
       await expect(physicalSection).toBeDisplayed();
@@ -241,7 +296,7 @@ describe("Disk Mount Advanced Scenarios", () => {
 
       const physicalTab = await $(selectors.diskMountTabPhysical);
       await physicalTab.click();
-      await browser.pause(300);
+      await waitForSectionDisplayed(selectors.diskMountPhysicalSection);
 
       const adminWarning = await $(selectors.diskMountAdminWarning);
       await expect(adminWarning).toBeDisplayed();
@@ -254,7 +309,7 @@ describe("Disk Mount Advanced Scenarios", () => {
 
       const physicalTab = await $(selectors.diskMountTabPhysical);
       await physicalTab.click();
-      await browser.pause(300);
+      await waitForSectionDisplayed(selectors.diskMountPhysicalSection);
 
       const diskSelector = await $(selectors.diskMountPhysicalSelector);
       await expect(diskSelector).toBeDisplayed();
@@ -262,6 +317,16 @@ describe("Disk Mount Advanced Scenarios", () => {
   });
 
   describe("Disk Mount Dialog - Advanced Options", () => {
+    /**
+     * Helper to expand advanced options and wait for content
+     */
+    async function expandAdvancedOptions(): Promise<void> {
+      const advancedOptions = await $(selectors.diskMountAdvancedOptions);
+      const summary = await advancedOptions.$("summary");
+      await summary.click();
+      await waitForSectionDisplayed(selectors.diskMountOptionsInput);
+    }
+
     it("should have collapsible advanced options", async () => {
       await openDiskMountDialog();
 
@@ -271,11 +336,7 @@ describe("Disk Mount Advanced Scenarios", () => {
 
     it("should expand advanced options on click", async () => {
       await openDiskMountDialog();
-
-      const advancedOptions = await $(selectors.diskMountAdvancedOptions);
-      const summary = await advancedOptions.$("summary");
-      await summary.click();
-      await browser.pause(300);
+      await expandAdvancedOptions();
 
       const mountOptionsInput = await $(selectors.diskMountOptionsInput);
       await expect(mountOptionsInput).toBeDisplayed();
@@ -283,19 +344,14 @@ describe("Disk Mount Advanced Scenarios", () => {
 
     it("should have mount options input for custom options", async () => {
       await openDiskMountDialog();
-
-      // Expand advanced options
-      const advancedOptions = await $(selectors.diskMountAdvancedOptions);
-      const summary = await advancedOptions.$("summary");
-      await summary.click();
-      await browser.pause(300);
+      await expandAdvancedOptions();
 
       const optionsInput = await $(selectors.diskMountOptionsInput);
       await expect(optionsInput).toBeDisplayed();
 
       // Enter custom mount options
       await optionsInput.setValue("ro,noexec");
-      await browser.pause(200);
+      await waitForInputValue(selectors.diskMountOptionsInput, "ro,noexec");
 
       const value = await optionsInput.getValue();
       expect(value).toBe("ro,noexec");
@@ -303,12 +359,7 @@ describe("Disk Mount Advanced Scenarios", () => {
 
     it("should have bare mount checkbox", async () => {
       await openDiskMountDialog();
-
-      // Expand advanced options
-      const advancedOptions = await $(selectors.diskMountAdvancedOptions);
-      const summary = await advancedOptions.$("summary");
-      await summary.click();
-      await browser.pause(300);
+      await expandAdvancedOptions();
 
       const bareCheckbox = await $(selectors.diskMountBareCheckbox);
       await expect(bareCheckbox).toBeDisplayed();
@@ -320,16 +371,16 @@ describe("Disk Mount Advanced Scenarios", () => {
 
     it("should toggle bare mount checkbox", async () => {
       await openDiskMountDialog();
-
-      // Expand advanced options
-      const advancedOptions = await $(selectors.diskMountAdvancedOptions);
-      const summary = await advancedOptions.$("summary");
-      await summary.click();
-      await browser.pause(300);
+      await expandAdvancedOptions();
 
       const bareCheckbox = await $(selectors.diskMountBareCheckbox);
       await bareCheckbox.click();
-      await browser.pause(200);
+
+      // Wait for checkbox to be selected
+      await browser.waitUntil(
+        async () => bareCheckbox.isSelected(),
+        { timeout: 3000, timeoutMsg: "Checkbox did not toggle" }
+      );
 
       const isSelected = await bareCheckbox.isSelected();
       expect(isSelected).toBe(true);
@@ -352,7 +403,7 @@ describe("Disk Mount Advanced Scenarios", () => {
       // Switch to physical tab
       const physicalTab = await $(selectors.diskMountTabPhysical);
       await physicalTab.click();
-      await browser.pause(300);
+      await waitForSectionDisplayed(selectors.diskMountPhysicalSection);
 
       const submitButton = await $(selectors.diskMountSubmitButton);
       // Without a disk selected, button should be disabled
@@ -367,11 +418,10 @@ describe("Disk Mount Advanced Scenarios", () => {
 
       const cancelButton = await $(selectors.diskMountCancelButton);
       await cancelButton.click();
-      await browser.pause(300);
+      await waitForDialogToDisappear(selectors.diskMountDialog, 5000);
 
-      const dialog = await $(selectors.diskMountDialog);
-      const isDisplayed = await dialog.isDisplayed().catch(() => false);
-      expect(isDisplayed).toBe(false);
+      const dialogVisible = await isElementDisplayed(selectors.diskMountDialog);
+      expect(dialogVisible).toBe(false);
     });
 
     it("should close dialog with Escape key", async () => {
@@ -381,11 +431,10 @@ describe("Disk Mount Advanced Scenarios", () => {
       await expect(dialog).toBeDisplayed();
 
       await browser.keys("Escape");
-      await browser.pause(300);
+      await waitForDialogToDisappear(selectors.diskMountDialog, 5000);
 
-      const dialogAfter = await $(selectors.diskMountDialog);
-      const isDisplayed = await dialogAfter.isDisplayed().catch(() => false);
-      expect(isDisplayed).toBe(false);
+      const dialogVisible = await isElementDisplayed(selectors.diskMountDialog);
+      expect(dialogVisible).toBe(false);
     });
 
     it("should reset form when dialog is closed and reopened", async () => {
@@ -394,12 +443,12 @@ describe("Disk Mount Advanced Scenarios", () => {
       // Enter some data
       const nameInput = await $(selectors.diskMountNameInput);
       await nameInput.setValue("test-disk-name");
-      await browser.pause(200);
+      await waitForInputValue(selectors.diskMountNameInput, "test-disk-name");
 
       // Close dialog
       const cancelButton = await $(selectors.diskMountCancelButton);
       await cancelButton.click();
-      await browser.pause(300);
+      await waitForDialogToDisappear(selectors.diskMountDialog, 5000);
 
       // Reopen dialog
       await openDiskMountDialog();
@@ -422,7 +471,7 @@ describe("Disk Mount Advanced Scenarios", () => {
       // Switch to Physical
       const physicalTab = await $(selectors.diskMountTabPhysical);
       await physicalTab.click();
-      await browser.pause(300);
+      await waitForSectionDisplayed(selectors.diskMountPhysicalSection);
 
       const physicalSection = await $(selectors.diskMountPhysicalSection);
       await expect(physicalSection).toBeDisplayed();
@@ -430,7 +479,7 @@ describe("Disk Mount Advanced Scenarios", () => {
       // Switch back to VHD
       const vhdTab = await $(selectors.diskMountTabVhd);
       await vhdTab.click();
-      await browser.pause(300);
+      await waitForSectionDisplayed(selectors.diskMountVhdSection);
 
       vhdSection = await $(selectors.diskMountVhdSection);
       await expect(vhdSection).toBeDisplayed();
@@ -442,17 +491,17 @@ describe("Disk Mount Advanced Scenarios", () => {
       // Enter mount name
       const nameInput = await $(selectors.diskMountNameInput);
       await nameInput.setValue("persistent-name");
-      await browser.pause(200);
+      await waitForInputValue(selectors.diskMountNameInput, "persistent-name");
 
       // Switch to Physical
       const physicalTab = await $(selectors.diskMountTabPhysical);
       await physicalTab.click();
-      await browser.pause(300);
+      await waitForSectionDisplayed(selectors.diskMountPhysicalSection);
 
       // Switch back to VHD
       const vhdTab = await $(selectors.diskMountTabVhd);
       await vhdTab.click();
-      await browser.pause(300);
+      await waitForSectionDisplayed(selectors.diskMountVhdSection);
 
       // Check name persists
       const newNameInput = await $(selectors.diskMountNameInput);

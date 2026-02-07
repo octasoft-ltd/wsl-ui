@@ -12,21 +12,14 @@
  * These tests focus on validatable UI behavior.
  */
 
+import { setupHooks, isElementDisplayed } from "../base";
 import {
-  waitForAppReady,
-  resetMockState,
   selectors,
-  safeRefresh,
+  waitForDialogToDisappear,
 } from "../utils";
 
 describe("Import Distribution", () => {
-  beforeEach(async () => {
-    await safeRefresh();
-    await browser.pause(500);
-    await resetMockState();
-    await waitForAppReady();
-    await browser.pause(500);
-  });
+  setupHooks.standard();
 
   describe("Import Dialog Opening", () => {
     it("should have import button in header", async () => {
@@ -65,9 +58,12 @@ describe("Import Distribution", () => {
 
       const cancelButton = await dialog.$("button*=Cancel");
       await cancelButton.click();
-      await browser.pause(300);
 
-      await expect(dialog).not.toBeDisplayed();
+      // Wait for dialog to close
+      await waitForDialogToDisappear(selectors.dialog, 5000);
+
+      const dialogVisible = await isElementDisplayed(selectors.dialog);
+      expect(dialogVisible).toBe(false);
     });
 
   });
@@ -136,7 +132,15 @@ describe("Import Distribution", () => {
       // Find and fill name input
       const nameInput = await dialog.$("input[placeholder*='Ubuntu-Dev'], input[placeholder*='e.g.']");
       await nameInput.setValue("TestDistro");
-      await browser.pause(300);
+
+      // Wait for input value to be set
+      await browser.waitUntil(
+        async () => {
+          const value = await nameInput.getValue();
+          return value === "TestDistro";
+        },
+        { timeout: 3000, timeoutMsg: "Input value was not set" }
+      );
 
       // Import button should still be disabled (missing TAR and location)
       const importBtn = await dialog.$("button*=Import");
@@ -161,10 +165,17 @@ describe("Import Distribution", () => {
       // Enter a name that already exists in mock data
       const nameInput = await dialog.$("input[placeholder*='Ubuntu-Dev'], input[placeholder*='e.g.']");
       await nameInput.setValue("Ubuntu"); // Ubuntu exists in mock data
-      await browser.pause(500);
+
+      // Wait for validation to run and error to appear
+      await browser.waitUntil(
+        async () => {
+          const text = await dialog.getText();
+          return text.includes("already exists");
+        },
+        { timeout: 5000, timeoutMsg: "Duplicate name error did not appear" }
+      );
 
       // Should show error message about duplicate name (inline error below input)
-      // The error is shown in a span with text-theme-status-error class
       const dialogText = await dialog.getText();
       expect(dialogText).toContain("already exists");
     });
@@ -175,7 +186,15 @@ describe("Import Distribution", () => {
       // First enter a duplicate name
       const nameInput = await dialog.$("input[placeholder*='Ubuntu-Dev'], input[placeholder*='e.g.']");
       await nameInput.setValue("Ubuntu");
-      await browser.pause(500);
+
+      // Wait for error to appear
+      await browser.waitUntil(
+        async () => {
+          const text = await dialog.getText();
+          return text.includes("already exists");
+        },
+        { timeout: 5000, timeoutMsg: "Duplicate name error did not appear" }
+      );
 
       // Verify error is shown
       let dialogText = await dialog.getText();
@@ -183,7 +202,15 @@ describe("Import Distribution", () => {
 
       // Change to a unique name
       await nameInput.setValue("UniqueNewDistro");
-      await browser.pause(500);
+
+      // Wait for error to clear
+      await browser.waitUntil(
+        async () => {
+          const text = await dialog.getText();
+          return !text.includes("already exists");
+        },
+        { timeout: 5000, timeoutMsg: "Duplicate name error did not clear" }
+      );
 
       // Error should no longer be in dialog text
       dialogText = await dialog.getText();
@@ -196,7 +223,15 @@ describe("Import Distribution", () => {
       // Enter same name with different case
       const nameInput = await dialog.$("input[placeholder*='Ubuntu-Dev'], input[placeholder*='e.g.']");
       await nameInput.setValue("ubuntu"); // lowercase of existing "Ubuntu"
-      await browser.pause(500);
+
+      // Wait for validation to run and error to appear
+      await browser.waitUntil(
+        async () => {
+          const text = await dialog.getText();
+          return text.includes("already exists");
+        },
+        { timeout: 5000, timeoutMsg: "Case-insensitive duplicate error did not appear" }
+      );
 
       // Should still show error (case-insensitive check)
       const dialogText = await dialog.getText();
@@ -215,12 +250,20 @@ describe("Import Distribution", () => {
 
       const nameInput = await dialog.$("input[placeholder*='Ubuntu-Dev'], input[placeholder*='e.g.']");
       await nameInput.setValue("TestDistro");
-      await browser.pause(300);
+
+      // Wait for input value to be set
+      await browser.waitUntil(
+        async () => {
+          const value = await nameInput.getValue();
+          return value === "TestDistro";
+        },
+        { timeout: 3000, timeoutMsg: "Input value was not set" }
+      );
 
       // Close dialog
       const cancelButton = await dialog.$("button*=Cancel");
       await cancelButton.click();
-      await browser.pause(300);
+      await waitForDialogToDisappear(selectors.dialog, 5000);
 
       // Reopen dialog
       await importButton.click();

@@ -13,25 +13,14 @@
  */
 
 import {
-  waitForAppReady,
-  resetMockState,
   setMockError,
   clearMockErrors,
   preflightSelectors,
-  waitForPreflightBanner,
-  waitForPreflightBannerToDisappear,
-  clickPreflightRetry,
-  setMockPreflightError,
-  clearMockPreflightError,
-  byText,
 } from "../utils";
+import { setupHooks, isElementDisplayed } from "../base";
 
 describe("Preflight Check Scenarios", () => {
-  beforeEach(async () => {
-    // Reset mock state to defaults (WSL ready)
-    await resetMockState();
-    await waitForAppReady();
-  });
+  setupHooks.standard();
 
   afterEach(async () => {
     // Always clear errors to restore ready state
@@ -41,9 +30,8 @@ describe("Preflight Check Scenarios", () => {
   describe("WSL Ready (Default)", () => {
     it("should not show preflight banner when WSL is ready", async () => {
       // The default mock state has WSL ready
-      const banner = await $(preflightSelectors.preflightBanner);
-      const isDisplayed = await banner.isDisplayed().catch(() => false);
-      expect(isDisplayed).toBe(false);
+      const bannerDisplayed = await isElementDisplayed(preflightSelectors.preflightBanner);
+      expect(bannerDisplayed).toBe(false);
     });
 
     it("should show distribution list when WSL is ready", async () => {
@@ -104,10 +92,7 @@ describe("Preflight Banner UI Elements", () => {
   // These tests verify the banner structure when displayed
   // They use the mock error configuration that's already set up
 
-  beforeEach(async () => {
-    await resetMockState();
-    await waitForAppReady();
-  });
+  setupHooks.standard();
 
   afterEach(async () => {
     await clearMockErrors();

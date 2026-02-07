@@ -76,8 +76,27 @@ pub fn import_distribution_with_version(
 /// Creates metadata for the cloned distribution automatically.
 pub fn clone_distribution(source: &str, new_name: &str, install_location: Option<&str>) -> Result<(), WslError> {
     use crate::settings::get_default_distro_path;
+    use crate::utils::is_mock_mode;
 
     info!("Cloning distribution '{}' to '{}'", source, new_name);
+
+    // In mock mode, just call the mock import/export without filesystem operations
+    if is_mock_mode() {
+        // Mock export (just validates source exists)
+        let export_output = wsl_executor().export(source, "/tmp/mock-clone.tar", None)?;
+        if !export_output.success {
+            return Err(WslError::CommandFailed(export_output.stderr));
+        }
+
+        // Mock import (adds to mock state)
+        let import_output = wsl_executor().import(new_name, "/tmp/mock-location", "/tmp/mock-clone.tar", Some(2))?;
+        if !import_output.success {
+            return Err(WslError::CommandFailed(import_output.stderr));
+        }
+
+        info!("Mock: Cloned distribution '{}' to '{}'", source, new_name);
+        return Ok(());
+    }
 
     // Get source distro's GUID before cloning (for metadata lineage)
     let registry_info = resource_monitor().get_all_distro_registry_info();

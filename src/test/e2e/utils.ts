@@ -13,6 +13,14 @@
  * - For buttons: //button[contains(., 'text')]
  */
 
+import type { ChainablePromiseElement } from "webdriverio";
+
+/**
+ * Type alias for element parameters that can accept either the resolved Element
+ * or the ChainablePromiseElement returned by $()
+ */
+type ElementParam = WebdriverIO.Element | ChainablePromiseElement;
+
 /**
  * Find an element by partial text content (works with any element type)
  * Use this instead of *=text selector which only works with <a> elements
@@ -30,17 +38,203 @@ export function byButtonText(text: string): string {
 
 /**
  * Safe page reload for Tauri WebView2
- * browser.refresh() can cause "session deleted" errors in WebView2/Edge
- * This uses URL navigation instead which is more reliable
+ * Tries browser.refresh() first, falls back to URL navigation
+ * Note: Does NOT wait for app ready - caller should call waitForAppReady() after any setup
  */
 export async function safeRefresh(): Promise<void> {
-  const currentUrl = await browser.getUrl();
-  await browser.url(currentUrl);
-  await browser.pause(500);
+  try {
+    await browser.refresh();
+  } catch {
+    // browser.refresh() can cause "session deleted" errors in WebView2/Edge
+    // Fall back to URL navigation
+    const currentUrl = await browser.getUrl();
+    await browser.url(currentUrl);
+  }
+}
+
+// ============================================================================
+// ROBUST STATE-BASED SYNCHRONIZATION UTILITIES
+// These replace arbitrary timeouts with event/state-driven waiting
+// ============================================================================
+
+/**
+ * Wait for a Zustand store value to match expected condition.
+ * This is more robust than arbitrary pauses - it waits for actual state changes.
+ *
+ * @param storeName - Name of the exposed store (e.g., '__distroStore')
+ * @param selector - Function to select value from store state (as string to execute in browser)
+ * @param predicate - Function to test if value is ready (as string to execute in browser)
+ * @param timeout - Maximum time to wait
+ *
+ * @example
+ * // Wait for actionInProgress to be null (operation complete)
+ * await waitForStoreValue('__distroStore', 'state.actionInProgress', 'value === null');
+ *
+ * // Wait for distro list to be loaded
+ * await waitForStoreValue('__distroStore', 'state.distros.length', 'value > 0');
+ */
+export async function waitForStoreValue(
+  storeName: string,
+  selectorPath: string,
+  predicateCode: string,
+  timeout: number = 10000
+): Promise<void> {
+  await browser.waitUntil(
+    async () => {
+      return browser.execute(
+        (store, selector, predicate) => {
+          // @ts-expect-error - Stores are exposed for testing
+          const storeInstance = window[store];
+          if (!storeInstance) return false;
+
+          const state = storeInstance.getState();
+          // Navigate the selector path (e.g., "actionInProgress" or "distros.length")
+          const parts = selector.split('.');
+          let value: unknown = state;
+          for (const part of parts) {
+            if (value === null || value === undefined) return false;
+            value = (value as Record<string, unknown>)[part];
+          }
+
+          // Evaluate the predicate with the value
+          // eslint-disable-next-line no-eval
+          return eval(predicate);
+        },
+        storeName,
+        selectorPath,
+        predicateCode
+      );
+    },
+    {
+      timeout,
+      interval: 100,
+      timeoutMsg: `Store ${storeName}.${selectorPath} did not satisfy condition "${predicateCode}" within ${timeout}ms`,
+    }
+  );
 }
 
 /**
- * Wait for the application to be fully loaded and ready
+ * Wait for any in-progress distro action to complete.
+ * Use this after clicking start/stop/delete buttons to wait for operation completion.
+ * More robust than waiting for UI changes since it watches the actual operation state.
+ *
+ * @example
+ * await startButton.click();
+ * await waitForActionComplete(); // Waits for operation to finish
+ * // Now safe to verify state
+ */
+export async function waitForActionComplete(timeout: number = 15000): Promise<void> {
+  await waitForStoreValue(
+    '__distroStore',
+    'actionInProgress',
+    'value === null',
+    timeout
+  );
+}
+
+/**
+ * Wait for distro store to finish loading (isLoading becomes false).
+ * Use after triggering a refresh or navigation.
+ */
+export async function waitForDistrosLoaded(timeout: number = 10000): Promise<void> {
+  await waitForStoreValue(
+    '__distroStore',
+    'isLoading',
+    'value === false',
+    timeout
+  );
+}
+
+/**
+ * Wait for a notification to appear in the notification store.
+ * More robust than waiting for DOM elements since it watches the actual store.
+ *
+ * @param titlePattern - Partial text to match in notification title (case-insensitive)
+ * @param timeout - Maximum time to wait
+ */
+export async function waitForNotification(
+  titlePattern: string,
+  timeout: number = 10000
+): Promise<void> {
+  const lowerPattern = titlePattern.toLowerCase();
+  await browser.waitUntil(
+    async () => {
+      return browser.execute((pattern) => {
+        // @ts-expect-error - Store is exposed for testing
+        const store = window.__notificationStore;
+        if (!store) return false;
+        const notifications = store.getState().notifications;
+        return notifications.some(
+          (n: { title: string }) => n.title.toLowerCase().includes(pattern)
+        );
+      }, lowerPattern);
+    },
+    {
+      timeout,
+      interval: 100,
+      timeoutMsg: `Notification with title containing "${titlePattern}" did not appear within ${timeout}ms`,
+    }
+  );
+}
+
+/**
+ * Wait for resource stats to be available in the store (not loading).
+ * More robust than checking DOM elements.
+ */
+export async function waitForResourceStatsLoaded(timeout: number = 10000): Promise<void> {
+  // First trigger a fetch
+  await triggerResourceFetch();
+
+  // Then wait for stats to have data
+  await waitForStoreValue(
+    '__resourceStore',
+    'stats',
+    'value !== null && Object.keys(value).length > 0',
+    timeout
+  );
+}
+
+/**
+ * Execute an action and wait for it to complete.
+ * Combines clicking an element with waiting for the operation to finish.
+ *
+ * @param clickFn - Async function that triggers the action (e.g., button click)
+ * @param timeout - Maximum time to wait for action completion
+ *
+ * @example
+ * await executeAndWaitForComplete(async () => {
+ *   const startButton = await card.$('[data-testid="start-button"]');
+ *   await startButton.click();
+ * });
+ */
+export async function executeAndWaitForComplete(
+  clickFn: () => Promise<void>,
+  timeout: number = 15000
+): Promise<void> {
+  // Execute the click
+  await clickFn();
+
+  // Wait a tick for actionInProgress to be set
+  await browser.waitUntil(
+    async () => {
+      return browser.execute(() => {
+        // @ts-expect-error - Store is exposed for testing
+        const store = window.__distroStore;
+        return store && store.getState().actionInProgress !== null;
+      });
+    },
+    { timeout: 2000, interval: 50 }
+  ).catch(() => {
+    // Action may have already completed - that's OK
+  });
+
+  // Now wait for it to complete
+  await waitForActionComplete(timeout);
+}
+
+/**
+ * Wait for the application to be fully loaded and ready.
+ * Waits for both DOM and store state to be ready - no arbitrary pauses.
  */
 export async function waitForAppReady(): Promise<void> {
   // Wait for the main container to be visible
@@ -55,43 +249,90 @@ export async function waitForAppReady(): Promise<void> {
     }
   );
 
-  // Additional wait for any initial data loading
-  await browser.pause(500);
+  // Wait for distro store to be initialized and loaded (replaces arbitrary pause)
+  // This is optional - if store isn't exposed, fall back to waiting for distro cards
+  const storeReady = await browser.waitUntil(
+    async () => {
+      return browser.execute(() => {
+        // @ts-expect-error - Store is exposed for testing
+        const store = window.__distroStore;
+        if (!store) return false;
+        const state = store.getState();
+        // Ready when: store exists, not loading, and distros array exists
+        return !state.isLoading && Array.isArray(state.distros);
+      });
+    },
+    {
+      timeout: 5000,
+      interval: 100,
+    }
+  ).then(() => true).catch(() => false);
+
+  // If store-based check didn't work, fall back to waiting for UI elements
+  if (!storeReady) {
+    await browser.waitUntil(
+      async () => {
+        // Check for either distro cards or the "no distributions" message
+        const cards = await $$('[data-testid^="distro-card"]');
+        if (cards.length > 0) return true;
+        // Also accept if header is visible (app is loaded even if no distros)
+        const header = await $("header");
+        return header.isDisplayed();
+      },
+      {
+        timeout: 5000,
+        interval: 100,
+        timeoutMsg: "App UI did not load within timeout",
+      }
+    );
+  }
 }
 
 /**
  * Reset mock state to defaults via Tauri command
- * This should be called in beforeEach to ensure clean state between tests
- * Also clears frontend Zustand store state (error banners, notifications)
+ * This should be called BEFORE page refresh to ensure clean state between tests.
+ * The page refresh will then fetch fresh data from the reset mock.
  */
 export async function resetMockState(): Promise<void> {
   // Execute the reset command via the app's JavaScript context
-  await browser.execute(() => {
+  // Use executeAsync to properly wait for the Tauri IPC call to complete
+  await browser.executeAsync((done) => {
     // @ts-expect-error - Tauri API is available in the window
-    return window.__TAURI__.core.invoke("reset_mock_state_cmd");
+    window.__TAURI__.core.invoke("reset_mock_state_cmd")
+      .then(() => done())
+      .catch((err: Error) => done(err));
   });
 
-  // Clear frontend state (error banners, notifications)
+  // Clear frontend state that should be reset between tests
+  // Note: distros will be refreshed naturally when page reloads
   await browser.execute(() => {
-    // Clear distro store error state
-    // @ts-expect-error - Store is exposed for e2e testing
-    if (window.__distroStore) {
-      // @ts-expect-error - Store is exposed for e2e testing
-      const distroStore = window.__distroStore.getState();
-      distroStore.clearError();
-    }
-
     // Clear notification store
     // @ts-expect-error - Store is exposed for e2e testing
     if (window.__notificationStore) {
       // @ts-expect-error - Store is exposed for e2e testing
-      const notificationStore = window.__notificationStore.getState();
-      notificationStore.clearAll();
+      window.__notificationStore.getState().clearAll();
+    }
+
+    // Clear config pending store and stop its polling
+    // @ts-expect-error - Store is exposed for e2e testing
+    if (window.__configPendingStore) {
+      // @ts-expect-error - Store is exposed for e2e testing
+      const configPendingStore = window.__configPendingStore.getState();
+      configPendingStore.stopPolling();
+      configPendingStore.clearStatus();
+    }
+
+    // Mark telemetry prompt as seen to prevent dialog from appearing during tests
+    // @ts-expect-error - Store is exposed for e2e testing
+    if (window.__settingsStore) {
+      // @ts-expect-error - Store is exposed for e2e testing
+      const settingsStore = window.__settingsStore.getState();
+      if (settingsStore.updateSetting) {
+        settingsStore.updateSetting("telemetryPromptSeen", true);
+        settingsStore.updateSetting("reviewPromptState", "declined");
+      }
     }
   });
-
-  // Refresh the distribution list after resetting
-  await browser.pause(200);
 }
 
 /**
@@ -152,10 +393,80 @@ export async function clearFrontendState(): Promise<void> {
       const notificationStore = window.__notificationStore.getState();
       notificationStore.clearAll();
     }
+
+    // Clear config pending store and stop its polling
+    // @ts-expect-error - Store is exposed for e2e testing
+    if (window.__configPendingStore) {
+      // @ts-expect-error - Store is exposed for e2e testing
+      const configPendingStore = window.__configPendingStore.getState();
+      configPendingStore.stopPolling();
+      configPendingStore.clearStatus();
+    }
   });
 
-  // Wait for React to process state updates
-  await browser.pause(100);
+  // Wait for state to be cleared (replaces arbitrary pause)
+  await browser.waitUntil(
+    async () => {
+      return browser.execute(() => {
+        // @ts-expect-error - Store is exposed for testing
+        const notifStore = window.__notificationStore;
+        // Ready when notifications are cleared
+        return notifStore && notifStore.getState().notifications.length === 0;
+      });
+    },
+    { timeout: 2000, interval: 50 }
+  ).catch(() => {
+    // If it times out, that's OK - state may already be clear
+  });
+}
+
+/**
+ * Clear config pending state and stop polling
+ * Call this after app reload to prevent the "WSL Config Pending Restart" notification
+ * from interfering with other notification tests.
+ */
+export async function clearConfigPendingState(): Promise<void> {
+  await browser.execute(() => {
+    // @ts-expect-error - Store is exposed for e2e testing
+    if (window.__configPendingStore) {
+      // @ts-expect-error - Store is exposed for e2e testing
+      const configPendingStore = window.__configPendingStore.getState();
+      configPendingStore.stopPolling();
+      configPendingStore.clearStatus();
+    }
+
+    // Also clear any lingering config pending notifications
+    // @ts-expect-error - Store is exposed for e2e testing
+    if (window.__notificationStore) {
+      // @ts-expect-error - Store is exposed for e2e testing
+      const notificationStore = window.__notificationStore.getState();
+      const notifications = notificationStore.notifications;
+      const configNotification = notifications.find(
+        (n: { title: string }) => n.title === "WSL Config Pending Restart"
+      );
+      if (configNotification) {
+        notificationStore.removeNotification(configNotification.id);
+      }
+    }
+  });
+
+  // Wait for config pending notification to be removed (replaces arbitrary pause)
+  await browser.waitUntil(
+    async () => {
+      return browser.execute(() => {
+        // @ts-expect-error - Store is exposed for testing
+        const notifStore = window.__notificationStore;
+        if (!notifStore) return true;
+        const notifications = notifStore.getState().notifications;
+        return !notifications.some(
+          (n: { title: string }) => n.title === "WSL Config Pending Restart"
+        );
+      });
+    },
+    { timeout: 2000, interval: 50 }
+  ).catch(() => {
+    // If it times out, that's OK - notification may not exist
+  });
 }
 
 /**
@@ -274,8 +585,22 @@ export async function captureProgressEvents(
   // Run the installation function
   await fn();
 
-  // Wait a bit for final events
-  await browser.pause(500);
+  // Wait for completion event or timeout (replaces arbitrary pause)
+  await browser.waitUntil(
+    async () => {
+      return browser.execute(() => {
+        // @ts-expect-error - Custom global for test
+        const events = window.__progressEvents || [];
+        // Check if we have a completion or error event
+        return events.some(
+          (e: { stage: string }) => e.stage === 'complete' || e.stage === 'error'
+        );
+      });
+    },
+    { timeout: 5000, interval: 100 }
+  ).catch(() => {
+    // If no completion event, still collect whatever events we have
+  });
 
   // Collect the events
   const collectedEvents = await browser.execute(() => {
@@ -335,8 +660,7 @@ export async function waitForErrorBanner(timeout: number = 5000): Promise<Webdri
       interval: 100, // Check every 100ms
     }
   );
-  const banner = await $(selectors.errorBanner);
-  return banner;
+  return await $(selectors.errorBanner) as unknown as WebdriverIO.Element;
 }
 
 /**
@@ -373,7 +697,7 @@ export async function waitForDialog(selector: string = '[role="dialog"]', timeou
       interval: 100,
     }
   );
-  return $(selector);
+  return await $(selector) as unknown as WebdriverIO.Element;
 }
 
 /**
@@ -401,14 +725,15 @@ export async function waitForDialogToDisappear(selector: string = '[role="dialog
  * @param timeout - Maximum time to wait in milliseconds
  */
 export async function waitForElementText(
-  element: WebdriverIO.Element,
+  element: ElementParam,
   expectedText: string,
   timeout: number = 5000
 ): Promise<string> {
   let actualText = "";
+  const el = element as unknown as WebdriverIO.Element;
   await browser.waitUntil(
     async () => {
-      actualText = await element.getText();
+      actualText = await el.getText();
       return actualText.toLowerCase().includes(expectedText.toLowerCase());
     },
     {
@@ -424,10 +749,11 @@ export async function waitForElementText(
  * @param button - WebdriverIO button element
  * @param timeout - Maximum time to wait in milliseconds
  */
-export async function waitForButtonEnabled(button: WebdriverIO.Element, timeout: number = 5000): Promise<void> {
+export async function waitForButtonEnabled(button: ElementParam, timeout: number = 5000): Promise<void> {
+  const btn = button as unknown as WebdriverIO.Element;
   await browser.waitUntil(
     async () => {
-      const disabled = await button.getAttribute("disabled");
+      const disabled = await btn.getAttribute("disabled");
       return disabled === null;
     },
     {
@@ -442,10 +768,11 @@ export async function waitForButtonEnabled(button: WebdriverIO.Element, timeout:
  * @param button - WebdriverIO button element
  * @param timeout - Maximum time to wait in milliseconds
  */
-export async function waitForButtonDisabled(button: WebdriverIO.Element, timeout: number = 5000): Promise<void> {
+export async function waitForButtonDisabled(button: ElementParam, timeout: number = 5000): Promise<void> {
+  const btn = button as unknown as WebdriverIO.Element;
   await browser.waitUntil(
     async () => {
-      const disabled = await button.getAttribute("disabled");
+      const disabled = await btn.getAttribute("disabled");
       return disabled !== null;
     },
     {
@@ -509,14 +836,15 @@ export async function verifyDistroCardState(distroName: string, expectedState: s
  * @param timeout - Maximum time to wait in milliseconds
  */
 export async function waitForElementClickable(
-  element: WebdriverIO.Element,
+  element: ElementParam,
   timeout: number = 5000
 ): Promise<void> {
+  const el = element as unknown as WebdriverIO.Element;
   await browser.waitUntil(
     async () => {
-      const isDisplayed = await element.isDisplayed().catch(() => false);
+      const isDisplayed = await el.isDisplayed().catch(() => false);
       if (!isDisplayed) return false;
-      const disabled = await element.getAttribute("disabled");
+      const disabled = await el.getAttribute("disabled");
       return disabled === null;
     },
     {
@@ -543,6 +871,351 @@ export async function confirmDialog(confirm: boolean = true, confirmText: string
   const button = await dialog.$(`button*=${buttonText}`);
   await button.waitForDisplayed({ timeout: 5000 });
   await button.click();
+}
+
+// ============================================================================
+// STORY-005: Error Message Verification Helpers
+// ============================================================================
+
+/**
+ * Expected error message patterns for consistent verification.
+ * Use these constants instead of ad-hoc strings in tests.
+ */
+export const EXPECTED_ERRORS = {
+  TIMEOUT: {
+    patterns: ["timed out", "timeout"],
+    tip: "Force Shutdown WSL",
+  },
+  ALREADY_EXISTS: {
+    patterns: ["already exists"],
+  },
+  PERMISSION: {
+    patterns: ["permission denied", "access denied"],
+  },
+  NOT_FOUND: {
+    patterns: ["not found", "does not exist"],
+  },
+  CANCELLED: {
+    patterns: ["cancelled", "canceled"],
+  },
+  COMMAND_FAILED: {
+    patterns: ["failed", "error"],
+  },
+  VALIDATION: {
+    NAME_REQUIRED: "name is required",
+    NAME_EXISTS: "already exists",
+    INVALID_PATH: "invalid path",
+    INVALID_CHARS: "can only contain",
+  },
+};
+
+/**
+ * Options for comprehensive error banner verification
+ */
+export interface VerifyErrorBannerOptions {
+  /** Pattern(s) that must appear in error message (any one must match) */
+  expectedPatterns: string[];
+  /** Context strings that should appear (e.g., distro name, operation type) */
+  shouldContainContext?: string[];
+  /** Whether to verify timeout tip is shown */
+  shouldHaveTip?: boolean;
+  /** Whether to click dismiss and verify banner closes */
+  shouldDismiss?: boolean;
+  /** Timeout for waiting for error banner */
+  timeout?: number;
+}
+
+/**
+ * Comprehensive error banner verification with all checks.
+ * Use this for thorough error message testing.
+ *
+ * @example
+ * await verifyErrorBanner({
+ *   expectedPatterns: EXPECTED_ERRORS.TIMEOUT.patterns,
+ *   shouldContainContext: ["Debian", "start"],
+ *   shouldHaveTip: true,
+ *   shouldDismiss: true,
+ * });
+ */
+export async function verifyErrorBanner(options: VerifyErrorBannerOptions): Promise<{
+  banner: WebdriverIO.Element;
+  errorText: string;
+}> {
+  const timeout = options.timeout ?? 5000;
+
+  // Wait for and get error banner
+  const banner = await waitForErrorBanner(timeout);
+
+  // Wait for error message text to be populated
+  await browser.waitUntil(
+    async () => {
+      const errorMessage = await banner.$(selectors.errorMessage);
+      const text = await errorMessage.getText();
+      return text.length > 0;
+    },
+    { timeout: 3000, timeoutMsg: "Error message text did not appear" }
+  );
+
+  const errorMessage = await banner.$(selectors.errorMessage);
+  const errorText = await errorMessage.getText();
+  const lowerText = errorText.toLowerCase();
+
+  // Verify at least one expected pattern matches
+  const hasPattern = options.expectedPatterns.some(p =>
+    lowerText.includes(p.toLowerCase())
+  );
+  if (!hasPattern) {
+    throw new Error(
+      `Error banner missing expected pattern. ` +
+      `Expected one of: [${options.expectedPatterns.join(", ")}]. ` +
+      `Actual: "${errorText}"`
+    );
+  }
+
+  // Verify context (distro name, operation type)
+  if (options.shouldContainContext) {
+    for (const ctx of options.shouldContainContext) {
+      if (!lowerText.includes(ctx.toLowerCase())) {
+        throw new Error(
+          `Error banner missing context "${ctx}". Actual: "${errorText}"`
+        );
+      }
+    }
+  }
+
+  // Verify tip for timeout errors
+  if (options.shouldHaveTip) {
+    // Check for either the tip text OR the Force Shutdown button
+    const tipElement = await banner.$(selectors.timeoutErrorTip);
+    const tipDisplayed = await tipElement.isDisplayed().catch(() => false);
+    const forceShutdownBtn = await banner.$(selectors.forceShutdownButton);
+    const forceShutdownDisplayed = await forceShutdownBtn.isDisplayed().catch(() => false);
+
+    // Timeout errors should show either the tip text or Force Shutdown button
+    if (!tipDisplayed && !forceShutdownDisplayed) {
+      throw new Error("Timeout tip section not displayed - neither tip text nor Force Shutdown button found");
+    }
+    // Note: Tip content varies - may mention terminal windows or other context
+  }
+
+  // Verify dismiss functionality
+  if (options.shouldDismiss) {
+    const dismissBtn = await banner.$(selectors.errorDismissButton);
+    const dismissDisplayed = await dismissBtn.isDisplayed().catch(() => false);
+    if (dismissDisplayed) {
+      await dismissBtn.click();
+      await waitForErrorBannerToDisappear(3000);
+    }
+  }
+
+  return { banner, errorText };
+}
+
+/**
+ * Verify error banner appears and then dismiss it.
+ * Convenience function for tests that just need to check error occurred.
+ */
+export async function verifyAndDismissError(
+  expectedPatterns: string[],
+  timeout: number = 5000
+): Promise<string> {
+  const { errorText } = await verifyErrorBanner({
+    expectedPatterns,
+    shouldDismiss: true,
+    timeout,
+  });
+  return errorText;
+}
+
+// ============================================================================
+// STORY-006: State Consistency Verification Helpers
+// ============================================================================
+
+/**
+ * Snapshot of a distribution's state
+ */
+export interface DistroSnapshot {
+  name: string;
+  state: string;
+}
+
+/**
+ * Capture current state of all visible distribution cards.
+ * Use before operations to verify no unintended side effects.
+ *
+ * @example
+ * const snapshot = await captureDistroStates();
+ * await startDistro("Debian");
+ * await verifyStatesUnchanged(snapshot, [{ name: "Debian", newState: "ONLINE" }]);
+ */
+export async function captureDistroStates(): Promise<DistroSnapshot[]> {
+  const cards = await $$(selectors.distroCard);
+  const states: DistroSnapshot[] = [];
+
+  for (const card of cards) {
+    const testId = await card.getAttribute("data-testid");
+    const name = testId?.replace("distro-card-", "") || "";
+    if (!name) continue;
+
+    const badge = await card.$(selectors.stateBadge);
+    const state = await badge.getText().catch(() => "UNKNOWN");
+    states.push({ name, state });
+  }
+
+  return states;
+}
+
+/**
+ * Verify distro states match snapshot, except for specified changes.
+ * Use after operations to verify only intended distros changed state.
+ *
+ * @param snapshot - State snapshot from before the operation
+ * @param exceptChanges - Expected state changes (distros that should have new states)
+ * @param allowNewDistros - If true, allows new distros to appear (for clone operations)
+ */
+export async function verifyStatesUnchanged(
+  snapshot: DistroSnapshot[],
+  exceptChanges: { name: string; newState: string }[] = [],
+  allowNewDistros: boolean = false
+): Promise<void> {
+  const currentStates = await captureDistroStates();
+
+  // Build expected states
+  const expected = snapshot.map(s => {
+    const change = exceptChanges.find(c => c.name === s.name);
+    return change ? { ...s, state: change.newState } : s;
+  });
+
+  // Verify expected distros have correct state
+  for (const exp of expected) {
+    const current = currentStates.find(c => c.name === exp.name);
+    if (!current) {
+      throw new Error(`Distro "${exp.name}" missing from list after operation`);
+    }
+    if (current.state !== exp.state) {
+      throw new Error(
+        `Distro "${exp.name}" state mismatch: expected "${exp.state}", got "${current.state}"`
+      );
+    }
+  }
+
+  // Check no unexpected distros disappeared
+  if (!allowNewDistros && currentStates.length < expected.length) {
+    const missingNames = expected
+      .filter(e => !currentStates.find(c => c.name === e.name))
+      .map(e => e.name);
+    throw new Error(`Distros unexpectedly removed: [${missingNames.join(", ")}]`);
+  }
+
+  // If not allowing new distros, verify count matches
+  if (!allowNewDistros && currentStates.length !== expected.length) {
+    throw new Error(
+      `Distro count mismatch: expected ${expected.length}, got ${currentStates.length}`
+    );
+  }
+}
+
+/**
+ * Verify state after a start operation.
+ * Checks the started distro is ONLINE and all others unchanged.
+ */
+export async function verifyAfterStart(
+  startedDistro: string,
+  preSnapshot: DistroSnapshot[]
+): Promise<void> {
+  await waitForDistroState(startedDistro, "ONLINE");
+  await verifyStatesUnchanged(preSnapshot, [{ name: startedDistro, newState: "ONLINE" }]);
+}
+
+/**
+ * Verify state after a stop operation.
+ * Checks the stopped distro is OFFLINE and all others unchanged.
+ */
+export async function verifyAfterStop(
+  stoppedDistro: string,
+  preSnapshot: DistroSnapshot[]
+): Promise<void> {
+  await waitForDistroState(stoppedDistro, "OFFLINE");
+  await verifyStatesUnchanged(preSnapshot, [{ name: stoppedDistro, newState: "OFFLINE" }]);
+}
+
+/**
+ * Verify state after a clone operation.
+ * Checks clone appeared OFFLINE, original unchanged, count increased by 1.
+ */
+export async function verifyAfterClone(
+  sourceDistro: string,
+  cloneName: string,
+  preSnapshot: DistroSnapshot[]
+): Promise<void> {
+  // Wait for clone to appear
+  await waitForDistroState(cloneName, "OFFLINE");
+
+  // Verify original unchanged
+  const sourceState = preSnapshot.find(s => s.name === sourceDistro)?.state;
+  if (sourceState) {
+    await verifyDistroCardState(sourceDistro, sourceState);
+  }
+
+  // Verify total count increased by 1
+  const count = await getDistroCardCount();
+  if (count !== preSnapshot.length + 1) {
+    throw new Error(
+      `After clone, expected ${preSnapshot.length + 1} distros, got ${count}`
+    );
+  }
+
+  // Verify other distros unchanged (allow new clone)
+  await verifyStatesUnchanged(preSnapshot, [], true);
+}
+
+/**
+ * Verify state after a delete operation.
+ * Checks deleted distro is gone, others unchanged, count decreased by 1.
+ */
+export async function verifyAfterDelete(
+  deletedDistro: string,
+  preSnapshot: DistroSnapshot[]
+): Promise<void> {
+  // Wait for distro to disappear
+  await browser.waitUntil(
+    async () => {
+      const card = await $(selectors.distroCardByName(deletedDistro));
+      return !(await card.isDisplayed().catch(() => false));
+    },
+    { timeout: 5000, timeoutMsg: `Distro "${deletedDistro}" was not removed from list` }
+  );
+
+  // Verify count decreased
+  const count = await getDistroCardCount();
+  if (count !== preSnapshot.length - 1) {
+    throw new Error(
+      `After delete, expected ${preSnapshot.length - 1} distros, got ${count}`
+    );
+  }
+
+  // Verify other distros unchanged
+  const remainingExpected = preSnapshot.filter(s => s.name !== deletedDistro);
+  for (const exp of remainingExpected) {
+    await verifyDistroCardState(exp.name, exp.state);
+  }
+}
+
+/**
+ * Verify resource stats are cleared after stopping a distribution.
+ * Memory/CPU should show placeholder values.
+ */
+export async function verifyResourcesCleared(distroName: string): Promise<void> {
+  await browser.waitUntil(
+    async () => {
+      const card = await $(selectors.distroCardByName(distroName));
+      const memory = await card.$(selectors.memoryLabel);
+      const text = await memory.getText().catch(() => "");
+      // Empty, dash, or em-dash indicates cleared
+      return text === "" || text === "—" || text === "-" || text === "–";
+    },
+    { timeout: 5000, timeoutMsg: `Resource stats for "${distroName}" were not cleared` }
+  );
 }
 
 /**
@@ -607,8 +1280,23 @@ export async function triggerResourceFetch(): Promise<void> {
       await window.__resourceStore.getState().fetchStats();
     }
   });
-  // Give React time to re-render with new data
-  await browser.pause(300);
+
+  // Wait for resource store to have data (replaces arbitrary pause)
+  await browser.waitUntil(
+    async () => {
+      return browser.execute(() => {
+        // @ts-expect-error - Store is exposed for testing
+        const store = window.__resourceStore;
+        if (!store) return false;
+        const state = store.getState();
+        // Ready when not loading and stats object has entries
+        return !state.isLoading && state.stats && Object.keys(state.stats).length > 0;
+      });
+    },
+    { timeout: 5000, interval: 50 }
+  ).catch(() => {
+    // If no stats after timeout, continue - test will catch the actual issue
+  });
 }
 
 /**
@@ -686,6 +1374,12 @@ export const selectors = {
   quickActionsButton: '[data-testid="quick-actions-button"]',
   quickActionsMenu: '[data-testid="quick-actions-menu"]',
   quickAction: (id: string) => `[data-testid="quick-action-${id}"]`,
+  explorerAction: '[data-testid="quick-action-explorer"]',
+  ideAction: '[data-testid="quick-action-ide"]',
+  exportAction: '[data-testid="quick-action-export"]',
+  setDefaultAction: '[data-testid="quick-action-default"]',
+  restartAction: '[data-testid="quick-action-restart"]',
+  infoAction: '[data-testid="quick-action-info"]',
 
   // Manage Submenu Actions
   manageSubmenu: '[data-testid="quick-action-manage"]',
@@ -882,7 +1576,7 @@ export async function waitForPreflightBanner(timeout: number = 5000): Promise<We
       interval: 100,
     }
   );
-  return $(preflightSelectors.preflightBanner);
+  return await $(preflightSelectors.preflightBanner) as unknown as WebdriverIO.Element;
 }
 
 /**

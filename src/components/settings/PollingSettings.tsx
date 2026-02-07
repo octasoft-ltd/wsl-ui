@@ -98,6 +98,7 @@ export function PollingSettings() {
               options={INTERVAL_OPTIONS}
               onChange={(v) => handleIntervalChange("distros", v as number)}
               disabled={!settings.pollingEnabled}
+              testId="polling-interval-distros"
             />
 
             <SettingSelect
@@ -107,6 +108,7 @@ export function PollingSettings() {
               options={INTERVAL_OPTIONS}
               onChange={(v) => handleIntervalChange("resources", v as number)}
               disabled={!settings.pollingEnabled}
+              testId="polling-interval-resources"
             />
 
             <SettingSelect
@@ -116,6 +118,7 @@ export function PollingSettings() {
               options={INTERVAL_OPTIONS}
               onChange={(v) => handleIntervalChange("health", v as number)}
               disabled={!settings.pollingEnabled}
+              testId="polling-interval-health"
             />
           </div>
 

@@ -225,6 +225,7 @@ export function SettingsPage({ onBack }: SettingsPageProps) {
                     </div>
                   }
                   isLoading={isLoading}
+                  testId="ide-setting"
                 />
 
                 <SettingSection
@@ -263,6 +264,7 @@ export function SettingsPage({ onBack }: SettingsPageProps) {
                     </div>
                   }
                   isLoading={isLoading}
+                  testId="terminal-setting"
                 />
 
                 {/* Window Behavior Section */}

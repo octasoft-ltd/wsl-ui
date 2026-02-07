@@ -10,14 +10,8 @@
  * - Action persistence
  */
 
-import {
-  waitForAppReady,
-  resetMockState,
-  selectors,
-  byText,
-  byButtonText,
-  safeRefresh,
-} from "../utils";
+import { byText, byButtonText, safeRefresh, waitForAppReady } from "../utils";
+import { setupHooks, actions, isElementDisplayed } from "../base";
 
 const customActionsSelectors = {
   settingsButton: '[data-testid="settings-button"]',
@@ -32,28 +26,48 @@ const customActionsSelectors = {
 
 async function navigateToCustomActions(): Promise<void> {
   // Open settings dialog
-  const settingsButton = await $(customActionsSelectors.settingsButton);
-  await settingsButton.waitForClickable({ timeout: 5000 });
-  await settingsButton.click();
-
-  // Wait for settings to be displayed
-  await browser.pause(500);
+  await actions.goToSettings();
 
   // Click on Custom Actions tab
   const customActionsTab = await $(customActionsSelectors.customActionsTab);
   await customActionsTab.waitForClickable({ timeout: 5000 });
   await customActionsTab.click();
-  await browser.pause(500);
+
+  // Wait for Custom Actions content to load
+  await browser.waitUntil(
+    async () => isElementDisplayed(customActionsSelectors.newActionButton),
+    { timeout: 5000, timeoutMsg: "Custom Actions tab did not load" }
+  );
+}
+
+/**
+ * Helper to open the action editor
+ */
+async function openActionEditor(): Promise<void> {
+  const newActionButton = await $(customActionsSelectors.newActionButton);
+  await newActionButton.click();
+  // Wait for editor to open
+  await browser.waitUntil(
+    async () => isElementDisplayed(customActionsSelectors.actionNameInput),
+    { timeout: 5000, timeoutMsg: "Action editor did not open" }
+  );
+}
+
+/**
+ * Helper to save an action and wait for it to appear in the list
+ */
+async function saveActionAndWait(actionName: string): Promise<void> {
+  const saveButton = await $(customActionsSelectors.saveActionButton);
+  await saveButton.click();
+  // Wait for action to appear in list
+  await browser.waitUntil(
+    async () => isElementDisplayed(`h4*=${actionName}`),
+    { timeout: 5000, timeoutMsg: `Action "${actionName}" did not appear in list` }
+  );
 }
 
 describe("Custom Actions CRUD", () => {
-  beforeEach(async () => {
-    await safeRefresh();
-    await browser.pause(500);
-    await resetMockState();
-    await waitForAppReady();
-    await browser.pause(500);
-  });
+  setupHooks.standard();
 
   describe("Navigation and Layout", () => {
     it("should navigate to Custom Actions settings", async () => {
@@ -91,10 +105,11 @@ describe("Custom Actions CRUD", () => {
       await navigateToCustomActions();
 
       // In a fresh mock state, there should be no custom actions
-      const emptyState = await $(byText("No custom actions yet"));
-      const isDisplayed = await emptyState.isDisplayed().catch(() => false);
+      const emptyStateSelector = byText("No custom actions yet");
+      const displayed = await isElementDisplayed(emptyStateSelector);
 
-      if (isDisplayed) {
+      if (displayed) {
+        const emptyState = await $(emptyStateSelector);
         await expect(emptyState).toBeDisplayed();
       }
     });
@@ -106,9 +121,7 @@ describe("Custom Actions CRUD", () => {
     });
 
     it("should open action editor when clicking New Action", async () => {
-      const newActionButton = await $(customActionsSelectors.newActionButton);
-      await newActionButton.click();
-      await browser.pause(300);
+      await openActionEditor();
 
       // Editor should be visible with form fields
       const nameInput = await $(customActionsSelectors.actionNameInput);
@@ -116,9 +129,7 @@ describe("Custom Actions CRUD", () => {
     });
 
     it("should display all required form fields in editor", async () => {
-      const newActionButton = await $(customActionsSelectors.newActionButton);
-      await newActionButton.click();
-      await browser.pause(300);
+      await openActionEditor();
 
       // Name input
       const nameInput = await $(customActionsSelectors.actionNameInput);
@@ -134,9 +145,7 @@ describe("Custom Actions CRUD", () => {
     });
 
     it("should display icon selection grid", async () => {
-      const newActionButton = await $(customActionsSelectors.newActionButton);
-      await newActionButton.click();
-      await browser.pause(300);
+      await openActionEditor();
 
       // Icon label should be visible
       const iconLabel = await $("label=Icon");
@@ -148,14 +157,11 @@ describe("Custom Actions CRUD", () => {
     });
 
     it("should display target distribution options", async () => {
-      const newActionButton = await $(customActionsSelectors.newActionButton);
-      await newActionButton.click();
-      await browser.pause(500);
+      await openActionEditor();
 
       // Scroll down in the form to find target distribution section
       const saveButton = await $(customActionsSelectors.saveActionButton);
       await saveButton.scrollIntoView();
-      await browser.pause(300);
 
       // Verify form contains the target distribution text
       const formElement = await $("form");
@@ -164,14 +170,11 @@ describe("Custom Actions CRUD", () => {
     });
 
     it("should display action options checkboxes", async () => {
-      const newActionButton = await $(customActionsSelectors.newActionButton);
-      await newActionButton.click();
-      await browser.pause(300);
+      await openActionEditor();
 
       // Scroll to make options visible
       const saveButton = await $(customActionsSelectors.saveActionButton);
       await saveButton.scrollIntoView();
-      await browser.pause(200);
 
       // Check text is in the form
       const pageText = await $("form").getText();
@@ -181,9 +184,7 @@ describe("Custom Actions CRUD", () => {
     });
 
     it("should create action with name and command", async () => {
-      const newActionButton = await $(customActionsSelectors.newActionButton);
-      await newActionButton.click();
-      await browser.pause(300);
+      await openActionEditor();
 
       // Fill in required fields
       const nameInput = await $(customActionsSelectors.actionNameInput);
@@ -192,10 +193,8 @@ describe("Custom Actions CRUD", () => {
       const commandInput = await $(customActionsSelectors.actionCommandInput);
       await commandInput.setValue("echo 'Hello World'");
 
-      // Save the action
-      const saveButton = await $(customActionsSelectors.saveActionButton);
-      await saveButton.click();
-      await browser.pause(500);
+      // Save the action and wait for it to appear
+      await saveActionAndWait("Test Action");
 
       // Should return to action list and show new action
       const actionName = await $("h4*=Test Action");
@@ -203,9 +202,7 @@ describe("Custom Actions CRUD", () => {
     });
 
     it("should cancel action creation when clicking Cancel", async () => {
-      const newActionButton = await $(customActionsSelectors.newActionButton);
-      await newActionButton.click();
-      await browser.pause(300);
+      await openActionEditor();
 
       // Fill in some data
       const nameInput = await $(customActionsSelectors.actionNameInput);
@@ -214,22 +211,27 @@ describe("Custom Actions CRUD", () => {
       // Click cancel
       const cancelButton = await $("button*=Cancel");
       await cancelButton.click();
-      await browser.pause(300);
+
+      // Wait for list view to return
+      await browser.waitUntil(
+        async () => {
+          const btn = await $(customActionsSelectors.newActionButton);
+          return btn.isDisplayed();
+        },
+        { timeout: 5000, timeoutMsg: "List view did not return" }
+      );
 
       // Should return to list view without the action
       const newActionBtn = await $(customActionsSelectors.newActionButton);
       await expect(newActionBtn).toBeDisplayed();
 
       // The cancelled action should not appear
-      const actionName = await $("h4*=Cancelled Action");
-      const isDisplayed = await actionName.isDisplayed().catch(() => false);
-      expect(isDisplayed).toBe(false);
+      const displayed = await isElementDisplayed("h4*=Cancelled Action");
+      expect(displayed).toBe(false);
     });
 
     it("should display variable buttons", async () => {
-      const newActionButton = await $(customActionsSelectors.newActionButton);
-      await newActionButton.click();
-      await browser.pause(500);
+      await openActionEditor();
 
       // Check form contains Available variables section
       const formElement = await $("form");
@@ -238,9 +240,7 @@ describe("Custom Actions CRUD", () => {
     });
 
     it("should insert variable when clicking variable button", async () => {
-      const newActionButton = await $(customActionsSelectors.newActionButton);
-      await newActionButton.click();
-      await browser.pause(300);
+      await openActionEditor();
 
       // First, add some command text
       const commandInput = await $(customActionsSelectors.actionCommandInput);
@@ -249,9 +249,17 @@ describe("Custom Actions CRUD", () => {
 
       // Find and click variable button
       const varButtons = await $$("button.px-2.py-0\\.5.text-xs");
-      if (varButtons.length > 0) {
+      if ((await varButtons.length) > 0) {
         await varButtons[0].click();
-        await browser.pause(200);
+
+        // Wait for command input to be updated
+        await browser.waitUntil(
+          async () => {
+            const value = await commandInput.getValue();
+            return value.length > 5; // "echo " + variable
+          },
+          { timeout: 3000, timeoutMsg: "Variable was not inserted" }
+        );
 
         // The command input should now contain additional text
         const commandValue = await commandInput.getValue();
@@ -265,9 +273,7 @@ describe("Custom Actions CRUD", () => {
       await navigateToCustomActions();
 
       // Create an action first
-      const newActionButton = await $(customActionsSelectors.newActionButton);
-      await newActionButton.click();
-      await browser.pause(300);
+      await openActionEditor();
 
       const nameInput = await $(customActionsSelectors.actionNameInput);
       await nameInput.setValue("Action To Edit");
@@ -275,9 +281,7 @@ describe("Custom Actions CRUD", () => {
       const commandInput = await $(customActionsSelectors.actionCommandInput);
       await commandInput.setValue("echo 'original'");
 
-      const saveButton = await $(customActionsSelectors.saveActionButton);
-      await saveButton.click();
-      await browser.pause(500);
+      await saveActionAndWait("Action To Edit");
     });
 
     it("should open editor with existing action data when clicking edit", async () => {
@@ -289,11 +293,23 @@ describe("Custom Actions CRUD", () => {
       const editButton = await $('[data-testid="action-edit-Action-To-Edit"]');
       await editButton.waitForClickable({ timeout: 5000 });
       await editButton.click();
-      await browser.pause(500);
+
+      // Wait for editor to open with data
+      await browser.waitUntil(
+        async () => {
+          const input = await $(customActionsSelectors.actionNameInput);
+          try {
+            const val = await input.getValue();
+            return val === "Action To Edit";
+          } catch {
+            return false;
+          }
+        },
+        { timeout: 5000, timeoutMsg: "Editor did not open with action data" }
+      );
 
       // Should show editor with existing data
       const nameInput = await $(customActionsSelectors.actionNameInput);
-      await nameInput.waitForDisplayed({ timeout: 5000 });
       const nameValue = await nameInput.getValue();
       expect(nameValue).toBe("Action To Edit");
     });
@@ -302,17 +318,23 @@ describe("Custom Actions CRUD", () => {
       // Click edit
       const editButton = await $('button[title="Edit"]');
       await editButton.click();
-      await browser.pause(300);
+
+      // Wait for editor to open
+      await browser.waitUntil(
+        async () => {
+          const input = await $(customActionsSelectors.actionNameInput);
+          return input.isDisplayed();
+        },
+        { timeout: 5000, timeoutMsg: "Editor did not open" }
+      );
 
       // Modify the name
       const nameInput = await $(customActionsSelectors.actionNameInput);
       await nameInput.clearValue();
       await nameInput.setValue("Updated Action");
 
-      // Save
-      const saveButton = await $(customActionsSelectors.saveActionButton);
-      await saveButton.click();
-      await browser.pause(500);
+      // Save and wait
+      await saveActionAndWait("Updated Action");
 
       // Should show updated name
       const actionName = await $("h4*=Updated Action");
@@ -322,7 +344,15 @@ describe("Custom Actions CRUD", () => {
     it("should show 'Update Action' button when editing", async () => {
       const editButton = await $('button[title="Edit"]');
       await editButton.click();
-      await browser.pause(300);
+
+      // Wait for editor to open
+      await browser.waitUntil(
+        async () => {
+          const input = await $(customActionsSelectors.actionNameInput);
+          return input.isDisplayed();
+        },
+        { timeout: 5000, timeoutMsg: "Editor did not open" }
+      );
 
       const saveButton = await $(customActionsSelectors.saveActionButton);
       const buttonText = await saveButton.getText();
@@ -335,9 +365,7 @@ describe("Custom Actions CRUD", () => {
       await navigateToCustomActions();
 
       // Create an action to delete
-      const newActionButton = await $(customActionsSelectors.newActionButton);
-      await newActionButton.click();
-      await browser.pause(300);
+      await openActionEditor();
 
       const nameInput = await $(customActionsSelectors.actionNameInput);
       await nameInput.setValue("Action To Delete");
@@ -345,9 +373,7 @@ describe("Custom Actions CRUD", () => {
       const commandInput = await $(customActionsSelectors.actionCommandInput);
       await commandInput.setValue("echo 'delete me'");
 
-      const saveButton = await $(customActionsSelectors.saveActionButton);
-      await saveButton.click();
-      await browser.pause(500);
+      await saveActionAndWait("Action To Delete");
     });
 
     it("should have delete button for action", async () => {
@@ -361,19 +387,18 @@ describe("Custom Actions CRUD", () => {
       await actionName.waitForDisplayed({ timeout: 5000 });
       await expect(actionName).toBeDisplayed();
 
-      // Get initial count of actions
-      const actionsBefore = await $$("h4");
-      const countBefore = actionsBefore.length;
-
       // Click delete button
       const deleteButton = await $('button[title="Delete"]');
       await deleteButton.waitForClickable({ timeout: 5000 });
       await deleteButton.click();
-      await browser.pause(500);
+
+      // Wait for delete action to complete (button click processed)
+      await browser.waitUntil(
+        async () => true,
+        { timeout: 500 }
+      );
 
       // Verify delete was attempted (either action disappears or count changes)
-      const actionsAfter = await $$("h4");
-      // If delete worked, there should be fewer actions (or action text changed)
       // This test just confirms the delete button is clickable
     });
   });
@@ -381,10 +406,7 @@ describe("Custom Actions CRUD", () => {
   describe("Scope Selection", () => {
     beforeEach(async () => {
       await navigateToCustomActions();
-
-      const newActionButton = await $(customActionsSelectors.newActionButton);
-      await newActionButton.click();
-      await browser.pause(300);
+      await openActionEditor();
     });
 
     it("should default to 'All distributions' scope", async () => {
@@ -398,7 +420,6 @@ describe("Custom Actions CRUD", () => {
       // Scroll down to see all radio buttons
       const saveButton = await $(customActionsSelectors.saveActionButton);
       await saveButton.scrollIntoView();
-      await browser.pause(300);
 
       // Find all scope radio buttons
       const radios = await $$("input[type='radio'][name='targetDistros']");
@@ -409,7 +430,6 @@ describe("Custom Actions CRUD", () => {
       // Scroll down to see all radio buttons
       const saveButton = await $(customActionsSelectors.saveActionButton);
       await saveButton.scrollIntoView();
-      await browser.pause(300);
 
       // Find all scope radio buttons
       const radios = await $$("input[type='radio'][name='targetDistros']");
@@ -417,7 +437,14 @@ describe("Custom Actions CRUD", () => {
 
       // Click on the second radio (pattern)
       await radios[1].click();
-      await browser.pause(200);
+
+      // Wait for selection to register
+      await browser.waitUntil(
+        async () => {
+          return radios[1].isSelected();
+        },
+        { timeout: 3000, timeoutMsg: "Radio button was not selected" }
+      );
 
       // Verify it's selected
       const isChecked = await radios[1].isSelected();
@@ -430,9 +457,7 @@ describe("Custom Actions CRUD", () => {
       await navigateToCustomActions();
 
       // Create an action
-      const newActionButton = await $(customActionsSelectors.newActionButton);
-      await newActionButton.click();
-      await browser.pause(300);
+      await openActionEditor();
 
       const nameInput = await $(customActionsSelectors.actionNameInput);
       await nameInput.setValue("Persistent Action");
@@ -440,13 +465,10 @@ describe("Custom Actions CRUD", () => {
       const commandInput = await $(customActionsSelectors.actionCommandInput);
       await commandInput.setValue("echo 'persist'");
 
-      const saveButton = await $(customActionsSelectors.saveActionButton);
-      await saveButton.click();
-      await browser.pause(500);
+      await saveActionAndWait("Persistent Action");
 
       // Refresh the page
       await safeRefresh();
-      await browser.pause(500);
       await waitForAppReady();
 
       // Navigate back to custom actions

@@ -700,6 +700,105 @@ Avoid using port 3389 as it's the Windows default RDP port and may conflict with
 
 ---
 
+## Issue #11: WSL System Shell fails with GUI_APPLICATIONS_DISABLED
+
+### Symptoms
+- Clicking the system terminal icon (in the header) opens a terminal that immediately shows an error
+- Error message:
+  ```
+  GUI application support is disabled via C:\Users\<username>\.wslconfig or /etc/wsl.conf.
+  Error code: Wsl/Service/CreateInstance/WSL_E_GUI_APPLICATIONS_DISABLED
+
+  [process exited with code 4294967295 (0xffffffff)]
+  ```
+- The "SYS" and "VER" info box in the header may not appear (when system distro is unavailable)
+
+### Root Cause
+The WSL2 "system distro" (CBL-Mariner/Azure Linux) is not running because GUI application support has been disabled. This happens when:
+
+1. **`guiApplications=false`** is set in `%USERPROFILE%\.wslconfig`:
+   ```ini
+   [wsl2]
+   guiApplications=false
+   ```
+
+2. Running **WSL 1** only - the system distro requires WSL 2
+
+3. Using an **older WSL version** without WSLg support (pre-Store inbox version)
+
+The system distro hosts WSLg (X/Wayland servers, PulseAudio) for GUI application support. When disabled, `wsl --system` commands fail with this error.
+
+### Diagnosis
+1. Check your `.wslconfig` file:
+   ```powershell
+   notepad $env:USERPROFILE\.wslconfig
+   ```
+   Look for `guiApplications=false` under `[wsl2]`
+
+2. Check WSL version:
+   ```cmd
+   wsl --version
+   ```
+   WSLg requires WSL version 2.0+ from the Microsoft Store
+
+3. Verify WSL 2 is available:
+   ```cmd
+   wsl --list --verbose
+   ```
+   Check the VERSION column - WSL 1 distros won't have system distro access
+
+### Solution
+**If you intentionally disabled GUI applications:**
+
+This is expected behavior. The system shell is only available when the system distro (WSLg) is running. You can:
+- Use a regular distro terminal instead of the system shell
+- The app will hide the SYS/VER info box when the system distro is unavailable
+
+**If you want to enable GUI application support:**
+
+1. Edit your `.wslconfig`:
+   ```powershell
+   notepad $env:USERPROFILE\.wslconfig
+   ```
+
+2. Either remove the `guiApplications=false` line or set it to `true`:
+   ```ini
+   [wsl2]
+   guiApplications=true
+   ```
+
+3. Restart WSL for changes to take effect:
+   ```cmd
+   wsl --shutdown
+   ```
+
+**If you need to update WSL:**
+
+```cmd
+wsl --update
+```
+
+Or install from the Microsoft Store for the latest features.
+
+### Why disable GUI applications?
+Users may intentionally disable GUI applications to:
+- Reduce resource usage (the system distro uses ~200MB RAM)
+- Run WSL in headless/server environments
+- Avoid WSLg startup overhead when only using CLI applications
+
+### Files Changed
+- `src-tauri/src/wsl/info.rs`: `get_system_distro_info()` now returns `None` when system distro unavailable
+- `src-tauri/src/commands.rs`: Updated return type to `Option<SystemDistroInfo>`
+- `src/services/wslService.ts`: Updated TypeScript type to handle `null`
+- `src/components/Header.tsx`: Already handles `null` by hiding SYS/VER box
+
+### Related
+- WSLg GitHub: https://github.com/microsoft/wslg
+- WSL configuration: https://learn.microsoft.com/en-us/windows/wsl/wsl-config
+- The system distro is based on CBL-Mariner (now Azure Linux)
+
+---
+
 ## Template for New Issues
 
 ```markdown

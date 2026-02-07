@@ -8,21 +8,11 @@
  * - Resource usage display
  */
 
-import {
-  waitForAppReady,
-  resetMockState,
-  selectors,
-  safeRefresh,
-} from "../utils";
+import { setupHooks, isElementDisplayed } from "../base";
+import { selectors, waitForDistroState, triggerResourceFetch } from "../utils";
 
 describe("WSL Status Features", () => {
-  beforeEach(async () => {
-    await safeRefresh();
-    await browser.pause(500);
-    await resetMockState();
-    await waitForAppReady();
-    await browser.pause(500);
-  });
+  setupHooks.standard();
 
   describe("Status Bar", () => {
     it("should display the status bar", async () => {
@@ -67,8 +57,8 @@ describe("WSL Status Features", () => {
       const statusBar = await $(selectors.statusBar);
       const statusBarText = await statusBar.getText();
 
-      // Should show OPERATIONAL or STANDBY indicator
-      expect(statusBarText).toMatch(/OPERATIONAL|STANDBY/);
+      // With running distributions in mock data, status should show OPERATIONAL
+      expect(statusBarText).toContain("OPERATIONAL");
     });
   });
 
@@ -148,11 +138,19 @@ describe("WSL Status Features", () => {
       const updateButton = await statusBar.$('button[title*="Update"]');
       await updateButton.click();
 
-      // Should show spinner during update
-      await browser.pause(200);
-      const spinner = await statusBar.$('.animate-spin');
+      // Spinner may appear briefly - try to detect it
+      try {
+        await browser.waitUntil(
+          async () => {
+            const spinner = await statusBar.$('.animate-spin');
+            return await spinner.isDisplayed();
+          },
+          { timeout: 2000 }
+        );
+      } catch {
+        // Spinner may be too fast to catch - that's ok
+      }
 
-      // Spinner may or may not be visible depending on timing
       // Just verify the click doesn't cause an error
       expect(true).toBe(true);
     });
@@ -162,7 +160,10 @@ describe("WSL Status Features", () => {
     it("should show memory usage in status bar", async () => {
       const statusBar = await $(selectors.statusBar);
 
-      // Wait for resource stats to load (polled every 5s)
+      // Force a resource fetch since polling may be paused when window is unfocused during tests
+      await triggerResourceFetch();
+
+      // Wait for resource stats to load
       await browser.waitUntil(
         async () => {
           const text = await statusBar.getText();
@@ -185,7 +186,13 @@ describe("WSL Status Features", () => {
       const statusBar = await $(selectors.statusBar);
 
       // Wait for stats to load
-      await browser.pause(1000);
+      await browser.waitUntil(
+        async () => {
+          const text = await statusBar.getText();
+          return text.includes("INSTANCES") && text.includes("ACTIVE");
+        },
+        { timeout: 5000, timeoutMsg: "Instance and active counts did not appear" }
+      );
 
       const statusBarText = await statusBar.getText();
 
@@ -210,25 +217,33 @@ describe("WSL Status Features", () => {
       const startButton = await debianCard.$('[data-testid="start-button"]');
       await startButton.click();
 
-      // Should show loading in status bar
-      await browser.pause(100);
       const statusBar = await $(selectors.statusBar);
 
-      // Look for spinner or action text
-      const spinner = await statusBar.$('.animate-spin');
-      const isSpinnerDisplayed = await spinner.isDisplayed().catch(() => false);
-
       // Either spinner is visible or status shows action in progress
-      if (isSpinnerDisplayed) {
-        expect(true).toBe(true);
-      } else {
+      let foundIndicator = false;
+      try {
+        await browser.waitUntil(
+          async () => {
+            const spinner = await statusBar.$('.animate-spin');
+            try {
+              return await spinner.isDisplayed();
+            } catch {
+              return false;
+            }
+          },
+          { timeout: 2000 }
+        );
+        foundIndicator = true;
+      } catch {
+        // Spinner may be too fast - check text instead
         const text = await statusBar.getText();
-        // May show Starting, Syncing, or OPERATIONAL
-        expect(text.includes("Starting") || text.includes("Syncing") || text.includes("OPERATIONAL")).toBe(true);
+        foundIndicator = text.includes("Starting") || text.includes("Syncing") || text.includes("OPERATIONAL");
       }
 
+      expect(foundIndicator).toBe(true);
+
       // Wait for operation to complete
-      await browser.pause(1000);
+      await waitForDistroState("Debian", "ONLINE", 10000);
     });
 
     it("should show active count in status bar", async () => {
@@ -257,15 +272,30 @@ describe("WSL Status Features", () => {
       // Change default to Debian
       const debianCard = await $(selectors.distroCardByName("Debian"));
       const quickActionsButton = await debianCard.$('[data-testid="quick-actions-button"]');
+      await quickActionsButton.waitForClickable({ timeout: 5000 });
       await quickActionsButton.click();
-      await browser.pause(300);
+
+      // Wait for quick actions menu to appear
+      await browser.waitUntil(
+        async () => isElementDisplayed(selectors.quickActionsMenu),
+        { timeout: 5000, timeoutMsg: "Quick actions menu did not appear" }
+      );
 
       const setDefaultAction = await $('[data-testid="quick-action-default"]');
+      await setDefaultAction.waitForClickable({ timeout: 5000 });
       await setDefaultAction.click();
-      await browser.pause(500);
+
+      // Wait for status bar to update
+      const statusBar = await $(selectors.statusBar);
+      await browser.waitUntil(
+        async () => {
+          const text = await statusBar.getText();
+          return text.includes("Debian");
+        },
+        { timeout: 5000, timeoutMsg: "Status bar did not update to show Debian as primary" }
+      );
 
       // Check status bar updated
-      const statusBar = await $(selectors.statusBar);
       const statusBarText = await statusBar.getText();
 
       expect(statusBarText).toContain("PRIMARY");

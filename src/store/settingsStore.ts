@@ -97,5 +97,11 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
   },
 }));
 
+// Expose store for e2e testing
+if (typeof window !== "undefined") {
+  (window as unknown as { __settingsStore: typeof useSettingsStore }).__settingsStore =
+    useSettingsStore;
+}
+
 
 

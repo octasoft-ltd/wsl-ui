@@ -92,6 +92,17 @@ pub struct VhdSizeInfo {
 
 /// Get both file size and virtual size of a distribution's VHDX
 pub fn get_distribution_vhd_size(name: &str) -> Result<VhdSizeInfo, WslError> {
+    use crate::utils::is_mock_mode;
+
+    // In mock mode, return realistic fake VHD sizes
+    if is_mock_mode() {
+        // Return mock values: ~8GB file size, 256GB virtual size
+        return Ok(VhdSizeInfo {
+            file_size: 8_000_000_000,       // ~8 GB (realistic file size)
+            virtual_size: 274_877_906_944,  // 256 GB (default WSL2 virtual disk size)
+        });
+    }
+
     // Get the VHDX path
     let vhdx_path = get_vhdx_path_from_registry(name)
         .ok_or_else(|| WslError::CommandFailed(format!("Could not find VHDX for {}", name)))?;
@@ -352,17 +363,31 @@ impl Default for SystemDistroInfo {
 
 /// Get information about the WSL2 system distribution
 /// This queries /etc/os-release in the hidden system distro (CBL-Mariner/Azure Linux)
-pub fn get_system_distro_info() -> Result<SystemDistroInfo, WslError> {
+/// Returns None if the system distro is not available (e.g., guiApplications=false in .wslconfig)
+pub fn get_system_distro_info() -> Result<Option<SystemDistroInfo>, WslError> {
     debug!("Getting system distro info");
 
     let output = wsl_executor().exec_system_with_timeout("cat /etc/os-release", 5)?;
 
     if !output.success {
+        // Check for GUI_APPLICATIONS_DISABLED error - this is expected when guiApplications=false
+        if output.stderr.contains("GUI_APPLICATIONS_DISABLED") || output.stderr.contains("gui") {
+            debug!("System distro not available: GUI applications disabled in .wslconfig");
+            return Ok(None);
+        }
         warn!("Failed to get system distro info: {}", output.stderr);
-        return Ok(SystemDistroInfo::default());
+        return Ok(None);
     }
 
-    Ok(parse_system_distro_info(&output.stdout))
+    let info = parse_system_distro_info(&output.stdout);
+
+    // If we only got "Unknown" values, treat as unavailable
+    if info.name == "Unknown" && info.version == "Unknown" {
+        debug!("System distro returned empty data");
+        return Ok(None);
+    }
+
+    Ok(Some(info))
 }
 
 /// Parse /etc/os-release output for system distro
