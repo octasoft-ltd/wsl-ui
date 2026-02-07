@@ -5,6 +5,25 @@ All notable changes to WSL UI will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.16.0](https://github.com/octasoft-ltd/wsl-ui/compare/v0.15.0...v0.16.0) (2026-02-07)
+
+
+### Features
+
+* add Microsoft Store review prompt after first install ([6a812f5](https://github.com/octasoft-ltd/wsl-ui/commit/6a812f566c9d476c79b69c87aa636e2102f37da5))
+* Detect pending wslconfig changes, ([761e878](https://github.com/octasoft-ltd/wsl-ui/commit/761e87819554dcc401b5c399a1cf2107321cc2fb))
+* xrdp detection and quick rdp connection button on distro card. Opens terminal to keep alive if timeout settings not configured in wsl. ([938089f](https://github.com/octasoft-ltd/wsl-ui/commit/938089f4e0ef6eaf49dadb6cc8005744270f9dd2))
+
+
+### Bug Fixes
+
+* add shell:allow-open permission for Store URL ([3150cdc](https://github.com/octasoft-ltd/wsl-ui/commit/3150cdcaf1b058e1c92e83489d16d9e1178281c2))
+* Fix microsoft store icons to be correct size - ([9db2048](https://github.com/octasoft-ltd/wsl-ui/commit/9db204803b1382d41754c485fbffff7b6b4fe51b))
+* Fix microsoft store icons to be correct size - remove unused variants. ([18f3cc5](https://github.com/octasoft-ltd/wsl-ui/commit/18f3cc51354c95141783c2d3f97da1c4bb153ffc))
+* tidy up icons. Use single canonical svg for generation ([d512564](https://github.com/octasoft-ltd/wsl-ui/commit/d5125644567112064f4da3bd40f4ec5db8646e9b))
+* use custom Tauri command to open Store URL ([bb4abb1](https://github.com/octasoft-ltd/wsl-ui/commit/bb4abb15ecc084d749aa635b27bb7c09378e9f71))
+* wait for settings to load before checking review prompt ([498c300](https://github.com/octasoft-ltd/wsl-ui/commit/498c3007b449850c0cf00703e1ec4014f112a63c))
+
 ## [0.15.0](https://github.com/octasoft-ltd/wsl-ui/compare/v0.14.0...v0.15.0) (2026-01-18)
 
 
