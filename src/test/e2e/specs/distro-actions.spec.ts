@@ -8,28 +8,20 @@
  */
 
 import {
-  waitForAppReady,
-  resetMockState,
   selectors,
   getDistroCardCount,
   waitForDistroState,
   mockDistributions,
-  verifyDistroCardState,
   waitForDialog,
   waitForDialogToDisappear,
-  safeRefresh,
+  captureDistroStates,
+  verifyAfterStart,
+  verifyAfterDelete,
 } from "../utils";
+import { setupHooks, isElementDisplayed } from "../base";
 
 describe("Distribution Actions", () => {
-  beforeEach(async () => {
-    await safeRefresh();
-    await browser.pause(300);
-    await resetMockState();
-    // Refresh again to load the clean mock data
-    await safeRefresh();
-    await waitForAppReady();
-    await browser.pause(500);
-  });
+  setupHooks.standard();
 
   describe("Start Distribution", () => {
     it("should start a stopped distribution", async () => {
@@ -105,7 +97,9 @@ describe("Distribution Actions", () => {
       // Close dialog
       const cancelButton = await $(selectors.dialogCancelButton);
       await cancelButton.click();
-      await browser.pause(300);
+
+      // Wait for dialog to close
+      await waitForDialogToDisappear(selectors.confirmDialog, 5000);
     });
 
     it("should close dialog when cancel is clicked", async () => {
@@ -124,12 +118,11 @@ describe("Distribution Actions", () => {
       await cancelButton.click();
 
       // Wait for dialog to close
-      await browser.pause(500);
+      await waitForDialogToDisappear(selectors.confirmDialog, 5000);
 
       // Verify dialog is closed
-      const dialogAfter = await $(selectors.confirmDialog);
-      const isDisplayed = await dialogAfter.isDisplayed().catch(() => false);
-      expect(isDisplayed).toBe(false);
+      const dialogClosed = !(await isElementDisplayed(selectors.confirmDialog));
+      expect(dialogClosed).toBe(true);
 
       // Verify distribution still exists
       await expect(alpineCard).toBeDisplayed();
@@ -156,9 +149,7 @@ describe("Distribution Actions", () => {
       // Wait for deletion to complete - card should disappear
       await browser.waitUntil(
         async () => {
-          const cardAfter = await $(selectors.distroCardByName("Alpine"));
-          const exists = await cardAfter.isDisplayed().catch(() => false);
-          return !exists;
+          return !(await isElementDisplayed(selectors.distroCardByName("Alpine")));
         },
         {
           timeout: 10000,
@@ -191,15 +182,18 @@ describe("Distribution Actions", () => {
       const versionBadge = await ubuntuCard.$(selectors.wslVersionBadge);
 
       await versionBadge.click();
-      await browser.pause(300);
 
+      // Wait for info dialog to appear
       const infoDialog = await $(selectors.distroInfoDialog);
+      await infoDialog.waitForDisplayed({ timeout: 5000 });
       await expect(infoDialog).toBeDisplayed();
 
       // Close dialog
       const closeButton = await $(selectors.infoCloseButton);
       await closeButton.click();
-      await browser.pause(300);
+
+      // Wait for dialog to close
+      await waitForDialogToDisappear(selectors.distroInfoDialog, 5000);
     });
   });
 
@@ -279,29 +273,24 @@ describe("Distribution Actions", () => {
     });
 
     it("should correctly update only the target distribution state", async () => {
-      // Record initial states
-      await verifyDistroCardState("Ubuntu", "ONLINE");
-      await verifyDistroCardState("Ubuntu-22.04", "ONLINE");
-      await verifyDistroCardState("Debian", "OFFLINE");
-      await verifyDistroCardState("Alpine", "OFFLINE");
+      // Capture snapshot of all distro states before operation
+      const snapshot = await captureDistroStates();
 
       // Start Debian
       const debianCard = await $(selectors.distroCardByName("Debian"));
       const startButton = await debianCard.$(selectors.startButton);
       await startButton.click();
 
-      // Wait for Debian to start
-      await waitForDistroState("Debian", "ONLINE", 10000);
-
-      // Verify other states haven't changed
-      await verifyDistroCardState("Ubuntu", "ONLINE");
-      await verifyDistroCardState("Ubuntu-22.04", "ONLINE");
-      await verifyDistroCardState("Alpine", "OFFLINE");
+      // Verify using snapshot-based consistency check:
+      // - Debian should be ONLINE
+      // - All other distros should be unchanged
+      await verifyAfterStart("Debian", snapshot);
     });
 
     it("should correctly reduce card count after delete", async () => {
-      const initialCount = await getDistroCardCount();
-      expect(initialCount).toBe(mockDistributions.length);
+      // Capture snapshot before delete
+      const snapshot = await captureDistroStates();
+      expect(snapshot.length).toBe(mockDistributions.length);
 
       // Delete Alpine
       const alpineCard = await $(selectors.distroCardByName("Alpine"));
@@ -313,22 +302,10 @@ describe("Distribution Actions", () => {
       const confirmButton = await $(selectors.dialogConfirmButton);
       await confirmButton.click();
 
-      // Wait for deletion
-      await browser.waitUntil(
-        async () => {
-          const card = await $(selectors.distroCardByName("Alpine"));
-          return !(await card.isDisplayed().catch(() => false));
-        },
-        { timeout: 10000, timeoutMsg: "Alpine was not deleted" }
-      );
-
-      // Card count should be reduced by 1
-      const afterCount = await getDistroCardCount();
-      expect(afterCount).toBe(initialCount - 1);
-
-      // Other cards should still exist
-      await verifyDistroCardState("Ubuntu", "ONLINE");
-      await verifyDistroCardState("Debian", "OFFLINE");
+      // Verify using snapshot-based consistency check:
+      // - Alpine should be gone
+      // - All other distros should be unchanged
+      await verifyAfterDelete("Alpine", snapshot);
     });
 
     it("should display correct button based on distribution state", async () => {

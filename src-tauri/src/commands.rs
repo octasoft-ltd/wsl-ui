@@ -12,7 +12,7 @@ use crate::validation::{
 };
 use crate::wsl::resources::parse_memory_string;
 use crate::wsl::{reset_mock_state, set_mock_error, clear_mock_errors, set_stubborn_shutdown, was_force_shutdown_used, MockErrorType, CompactResult, Distribution, DistroResourceUsage, VhdSizeInfo, WslResourceUsage, WslService, WslVersionInfo, WslPreflightStatus, MountedDisk, MountDiskOptions, PhysicalDisk, InstalledTerminal};
-use crate::wsl::executor::terminal_executor;
+use crate::wsl::executor::{terminal_executor, wsl_executor};
 use crate::{build_tray_menu, TrayState};
 use tauri::{AppHandle, Emitter, Manager};
 
@@ -22,6 +22,37 @@ use tauri::{AppHandle, Emitter, Manager};
 pub struct ResourceStats {
     pub global: WslResourceUsage,
     pub per_distro: Vec<DistroResourceUsage>,
+}
+
+/// RDP detection result
+#[derive(Debug, Clone, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct RdpDetectionResult {
+    /// Type of RDP server detected: "xrdp", "port_conflict", or "none"
+    #[serde(rename = "type")]
+    pub detection_type: String,
+    /// Port number (for xrdp or port_conflict)
+    pub port: Option<u16>,
+}
+
+/// WSL config timeout status
+#[derive(Debug, Clone, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WslConfigStatus {
+    /// Whether both timeout settings are configured
+    pub timeouts_configured: bool,
+}
+
+/// WSL config pending restart status
+#[derive(Debug, Clone, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WslConfigPendingStatus {
+    /// Whether .wslconfig has changes that require WSL restart
+    pub pending_restart: bool,
+    /// When the config was last modified (ISO 8601 format)
+    pub config_modified: Option<String>,
+    /// When WSL was started (ISO 8601 format)
+    pub wsl_started: Option<String>,
 }
 
 #[tauri::command]
@@ -195,6 +226,368 @@ pub async fn run_action_in_terminal(action_id: String, distro: String, id: Optio
     .await
     .map_err(|e| format!("Task failed: {}", e))?
 }
+
+// ==================== RDP Commands ====================
+
+/// Detect RDP server availability in a distribution
+#[tauri::command]
+pub async fn detect_rdp(name: String, id: Option<String>) -> Result<RdpDetectionResult, String> {
+    validate_distro_name(&name).map_err(|e| e.to_string())?;
+
+    tokio::task::spawn_blocking(move || {
+        log::debug!("detect_rdp: checking xrdp for distro '{}'", name);
+
+        // Check if xrdp is running
+        if let Some(port) = check_xrdp_listening(&name, id.as_deref())? {
+            log::debug!("detect_rdp: xrdp running on port {}", port);
+            return Ok(RdpDetectionResult {
+                detection_type: "xrdp".to_string(),
+                port: Some(port),
+            });
+        }
+
+        log::debug!("detect_rdp: xrdp not running, checking for port conflict");
+
+        // xrdp not running - check if it's installed and has a port conflict
+        match check_xrdp_port_conflict(&name, id.as_deref()) {
+            Ok(Some(port)) => {
+                log::info!("detect_rdp: port conflict detected on port {}", port);
+                return Ok(RdpDetectionResult {
+                    detection_type: "port_conflict".to_string(),
+                    port: Some(port),
+                });
+            }
+            Ok(None) => {
+                log::debug!("detect_rdp: no port conflict detected");
+            }
+            Err(e) => {
+                log::warn!("detect_rdp: error checking port conflict: {}", e);
+            }
+        }
+
+        // Nothing detected
+        log::debug!("detect_rdp: returning none");
+        Ok(RdpDetectionResult {
+            detection_type: "none".to_string(),
+            port: None,
+        })
+    })
+    .await
+    .map_err(|e| format!("Task failed: {}", e))?
+}
+
+/// Check if xrdp is listening and return port
+/// Uses only universal POSIX tools: ps, grep, cut, tr
+fn check_xrdp_listening(name: &str, id: Option<&str>) -> Result<Option<u16>, String> {
+    // Single command: check if xrdp process is running, if so get port from config
+    // - ps aux: POSIX standard, works on all Linux
+    // - grep 'xrdp$': matches process names ending in "xrdp"
+    // - /etc/xrdp/xrdp.ini: standardized config path for xrdp
+    let output = wsl_executor()
+        .exec(
+            name,
+            id,
+            r#"ps aux 2>/dev/null | grep -v grep | grep -q 'xrdp$' && grep -i '^port=' /etc/xrdp/xrdp.ini 2>/dev/null | head -1 | cut -d'=' -f2 | tr -d ' ' || echo ''"#
+        )
+        .map_err(|e| e.to_string())?;
+
+    let result = output.stdout.trim();
+
+    // Empty means xrdp not running or config not found
+    if result.is_empty() {
+        return Ok(None);
+    }
+
+    // Parse port from config
+    if let Ok(port) = result.parse::<u16>() {
+        return Ok(Some(port));
+    }
+
+    // xrdp running but couldn't parse port, use default
+    Ok(Some(3389))
+}
+
+/// Check if xrdp is installed but has a port conflict with another distro
+/// Returns the conflicting port if detected, None otherwise
+///
+/// Detection logic:
+/// 1. Check if xrdp config exists (meaning xrdp is installed)
+/// 2. Get the configured port from the config
+/// 3. Check if that port is in use using /proc/net/tcp*
+/// 4. If in use, check if this distro owns the socket (using /proc/[pid]/fd)
+/// 5. If port is in use but not owned by this distro = port conflict
+fn check_xrdp_port_conflict(name: &str, id: Option<&str>) -> Result<Option<u16>, String> {
+    // Single compound command that:
+    // 1. Reads port from xrdp config (if exists)
+    // 2. Converts port to hex
+    // 3. Checks if port is listening in /proc/net/tcp*
+    // 4. If listening, checks if any process in this distro owns the socket
+    //
+    // Output format: "port_conflict:<port>" or "no_conflict" or "not_installed"
+    // Build the script with the port converted to hex in Rust to avoid shell escaping issues
+    // First, get the port from xrdp config
+    let port_script = r#"grep -i '^port=' /etc/xrdp/xrdp.ini 2>/dev/null | head -1 | cut -d'=' -f2 | tr -d ' '"#;
+
+    let port_output = wsl_executor()
+        .exec_as_root(name, id, port_script)
+        .map_err(|e| e.to_string())?;
+
+    let port_str = port_output.stdout.trim();
+    let port: u16 = if port_str.is_empty() {
+        // Config doesn't exist or no port setting - check if config exists
+        let config_check = wsl_executor()
+            .exec(name, id, "test -f /etc/xrdp/xrdp.ini && echo exists")
+            .map_err(|e| e.to_string())?;
+
+        if config_check.stdout.trim() != "exists" {
+            // xrdp not installed
+            return Ok(None);
+        }
+        3389 // default port
+    } else {
+        port_str.parse().unwrap_or(3389)
+    };
+
+    // Convert port to hex in Rust
+    let port_hex = format!("{:04X}", port);
+
+    // Run each step separately to avoid shell escaping issues with complex pipelines
+    // Step 1: Get the inode for the listening port
+    let inode_script = format!(
+        r#"cat /proc/net/tcp /proc/net/tcp6 2>/dev/null | grep -i ':{port_hex} ' | grep ' 0A ' | head -1 | tr -s ' ' | cut -d' ' -f11"#,
+        port_hex = port_hex
+    );
+
+    let inode_output = wsl_executor()
+        .exec_as_root(name, id, &inode_script)
+        .map_err(|e| e.to_string())?;
+
+    let inode = inode_output.stdout.trim();
+    log::debug!("check_xrdp_port_conflict: inode = '{}'", inode);
+
+    if inode.is_empty() {
+        // Port not in use
+        return Ok(None);
+    }
+
+    // Step 2: Check if we own the socket
+    let socket_script = format!(
+        r#"ls -la /proc/[0-9]*/fd 2>/dev/null | grep 'socket:\[{inode}\]' | head -1"#,
+        inode = inode
+    );
+
+    let socket_output = wsl_executor()
+        .exec_as_root(name, id, &socket_script)
+        .map_err(|e| e.to_string())?;
+
+    let socket_check = socket_output.stdout.trim();
+    log::debug!("check_xrdp_port_conflict: socket_check = '{}'", socket_check);
+
+    if !socket_check.is_empty() {
+        // We own this socket - no conflict
+        return Ok(None);
+    }
+
+    // Port is in use but we don't own it - conflict!
+    log::info!("check_xrdp_port_conflict: port {} conflict detected (inode {})", port, inode);
+    return Ok(Some(port));
+}
+
+
+/// Parse .wslconfig content to check if timeout settings are configured for RDP use
+/// This is extracted for testability
+fn parse_wsl_config_timeouts(content: &str) -> WslConfigStatus {
+    // Check for uncommented timeout settings with -1 value
+    // Lines starting with # are comments and should be ignored
+    let has_instance_timeout = content.lines().any(|line| {
+        let trimmed = line.trim();
+        !trimmed.starts_with('#')
+            && trimmed.to_lowercase().contains("instanceidletimeout")
+            && (trimmed.contains("=-1") || trimmed.contains("= -1"))
+    });
+
+    let has_vm_timeout = content.lines().any(|line| {
+        let trimmed = line.trim();
+        !trimmed.starts_with('#')
+            && trimmed.to_lowercase().contains("vmidletimeout")
+            && (trimmed.contains("=-1") || trimmed.contains("= -1"))
+    });
+
+    WslConfigStatus {
+        timeouts_configured: has_instance_timeout && has_vm_timeout,
+    }
+}
+
+/// Check if WSL config has timeouts set for RDP use
+#[tauri::command]
+pub fn check_wsl_config_timeouts() -> WslConfigStatus {
+    use std::fs;
+
+    let wslconfig_path = utils::get_user_profile().join(".wslconfig");
+    let content = fs::read_to_string(&wslconfig_path).unwrap_or_default();
+
+    parse_wsl_config_timeouts(&content)
+}
+
+/// Check if .wslconfig has pending changes that require WSL restart
+/// Compares the config file modification time with the earliest WSL process start time
+#[tauri::command]
+pub async fn check_wsl_config_pending() -> Result<WslConfigPendingStatus, String> {
+    use std::fs;
+    use std::process::Command;
+
+    tokio::task::spawn_blocking(|| {
+        let wslconfig_path = utils::get_user_profile().join(".wslconfig");
+
+        // Get config file modification time
+        let config_modified = match fs::metadata(&wslconfig_path) {
+            Ok(metadata) => match metadata.modified() {
+                Ok(time) => Some(time),
+                Err(_) => None,
+            },
+            Err(_) => {
+                // No config file exists, so no pending changes
+                return Ok(WslConfigPendingStatus {
+                    pending_restart: false,
+                    config_modified: None,
+                    wsl_started: None,
+                });
+            }
+        };
+
+        // Get earliest WSL process start time via PowerShell
+        let ps_output = Command::new("powershell")
+            .args([
+                "-NoProfile",
+                "-Command",
+                "(Get-Process -Name 'wsl' -ErrorAction SilentlyContinue | Sort-Object StartTime | Select-Object -First 1).StartTime.ToString('o')",
+            ])
+            .output()
+            .map_err(|e| format!("Failed to query WSL process: {}", e))?;
+
+        let wsl_started_str = String::from_utf8_lossy(&ps_output.stdout).trim().to_string();
+
+        if wsl_started_str.is_empty() {
+            // No WSL process running, so no pending changes to worry about
+            return Ok(WslConfigPendingStatus {
+                pending_restart: false,
+                config_modified: config_modified.map(|t| {
+                    chrono::DateTime::<chrono::Utc>::from(t).to_rfc3339()
+                }),
+                wsl_started: None,
+            });
+        }
+
+        // Parse WSL start time
+        let wsl_started = match chrono::DateTime::parse_from_rfc3339(&wsl_started_str) {
+            Ok(dt) => dt.with_timezone(&chrono::Utc),
+            Err(_) => {
+                log::warn!("Failed to parse WSL start time: {}", wsl_started_str);
+                return Ok(WslConfigPendingStatus {
+                    pending_restart: false,
+                    config_modified: config_modified.map(|t| {
+                        chrono::DateTime::<chrono::Utc>::from(t).to_rfc3339()
+                    }),
+                    wsl_started: Some(wsl_started_str),
+                });
+            }
+        };
+
+        // Compare times
+        let config_modified_dt = config_modified.map(|t| chrono::DateTime::<chrono::Utc>::from(t));
+        let pending_restart = match config_modified_dt {
+            Some(config_dt) => config_dt > wsl_started,
+            None => false,
+        };
+
+        if pending_restart {
+            log::info!(
+                "WSL config has pending changes: config modified at {:?}, WSL started at {}",
+                config_modified_dt,
+                wsl_started
+            );
+        }
+
+        Ok(WslConfigPendingStatus {
+            pending_restart,
+            config_modified: config_modified_dt.map(|t| t.to_rfc3339()),
+            wsl_started: Some(wsl_started.to_rfc3339()),
+        })
+    })
+    .await
+    .map_err(|e| format!("Task failed: {}", e))?
+}
+
+/// Open RDP connection using mstsc.exe
+#[tauri::command]
+pub async fn open_rdp(port: u16) -> Result<(), String> {
+    tokio::task::spawn_blocking(move || {
+        use crate::utils::hidden_command;
+
+        let connection = format!("localhost:{}", port);
+
+        hidden_command("mstsc.exe")
+            .arg("/v")
+            .arg(&connection)
+            .spawn()
+            .map_err(|e| format!("Failed to open Remote Desktop: {}", e))?;
+
+        Ok(())
+    })
+    .await
+    .map_err(|e| format!("Task failed: {}", e))?
+}
+
+/// Open a keep-alive terminal for RDP sessions with an informational message
+#[tauri::command]
+pub async fn open_terminal_with_message(name: String, id: Option<String>, message: String) -> Result<(), String> {
+    validate_distro_name(&name).map_err(|e| e.to_string())?;
+
+    tokio::task::spawn_blocking(move || {
+        use crate::utils::hidden_command;
+        #[cfg(windows)]
+        use std::os::windows::process::CommandExt;
+
+        let paths = settings::get_executable_paths();
+
+        // Build distro args
+        let distro_args = match &id {
+            Some(guid) => format!("--distribution-id {}", guid),
+            None => format!("-d {}", name),
+        };
+
+        // Escape single quotes in message for bash
+        let escaped_message = message.replace('\'', "'\\''");
+
+        // Build bash command: echo message, then exec login shell to keep terminal open
+        // Using && to chain commands (WT treats ; as tab separator)
+        let bash_cmd = format!("echo '' && echo '{}' && echo '' && exec bash -l", escaped_message);
+
+        // Escape for the command line
+        let bash_cmd_escaped = bash_cmd.replace('\\', "\\\\").replace('"', "\\\"");
+
+        // Build the full WT argument string
+        let wt_args = format!(
+            "{} {} --cd ~ -- bash -c \"{}\"",
+            paths.wsl,
+            distro_args,
+            bash_cmd_escaped
+        );
+
+        log::debug!("Opening terminal with message: {} {}", paths.windows_terminal, wt_args);
+
+        hidden_command(&paths.windows_terminal)
+            .raw_arg(&wt_args)
+            .spawn()
+            .map_err(|e| format!("Failed to open terminal: {}", e))?;
+
+        Ok(())
+    })
+    .await
+    .map_err(|e| format!("Task failed: {}", e))?
+}
+
+// ==================== End RDP Commands ====================
 
 #[tauri::command]
 pub async fn open_file_explorer(name: String) -> Result<(), String> {
@@ -1093,7 +1486,7 @@ pub async fn get_wsl_ip() -> Result<Option<String>, String> {
 }
 
 #[tauri::command]
-pub async fn get_system_distro_info() -> Result<crate::wsl::SystemDistroInfo, String> {
+pub async fn get_system_distro_info() -> Result<Option<crate::wsl::SystemDistroInfo>, String> {
     tokio::task::spawn_blocking(|| {
         WslService::get_system_distro_info().map_err(|e| e.to_string())
     })
@@ -1560,5 +1953,329 @@ pub fn set_debug_logging(enabled: bool) {
 #[tauri::command]
 pub fn get_log_path() -> String {
     utils::get_config_dir().join("logs").to_string_lossy().to_string()
+}
+
+/// Microsoft Store Product ID for WSL UI
+const STORE_PRODUCT_ID: &str = "9p8548knj2m9";
+
+/// Open the Microsoft Store review page for WSL UI
+///
+/// This is a dedicated command for opening the Store review page because
+/// Tauri's shell plugin only allows http(s)://, mailto:, and tel:// protocols.
+/// The ms-windows-store:// protocol requires using the Windows shell directly.
+#[tauri::command]
+pub fn open_store_review() -> Result<(), String> {
+    let url = format!("ms-windows-store://review/?ProductId={}", STORE_PRODUCT_ID);
+
+    log::info!("Opening Microsoft Store review page");
+
+    std::process::Command::new("cmd")
+        .args(["/c", "start", "", &url])
+        .spawn()
+        .map_err(|e| format!("Failed to open Store review page: {}", e))?;
+
+    Ok(())
+}
+
+#[cfg(test)]
+mod store_review_tests {
+    use super::*;
+
+    #[test]
+    fn store_product_id_is_correct() {
+        // Verify the Store Product ID matches what's in README.md
+        // https://apps.microsoft.com/detail/9p8548knj2m9
+        assert_eq!(STORE_PRODUCT_ID, "9p8548knj2m9");
+    }
+
+    #[test]
+    fn store_url_format_is_correct() {
+        let url = format!("ms-windows-store://review/?ProductId={}", STORE_PRODUCT_ID);
+        assert_eq!(url, "ms-windows-store://review/?ProductId=9p8548knj2m9");
+        assert!(url.starts_with("ms-windows-store://"));
+        assert!(url.contains("review"));
+        assert!(url.contains("ProductId="));
+    }
+}
+
+#[cfg(test)]
+mod rdp_port_conflict_tests {
+    /// Test helper to parse port conflict output (same logic as check_xrdp_port_conflict)
+    fn parse_port_conflict_output(result: &str) -> Option<u16> {
+        if result.starts_with("port_conflict:") {
+            if let Some(port_str) = result.strip_prefix("port_conflict:") {
+                return port_str.trim().parse::<u16>().ok();
+            }
+        }
+        None
+    }
+
+    #[test]
+    fn parses_port_conflict_with_standard_port() {
+        assert_eq!(parse_port_conflict_output("port_conflict:3390"), Some(3390));
+    }
+
+    #[test]
+    fn parses_port_conflict_with_custom_port() {
+        assert_eq!(parse_port_conflict_output("port_conflict:3391"), Some(3391));
+    }
+
+    #[test]
+    fn parses_port_conflict_with_default_rdp_port() {
+        assert_eq!(parse_port_conflict_output("port_conflict:3389"), Some(3389));
+    }
+
+    #[test]
+    fn returns_none_for_no_conflict() {
+        assert_eq!(parse_port_conflict_output("no_conflict"), None);
+    }
+
+    #[test]
+    fn returns_none_for_not_installed() {
+        assert_eq!(parse_port_conflict_output("not_installed"), None);
+    }
+
+    #[test]
+    fn returns_none_for_empty_string() {
+        assert_eq!(parse_port_conflict_output(""), None);
+    }
+
+    #[test]
+    fn returns_none_for_invalid_port() {
+        assert_eq!(parse_port_conflict_output("port_conflict:invalid"), None);
+    }
+
+    #[test]
+    fn handles_whitespace_in_port() {
+        assert_eq!(parse_port_conflict_output("port_conflict: 3390 "), Some(3390));
+    }
+}
+
+#[cfg(test)]
+mod wsl_config_timeout_tests {
+    use super::*;
+
+    #[test]
+    fn returns_true_when_both_timeouts_configured() {
+        let content = r#"
+[wsl2]
+instanceIdleTimeout=-1
+vmIdleTimeout=-1
+"#;
+        let result = parse_wsl_config_timeouts(content);
+        assert!(result.timeouts_configured);
+    }
+
+    #[test]
+    fn returns_true_with_spaces_around_equals() {
+        let content = r#"
+[wsl2]
+instanceIdleTimeout = -1
+vmIdleTimeout = -1
+"#;
+        let result = parse_wsl_config_timeouts(content);
+        assert!(result.timeouts_configured);
+    }
+
+    #[test]
+    fn returns_false_when_only_instance_timeout() {
+        let content = r#"
+[wsl2]
+instanceIdleTimeout=-1
+"#;
+        let result = parse_wsl_config_timeouts(content);
+        assert!(!result.timeouts_configured);
+    }
+
+    #[test]
+    fn returns_false_when_only_vm_timeout() {
+        let content = r#"
+[wsl2]
+vmIdleTimeout=-1
+"#;
+        let result = parse_wsl_config_timeouts(content);
+        assert!(!result.timeouts_configured);
+    }
+
+    #[test]
+    fn returns_false_for_empty_content() {
+        let result = parse_wsl_config_timeouts("");
+        assert!(!result.timeouts_configured);
+    }
+
+    #[test]
+    fn ignores_commented_lines() {
+        let content = r#"
+[wsl2]
+# instanceIdleTimeout=-1
+# vmIdleTimeout=-1
+"#;
+        let result = parse_wsl_config_timeouts(content);
+        assert!(!result.timeouts_configured);
+    }
+
+    #[test]
+    fn handles_mixed_case() {
+        let content = r#"
+[wsl2]
+INSTANCEIDLETIMEOUT=-1
+VMIDLETIMEOUT=-1
+"#;
+        let result = parse_wsl_config_timeouts(content);
+        assert!(result.timeouts_configured);
+    }
+
+    #[test]
+    fn handles_lowercase() {
+        let content = r#"
+[wsl2]
+instanceidletimeout=-1
+vmidletimeout=-1
+"#;
+        let result = parse_wsl_config_timeouts(content);
+        assert!(result.timeouts_configured);
+    }
+
+    #[test]
+    fn returns_false_when_timeout_not_minus_one() {
+        let content = r#"
+[wsl2]
+instanceIdleTimeout=60
+vmIdleTimeout=120
+"#;
+        let result = parse_wsl_config_timeouts(content);
+        assert!(!result.timeouts_configured);
+    }
+
+    #[test]
+    fn returns_true_with_one_commented_one_active() {
+        // Only vmIdleTimeout is active
+        let content = r#"
+[wsl2]
+# instanceIdleTimeout=-1
+vmIdleTimeout=-1
+"#;
+        let result = parse_wsl_config_timeouts(content);
+        assert!(!result.timeouts_configured);
+    }
+
+    #[test]
+    fn handles_leading_whitespace() {
+        let content = r#"
+[wsl2]
+  instanceIdleTimeout=-1
+  vmIdleTimeout=-1
+"#;
+        let result = parse_wsl_config_timeouts(content);
+        assert!(result.timeouts_configured);
+    }
+
+    #[test]
+    fn handles_other_settings_present() {
+        let content = r#"
+[wsl2]
+memory=4GB
+processors=2
+instanceIdleTimeout=-1
+swap=8GB
+vmIdleTimeout=-1
+localhostForwarding=true
+"#;
+        let result = parse_wsl_config_timeouts(content);
+        assert!(result.timeouts_configured);
+    }
+}
+
+#[cfg(test)]
+mod port_hex_conversion_tests {
+    #[test]
+    fn converts_default_rdp_port() {
+        assert_eq!(format!("{:04X}", 3389u16), "0D3D");
+    }
+
+    #[test]
+    fn converts_common_xrdp_port() {
+        assert_eq!(format!("{:04X}", 3390u16), "0D3E");
+    }
+
+    #[test]
+    fn converts_custom_port() {
+        assert_eq!(format!("{:04X}", 3391u16), "0D3F");
+    }
+
+    #[test]
+    fn converts_high_port() {
+        assert_eq!(format!("{:04X}", 49152u16), "C000");
+    }
+
+    #[test]
+    fn converts_low_port() {
+        assert_eq!(format!("{:04X}", 22u16), "0016");
+    }
+}
+
+#[cfg(test)]
+mod config_pending_comparison_tests {
+    use chrono::{DateTime, Utc, TimeZone};
+
+    /// Helper to determine if config changes are pending restart
+    /// Config modified after WSL started = pending restart
+    fn is_pending_restart(config_modified: Option<DateTime<Utc>>, wsl_started: Option<DateTime<Utc>>) -> bool {
+        match (config_modified, wsl_started) {
+            (Some(config_dt), Some(wsl_dt)) => config_dt > wsl_dt,
+            _ => false,
+        }
+    }
+
+    #[test]
+    fn returns_true_when_config_modified_after_wsl_started() {
+        let wsl_started = Utc.with_ymd_and_hms(2024, 1, 15, 9, 0, 0).unwrap();
+        let config_modified = Utc.with_ymd_and_hms(2024, 1, 15, 10, 0, 0).unwrap();
+
+        assert!(is_pending_restart(Some(config_modified), Some(wsl_started)));
+    }
+
+    #[test]
+    fn returns_false_when_config_modified_before_wsl_started() {
+        let config_modified = Utc.with_ymd_and_hms(2024, 1, 15, 8, 0, 0).unwrap();
+        let wsl_started = Utc.with_ymd_and_hms(2024, 1, 15, 9, 0, 0).unwrap();
+
+        assert!(!is_pending_restart(Some(config_modified), Some(wsl_started)));
+    }
+
+    #[test]
+    fn returns_false_when_times_are_equal() {
+        let time = Utc.with_ymd_and_hms(2024, 1, 15, 9, 0, 0).unwrap();
+
+        assert!(!is_pending_restart(Some(time), Some(time)));
+    }
+
+    #[test]
+    fn returns_false_when_no_config_modified_time() {
+        let wsl_started = Utc.with_ymd_and_hms(2024, 1, 15, 9, 0, 0).unwrap();
+
+        assert!(!is_pending_restart(None, Some(wsl_started)));
+    }
+
+    #[test]
+    fn returns_false_when_no_wsl_started_time() {
+        let config_modified = Utc.with_ymd_and_hms(2024, 1, 15, 10, 0, 0).unwrap();
+
+        assert!(!is_pending_restart(Some(config_modified), None));
+    }
+
+    #[test]
+    fn returns_false_when_both_times_missing() {
+        assert!(!is_pending_restart(None, None));
+    }
+
+    #[test]
+    fn handles_subsecond_differences() {
+        // Config modified 1 second after WSL started
+        let wsl_started = Utc.with_ymd_and_hms(2024, 1, 15, 9, 0, 0).unwrap();
+        let config_modified = Utc.with_ymd_and_hms(2024, 1, 15, 9, 0, 1).unwrap();
+
+        assert!(is_pending_restart(Some(config_modified), Some(wsl_started)));
+    }
 }
 

@@ -7,27 +7,16 @@
  * - Data accuracy (verifies UI matches mock data)
  */
 
+import { setupHooks, isElementDisplayed } from "../base";
 import {
-  waitForAppReady,
-  resetMockState,
   mockDistributions,
   selectors,
   getDistroCardCount,
   verifyDistroCardState,
-  waitForDistroState,
-  safeRefresh,
 } from "../utils";
 
 describe("Distribution List", () => {
-  beforeEach(async () => {
-    await safeRefresh();
-    await browser.pause(300);
-    await resetMockState();
-    // Refresh again to load the clean mock data
-    await safeRefresh();
-    await waitForAppReady();
-    await browser.pause(500);
-  });
+  setupHooks.standard();
 
   describe("Initial Load", () => {
     it("should display all mock distributions", async () => {
@@ -109,9 +98,9 @@ describe("Distribution List", () => {
 
     it("should display correct running count in status bar", async () => {
       const runningDistros = mockDistributions.filter(d => d.state === "Running");
-      const statusBar = await $(selectors.statusBar);
 
-      if (await statusBar.isDisplayed().catch(() => false)) {
+      if (await isElementDisplayed(selectors.statusBar)) {
+        const statusBar = await $(selectors.statusBar);
         const statusText = await statusBar.getText();
         // Status bar should show running count
         expect(statusText).toContain(String(runningDistros.length));
@@ -152,7 +141,15 @@ describe("Distribution List", () => {
     it("should refresh the list when clicking refresh", async () => {
       const refreshButton = await $(selectors.refreshButton);
       await refreshButton.click();
-      await browser.pause(1000);
+
+      // Wait for distributions to be displayed after refresh
+      await browser.waitUntil(
+        async () => {
+          const count = await getDistroCardCount();
+          return count > 0;
+        },
+        { timeout: 5000, timeoutMsg: "Distributions did not appear after refresh" }
+      );
 
       // Verify distributions are still displayed
       const cardCount = await getDistroCardCount();

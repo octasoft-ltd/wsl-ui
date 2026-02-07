@@ -9,17 +9,11 @@
  * - Save and discard changes
  */
 
-import {
-  waitForAppReady,
-  resetMockState,
-  selectors,
-  byText,
-  safeRefresh,
-} from "../utils";
+import { selectors, byText } from "../utils";
+import { setupHooks, actions, isElementDisplayed } from "../base";
 
 const wslGlobalSelectors = {
-  settingsButton: '[data-testid="settings-button"]',
-  wslGlobalTab: '[data-testid="settings-tab-wsl-global"]',
+  wslGlobalTab: selectors.settingsTab("wsl-global"),
   wslGlobalSettings: '[data-testid="wsl-global-settings"]',
   // Resource inputs
   memoryInput: '[data-testid="wsl-memory-input"]',
@@ -37,29 +31,27 @@ const wslGlobalSelectors = {
 };
 
 async function navigateToWslGlobalSettings(): Promise<void> {
-  const settingsButton = await $(wslGlobalSelectors.settingsButton);
-  await settingsButton.waitForClickable({ timeout: 5000 });
-  await settingsButton.click();
-  await browser.pause(500);
+  await actions.goToSettings();
+
+  // Wait for WSL Global tab to appear
+  await browser.waitUntil(
+    async () => isElementDisplayed(wslGlobalSelectors.wslGlobalTab),
+    { timeout: 5000, timeoutMsg: "WSL Global tab did not appear" }
+  );
 
   const wslGlobalTab = await $(wslGlobalSelectors.wslGlobalTab);
   await wslGlobalTab.waitForClickable({ timeout: 5000 });
   await wslGlobalTab.click();
-  await browser.pause(500);
 
   // Wait for the settings page to load
-  const settings = await $(wslGlobalSelectors.wslGlobalSettings);
-  await settings.waitForDisplayed({ timeout: 5000 });
+  await browser.waitUntil(
+    async () => isElementDisplayed(wslGlobalSelectors.wslGlobalSettings),
+    { timeout: 5000, timeoutMsg: "WSL Global settings did not load" }
+  );
 }
 
 describe("WSL Global Settings", () => {
-  beforeEach(async () => {
-    await safeRefresh();
-    await browser.pause(500);
-    await resetMockState();
-    await waitForAppReady();
-    await browser.pause(500);
-  });
+  setupHooks.standard();
 
   describe("Navigation", () => {
     it("should navigate to WSL Global settings tab", async () => {
@@ -70,9 +62,13 @@ describe("WSL Global Settings", () => {
     });
 
     it("should display WSL Global tab in settings sidebar", async () => {
-      const settingsButton = await $(wslGlobalSelectors.settingsButton);
-      await settingsButton.click();
-      await browser.pause(300);
+      await actions.goToSettings();
+
+      // Wait for WSL Global tab to appear
+      await browser.waitUntil(
+        async () => isElementDisplayed(wslGlobalSelectors.wslGlobalTab),
+        { timeout: 5000, timeoutMsg: "WSL Global tab did not appear" }
+      );
 
       const wslGlobalTab = await $(wslGlobalSelectors.wslGlobalTab);
       await expect(wslGlobalTab).toBeDisplayed();
@@ -111,7 +107,15 @@ describe("WSL Global Settings", () => {
     it("should allow entering memory limit value", async () => {
       const memoryInput = await $(wslGlobalSelectors.memoryInput);
       await memoryInput.setValue("8GB");
-      await browser.pause(200);
+
+      // Wait for input value to be set
+      await browser.waitUntil(
+        async () => {
+          const value = await memoryInput.getValue();
+          return value === "8GB";
+        },
+        { timeout: 3000, timeoutMsg: "Memory input value was not set" }
+      );
 
       const value = await memoryInput.getValue();
       expect(value).toBe("8GB");
@@ -121,7 +125,15 @@ describe("WSL Global Settings", () => {
       const processorsInput = await $(wslGlobalSelectors.processorsInput);
       await processorsInput.clearValue();
       await processorsInput.setValue("4");
-      await browser.pause(200);
+
+      // Wait for input value to be set
+      await browser.waitUntil(
+        async () => {
+          const value = await processorsInput.getValue();
+          return value === "4";
+        },
+        { timeout: 3000, timeoutMsg: "Processors input value was not set" }
+      );
 
       const value = await processorsInput.getValue();
       expect(value).toBe("4");
@@ -130,7 +142,15 @@ describe("WSL Global Settings", () => {
     it("should allow entering swap size", async () => {
       const swapInput = await $(wslGlobalSelectors.swapInput);
       await swapInput.setValue("4GB");
-      await browser.pause(200);
+
+      // Wait for input value to be set
+      await browser.waitUntil(
+        async () => {
+          const value = await swapInput.getValue();
+          return value === "4GB";
+        },
+        { timeout: 3000, timeoutMsg: "Swap input value was not set" }
+      );
 
       const value = await swapInput.getValue();
       expect(value).toBe("4GB");
@@ -159,30 +179,45 @@ describe("WSL Global Settings", () => {
 
     it("should toggle GUI Applications", async () => {
       const toggle = await $(wslGlobalSelectors.guiAppsToggle);
+      await toggle.waitForClickable({ timeout: 5000 });
       await toggle.click();
-      await browser.pause(200);
 
       // Should show save button after making change
+      await browser.waitUntil(
+        async () => isElementDisplayed(wslGlobalSelectors.saveButton),
+        { timeout: 5000, timeoutMsg: "Save button did not appear after toggle" }
+      );
+
       const saveButton = await $(wslGlobalSelectors.saveButton);
       await expect(saveButton).toBeDisplayed();
     });
 
     it("should toggle Localhost Forwarding", async () => {
       const toggle = await $(wslGlobalSelectors.localhostForwardingToggle);
+      await toggle.waitForClickable({ timeout: 5000 });
       await toggle.click();
-      await browser.pause(200);
 
       // Should show save button after making change
+      await browser.waitUntil(
+        async () => isElementDisplayed(wslGlobalSelectors.saveButton),
+        { timeout: 5000, timeoutMsg: "Save button did not appear after toggle" }
+      );
+
       const saveButton = await $(wslGlobalSelectors.saveButton);
       await expect(saveButton).toBeDisplayed();
     });
 
     it("should toggle Nested Virtualization", async () => {
       const toggle = await $(wslGlobalSelectors.nestedVirtualizationToggle);
+      await toggle.waitForClickable({ timeout: 5000 });
       await toggle.click();
-      await browser.pause(200);
 
       // Should show save button after making change
+      await browser.waitUntil(
+        async () => isElementDisplayed(wslGlobalSelectors.saveButton),
+        { timeout: 5000, timeoutMsg: "Save button did not appear after toggle" }
+      );
+
       const saveButton = await $(wslGlobalSelectors.saveButton);
       await expect(saveButton).toBeDisplayed();
     });
@@ -207,7 +242,15 @@ describe("WSL Global Settings", () => {
     it("should allow changing networking mode to Mirrored", async () => {
       const select = await $(wslGlobalSelectors.networkingModeSelect);
       await select.selectByVisibleText("Mirrored");
-      await browser.pause(200);
+
+      // Wait for select value to change
+      await browser.waitUntil(
+        async () => {
+          const value = await select.getValue();
+          return value === "mirrored";
+        },
+        { timeout: 3000, timeoutMsg: "Networking mode did not change" }
+      );
 
       const value = await select.getValue();
       expect(value).toBe("mirrored");
@@ -220,15 +263,20 @@ describe("WSL Global Settings", () => {
     });
 
     it("should not show save button initially", async () => {
-      const saveButton = await $(wslGlobalSelectors.saveButton);
-      const isDisplayed = await saveButton.isDisplayed().catch(() => false);
-      expect(isDisplayed).toBe(false);
+      const saveButtonVisible = await isElementDisplayed(wslGlobalSelectors.saveButton);
+      expect(saveButtonVisible).toBe(false);
     });
 
     it("should show save button after making changes", async () => {
       const memoryInput = await $(wslGlobalSelectors.memoryInput);
+      await memoryInput.waitForClickable({ timeout: 5000 });
       await memoryInput.setValue("16GB");
-      await browser.pause(200);
+
+      // Wait for save button to appear
+      await browser.waitUntil(
+        async () => isElementDisplayed(wslGlobalSelectors.saveButton),
+        { timeout: 5000, timeoutMsg: "Save button did not appear after change" }
+      );
 
       const saveButton = await $(wslGlobalSelectors.saveButton);
       await expect(saveButton).toBeDisplayed();
@@ -236,16 +284,27 @@ describe("WSL Global Settings", () => {
 
     it("should hide save button after saving", async () => {
       const memoryInput = await $(wslGlobalSelectors.memoryInput);
+      await memoryInput.waitForClickable({ timeout: 5000 });
       await memoryInput.setValue("16GB");
-      await browser.pause(200);
+
+      // Wait for save button to appear
+      await browser.waitUntil(
+        async () => isElementDisplayed(wslGlobalSelectors.saveButton),
+        { timeout: 5000, timeoutMsg: "Save button did not appear after change" }
+      );
 
       const saveButton = await $(wslGlobalSelectors.saveButton);
+      await saveButton.waitForClickable({ timeout: 5000 });
       await saveButton.click();
-      await browser.pause(500);
 
-      const saveButtonAfter = await $(wslGlobalSelectors.saveButton);
-      const isDisplayed = await saveButtonAfter.isDisplayed().catch(() => false);
-      expect(isDisplayed).toBe(false);
+      // Wait for save button to disappear
+      await browser.waitUntil(
+        async () => !(await isElementDisplayed(wslGlobalSelectors.saveButton)),
+        { timeout: 5000, timeoutMsg: "Save button did not disappear after saving" }
+      );
+
+      const saveButtonVisible = await isElementDisplayed(wslGlobalSelectors.saveButton);
+      expect(saveButtonVisible).toBe(false);
     });
   });
 
@@ -277,10 +336,12 @@ describe("WSL Global Settings", () => {
 
     it("should toggle Pre-Release Updates setting", async () => {
       const toggle = await $(wslGlobalSelectors.prereleaseUpdatesToggle);
+      await toggle.waitForClickable({ timeout: 5000 });
       await toggle.click();
-      await browser.pause(200);
 
-      // Toggle should respond to click
+      // Pre-release updates uses the settings store directly, not WSL config
+      // It doesn't trigger the save button - it saves automatically
+      // Just verify the toggle is clickable and responds
       await expect(toggle).toBeClickable();
     });
   });
@@ -343,29 +404,41 @@ describe("WSL Global Settings", () => {
     it("should track multiple changes before save", async () => {
       // Make multiple changes
       const memoryInput = await $(wslGlobalSelectors.memoryInput);
+      await memoryInput.waitForClickable({ timeout: 5000 });
       await memoryInput.setValue("16GB");
 
       const processorsInput = await $(wslGlobalSelectors.processorsInput);
+      await processorsInput.waitForClickable({ timeout: 5000 });
       await processorsInput.clearValue();
       await processorsInput.setValue("8");
 
       const toggle = await $(wslGlobalSelectors.nestedVirtualizationToggle);
+      await toggle.waitForClickable({ timeout: 5000 });
       await toggle.click();
 
-      await browser.pause(200);
+      // Wait for save button to appear
+      await browser.waitUntil(
+        async () => isElementDisplayed(wslGlobalSelectors.saveButton),
+        { timeout: 5000, timeoutMsg: "Save button did not appear after changes" }
+      );
 
       // Save button should be visible
       const saveButton = await $(wslGlobalSelectors.saveButton);
       await expect(saveButton).toBeDisplayed();
 
       // Save all changes at once
+      await saveButton.waitForClickable({ timeout: 5000 });
       await saveButton.click();
-      await browser.pause(500);
+
+      // Wait for save button to disappear
+      await browser.waitUntil(
+        async () => !(await isElementDisplayed(wslGlobalSelectors.saveButton)),
+        { timeout: 5000, timeoutMsg: "Save button did not disappear after saving" }
+      );
 
       // Save button should hide after saving
-      const saveButtonAfter = await $(wslGlobalSelectors.saveButton);
-      const isDisplayed = await saveButtonAfter.isDisplayed().catch(() => false);
-      expect(isDisplayed).toBe(false);
+      const saveButtonVisible = await isElementDisplayed(wslGlobalSelectors.saveButton);
+      expect(saveButtonVisible).toBe(false);
     });
   });
 });

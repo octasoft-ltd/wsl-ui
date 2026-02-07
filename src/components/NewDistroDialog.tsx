@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { wslService, type DownloadProgress } from "../services/wslService";
 import { useDistroStore } from "../store/distroStore";
 import { useSettingsStore } from "../store/settingsStore";
+import { useReviewPrompt } from "../hooks/useReviewPrompt";
 import { CheckIcon, DownloadIcon, StoreIcon, SourceDownloadIcon, LxcIcon, ContainerIcon, CloseIcon } from "./icons";
 import { getDistroLogo, DockerLogo, LinuxLogo } from "./icons/DistroLogos";
 import type { DistroCatalog, DownloadDistro, ContainerImage, DistroFamily } from "../types/catalog";
@@ -94,6 +95,7 @@ export function NewDistroDialog({ isOpen, onClose }: NewDistroDialogProps) {
   const lastProgressUpdateRef = useRef<number>(0);
   const { fetchDistros, distributions } = useDistroStore();
   const { settings } = useSettingsStore();
+  const { markFirstInstallComplete } = useReviewPrompt();
 
   // Throttled progress update - only update every 100ms to reduce re-renders
   const throttledSetProgress = useCallback((msg: string) => {
@@ -196,6 +198,7 @@ export function NewDistroDialog({ isOpen, onClose }: NewDistroDialogProps) {
       await wslService.quickInstallDistribution(selectedDistro);
       setProgress("Installed successfully!");
       await fetchDistros();
+      await markFirstInstallComplete();
 
       if (closeTimeoutRef.current !== null) {
         clearTimeout(closeTimeoutRef.current);
@@ -295,6 +298,7 @@ export function NewDistroDialog({ isOpen, onClose }: NewDistroDialogProps) {
         setCustomUrl("");
         setUseCustomUrl(false);
         await fetchDistros();
+        await markFirstInstallComplete();
 
         if (closeTimeoutRef.current !== null) {
           clearTimeout(closeTimeoutRef.current);
@@ -354,6 +358,7 @@ export function NewDistroDialog({ isOpen, onClose }: NewDistroDialogProps) {
         setProgress("Installed successfully!");
         setSelectedLxcDistro(null);
         await fetchDistros();
+        await markFirstInstallComplete();
 
         if (closeTimeoutRef.current !== null) {
           clearTimeout(closeTimeoutRef.current);
@@ -419,6 +424,7 @@ export function NewDistroDialog({ isOpen, onClose }: NewDistroDialogProps) {
         setCustomImage("");
         setUseCustomImage(false);
         await fetchDistros();
+        await markFirstInstallComplete();
 
         if (closeTimeoutRef.current !== null) {
           clearTimeout(closeTimeoutRef.current);

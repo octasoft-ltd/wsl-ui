@@ -8,47 +8,23 @@
  * - Sparse mode toggle
  */
 
+import { setupHooks, actions } from "../base";
 import {
-  waitForAppReady,
-  resetMockState,
   selectors,
-  safeRefresh,
+  waitForDialogToDisappear,
+  captureDistroStates,
+  verifyStatesUnchanged,
 } from "../utils";
 
 describe("Manage Quick Actions", () => {
-  beforeEach(async () => {
-    await safeRefresh();
-    await browser.pause(500);
-    await resetMockState();
-    await waitForAppReady();
-    await browser.pause(500);
-  });
-
-  /**
-   * Helper to open the quick actions menu for a distribution
-   */
-  async function openQuickActionsMenu(distroName: string): Promise<void> {
-    const card = await $(selectors.distroCardByName(distroName));
-    const quickActionsButton = await card.$('[data-testid="quick-actions-button"]');
-    await quickActionsButton.click();
-    await browser.pause(300);
-  }
-
-  /**
-   * Helper to open the Manage submenu
-   */
-  async function openManageSubmenu(): Promise<void> {
-    const manageButton = await $('[data-testid="quick-action-manage"]');
-    await manageButton.click();
-    await browser.pause(200);
-  }
+  setupHooks.standard();
 
   /**
    * Helper to find any open dialog/modal
    */
   async function findOpenDialog(): Promise<WebdriverIO.Element> {
     // Use role="dialog" which is set on modal dialogs
-    return $('[role="dialog"]');
+    return await $('[role="dialog"]') as unknown as WebdriverIO.Element;
   }
 
   /**
@@ -75,14 +51,67 @@ describe("Manage Quick Actions", () => {
     const dialog = await findOpenDialog();
     const cancelButton = await dialog.$("button*=Cancel");
     await cancelButton.click();
-    await browser.pause(300);
+    await waitForDialogToDisappear('[role="dialog"]');
+  }
+
+  /**
+   * Helper to handle the "Shutdown WSL?" dialog if it appears.
+   * Move, Resize, and Sparse mode require ALL WSL distros to be shut down.
+   * This clicks "Shutdown & Continue" to proceed to the actual dialog.
+   */
+  async function handleShutdownDialogIfPresent(): Promise<void> {
+    // Wait a moment for any dialog to appear
+    try {
+      await browser.waitUntil(
+        async () => {
+          const dialog = await findOpenDialog();
+          return dialog.isDisplayed();
+        },
+        { timeout: 1000 }
+      );
+    } catch {
+      // No dialog appeared, which is fine
+      return;
+    }
+
+    const dialog = await findOpenDialog();
+    let dialogText: string;
+    try {
+      dialogText = await dialog.getText();
+    } catch {
+      return;
+    }
+
+    if (dialogText.toLowerCase().includes("shutdown wsl")) {
+      const shutdownButton = await dialog.$("button*=Shutdown & Continue");
+      let isShutdownButtonDisplayed = false;
+      try {
+        isShutdownButtonDisplayed = await shutdownButton.isDisplayed();
+      } catch {
+        return;
+      }
+
+      if (isShutdownButtonDisplayed) {
+        await shutdownButton.click();
+        // Wait for shutdown to complete and the next dialog to appear
+        await browser.waitUntil(
+          async () => {
+            const newDialog = await findOpenDialog();
+            const newDialogText = await newDialog.getText();
+            // Wait until we get a different dialog (not the shutdown dialog)
+            return !newDialogText.toLowerCase().includes("shutdown wsl");
+          },
+          { timeout: 10000, timeoutMsg: "Shutdown did not complete" }
+        );
+      }
+    }
   }
 
   describe("Manage Submenu", () => {
     it("should have Manage option in quick actions menu", async () => {
-      await openQuickActionsMenu("Ubuntu");
+      await actions.openQuickActionsMenu("Ubuntu");
 
-      const manageAction = await $('[data-testid="quick-action-manage"]');
+      const manageAction = await $(selectors.manageSubmenu);
       await expect(manageAction).toBeDisplayed();
 
       const text = await manageAction.getText();
@@ -90,14 +119,13 @@ describe("Manage Quick Actions", () => {
     });
 
     it("should expand Manage submenu when clicked", async () => {
-      await openQuickActionsMenu("Ubuntu");
-      await openManageSubmenu();
+      await actions.openManageSubmenu("Ubuntu");
 
       // Check submenu items are visible
-      const moveAction = await $('[data-testid="manage-action-move"]');
-      const resizeAction = await $('[data-testid="manage-action-resize"]');
-      const userAction = await $('[data-testid="manage-action-user"]');
-      const sparseAction = await $('[data-testid="manage-action-sparse"]');
+      const moveAction = await $(selectors.moveAction);
+      const resizeAction = await $(selectors.resizeAction);
+      const userAction = await $(selectors.setUserAction);
+      const sparseAction = await $(selectors.sparseAction);
 
       await expect(moveAction).toBeDisplayed();
       await expect(resizeAction).toBeDisplayed();
@@ -106,52 +134,50 @@ describe("Manage Quick Actions", () => {
     });
 
     it("should have Move Distribution option", async () => {
-      await openQuickActionsMenu("Ubuntu");
-      await openManageSubmenu();
+      await actions.openManageSubmenu("Ubuntu");
 
-      const moveAction = await $('[data-testid="manage-action-move"]');
+      const moveAction = await $(selectors.moveAction);
       const text = await moveAction.getText();
       expect(text).toContain("Move Distribution");
     });
 
     it("should have Resize Disk option", async () => {
-      await openQuickActionsMenu("Ubuntu");
-      await openManageSubmenu();
+      await actions.openManageSubmenu("Ubuntu");
 
-      const resizeAction = await $('[data-testid="manage-action-resize"]');
+      const resizeAction = await $(selectors.resizeAction);
       const text = await resizeAction.getText();
       expect(text).toContain("Resize Disk");
     });
 
     it("should have Set Default User option", async () => {
-      await openQuickActionsMenu("Ubuntu");
-      await openManageSubmenu();
+      await actions.openManageSubmenu("Ubuntu");
 
-      const userAction = await $('[data-testid="manage-action-user"]');
+      const userAction = await $(selectors.setUserAction);
       const text = await userAction.getText();
       expect(text).toContain("Set Default User");
     });
 
     it("should have Sparse Mode option with toggle indicator", async () => {
-      await openQuickActionsMenu("Ubuntu");
-      await openManageSubmenu();
+      await actions.openManageSubmenu("Ubuntu");
 
-      const sparseAction = await $('[data-testid="manage-action-sparse"]');
+      const sparseAction = await $(selectors.sparseAction);
       const text = await sparseAction.getText();
       expect(text).toContain("Sparse Mode");
-      // Should show Off or On indicator
-      expect(text.includes("Off") || text.includes("On")).toBe(true);
+      // Note: OR is intentional - checking that a toggle state indicator is present (either state is valid)
+      expect(text).toMatch(/\b(Off|On)\b/);
     });
   });
 
   describe("Move Distribution Dialog", () => {
     it("should open Move dialog when clicking Move Distribution", async () => {
       // Use a stopped distro (Debian) for move operations
-      await openQuickActionsMenu("Debian");
-      await openManageSubmenu();
+      await actions.openManageSubmenu("Debian");
 
-      const moveAction = await $('[data-testid="manage-action-move"]');
+      const moveAction = await $(selectors.moveAction);
       await moveAction.click();
+
+      // Handle shutdown dialog if other distros are running
+      await handleShutdownDialogIfPresent();
 
       // Wait for dialog to appear
       const dialog = await waitForDialog();
@@ -161,7 +187,11 @@ describe("Manage Quick Actions", () => {
       await browser.waitUntil(
         async () => {
           const title = await $('[role="dialog"] h2');
-          return (await title.isDisplayed().catch(() => false));
+          try {
+            return await title.isDisplayed();
+          } catch {
+            return false;
+          }
         },
         { timeout: 5000, timeoutMsg: "Move dialog title did not appear" }
       );
@@ -172,11 +202,13 @@ describe("Manage Quick Actions", () => {
     });
 
     it("should show current location in Move dialog", async () => {
-      await openQuickActionsMenu("Debian");
-      await openManageSubmenu();
+      await actions.openManageSubmenu("Debian");
 
-      const moveAction = await $('[data-testid="manage-action-move"]');
+      const moveAction = await $(selectors.moveAction);
       await moveAction.click();
+
+      // Handle shutdown dialog if other distros are running
+      await handleShutdownDialogIfPresent();
 
       const dialog = await waitForDialog();
 
@@ -191,58 +223,64 @@ describe("Manage Quick Actions", () => {
     });
 
     it("should close Move dialog when Cancel is clicked", async () => {
-      await openQuickActionsMenu("Debian");
-      await openManageSubmenu();
+      await actions.openManageSubmenu("Debian");
 
-      const moveAction = await $('[data-testid="manage-action-move"]');
+      const moveAction = await $(selectors.moveAction);
       await moveAction.click();
+
+      // Handle shutdown dialog if other distros are running
+      await handleShutdownDialogIfPresent();
 
       await waitForDialog();
       await closeDialogViaCancel();
 
-      // Dialog should be closed
-      await browser.pause(300);
+      // Dialog should be closed - closeDialogViaCancel already waits for disappearance
       const dialogAfter = await findOpenDialog();
-      const isDisplayed = await dialogAfter.isDisplayed().catch(() => false);
+      let isDisplayed = false;
+      try {
+        isDisplayed = await dialogAfter.isDisplayed();
+      } catch {
+        isDisplayed = false;
+      }
       expect(isDisplayed).toBe(false);
     });
 
-    it("should show warning when trying to move a running distribution", async () => {
+    it("should open Move dialog for running distribution (handles shutdown internally)", async () => {
       // Ubuntu is running by default
-      await openQuickActionsMenu("Ubuntu");
-      await openManageSubmenu();
+      await actions.openManageSubmenu("Ubuntu");
 
-      const moveAction = await $('[data-testid="manage-action-move"]');
+      const moveAction = await $(selectors.moveAction);
       await moveAction.click();
+
+      // Handle shutdown dialog that appears for running distros
+      await handleShutdownDialogIfPresent();
 
       const dialog = await waitForDialog();
 
-      // Wait for dialog content to fully render (includes async data loading)
+      // Wait for dialog content to fully render
       await browser.waitUntil(
         async () => {
-          const dialogText = await dialog.getText();
-          // Wait until we have some content in the dialog - UI now uses "shutdown" instead of "stop"
-          return dialogText.length > 0 && dialogText.toLowerCase().includes("shutdown");
+          const text = await dialog.getText();
+          return text.toLowerCase().includes("move") && text.toLowerCase().includes("ubuntu");
         },
-        {
-          timeout: 5000,
-          timeoutMsg: "Dialog content with shutdown warning did not appear",
-        }
+        { timeout: 5000, timeoutMsg: "Move dialog content did not render" }
       );
 
       const dialogText = await dialog.getText();
-      // Should show warning about shutting down the distribution
-      expect(dialogText.toLowerCase()).toContain("shutdown");
+      expect(dialogText.toLowerCase()).toContain("move");
+      expect(dialogText.toLowerCase()).toContain("ubuntu");
     });
   });
 
   describe("Resize Disk Dialog", () => {
     it("should open Resize dialog when clicking Resize Disk", async () => {
-      await openQuickActionsMenu("Debian");
-      await openManageSubmenu();
+      await actions.openManageSubmenu("Debian");
 
-      const resizeAction = await $('[data-testid="manage-action-resize"]');
+      const resizeAction = await $(selectors.resizeAction);
       await resizeAction.click();
+
+      // Handle shutdown dialog if other distros are running
+      await handleShutdownDialogIfPresent();
 
       const dialog = await waitForDialog();
       await expect(dialog).toBeDisplayed();
@@ -251,7 +289,11 @@ describe("Manage Quick Actions", () => {
       await browser.waitUntil(
         async () => {
           const title = await $('[role="dialog"] h2');
-          return (await title.isDisplayed().catch(() => false));
+          try {
+            return await title.isDisplayed();
+          } catch {
+            return false;
+          }
         },
         { timeout: 5000, timeoutMsg: "Resize dialog title did not appear" }
       );
@@ -262,29 +304,38 @@ describe("Manage Quick Actions", () => {
     });
 
     it("should show current size information in Resize dialog", async () => {
-      await openQuickActionsMenu("Debian");
-      await openManageSubmenu();
+      await actions.openManageSubmenu("Debian");
 
-      const resizeAction = await $('[data-testid="manage-action-resize"]');
+      const resizeAction = await $(selectors.resizeAction);
       await resizeAction.click();
+
+      // Handle shutdown dialog if other distros are running
+      await handleShutdownDialogIfPresent();
 
       const dialog = await waitForDialog();
 
-      // Wait for dialog content to fully render
-      await browser.pause(500);
-      const dialogText = await dialog.getText();
+      // Wait for dialog content to fully render with size information
+      await browser.waitUntil(
+        async () => {
+          const text = await dialog.getText();
+          return text.toLowerCase().includes("virtual size");
+        },
+        { timeout: 5000, timeoutMsg: "Size information did not appear in dialog" }
+      );
 
-      // Should show Virtual Size and File Size labels (may be uppercase in UI)
-      // The UI shows "Virtual Size (Max)" and "File Size (Actual)"
-      expect(dialogText.toLowerCase()).toMatch(/virtual size|file size|new size/);
+      const dialogText = await dialog.getText();
+      // Should show Virtual Size label (the resize dialog shows current disk size)
+      expect(dialogText.toLowerCase()).toContain("virtual size");
     });
 
     it("should have size input with GB/TB selector", async () => {
-      await openQuickActionsMenu("Debian");
-      await openManageSubmenu();
+      await actions.openManageSubmenu("Debian");
 
-      const resizeAction = await $('[data-testid="manage-action-resize"]');
+      const resizeAction = await $(selectors.resizeAction);
       await resizeAction.click();
+
+      // Handle shutdown dialog if other distros are running
+      await handleShutdownDialogIfPresent();
 
       const dialog = await waitForDialog();
 
@@ -302,46 +353,56 @@ describe("Manage Quick Actions", () => {
     });
 
     it("should close Resize dialog when Cancel is clicked", async () => {
-      await openQuickActionsMenu("Debian");
-      await openManageSubmenu();
+      await actions.openManageSubmenu("Debian");
 
-      const resizeAction = await $('[data-testid="manage-action-resize"]');
+      const resizeAction = await $(selectors.resizeAction);
       await resizeAction.click();
+
+      // Handle shutdown dialog if other distros are running
+      await handleShutdownDialogIfPresent();
 
       await waitForDialog();
       await closeDialogViaCancel();
 
-      await browser.pause(300);
+      // closeDialogViaCancel already waits for disappearance
       const dialogAfter = await findOpenDialog();
-      const isDisplayed = await dialogAfter.isDisplayed().catch(() => false);
+      let isDisplayed = false;
+      try {
+        isDisplayed = await dialogAfter.isDisplayed();
+      } catch {
+        isDisplayed = false;
+      }
       expect(isDisplayed).toBe(false);
     });
 
     it("should show warning when trying to resize a running distribution", async () => {
-      await openQuickActionsMenu("Ubuntu");
-      await openManageSubmenu();
+      await actions.openManageSubmenu("Ubuntu");
 
-      const resizeAction = await $('[data-testid="manage-action-resize"]');
+      const resizeAction = await $(selectors.resizeAction);
       await resizeAction.click();
 
       const dialog = await waitForDialog();
 
-      // Wait for dialog content to fully render
-      await browser.pause(500);
-      const dialogText = await dialog.getText();
+      // Wait for dialog content to show shutdown warning
+      await browser.waitUntil(
+        async () => {
+          const text = await dialog.getText();
+          return text.toLowerCase().includes("shutdown");
+        },
+        { timeout: 5000, timeoutMsg: "Shutdown warning did not appear in dialog" }
+      );
 
-      // Should show warning about needing to shutdown the distribution
-      // The UI now uses "shutdown" wording
-      expect(dialogText.toLowerCase()).toMatch(/shutdown|must be stopped|distribution must/);
+      const dialogText = await dialog.getText();
+      // Should show warning about needing to shutdown
+      expect(dialogText.toLowerCase()).toContain("shutdown");
     });
   });
 
   describe("Set Default User Dialog", () => {
     it("should open Set User dialog when clicking Set Default User", async () => {
-      await openQuickActionsMenu("Ubuntu");
-      await openManageSubmenu();
+      await actions.openManageSubmenu("Ubuntu");
 
-      const userAction = await $('[data-testid="manage-action-user"]');
+      const userAction = await $(selectors.setUserAction);
       await userAction.click();
 
       const dialog = await waitForDialog();
@@ -361,10 +422,9 @@ describe("Manage Quick Actions", () => {
     });
 
     it("should have username input field", async () => {
-      await openQuickActionsMenu("Ubuntu");
-      await openManageSubmenu();
+      await actions.openManageSubmenu("Ubuntu");
 
-      const userAction = await $('[data-testid="manage-action-user"]');
+      const userAction = await $(selectors.setUserAction);
       await userAction.click();
 
       const dialog = await waitForDialog();
@@ -373,44 +433,51 @@ describe("Manage Quick Actions", () => {
     });
 
     it("should show informational message about user requirements", async () => {
-      await openQuickActionsMenu("Ubuntu");
-      await openManageSubmenu();
+      await actions.openManageSubmenu("Ubuntu");
 
-      const userAction = await $('[data-testid="manage-action-user"]');
+      const userAction = await $(selectors.setUserAction);
       await userAction.click();
 
       const dialog = await waitForDialog();
 
-      // Wait for dialog content to fully render
-      await browser.pause(500);
-      const dialogText = await dialog.getText();
+      // Wait for dialog content to show user requirements message
+      await browser.waitUntil(
+        async () => {
+          const text = await dialog.getText();
+          return text.toLowerCase().includes("must already exist");
+        },
+        { timeout: 5000, timeoutMsg: "User requirements message did not appear" }
+      );
 
-      // Should mention that user must exist or show the info box content
-      // The UI shows "The user must already exist in the distribution."
-      expect(dialogText.toLowerCase()).toMatch(/exist|must.*exist|user.*distribution|automatic/);
+      const dialogText = await dialog.getText();
+      // Should mention that user must exist - "The user must already exist in the distribution."
+      expect(dialogText.toLowerCase()).toContain("must already exist");
     });
 
     it("should close Set User dialog when Cancel is clicked", async () => {
-      await openQuickActionsMenu("Ubuntu");
-      await openManageSubmenu();
+      await actions.openManageSubmenu("Ubuntu");
 
-      const userAction = await $('[data-testid="manage-action-user"]');
+      const userAction = await $(selectors.setUserAction);
       await userAction.click();
 
       await waitForDialog();
       await closeDialogViaCancel();
 
-      await browser.pause(300);
+      // closeDialogViaCancel already waits for disappearance
       const dialogAfter = await findOpenDialog();
-      const isDisplayed = await dialogAfter.isDisplayed().catch(() => false);
+      let isDisplayed = false;
+      try {
+        isDisplayed = await dialogAfter.isDisplayed();
+      } catch {
+        isDisplayed = false;
+      }
       expect(isDisplayed).toBe(false);
     });
 
     it("should disable Set User button when username is empty", async () => {
-      await openQuickActionsMenu("Ubuntu");
-      await openManageSubmenu();
+      await actions.openManageSubmenu("Ubuntu");
 
-      const userAction = await $('[data-testid="manage-action-user"]');
+      const userAction = await $(selectors.setUserAction);
       await userAction.click();
 
       const dialog = await waitForDialog();
@@ -422,18 +489,25 @@ describe("Manage Quick Actions", () => {
     });
 
     it("should enable Set User button when valid username is entered", async () => {
-      await openQuickActionsMenu("Ubuntu");
-      await openManageSubmenu();
+      await actions.openManageSubmenu("Ubuntu");
 
-      const userAction = await $('[data-testid="manage-action-user"]');
+      const userAction = await $(selectors.setUserAction);
       await userAction.click();
 
       const dialog = await waitForDialog();
       const usernameInput = await dialog.$('input[type="text"]');
       await usernameInput.setValue("testuser");
-      await browser.pause(200);
 
+      // Wait for button to become enabled
       const setUserButton = await dialog.$("button*=Set User");
+      await browser.waitUntil(
+        async () => {
+          const disabled = await setUserButton.getAttribute("disabled");
+          return !disabled;
+        },
+        { timeout: 5000, timeoutMsg: "Set User button did not become enabled" }
+      );
+
       const isDisabled = await setUserButton.getAttribute("disabled");
       expect(isDisabled).toBeFalsy();
     });
@@ -442,11 +516,13 @@ describe("Manage Quick Actions", () => {
   describe("Sparse Mode Toggle", () => {
     it("should show confirmation dialog when enabling sparse mode on stopped distro", async () => {
       // Use stopped distro
-      await openQuickActionsMenu("Debian");
-      await openManageSubmenu();
+      await actions.openManageSubmenu("Debian");
 
-      const sparseAction = await $('[data-testid="manage-action-sparse"]');
+      const sparseAction = await $(selectors.sparseAction);
       await sparseAction.click();
+
+      // Handle shutdown dialog if other distros are running
+      await handleShutdownDialogIfPresent();
 
       // Should show confirmation dialog with warning
       const dialog = await waitForDialog();
@@ -457,37 +533,49 @@ describe("Manage Quick Actions", () => {
     });
 
     it("should show error when trying to toggle sparse mode on running distro", async () => {
-      // Ubuntu is running
-      await openQuickActionsMenu("Ubuntu");
-      await openManageSubmenu();
+      // Capture initial state to verify no side effects
+      const initialStates = await captureDistroStates();
 
-      const sparseAction = await $('[data-testid="manage-action-sparse"]');
+      // Ubuntu is running
+      await actions.openManageSubmenu("Ubuntu");
+
+      const sparseAction = await $(selectors.sparseAction);
       await sparseAction.click();
 
-      // Wait for output dialog to appear (shows error for running distros)
-      await browser.pause(1000);
+      // Wait for either error message or shutdown dialog to appear
+      await browser.waitUntil(
+        async () => {
+          // Check for error pre element
+          const errorPre = await $("pre*=must be stopped");
+          let errorDisplayed = false;
+          try {
+            errorDisplayed = await errorPre.isDisplayed();
+          } catch {
+            errorDisplayed = false;
+          }
+          if (errorDisplayed) return true;
 
-      // The output dialog contains "Output" in its title and shows error message
-      // Look for the pre element that contains the error message
-      const errorPre = await $("pre*=must be stopped");
-      const isDisplayed = await errorPre.isDisplayed().catch(() => false);
+          // Check for shutdown text in body
+          const bodyText = await $("body").getText();
+          return bodyText.toLowerCase().includes("shutdown");
+        },
+        { timeout: 5000, timeoutMsg: "Neither error message nor shutdown dialog appeared" }
+      );
 
-      if (isDisplayed) {
-        expect(true).toBe(true);
-      } else {
-        // Alternative: check any element with the error text - uses "shutdown" not "stop"
-        const bodyText = await $("body").getText();
-        expect(bodyText.toLowerCase()).toContain("shutdown");
-      }
+      // Verify the shutdown-related message is present
+      const bodyText = await $("body").getText();
+      expect(bodyText.toLowerCase()).toContain("shutdown");
+
+      // Verify no distro states changed (operation was blocked, no side effects)
+      await verifyStatesUnchanged(initialStates);
     });
   });
 
   describe("Set WSL Version", () => {
     it("should have Set WSL Version option in Manage submenu", async () => {
-      await openQuickActionsMenu("Ubuntu");
-      await openManageSubmenu();
+      await actions.openManageSubmenu("Ubuntu");
 
-      const setVersionAction = await $('[data-testid="manage-action-set-version"]');
+      const setVersionAction = await $(selectors.manageAction("set-version"));
       await expect(setVersionAction).toBeDisplayed();
 
       const text = await setVersionAction.getText();
@@ -495,10 +583,9 @@ describe("Manage Quick Actions", () => {
     });
 
     it("should show current version indicator", async () => {
-      await openQuickActionsMenu("Ubuntu");
-      await openManageSubmenu();
+      await actions.openManageSubmenu("Ubuntu");
 
-      const setVersionAction = await $('[data-testid="manage-action-set-version"]');
+      const setVersionAction = await $(selectors.manageAction("set-version"));
       const text = await setVersionAction.getText();
       // Should show current version (v1 or v2) indicator
       expect(text).toMatch(/v[12]/i);
@@ -506,32 +593,40 @@ describe("Manage Quick Actions", () => {
 
     it("should open Set Version dialog when clicked for stopped distro", async () => {
       // Debian is stopped
-      await openQuickActionsMenu("Debian");
-      await openManageSubmenu();
+      await actions.openManageSubmenu("Debian");
 
-      const setVersionAction = await $('[data-testid="manage-action-set-version"]');
+      const setVersionAction = await $(selectors.manageAction("set-version"));
       await setVersionAction.click();
 
       const dialog = await waitForDialog();
       await expect(dialog).toBeDisplayed();
 
-      // Wait for dialog content to load
-      await browser.pause(500);
+      // Wait for dialog content to load with version-related text
+      await browser.waitUntil(
+        async () => {
+          const text = await dialog.getText();
+          return text.toLowerCase().includes("wsl");
+        },
+        { timeout: 5000, timeoutMsg: "Version-related content did not appear in dialog" }
+      );
+
       const dialogText = await dialog.getText();
-      // Dialog should contain "WSL" and/or version-related text
-      expect(dialogText.toLowerCase()).toMatch(/wsl|version|convert/);
+      // Dialog should contain "WSL" version text
+      expect(dialogText.toLowerCase()).toContain("wsl");
     });
 
     it("should show stop dialog when trying to set version on running distro", async () => {
-      // Ubuntu is running
-      await openQuickActionsMenu("Ubuntu");
-      await openManageSubmenu();
+      // Capture initial state to verify no side effects
+      const initialStates = await captureDistroStates();
 
-      const setVersionAction = await $('[data-testid="manage-action-set-version"]');
+      // Ubuntu is running
+      await actions.openManageSubmenu("Ubuntu");
+
+      const setVersionAction = await $(selectors.manageAction("set-version"));
       await setVersionAction.click();
 
       // Should show stop-and-action dialog
-      const stopDialog = await $('[data-testid="stop-and-action-dialog"]');
+      const stopDialog = await $(selectors.stopAndActionDialog);
       await browser.waitUntil(
         async () => stopDialog.isDisplayed(),
         { timeout: 5000, timeoutMsg: "Stop dialog did not appear" }
@@ -539,19 +634,27 @@ describe("Manage Quick Actions", () => {
 
       const dialogText = await stopDialog.getText();
       expect(dialogText.toLowerCase()).toContain("stop");
+
+      // Verify no distro states changed (dialog was shown but not confirmed)
+      await verifyStatesUnchanged(initialStates);
     });
 
     it("should show version options in the dialog", async () => {
-      await openQuickActionsMenu("Debian");
-      await openManageSubmenu();
+      await actions.openManageSubmenu("Debian");
 
-      const setVersionAction = await $('[data-testid="manage-action-set-version"]');
+      const setVersionAction = await $(selectors.manageAction("set-version"));
       await setVersionAction.click();
 
-      // Wait for dialog and content to render
-      await browser.pause(500);
       const dialog = await waitForDialog();
-      await browser.pause(300);
+
+      // Wait for dialog content to show both WSL versions
+      await browser.waitUntil(
+        async () => {
+          const text = await dialog.getText();
+          return text.toLowerCase().includes("wsl 1") && text.toLowerCase().includes("wsl 2");
+        },
+        { timeout: 5000, timeoutMsg: "WSL version options did not appear in dialog" }
+      );
 
       // Should show both WSL 1 and WSL 2 options
       const dialogText = await dialog.getText();
@@ -560,16 +663,21 @@ describe("Manage Quick Actions", () => {
     });
 
     it("should highlight current version and disable selecting same version", async () => {
-      await openQuickActionsMenu("Debian");
-      await openManageSubmenu();
+      await actions.openManageSubmenu("Debian");
 
-      const setVersionAction = await $('[data-testid="manage-action-set-version"]');
+      const setVersionAction = await $(selectors.manageAction("set-version"));
       await setVersionAction.click();
 
-      // Wait for dialog and content to render
-      await browser.pause(500);
       const dialog = await waitForDialog();
-      await browser.pause(500);
+
+      // Wait for dialog content to show "Current" badge
+      await browser.waitUntil(
+        async () => {
+          const text = await dialog.getText();
+          return text.includes("Current");
+        },
+        { timeout: 5000, timeoutMsg: "Current version indicator did not appear" }
+      );
 
       // The current version option should be marked/highlighted
       // Debian is WSL 2 by default in mock - look for "Current" badge
@@ -578,55 +686,66 @@ describe("Manage Quick Actions", () => {
     });
 
     it("should show warning about conversion time", async () => {
-      await openQuickActionsMenu("Debian");
-      await openManageSubmenu();
+      await actions.openManageSubmenu("Debian");
 
-      const setVersionAction = await $('[data-testid="manage-action-set-version"]');
+      const setVersionAction = await $(selectors.manageAction("set-version"));
       await setVersionAction.click();
 
-      // Wait for dialog and content to render
-      await browser.pause(500);
       const dialog = await waitForDialog();
-      await browser.pause(300);
+
+      // Wait for dialog content to show time warning
+      await browser.waitUntil(
+        async () => {
+          const text = await dialog.getText();
+          return text.toLowerCase().includes("minute");
+        },
+        { timeout: 5000, timeoutMsg: "Conversion time warning did not appear" }
+      );
 
       const dialogText = await dialog.getText();
-
-      // Should warn about conversion time
-      expect(dialogText.toLowerCase()).toMatch(/minute|time|conversion/);
+      // Should warn about conversion time (e.g., "may take several minutes")
+      expect(dialogText.toLowerCase()).toContain("minute");
     });
 
     it("should close dialog when Cancel is clicked", async () => {
-      await openQuickActionsMenu("Debian");
-      await openManageSubmenu();
+      await actions.openManageSubmenu("Debian");
 
-      const setVersionAction = await $('[data-testid="manage-action-set-version"]');
+      const setVersionAction = await $(selectors.manageAction("set-version"));
       await setVersionAction.click();
 
       await waitForDialog();
       await closeDialogViaCancel();
 
-      await browser.pause(300);
+      // closeDialogViaCancel already waits for disappearance
       const dialogAfter = await findOpenDialog();
-      const isDisplayed = await dialogAfter.isDisplayed().catch(() => false);
+      let isDisplayed = false;
+      try {
+        isDisplayed = await dialogAfter.isDisplayed();
+      } catch {
+        isDisplayed = false;
+      }
       expect(isDisplayed).toBe(false);
     });
 
     it("should show requires-stop indicator when distro is running", async () => {
-      await openQuickActionsMenu("Ubuntu");
-      await openManageSubmenu();
+      await actions.openManageSubmenu("Ubuntu");
 
-      const setVersionAction = await $('[data-testid="manage-action-set-version"]');
-      const stopIndicator = await setVersionAction.$('[data-testid="requires-stop-indicator"]');
+      const setVersionAction = await $(selectors.manageAction("set-version"));
+      const stopIndicator = await setVersionAction.$(selectors.requiresStopIndicator);
       await expect(stopIndicator).toBeDisplayed();
     });
 
     it("should not show requires-stop indicator when distro is stopped", async () => {
-      await openQuickActionsMenu("Debian");
-      await openManageSubmenu();
+      await actions.openManageSubmenu("Debian");
 
-      const setVersionAction = await $('[data-testid="manage-action-set-version"]');
-      const stopIndicator = await setVersionAction.$('[data-testid="requires-stop-indicator"]');
-      const isDisplayed = await stopIndicator.isDisplayed().catch(() => false);
+      const setVersionAction = await $(selectors.manageAction("set-version"));
+      const stopIndicator = await setVersionAction.$(selectors.requiresStopIndicator);
+      let isDisplayed = false;
+      try {
+        isDisplayed = await stopIndicator.isDisplayed();
+      } catch {
+        isDisplayed = false;
+      }
       expect(isDisplayed).toBe(false);
     });
   });

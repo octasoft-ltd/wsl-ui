@@ -22,6 +22,8 @@ interface SettingSectionProps {
   savedCustomValue?: string;
   /** Callback to save a custom value (saves both active and persisted custom value together) */
   onCustomValueSave?: (value: string) => void;
+  /** Test ID prefix for e2e tests */
+  testId?: string;
 }
 
 export function SettingSection({
@@ -37,6 +39,7 @@ export function SettingSection({
   isLoading,
   savedCustomValue = "",
   onCustomValueSave,
+  testId,
 }: SettingSectionProps) {
   // Track if user explicitly selected custom mode (even if currentValue matches a preset)
   const [isCustomMode, setIsCustomMode] = useState(false);
@@ -174,7 +177,7 @@ export function SettingSection({
             </div>
 
             {selectedPreset === "custom" && (
-              <div className="mt-4 p-4 bg-theme-bg-secondary/50 rounded-lg border border-theme-border-secondary/50">
+              <div className="mt-4 p-4 bg-theme-bg-secondary/50 rounded-lg border border-theme-border-secondary/50" data-testid={testId ? `${testId}-custom-section` : undefined}>
                 <label className="block text-sm font-medium text-theme-text-secondary mb-2">Custom Command</label>
                 <div className="flex gap-2">
                   <input
@@ -182,11 +185,13 @@ export function SettingSection({
                     value={customCommandInput}
                     onChange={(e) => setCustomCommandInput(e.target.value)}
                     placeholder={customPlaceholder}
+                    data-testid={testId ? `${testId}-custom-input` : undefined}
                     className="flex-1 px-4 py-2 bg-theme-bg-secondary border border-theme-border-secondary rounded-lg text-theme-text-primary placeholder-theme-text-muted focus:outline-hidden focus:border-theme-accent-primary"
                   />
                   <button
                     onClick={handleCustomCommandSave}
                     disabled={!customCommandInput.trim() || customCommandInput.trim() === savedCustomValue}
+                    data-testid={testId ? `${testId}-custom-save` : undefined}
                     className="px-4 py-2 bg-theme-accent-primary hover:opacity-90 text-theme-bg-primary font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Save

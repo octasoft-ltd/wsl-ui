@@ -17,23 +17,14 @@
  */
 
 import {
-  waitForAppReady,
-  resetMockState,
   setMockDownload,
   selectors,
-  safeRefresh,
+  waitForDialog,
 } from "../utils";
+import { setupHooks, isElementDisplayed } from "../base";
 
 describe("New Distribution Installation", () => {
-  beforeEach(async () => {
-    await safeRefresh();
-    // Wait longer for the webview to fully initialize
-    await browser.pause(2000);
-    await waitForAppReady();
-    await browser.pause(500);
-    await resetMockState();
-    await browser.pause(500);
-  });
+  setupHooks.standard();
 
   /**
    * Helper to open the new distribution dialog
@@ -43,10 +34,7 @@ describe("New Distribution Installation", () => {
     await newButton.waitForClickable({ timeout: 5000 });
     await newButton.click();
 
-    const dialog = await $(selectors.dialog);
-    await dialog.waitForDisplayed({ timeout: 10000 });
-    // Wait for content to load
-    await browser.pause(1000);
+    await waitForDialog(selectors.dialog, 10000);
   }
 
   /**
@@ -56,7 +44,16 @@ describe("New Distribution Installation", () => {
     const downloadTab = await $(selectors.newDistroTabDownload);
     await downloadTab.waitForClickable({ timeout: 5000 });
     await downloadTab.click();
-    await browser.pause(500);
+
+    // Wait for download tab content to load
+    await browser.waitUntil(
+      async () => {
+        const dialog = await $(selectors.dialog);
+        const text = await dialog.getText();
+        return text.includes("Custom URL") || text.includes("https://");
+      },
+      { timeout: 5000, timeoutMsg: "Download mode content did not load" }
+    );
   }
 
   /**
@@ -74,17 +71,31 @@ describe("New Distribution Installation", () => {
 
     await urlInput.click();
     await urlInput.setValue(url);
-    await browser.pause(300);
+
+    // Wait for input to register
+    await browser.waitUntil(
+      async () => {
+        const value = await urlInput.getValue();
+        return value === url;
+      },
+      { timeout: 3000, timeoutMsg: "URL input did not register" }
+    );
 
     // Click "Use URL" button to open the config dialog
     const useUrlButton = await dialog.$('button*=Use URL');
     if (await useUrlButton.isExisting()) {
       await useUrlButton.click();
-      await browser.pause(500);
 
       // Wait for config dialog to appear
-      const configDialog = await $(selectors.installConfigDialog);
-      return await configDialog.isDisplayed().catch(() => false);
+      try {
+        await browser.waitUntil(
+          async () => isElementDisplayed(selectors.installConfigDialog),
+          { timeout: 5000 }
+        );
+        return true;
+      } catch {
+        return false;
+      }
     }
 
     return false;
@@ -103,7 +114,15 @@ describe("New Distribution Installation", () => {
     // Select all and replace
     await browser.keys(['Control', 'a']);
     await browser.keys(distroName);
-    await browser.pause(300);
+
+    // Wait for input to register
+    await browser.waitUntil(
+      async () => {
+        const value = await nameInput.getValue();
+        return value === distroName;
+      },
+      { timeout: 3000, timeoutMsg: "Name input did not register" }
+    );
 
     // Click the install button
     const installButton = await $(selectors.installConfigConfirmButton);
@@ -118,7 +137,16 @@ describe("New Distribution Installation", () => {
     const containerTab = await $(selectors.newDistroTabContainer);
     await containerTab.waitForClickable({ timeout: 5000 });
     await containerTab.click();
-    await browser.pause(500);
+
+    // Wait for container tab content to load
+    await browser.waitUntil(
+      async () => {
+        const dialog = await $(selectors.dialog);
+        const text = await dialog.getText();
+        return text.includes("Custom Image") || text.includes("OCI");
+      },
+      { timeout: 5000, timeoutMsg: "Container mode content did not load" }
+    );
   }
 
   /**
@@ -128,7 +156,16 @@ describe("New Distribution Installation", () => {
     const communityTab = await $(selectors.newDistroTabLxc);
     await communityTab.waitForClickable({ timeout: 5000 });
     await communityTab.click();
-    await browser.pause(500);
+
+    // Wait for community tab content to load
+    await browser.waitUntil(
+      async () => {
+        const dialog = await $(selectors.dialog);
+        const text = await dialog.getText();
+        return text.length > 100; // Content loaded
+      },
+      { timeout: 5000, timeoutMsg: "Community mode content did not load" }
+    );
   }
 
   /**
@@ -136,14 +173,8 @@ describe("New Distribution Installation", () => {
    */
   async function waitForDialogToClose(timeout: number = 15000): Promise<void> {
     await browser.waitUntil(
-      async () => {
-        const dialog = await $(selectors.dialog);
-        return !(await dialog.isDisplayed().catch(() => false));
-      },
-      {
-        timeout,
-        timeoutMsg: `Dialog did not close within ${timeout}ms`,
-      }
+      async () => !(await isElementDisplayed(selectors.dialog)),
+      { timeout, timeoutMsg: `Dialog did not close within ${timeout}ms` }
     );
   }
 
@@ -152,14 +183,8 @@ describe("New Distribution Installation", () => {
    */
   async function waitForConfigDialogToClose(timeout: number = 5000): Promise<void> {
     await browser.waitUntil(
-      async () => {
-        const configDialog = await $(selectors.installConfigDialog);
-        return !(await configDialog.isDisplayed().catch(() => false));
-      },
-      {
-        timeout,
-        timeoutMsg: `Install config dialog did not close within ${timeout}ms`,
-      }
+      async () => !(await isElementDisplayed(selectors.installConfigDialog)),
+      { timeout, timeoutMsg: `Install config dialog did not close within ${timeout}ms` }
     );
   }
 
@@ -184,12 +209,9 @@ describe("New Distribution Installation", () => {
     it("should show Custom URL input section", async () => {
       const dialog = await $(selectors.dialog);
 
-      // Look for Custom URL text in the dialog (use XPath for text matching)
-      const customUrlSection = await dialog.$(".//*[contains(text(), 'Custom URL')]");
-      const isDisplayed = await customUrlSection.isDisplayed().catch(() => false);
-
-      // Either direct custom URL mode or as an option
-      expect(isDisplayed || (await dialog.getText()).includes("Custom URL")).toBe(true);
+      // Verify Custom URL option is available
+      const dialogText = await dialog.getText();
+      expect(dialogText).toContain("Custom URL");
     });
 
     it("should open config dialog when custom URL is entered and Use URL clicked", async () => {
@@ -200,13 +222,26 @@ describe("New Distribution Installation", () => {
       if (await customUrlInput.isExisting()) {
         await customUrlInput.click();
         await customUrlInput.setValue("https://example.com/rootfs.tar.gz");
-        await browser.pause(300);
+
+        // Wait for input to register
+        await browser.waitUntil(
+          async () => {
+            const value = await customUrlInput.getValue();
+            return value.includes("example.com");
+          },
+          { timeout: 3000, timeoutMsg: "URL input did not register" }
+        );
 
         // Click "Use URL" button
         const useUrlButton = await dialog.$('button*=Use URL');
         await expect(useUrlButton).toBeDisplayed();
         await useUrlButton.click();
-        await browser.pause(500);
+
+        // Wait for config dialog to appear
+        await browser.waitUntil(
+          async () => isElementDisplayed(selectors.installConfigDialog),
+          { timeout: 5000, timeoutMsg: "Config dialog did not appear" }
+        );
 
         // Config dialog should open with name input
         const configDialog = await $(selectors.installConfigDialog);
@@ -248,7 +283,16 @@ describe("New Distribution Installation", () => {
         await nameInput.click();
         await browser.keys(['Control', 'a']);
         await browser.keys('Backspace');
-        await browser.pause(300);
+
+        // Wait for validation to update
+        await browser.waitUntil(
+          async () => {
+            const btn = await $(selectors.installConfigConfirmButton);
+            const disabled = await btn.getAttribute("disabled");
+            return disabled === "true";
+          },
+          { timeout: 3000, timeoutMsg: "Button did not disable for empty name" }
+        );
 
         // Install button should be disabled when name is empty
         const installButton = await $(selectors.installConfigConfirmButton);
@@ -269,7 +313,19 @@ describe("New Distribution Installation", () => {
         await nameInput.click();
         await browser.keys(['Control', 'a']);
         await nameInput.setValue("invalid name!@#");
-        await browser.pause(500);
+
+        // Wait for validation to update
+        await browser.waitUntil(
+          async () => {
+            const configDialog = await $(selectors.installConfigDialog);
+            const dialogText = await configDialog.getText();
+            const installButton = await $(selectors.installConfigConfirmButton);
+            const isDisabled = await installButton.getAttribute("disabled");
+            const hasError = dialogText.toLowerCase().includes("can only contain");
+            return isDisabled === "true" || hasError;
+          },
+          { timeout: 3000, timeoutMsg: "Validation did not trigger for invalid name" }
+        );
 
         // Should show validation error or Install button should be disabled
         const installButton = await $(selectors.installConfigConfirmButton);
@@ -278,10 +334,9 @@ describe("New Distribution Installation", () => {
         // Check for error message in config dialog
         const configDialog = await $(selectors.installConfigDialog);
         const dialogText = await configDialog.getText();
-        const hasError = dialogText.toLowerCase().includes("only") ||
-                         dialogText.toLowerCase().includes("invalid") ||
-                         dialogText.toLowerCase().includes("letter");
+        const hasError = dialogText.toLowerCase().includes("can only contain");
 
+        // Note: OR is intentional - validation may disable button, show error, or both
         expect(isDisabled === "true" || hasError).toBe(true);
       }
     });
@@ -298,7 +353,18 @@ describe("New Distribution Installation", () => {
         await nameInput.click();
         await browser.keys(['Control', 'a']);
         await nameInput.setValue("Ubuntu");
-        await browser.pause(500);
+
+        // Wait for validation to update
+        await browser.waitUntil(
+          async () => {
+            const configDialog = await $(selectors.installConfigDialog);
+            const dialogText = await configDialog.getText();
+            const installButton = await $(selectors.installConfigConfirmButton);
+            const isDisabled = !(await installButton.isEnabled());
+            return dialogText.toLowerCase().includes("already exists") || isDisabled;
+          },
+          { timeout: 3000, timeoutMsg: "Validation did not trigger for duplicate name" }
+        );
 
         // Should show duplicate error or button should be disabled
         const configDialog = await $(selectors.installConfigDialog);
@@ -324,7 +390,16 @@ describe("New Distribution Installation", () => {
         await nameInput.click();
         await browser.keys(['Control', 'a']);
         await nameInput.setValue("Ubuntu");
-        await browser.pause(500);
+
+        // Wait for error to appear
+        await browser.waitUntil(
+          async () => {
+            const configDialog = await $(selectors.installConfigDialog);
+            const dialogText = await configDialog.getText();
+            return dialogText.toLowerCase().includes("already exists");
+          },
+          { timeout: 3000, timeoutMsg: "Duplicate name error did not appear" }
+        );
 
         // Should show error message element
         const errorElement = await $(selectors.installConfigNameError);
@@ -471,15 +546,14 @@ describe("New Distribution Installation", () => {
         await browser.waitUntil(
           async () => {
             const text = await dialog.getText();
-            return text.toLowerCase().includes("success") ||
-                   text.toLowerCase().includes("complete");
+            return text.toLowerCase().includes("successfully");
           },
           { timeout: 30000, timeoutMsg: "Installation did not complete" }
         );
 
         // Verify the success message
         const dialogText = await dialog.getText();
-        expect(dialogText.toLowerCase()).toMatch(/success|complete/);
+        expect(dialogText.toLowerCase()).toContain("successfully");
       }
     });
   });
@@ -517,7 +591,7 @@ describe("New Distribution Installation", () => {
 
         // Verify error is shown in dialog text
         const dialogText = await dialog.getText();
-        expect(dialogText.toLowerCase()).toMatch(/error|fail/);
+        expect(dialogText.toLowerCase()).toContain("failed");
       }
     });
 
@@ -645,7 +719,6 @@ describe("New Distribution Installation", () => {
           try {
             await btn.click();
             selectedOne = true;
-            await browser.pause(300);
             break;
           } catch {
             continue;
@@ -699,7 +772,15 @@ describe("New Distribution Installation", () => {
       if (await customImageInput.isExisting()) {
         await customImageInput.click();
         await customImageInput.setValue("alpine:latest");
-        await browser.pause(300);
+
+        // Wait for input to register
+        await browser.waitUntil(
+          async () => {
+            const value = await customImageInput.getValue();
+            return value === "alpine:latest";
+          },
+          { timeout: 3000, timeoutMsg: "Image input did not register" }
+        );
 
         const value = await customImageInput.getValue();
         expect(value).toBe("alpine:latest");
@@ -714,13 +795,26 @@ describe("New Distribution Installation", () => {
       if (await customImageInput.isExisting()) {
         await customImageInput.click();
         await customImageInput.setValue("alpine:latest");
-        await browser.pause(300);
+
+        // Wait for input to register
+        await browser.waitUntil(
+          async () => {
+            const value = await customImageInput.getValue();
+            return value === "alpine:latest";
+          },
+          { timeout: 3000, timeoutMsg: "Image input did not register" }
+        );
 
         // Click "Use Image" button
         const useImageButton = await dialog.$('button*=Use Image');
         if (await useImageButton.isExisting()) {
           await useImageButton.click();
-          await browser.pause(500);
+
+          // Wait for config dialog to appear
+          await browser.waitUntil(
+            async () => isElementDisplayed(selectors.installConfigDialog),
+            { timeout: 5000, timeoutMsg: "Config dialog did not appear" }
+          );
 
           // Config dialog should open
           const configDialog = await $(selectors.installConfigDialog);
@@ -741,13 +835,26 @@ describe("New Distribution Installation", () => {
       if (await customImageInput.isExisting()) {
         await customImageInput.click();
         await customImageInput.setValue("alpine:3.18");
-        await browser.pause(300);
+
+        // Wait for input to register
+        await browser.waitUntil(
+          async () => {
+            const value = await customImageInput.getValue();
+            return value === "alpine:3.18";
+          },
+          { timeout: 3000, timeoutMsg: "Image input did not register" }
+        );
 
         // Click "Use Image" button
         const useImageButton = await dialog.$('button*=Use Image');
         if (await useImageButton.isExisting()) {
           await useImageButton.click();
-          await browser.pause(500);
+
+          // Wait for config dialog to appear
+          await browser.waitUntil(
+            async () => isElementDisplayed(selectors.installConfigDialog),
+            { timeout: 5000, timeoutMsg: "Config dialog did not appear" }
+          );
 
           // Config dialog should have a suggested name
           const nameInput = await $(selectors.installConfigNameInput);
@@ -875,16 +982,19 @@ describe("New Distribution Installation", () => {
         await browser.waitUntil(
           async () => {
             const text = await dialog.getText();
+            // Note: OR is intentional - checking for in-progress or completed state
             return text.toLowerCase().includes("import") ||
-                   text.toLowerCase().includes("success") ||
-                   text.toLowerCase().includes("complete");
+                   text.toLowerCase().includes("successfully");
           },
           { timeout: 15000, timeoutMsg: "Importing stage did not appear" }
         );
 
         // Verify the dialog text shows importing or success
+        // Note: OR is intentional - test may catch either in-progress or completed state
         const dialogText = await dialog.getText();
-        expect(dialogText.toLowerCase()).toMatch(/import|success|complete/);
+        const hasImportOrSuccess = dialogText.toLowerCase().includes("import") ||
+                                   dialogText.toLowerCase().includes("successfully");
+        expect(hasImportOrSuccess).toBe(true);
       }
     });
   });

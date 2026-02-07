@@ -10,13 +10,12 @@
  */
 
 import {
-  waitForAppReady,
-  resetMockState,
   selectors,
   byText,
   byButtonText,
-  safeRefresh,
+  waitForDialogToDisappear,
 } from "../utils";
+import { setupHooks, isElementDisplayed } from "../base";
 
 const passwordPromptSelectors = {
   // Password prompt dialog
@@ -53,12 +52,22 @@ async function navigateToCustomActions(): Promise<void> {
   const settingsButton = await $(passwordPromptSelectors.settingsButton);
   await settingsButton.waitForClickable({ timeout: 5000 });
   await settingsButton.click();
-  await browser.pause(500);
+
+  // Wait for custom actions tab to appear
+  await browser.waitUntil(
+    async () => isElementDisplayed(passwordPromptSelectors.customActionsTab),
+    { timeout: 5000, timeoutMsg: "Custom actions tab did not appear" }
+  );
 
   const customActionsTab = await $(passwordPromptSelectors.customActionsTab);
   await customActionsTab.waitForClickable({ timeout: 5000 });
   await customActionsTab.click();
-  await browser.pause(500);
+
+  // Wait for New Action button to appear
+  await browser.waitUntil(
+    async () => isElementDisplayed(passwordPromptSelectors.newActionButton),
+    { timeout: 5000, timeoutMsg: "Custom actions section did not load" }
+  );
 }
 
 async function createSudoAction(): Promise<void> {
@@ -68,7 +77,12 @@ async function createSudoAction(): Promise<void> {
   const newActionButton = await $(passwordPromptSelectors.newActionButton);
   await newActionButton.waitForClickable({ timeout: 5000 });
   await newActionButton.click();
-  await browser.pause(300);
+
+  // Wait for action editor to appear
+  await browser.waitUntil(
+    async () => isElementDisplayed(passwordPromptSelectors.actionNameInput),
+    { timeout: 5000, timeoutMsg: "Action editor did not open" }
+  );
 
   // Fill in action details
   const nameInput = await $(passwordPromptSelectors.actionNameInput);
@@ -81,18 +95,40 @@ async function createSudoAction(): Promise<void> {
   // Enable sudo requirement
   const sudoCheckbox = await $(passwordPromptSelectors.requiresSudoCheckbox);
   await sudoCheckbox.click();
-  await browser.pause(200);
+
+  // Wait for checkbox to be selected
+  await browser.waitUntil(
+    async () => sudoCheckbox.isSelected(),
+    { timeout: 3000, timeoutMsg: "Sudo checkbox did not toggle" }
+  );
 
   // Save the action
   const saveButton = await $(passwordPromptSelectors.saveActionButton);
   await saveButton.click();
-  await browser.pause(500);
+
+  // Wait for action to be saved (action appears in list)
+  await browser.waitUntil(
+    async () => {
+      const action = await $(`h4*=${TEST_ACTION_NAME}`);
+      try {
+        return await action.isDisplayed();
+      } catch {
+        return false;
+      }
+    },
+    { timeout: 5000, timeoutMsg: "Action did not appear in list after save" }
+  );
 
   // Navigate back to the main view
   const backButton = await $(passwordPromptSelectors.backButton);
   await backButton.waitForClickable({ timeout: 5000 });
   await backButton.click();
-  await browser.pause(500);
+
+  // Wait for main view to load
+  await browser.waitUntil(
+    async () => isElementDisplayed(selectors.distroCard),
+    { timeout: 5000, timeoutMsg: "Main view did not load" }
+  );
 }
 
 async function openQuickActionsForDistro(distroName: string): Promise<void> {
@@ -104,7 +140,12 @@ async function openQuickActionsForDistro(distroName: string): Promise<void> {
   const quickActionsButton = await card.$(passwordPromptSelectors.quickActionsButton);
   await quickActionsButton.waitForClickable({ timeout: 5000 });
   await quickActionsButton.click();
-  await browser.pause(300);
+
+  // Wait for menu to appear
+  await browser.waitUntil(
+    async () => isElementDisplayed(passwordPromptSelectors.quickActionsMenu),
+    { timeout: 5000, timeoutMsg: "Quick actions menu did not appear" }
+  );
 }
 
 async function triggerSudoAction(): Promise<void> {
@@ -115,17 +156,16 @@ async function triggerSudoAction(): Promise<void> {
   const actionButton = await $(byText(TEST_ACTION_NAME));
   await actionButton.waitForClickable({ timeout: 5000 });
   await actionButton.click();
-  await browser.pause(500);
+
+  // Wait for password prompt to appear
+  await browser.waitUntil(
+    async () => isElementDisplayed(passwordPromptSelectors.dialog),
+    { timeout: 5000, timeoutMsg: "Password prompt dialog did not appear" }
+  );
 }
 
 describe("Password Prompt Dialog", () => {
-  beforeEach(async () => {
-    await safeRefresh();
-    await browser.pause(500);
-    await resetMockState();
-    await waitForAppReady();
-    await browser.pause(500);
-  });
+  setupHooks.standard();
 
   describe("Setup and Trigger", () => {
     it("should be able to create a custom action with sudo requirement", async () => {
@@ -220,7 +260,15 @@ describe("Password Prompt Dialog", () => {
     it("should allow typing in password field", async () => {
       const passwordInput = await $(passwordPromptSelectors.passwordInput);
       await passwordInput.setValue("testpassword123");
-      await browser.pause(200);
+
+      // Wait for input to register
+      await browser.waitUntil(
+        async () => {
+          const value = await passwordInput.getValue();
+          return value === "testpassword123";
+        },
+        { timeout: 3000, timeoutMsg: "Password input did not register" }
+      );
 
       const value = await passwordInput.getValue();
       expect(value).toBe("testpassword123");
@@ -259,7 +307,16 @@ describe("Password Prompt Dialog", () => {
     it("should be enabled when password is entered", async () => {
       const passwordInput = await $(passwordPromptSelectors.passwordInput);
       await passwordInput.setValue("testpassword");
-      await browser.pause(200);
+
+      // Wait for button to enable
+      await browser.waitUntil(
+        async () => {
+          const btn = await $(passwordPromptSelectors.submitButton);
+          const disabled = await btn.getAttribute("disabled");
+          return disabled === null;
+        },
+        { timeout: 3000, timeoutMsg: "Submit button did not enable" }
+      );
 
       const submitButton = await $(passwordPromptSelectors.submitButton);
       const isDisabled = await submitButton.getAttribute("disabled");
@@ -269,15 +326,23 @@ describe("Password Prompt Dialog", () => {
     it("should close dialog after submit", async () => {
       const passwordInput = await $(passwordPromptSelectors.passwordInput);
       await passwordInput.setValue("testpassword");
-      await browser.pause(200);
+
+      // Wait for button to enable
+      await browser.waitUntil(
+        async () => {
+          const btn = await $(passwordPromptSelectors.submitButton);
+          const disabled = await btn.getAttribute("disabled");
+          return disabled === null;
+        },
+        { timeout: 3000, timeoutMsg: "Submit button did not enable" }
+      );
 
       const submitButton = await $(passwordPromptSelectors.submitButton);
       await submitButton.click();
-      await browser.pause(500);
+      await waitForDialogToDisappear(passwordPromptSelectors.dialog, 5000);
 
-      const dialog = await $(passwordPromptSelectors.dialog);
-      const isDisplayed = await dialog.isDisplayed().catch(() => false);
-      expect(isDisplayed).toBe(false);
+      const dialogDisplayed = await isElementDisplayed(passwordPromptSelectors.dialog);
+      expect(dialogDisplayed).toBe(false);
     });
   });
 
@@ -295,31 +360,37 @@ describe("Password Prompt Dialog", () => {
     it("should close dialog when cancel button is clicked", async () => {
       const cancelButton = await $(passwordPromptSelectors.cancelButton);
       await cancelButton.click();
-      await browser.pause(300);
+      await waitForDialogToDisappear(passwordPromptSelectors.dialog, 5000);
 
-      const dialog = await $(passwordPromptSelectors.dialog);
-      const isDisplayed = await dialog.isDisplayed().catch(() => false);
-      expect(isDisplayed).toBe(false);
+      const dialogDisplayed = await isElementDisplayed(passwordPromptSelectors.dialog);
+      expect(dialogDisplayed).toBe(false);
     });
 
     it("should close dialog when close (X) button is clicked", async () => {
       const closeButton = await $(passwordPromptSelectors.closeButton);
       await closeButton.click();
-      await browser.pause(300);
+      await waitForDialogToDisappear(passwordPromptSelectors.dialog, 5000);
 
-      const dialog = await $(passwordPromptSelectors.dialog);
-      const isDisplayed = await dialog.isDisplayed().catch(() => false);
-      expect(isDisplayed).toBe(false);
+      const dialogDisplayed = await isElementDisplayed(passwordPromptSelectors.dialog);
+      expect(dialogDisplayed).toBe(false);
     });
 
     it("should clear password when cancelled", async () => {
       const passwordInput = await $(passwordPromptSelectors.passwordInput);
       await passwordInput.setValue("testpassword");
-      await browser.pause(200);
+
+      // Wait for input to register
+      await browser.waitUntil(
+        async () => {
+          const value = await passwordInput.getValue();
+          return value === "testpassword";
+        },
+        { timeout: 3000, timeoutMsg: "Password input did not register" }
+      );
 
       const cancelButton = await $(passwordPromptSelectors.cancelButton);
       await cancelButton.click();
-      await browser.pause(300);
+      await waitForDialogToDisappear(passwordPromptSelectors.dialog, 5000);
 
       // Trigger the action again to check password is cleared
       await triggerSudoAction();
@@ -338,29 +409,41 @@ describe("Password Prompt Dialog", () => {
 
     it("should close dialog when Escape key is pressed", async () => {
       await browser.keys("Escape");
-      await browser.pause(300);
+      await waitForDialogToDisappear(passwordPromptSelectors.dialog, 5000);
 
-      const dialog = await $(passwordPromptSelectors.dialog);
-      const isDisplayed = await dialog.isDisplayed().catch(() => false);
-      expect(isDisplayed).toBe(false);
+      const dialogDisplayed = await isElementDisplayed(passwordPromptSelectors.dialog);
+      expect(dialogDisplayed).toBe(false);
     });
 
     it("should submit form when Enter key is pressed with password", async () => {
       const passwordInput = await $(passwordPromptSelectors.passwordInput);
       await passwordInput.setValue("testpassword");
-      await browser.pause(200);
+
+      // Wait for button to enable
+      await browser.waitUntil(
+        async () => {
+          const btn = await $(passwordPromptSelectors.submitButton);
+          const disabled = await btn.getAttribute("disabled");
+          return disabled === null;
+        },
+        { timeout: 3000, timeoutMsg: "Submit button did not enable" }
+      );
 
       await browser.keys("Enter");
-      await browser.pause(500);
+      await waitForDialogToDisappear(passwordPromptSelectors.dialog, 5000);
 
-      const dialog = await $(passwordPromptSelectors.dialog);
-      const isDisplayed = await dialog.isDisplayed().catch(() => false);
-      expect(isDisplayed).toBe(false);
+      const dialogDisplayed = await isElementDisplayed(passwordPromptSelectors.dialog);
+      expect(dialogDisplayed).toBe(false);
     });
 
     it("should not submit form when Enter key is pressed without password", async () => {
       await browser.keys("Enter");
-      await browser.pause(300);
+
+      // Wait a moment to ensure dialog doesn't close
+      await browser.waitUntil(
+        async () => true,
+        { timeout: 300 }
+      );
 
       // Dialog should still be open
       const dialog = await $(passwordPromptSelectors.dialog);

@@ -9,20 +9,34 @@
  */
 
 import {
-  waitForAppReady,
-  resetMockState,
   selectors,
-  safeRefresh,
+  waitForDialog,
+  waitForDialogToDisappear,
 } from "../utils";
+import { setupHooks, isElementDisplayed } from "../base";
+
+/**
+ * Helper to wait for panel to appear
+ */
+async function waitForPanelDisplayed(): Promise<void> {
+  await browser.waitUntil(
+    async () => isElementDisplayed(".absolute.bottom-full"),
+    { timeout: 5000, timeoutMsg: "Mounted disks panel did not appear" }
+  );
+}
+
+/**
+ * Helper to wait for panel to close
+ */
+async function waitForPanelClosed(): Promise<void> {
+  await browser.waitUntil(
+    async () => !(await isElementDisplayed(".absolute.bottom-full")),
+    { timeout: 5000, timeoutMsg: "Mounted disks panel did not close" }
+  );
+}
 
 describe("Disk Mount Features", () => {
-  beforeEach(async () => {
-    await safeRefresh();
-    await browser.pause(500);
-    await resetMockState();
-    await waitForAppReady();
-    await browser.pause(500);
-  });
+  setupHooks.standard();
 
   describe("Mounted Disks Panel", () => {
     /**
@@ -36,7 +50,7 @@ describe("Disk Mount Features", () => {
         const title = await btn.getAttribute("title");
         if (title && title.includes("Disk")) {
           await btn.click();
-          await browser.pause(500);
+          await waitForPanelDisplayed();
           return;
         }
       }
@@ -44,16 +58,15 @@ describe("Disk Mount Features", () => {
     }
 
     /**
-     * Helper to wait for panel to appear
+     * Helper to wait for panel to appear and return it
      */
     async function waitForPanel(): Promise<WebdriverIO.Element | null> {
-      await browser.pause(500);
-      // Look for the panel by its unique text content
-      const panel = await $(".absolute.bottom-full");
-      if (await panel.isDisplayed().catch(() => false)) {
-        return panel;
+      try {
+        await waitForPanelDisplayed();
+        return await $(".absolute.bottom-full") as unknown as WebdriverIO.Element;
+      } catch {
+        return null;
       }
-      return null;
     }
 
     it("should have disk mount button in status bar", async () => {
@@ -78,41 +91,38 @@ describe("Disk Mount Features", () => {
 
     it("should show empty state when no disks are mounted", async () => {
       await openMountedDisksPanel();
-      await browser.pause(500);
 
-      // Look for empty state text within the panel
-      const panel = await $(".absolute.bottom-full");
-      if (await panel.isDisplayed().catch(() => false)) {
-        const panelText = await panel.getText();
-        expect(panelText.toLowerCase()).toContain("no disks mounted");
+      // Look for empty state element within the panel
+      const emptyStateDisplayed = await isElementDisplayed('[data-testid="mounted-disks-empty"]');
+      if (emptyStateDisplayed) {
+        const emptyState = await $('[data-testid="mounted-disks-empty"]');
+        const emptyText = await emptyState.getText();
+        expect(emptyText.toLowerCase()).toContain("no disks mounted");
       } else {
-        // Panel may have closed - just verify we can open it
-        expect(true).toBe(true);
+        // Panel may have disks mounted - just verify panel was opened
+        const panelDisplayed = await isElementDisplayed('[data-testid="mounted-disks-panel"]');
+        expect(panelDisplayed).toBe(true);
       }
     });
 
     it("should have Mount Disk button to open mount dialog", async () => {
       await openMountedDisksPanel();
-      await browser.pause(300);
 
-      const mountButton = await $("button*=Mount Disk");
-      const isDisplayed = await mountButton.isDisplayed().catch(() => false);
-      expect(isDisplayed).toBe(true);
+      const mountButtonDisplayed = await isElementDisplayed("button*=Mount Disk");
+      expect(mountButtonDisplayed).toBe(true);
     });
 
     it("should close panel when clicking outside", async () => {
       await openMountedDisksPanel();
-      await browser.pause(300);
 
       // Click outside on main content
       const main = await $("main");
       await main.click();
-      await browser.pause(500);
+      await waitForPanelClosed();
 
-      // Panel should be closed - look for it
-      const panel = await $(".absolute.bottom-full");
-      const isDisplayed = await panel.isDisplayed().catch(() => false);
-      expect(isDisplayed).toBe(false);
+      // Panel should be closed
+      const panelDisplayed = await isElementDisplayed(".absolute.bottom-full");
+      expect(panelDisplayed).toBe(false);
     });
   });
 
@@ -130,18 +140,35 @@ describe("Disk Mount Features", () => {
           break;
         }
       }
-      await browser.pause(500);
+      await waitForPanelDisplayed();
 
       const mountButton = await $("button*=Mount Disk");
       await mountButton.click();
-      await browser.pause(500);
+      await waitForDialog('[role="dialog"]', 5000);
     }
 
     /**
      * Helper to find the disk mount dialog (has role="dialog")
      */
     async function findDialog(): Promise<WebdriverIO.Element> {
-      return $('[role="dialog"]');
+      return await $('[role="dialog"]') as unknown as WebdriverIO.Element;
+    }
+
+    /**
+     * Helper to wait for tab content to switch
+     */
+    async function waitForTabContent(tabName: string): Promise<void> {
+      await browser.waitUntil(
+        async () => {
+          const dialog = await $('[role="dialog"]');
+          const text = await dialog.getText();
+          if (tabName === "Physical") {
+            return text.includes("Select a disk");
+          }
+          return text.includes("Browse");
+        },
+        { timeout: 5000, timeoutMsg: `Tab ${tabName} content did not appear` }
+      );
     }
 
     it("should open disk mount dialog from mounted disks panel", async () => {
@@ -201,7 +228,7 @@ describe("Disk Mount Features", () => {
       const dialog = await findDialog();
       const physicalTab = await dialog.$("button*=Mount Physical Disk");
       await physicalTab.click();
-      await browser.pause(300);
+      await waitForTabContent("Physical");
 
       // Should now show physical disk selector
       const diskSelector = await dialog.$("select");
@@ -218,7 +245,7 @@ describe("Disk Mount Features", () => {
       const dialog = await findDialog();
       const physicalTab = await dialog.$("button*=Mount Physical Disk");
       await physicalTab.click();
-      await browser.pause(500);
+      await waitForTabContent("Physical");
 
       const diskSelector = await dialog.$("select");
       const options = await diskSelector.$$("option");
@@ -275,12 +302,21 @@ describe("Disk Mount Features", () => {
       const dialog = await findDialog();
       const advancedSummary = await dialog.$("summary*=Advanced");
       await advancedSummary.click();
-      await browser.pause(300);
 
-      // Should show mount options or bare mount checkbox
+      // Wait for advanced options content to appear
+      await browser.waitUntil(
+        async () => {
+          const text = await dialog.getText();
+          const lowerText = text.toLowerCase();
+          return lowerText.includes("mount options");
+        },
+        { timeout: 3000, timeoutMsg: "Advanced options content did not appear" }
+      );
+
+      // Should show mount options section
       const dialogText = await dialog.getText();
-      expect(dialogText.toLowerCase()).toContain("mount options") ||
-        expect(dialogText.toLowerCase()).toContain("bare");
+      const lowerText = dialogText.toLowerCase();
+      expect(lowerText).toContain("mount options");
     });
 
     it("should have Cancel and Mount buttons", async () => {
@@ -313,7 +349,7 @@ describe("Disk Mount Features", () => {
       const dialog = await findDialog();
       const physicalTab = await dialog.$("button*=Mount Physical Disk");
       await physicalTab.click();
-      await browser.pause(300);
+      await waitForTabContent("Physical");
 
       // The submit Mount button has accent color background
       const mountButton = await dialog.$("button.bg-theme-accent-primary");
@@ -326,11 +362,10 @@ describe("Disk Mount Features", () => {
       const dialog = await findDialog();
       const cancelButton = await dialog.$("button*=Cancel");
       await cancelButton.click();
-      await browser.pause(300);
+      await waitForDialogToDisappear('[role="dialog"]', 5000);
 
-      const dialogAfter = await findDialog();
-      const isDisplayed = await dialogAfter.isDisplayed().catch(() => false);
-      expect(isDisplayed).toBe(false);
+      const dialogVisible = await isElementDisplayed('[role="dialog"]');
+      expect(dialogVisible).toBe(false);
     });
 
     it("should have backdrop visible when dialog is open", async () => {
@@ -347,16 +382,24 @@ describe("Disk Mount Features", () => {
       const dialog = await findDialog();
       const physicalTab = await dialog.$("button*=Mount Physical Disk");
       await physicalTab.click();
-      await browser.pause(500);
+      await waitForTabContent("Physical");
 
       // Select a disk from the dropdown
       const diskSelector = await dialog.$("select");
       const options = await diskSelector.$$("option");
 
-      if (options.length > 1) {
+      if ((await options.length) > 1) {
         // Select the first actual disk (not placeholder)
         await diskSelector.selectByIndex(1);
-        await browser.pause(500);
+
+        // Wait for partition selector to appear
+        await browser.waitUntil(
+          async () => {
+            const text = await dialog.getText();
+            return text.includes("Partition");
+          },
+          { timeout: 5000, timeoutMsg: "Partition selector did not appear" }
+        );
 
         // Should now show partition selector
         const dialogText = await dialog.getText();
@@ -370,9 +413,8 @@ describe("Disk Mount Features", () => {
       const dialog = await findDialog();
 
       // Error area exists but should not have visible error initially
-      const errorContainer = await dialog.$(".bg-red-900");
-      const isDisplayed = await errorContainer.isDisplayed().catch(() => false);
-      expect(isDisplayed).toBe(false);
+      const errorDisplayed = await isElementDisplayed(".bg-red-900");
+      expect(errorDisplayed).toBe(false);
     });
   });
 
@@ -387,16 +429,24 @@ describe("Disk Mount Features", () => {
           break;
         }
       }
-      await browser.pause(500);
+      await waitForPanelDisplayed();
 
       const mountButton = await $("button*=Mount Disk");
       await mountButton.click();
-      await browser.pause(500);
+      await waitForDialog('[role="dialog"]', 5000);
 
       const dialog = await $('[role="dialog"]');
       const physicalTab = await dialog.$("button*=Mount Physical Disk");
       await physicalTab.click();
-      await browser.pause(500);
+
+      // Wait for physical disk tab content
+      await browser.waitUntil(
+        async () => {
+          const text = await dialog.getText();
+          return text.includes("Select a disk");
+        },
+        { timeout: 5000, timeoutMsg: "Physical disk tab content did not appear" }
+      );
     }
 
     it("should load physical disks list", async () => {
@@ -418,13 +468,9 @@ describe("Disk Mount Features", () => {
 
       const selectorText = await diskSelector.getText();
 
-      // Mock data includes Samsung SSD and WD Blue
-      expect(
-        selectorText.includes("Samsung") ||
-          selectorText.includes("WD") ||
-          selectorText.includes("GB") ||
-          selectorText.includes("TB")
-      ).toBe(true);
+      // Disk entries should show size (GB or TB)
+      // Note: OR is intentional - size unit can be either GB or TB depending on disk size
+      expect(selectorText).toMatch(/GB|TB/);
     });
 
     it("should show admin privilege warning", async () => {
@@ -432,10 +478,10 @@ describe("Disk Mount Features", () => {
 
       const dialog = await $('[role="dialog"]');
       const dialogText = await dialog.getText();
+      const lowerText = dialogText.toLowerCase();
 
-      // Should mention admin/administrator privileges
-      expect(dialogText.toLowerCase()).toContain("administrator") ||
-        expect(dialogText.toLowerCase()).toContain("privileges");
+      // Should mention administrator privileges required
+      expect(lowerText).toContain("administrator");
     });
   });
 
@@ -458,28 +504,37 @@ describe("Disk Mount Features", () => {
 
       // Open panel and dialog
       await diskButton.click();
-      await browser.pause(500);
+      await waitForPanelDisplayed();
 
       let mountButton = await $("button*=Mount Disk");
       await mountButton.click();
-      await browser.pause(500);
+      await waitForDialog('[role="dialog"]', 5000);
 
       // Enter some data
       const dialog = await $('[role="dialog"]');
       const mountNameInput = await dialog.$('input[placeholder*="mydisk"]');
       await mountNameInput.setValue("testmount");
 
+      // Wait for input to register
+      await browser.waitUntil(
+        async () => {
+          const value = await mountNameInput.getValue();
+          return value === "testmount";
+        },
+        { timeout: 3000, timeoutMsg: "Input value did not register" }
+      );
+
       // Close dialog
       const cancelButton = await dialog.$("button*=Cancel");
       await cancelButton.click();
-      await browser.pause(500);
+      await waitForDialogToDisappear('[role="dialog"]', 5000);
 
       // Reopen dialog
       await diskButton.click();
-      await browser.pause(500);
+      await waitForPanelDisplayed();
       mountButton = await $("button*=Mount Disk");
       await mountButton.click();
-      await browser.pause(500);
+      await waitForDialog('[role="dialog"]', 5000);
 
       // Mount name should be cleared
       const newDialog = await $('[role="dialog"]');

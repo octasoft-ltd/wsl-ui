@@ -11,28 +11,46 @@
  * - Distribution sorting
  */
 
+import { setupHooks, isElementDisplayed } from "../base";
 import {
-  waitForAppReady,
-  resetMockState,
   selectors,
-  safeRefresh,
   getDistroCardCount,
   mockDistributions,
   mockDataHelpers,
 } from "../utils";
 
+/**
+ * Helper to wait for filter to be applied by checking card count
+ */
+async function waitForFilterApplied(expectedCount: number): Promise<void> {
+  await browser.waitUntil(
+    async () => {
+      const count = await getDistroCardCount();
+      return count === expectedCount;
+    },
+    { timeout: 5000, timeoutMsg: `Expected ${expectedCount} cards after filter` }
+  );
+}
+
+/**
+ * Helper to wait for empty filter state to appear
+ */
+async function waitForEmptyFilterState(): Promise<void> {
+  await browser.waitUntil(
+    async () => {
+      const emptyState = await $('[data-testid="empty-filter-state"]');
+      try {
+        return await emptyState.isDisplayed();
+      } catch {
+        return false;
+      }
+    },
+    { timeout: 5000, timeoutMsg: "Empty filter state did not appear" }
+  );
+}
+
 describe("Distribution Filters", () => {
-  beforeEach(async () => {
-    // First refresh to ensure app is loaded (required for Tauri commands)
-    await safeRefresh();
-    await browser.pause(300);
-    // Reset mock state to defaults (all 7 distributions)
-    await resetMockState();
-    // Refresh again to load the clean mock data
-    await safeRefresh();
-    await waitForAppReady();
-    await browser.pause(500);
-  });
+  setupHooks.standard();
 
   describe("Initial State", () => {
     it("should display all distributions by default", async () => {
@@ -72,12 +90,13 @@ describe("Distribution Filters", () => {
 
   describe("Status Filters", () => {
     it("should filter to only online distributions", async () => {
+      const expectedCount = mockDataHelpers.getRunningCount();
       const onlineButton = await $('[data-testid="status-filter-online"]');
       await onlineButton.click();
-      await browser.pause(300);
+      await waitForFilterApplied(expectedCount);
 
       const cardCount = await getDistroCardCount();
-      expect(cardCount).toBe(mockDataHelpers.getRunningCount());
+      expect(cardCount).toBe(expectedCount);
 
       // Verify all visible cards are online
       const cards = await $$(selectors.distroCard);
@@ -89,12 +108,13 @@ describe("Distribution Filters", () => {
     });
 
     it("should filter to only offline distributions", async () => {
+      const expectedCount = mockDataHelpers.getStoppedCount();
       const offlineButton = await $('[data-testid="status-filter-offline"]');
       await offlineButton.click();
-      await browser.pause(300);
+      await waitForFilterApplied(expectedCount);
 
       const cardCount = await getDistroCardCount();
-      expect(cardCount).toBe(mockDataHelpers.getStoppedCount());
+      expect(cardCount).toBe(expectedCount);
 
       // Verify all visible cards are offline
       const cards = await $$(selectors.distroCard);
@@ -109,12 +129,12 @@ describe("Distribution Filters", () => {
       // First filter to online
       const onlineButton = await $('[data-testid="status-filter-online"]');
       await onlineButton.click();
-      await browser.pause(300);
+      await waitForFilterApplied(mockDataHelpers.getRunningCount());
 
       // Then click All
       const allButton = await $('[data-testid="status-filter-all"]');
       await allButton.click();
-      await browser.pause(300);
+      await waitForFilterApplied(mockDistributions.length);
 
       const cardCount = await getDistroCardCount();
       expect(cardCount).toBe(mockDistributions.length);
@@ -123,33 +143,33 @@ describe("Distribution Filters", () => {
 
   describe("WSL Version Filters", () => {
     it("should hide WSL 1 distributions when v1 toggle is clicked", async () => {
+      const expectedCount = mockDataHelpers.getWsl2Count();
       const wsl1Button = await $('[data-testid="version-filter-wsl1"]');
       await wsl1Button.click();
-      await browser.pause(300);
+      await waitForFilterApplied(expectedCount);
 
       const cardCount = await getDistroCardCount();
-      expect(cardCount).toBe(mockDataHelpers.getWsl2Count());
+      expect(cardCount).toBe(expectedCount);
 
       // Verify no WSL 1 distros are visible
       for (const distro of mockDistributions.filter(d => d.version === 1)) {
-        const card = await $(selectors.distroCardByName(distro.name));
-        const isDisplayed = await card.isDisplayed().catch(() => false);
+        const isDisplayed = await isElementDisplayed(selectors.distroCardByName(distro.name));
         expect(isDisplayed).toBe(false);
       }
     });
 
     it("should hide WSL 2 distributions when v2 toggle is clicked", async () => {
+      const expectedCount = mockDataHelpers.getWsl1Count();
       const wsl2Button = await $('[data-testid="version-filter-wsl2"]');
       await wsl2Button.click();
-      await browser.pause(300);
+      await waitForFilterApplied(expectedCount);
 
       const cardCount = await getDistroCardCount();
-      expect(cardCount).toBe(mockDataHelpers.getWsl1Count());
+      expect(cardCount).toBe(expectedCount);
 
       // Verify no WSL 2 distros are visible
       for (const distro of mockDistributions.filter(d => d.version === 2)) {
-        const card = await $(selectors.distroCardByName(distro.name));
-        const isDisplayed = await card.isDisplayed().catch(() => false);
+        const isDisplayed = await isElementDisplayed(selectors.distroCardByName(distro.name));
         expect(isDisplayed).toBe(false);
       }
     });
@@ -159,9 +179,12 @@ describe("Distribution Filters", () => {
       const wsl2Button = await $('[data-testid="version-filter-wsl2"]');
 
       await wsl1Button.click();
-      await browser.pause(200);
+      // Wait for first filter to apply
+      await waitForFilterApplied(mockDataHelpers.getWsl2Count());
+
       await wsl2Button.click();
-      await browser.pause(300);
+      // Wait for empty state
+      await waitForEmptyFilterState();
 
       // Should show empty filter state
       const emptyState = await $('[data-testid="empty-filter-state"]');
@@ -184,36 +207,42 @@ describe("Distribution Filters", () => {
     });
 
     it("should filter by store source", async () => {
-      const storeButton = await $('[data-testid="source-filter-store"]');
-      if (await storeButton.isDisplayed().catch(() => false)) {
+      const isStoreButtonDisplayed = await isElementDisplayed('[data-testid="source-filter-store"]');
+      if (isStoreButtonDisplayed) {
+        const storeButton = await $('[data-testid="source-filter-store"]');
         await storeButton.click();
-        await browser.pause(300);
 
         const expectedCount = mockDataHelpers.getBySource("store").length;
+        await waitForFilterApplied(expectedCount);
+
         const cardCount = await getDistroCardCount();
         expect(cardCount).toBe(expectedCount);
       }
     });
 
     it("should filter by lxc source", async () => {
-      const lxcButton = await $('[data-testid="source-filter-lxc"]');
-      if (await lxcButton.isDisplayed().catch(() => false)) {
+      const isLxcButtonDisplayed = await isElementDisplayed('[data-testid="source-filter-lxc"]');
+      if (isLxcButtonDisplayed) {
+        const lxcButton = await $('[data-testid="source-filter-lxc"]');
         await lxcButton.click();
-        await browser.pause(300);
 
         const expectedCount = mockDataHelpers.getBySource("lxc").length;
+        await waitForFilterApplied(expectedCount);
+
         const cardCount = await getDistroCardCount();
         expect(cardCount).toBe(expectedCount);
       }
     });
 
     it("should filter by container source", async () => {
-      const containerButton = await $('[data-testid="source-filter-container"]');
-      if (await containerButton.isDisplayed().catch(() => false)) {
+      const isContainerButtonDisplayed = await isElementDisplayed('[data-testid="source-filter-container"]');
+      if (isContainerButtonDisplayed) {
+        const containerButton = await $('[data-testid="source-filter-container"]');
         await containerButton.click();
-        await browser.pause(300);
 
         const expectedCount = mockDataHelpers.getBySource("container").length;
+        await waitForFilterApplied(expectedCount);
+
         const cardCount = await getDistroCardCount();
         expect(cardCount).toBe(expectedCount);
       }
@@ -221,16 +250,18 @@ describe("Distribution Filters", () => {
 
     it("should return to all sources when All Sources is clicked", async () => {
       // Filter by a specific source first
-      const storeButton = await $('[data-testid="source-filter-store"]');
-      if (await storeButton.isDisplayed().catch(() => false)) {
+      const isStoreButtonDisplayed = await isElementDisplayed('[data-testid="source-filter-store"]');
+      if (isStoreButtonDisplayed) {
+        const storeButton = await $('[data-testid="source-filter-store"]');
         await storeButton.click();
-        await browser.pause(300);
+        const expectedCount = mockDataHelpers.getBySource("store").length;
+        await waitForFilterApplied(expectedCount);
       }
 
       // Click All Sources
       const allButton = await $('[data-testid="source-filter-all"]');
       await allButton.click();
-      await browser.pause(300);
+      await waitForFilterApplied(mockDistributions.length);
 
       const cardCount = await getDistroCardCount();
       expect(cardCount).toBe(mockDistributions.length);
@@ -242,17 +273,18 @@ describe("Distribution Filters", () => {
       // Filter to online only
       const onlineButton = await $('[data-testid="status-filter-online"]');
       await onlineButton.click();
-      await browser.pause(200);
+      await waitForFilterApplied(mockDataHelpers.getRunningCount());
 
       // Disable WSL 1
       const wsl1Button = await $('[data-testid="version-filter-wsl1"]');
       await wsl1Button.click();
-      await browser.pause(300);
 
       // Should show only online WSL 2 distros
       const expectedDistros = mockDistributions.filter(
         d => d.state === "Running" && d.version === 2
       );
+      await waitForFilterApplied(expectedDistros.length);
+
       const cardCount = await getDistroCardCount();
       expect(cardCount).toBe(expectedDistros.length);
     });
@@ -261,18 +293,20 @@ describe("Distribution Filters", () => {
       // Filter to offline only
       const offlineButton = await $('[data-testid="status-filter-offline"]');
       await offlineButton.click();
-      await browser.pause(200);
+      await waitForFilterApplied(mockDataHelpers.getStoppedCount());
 
       // Filter by import source
-      const importButton = await $('[data-testid="source-filter-import"]');
-      if (await importButton.isDisplayed().catch(() => false)) {
+      const isImportButtonDisplayed = await isElementDisplayed('[data-testid="source-filter-import"]');
+      if (isImportButtonDisplayed) {
+        const importButton = await $('[data-testid="source-filter-import"]');
         await importButton.click();
-        await browser.pause(300);
 
         // Should show only offline import distros
         const expectedDistros = mockDistributions.filter(
           d => d.state !== "Running" && d.source === "import"
         );
+        await waitForFilterApplied(expectedDistros.length);
+
         const cardCount = await getDistroCardCount();
         expect(cardCount).toBe(expectedDistros.length);
       }
@@ -286,9 +320,10 @@ describe("Distribution Filters", () => {
       const wsl2Button = await $('[data-testid="version-filter-wsl2"]');
 
       await wsl1Button.click();
-      await browser.pause(200);
+      await waitForFilterApplied(mockDataHelpers.getWsl2Count());
+
       await wsl2Button.click();
-      await browser.pause(300);
+      await waitForEmptyFilterState();
 
       // Clear filters button should appear
       const clearButton = await $('[data-testid="clear-filters-button"]');
@@ -301,14 +336,15 @@ describe("Distribution Filters", () => {
       const wsl2Button = await $('[data-testid="version-filter-wsl2"]');
 
       await wsl1Button.click();
-      await browser.pause(200);
+      await waitForFilterApplied(mockDataHelpers.getWsl2Count());
+
       await wsl2Button.click();
-      await browser.pause(300);
+      await waitForEmptyFilterState();
 
       // Click clear filters
       const clearButton = await $('[data-testid="clear-filters-button"]');
       await clearButton.click();
-      await browser.pause(300);
+      await waitForFilterApplied(mockDistributions.length);
 
       // All distributions should be visible
       const cardCount = await getDistroCardCount();
@@ -331,7 +367,19 @@ describe("Distribution Filters", () => {
     it("should copy IP to clipboard when clicked", async () => {
       const ipDisplay = await $('[data-testid="wsl-ip-display"]');
       await ipDisplay.click();
-      await browser.pause(500);
+
+      // Wait for "Copied!" indicator to appear
+      await browser.waitUntil(
+        async () => {
+          const copiedIndicator = await $('[data-testid="ip-copied-indicator"]');
+          try {
+            return await copiedIndicator.isDisplayed();
+          } catch {
+            return false;
+          }
+        },
+        { timeout: 3000, timeoutMsg: "Copied indicator did not appear" }
+      );
 
       // Should show "Copied!" indicator
       const copiedIndicator = await $('[data-testid="ip-copied-indicator"]');
@@ -382,7 +430,7 @@ describe("Distribution Filters", () => {
       // Filter to online only
       const onlineButton = await $('[data-testid="status-filter-online"]');
       await onlineButton.click();
-      await browser.pause(300);
+      await waitForFilterApplied(initialOnlineCount);
 
       const initialCardCount = await getDistroCardCount();
       expect(initialCardCount).toBe(initialOnlineCount);
@@ -390,7 +438,7 @@ describe("Distribution Filters", () => {
       // Clear filter to start a stopped distribution
       const allButton = await $('[data-testid="status-filter-all"]');
       await allButton.click();
-      await browser.pause(300);
+      await waitForFilterApplied(mockDistributions.length);
 
       // Start Debian (which is stopped)
       const debianCard = await $(selectors.distroCardByName("Debian"));
@@ -409,7 +457,7 @@ describe("Distribution Filters", () => {
 
       // Now switch back to online filter
       await onlineButton.click();
-      await browser.pause(300);
+      await waitForFilterApplied(initialCardCount + 1);
 
       // Count should now be +1
       const newCardCount = await getDistroCardCount();

@@ -12,13 +12,11 @@
  */
 
 import {
-  waitForAppReady,
-  resetMockState,
   selectors,
-  safeRefresh,
   waitForDialog,
   waitForResourceStats,
 } from "../utils";
+import { standardSetup } from "../base";
 
 // Timing constants for smooth video presentation (in milliseconds)
 const PAUSE_SHORT = 800;       // Brief transition
@@ -91,11 +89,22 @@ async function closeMenu(): Promise<void> {
 }
 
 /**
+ * Helper to safely check if an element is displayed
+ */
+async function isElementDisplayedSafe(element: WebdriverIO.Element): Promise<boolean> {
+  try {
+    return await element.isDisplayed();
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Helper to apply a theme
  */
 async function applyTheme(themeId: string): Promise<void> {
   const theme = await $(`[data-testid="theme-${themeId}"]`);
-  if (await theme.isDisplayed().catch(() => false)) {
+  if (await isElementDisplayedSafe(theme)) {
     await theme.click();
     await videoPause(PAUSE_MEDIUM);
   }
@@ -123,11 +132,7 @@ describe("Demo", () => {
     // =========================================================================
     // SETUP
     // =========================================================================
-    await safeRefresh();
-    await browser.pause(500);
-    await resetMockState();
-    await safeRefresh();
-    await waitForAppReady();
+    await standardSetup();
     await videoPause(PAUSE_SHORT);
 
     // =========================================================================
@@ -217,7 +222,7 @@ describe("Demo", () => {
 
     await openQuickActions("Debian");
     const exportAction = await $('[data-testid="quick-action-export"]');
-    if (await exportAction.isDisplayed().catch(() => false)) {
+    if (await isElementDisplayedSafe(exportAction)) {
       // Highlight the export action (don't click - it opens native file dialog)
       await exportAction.moveTo();
       await videoPause(PAUSE_LONG);
@@ -275,7 +280,7 @@ describe("Demo", () => {
     // Select a distribution to highlight it (Store mode has no config dialog)
     const distroGrid = await $('[data-testid="quick-install-content"] .grid');
     const distroButtons = await distroGrid.$$('button:not([disabled])');
-    if (distroButtons.length > 0) {
+    if ((await distroButtons.length) > 0) {
       await distroButtons[0].click();
       await videoPause(PAUSE_LONG);
     }
@@ -295,7 +300,7 @@ describe("Demo", () => {
     // Select a container to show the install config dialog with naming options
     const containerGrid = await $('[data-testid="container-content"] .grid');
     const containerButtons = await containerGrid.$$('button:not([disabled])');
-    if (containerButtons.length > 0) {
+    if ((await containerButtons.length) > 0) {
       await containerButtons[0].click();
       await waitForDialog('[data-testid="install-config-dialog"]');
       await videoPause(PAUSE_SCENE);
@@ -369,7 +374,7 @@ describe("Demo", () => {
     scene("Disk Mount Panel");
 
     const diskButton = await $(selectors.diskMountButton);
-    if (await diskButton.isDisplayed().catch(() => false)) {
+    if (await isElementDisplayedSafe(diskButton)) {
       await diskButton.click();
       await videoPause(PAUSE_SCENE);
       await closeMenu();
@@ -433,14 +438,14 @@ describe("Demo", () => {
 
     // Show import button
     const importActionsButton = await $('[data-testid="import-actions-button"]');
-    if (await importActionsButton.isDisplayed().catch(() => false)) {
+    if (await isElementDisplayedSafe(importActionsButton)) {
       await importActionsButton.moveTo();
       await videoPause(PAUSE_MEDIUM);
     }
 
     // Show export button
     const exportActionsButton = await $('[data-testid="export-actions-button"]');
-    if (await exportActionsButton.isDisplayed().catch(() => false)) {
+    if (await isElementDisplayedSafe(exportActionsButton)) {
       await exportActionsButton.moveTo();
       await videoPause(PAUSE_MEDIUM);
     }
@@ -458,7 +463,7 @@ describe("Demo", () => {
 
     // Hover over status bar
     const statusBar = await $('[data-testid="status-bar"]');
-    if (await statusBar.isDisplayed().catch(() => false)) {
+    if (await isElementDisplayedSafe(statusBar)) {
       await statusBar.moveTo();
       await videoPause(PAUSE_LONG);
     }

@@ -10,6 +10,8 @@ interface SettingsStore {
   isLoading: boolean;
   isSaving: boolean;
   error: string | null;
+  /** True after loadSettings has completed at least once */
+  hasLoaded: boolean;
 
   // Actions
   loadSettings: () => Promise<void>;
@@ -22,6 +24,7 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
   isLoading: false,
   isSaving: false,
   error: null,
+  hasLoaded: false,
 
   loadSettings: async () => {
     debug("[SettingsStore] Loading settings");
@@ -51,11 +54,11 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
         },
       };
       info("[SettingsStore] Settings loaded successfully");
-      set({ settings, isLoading: false });
+      set({ settings, isLoading: false, hasLoaded: true });
     } catch (error) {
       logger.error("Failed to load settings:", "SettingsStore", error);
       // Use defaults if loading fails
-      set({ settings: DEFAULT_SETTINGS, isLoading: false });
+      set({ settings: DEFAULT_SETTINGS, isLoading: false, hasLoaded: true });
     }
   },
 
@@ -93,6 +96,12 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
     await get().saveSettings(newSettings);
   },
 }));
+
+// Expose store for e2e testing
+if (typeof window !== "undefined") {
+  (window as unknown as { __settingsStore: typeof useSettingsStore }).__settingsStore =
+    useSettingsStore;
+}
 
 
 

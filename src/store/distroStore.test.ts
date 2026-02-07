@@ -19,6 +19,22 @@ vi.mock("../services/wslService", () => ({
     importDistribution: vi.fn(),
     getDistributionDiskSize: vi.fn(),
     getDistributionOsInfo: vi.fn(),
+    // RDP-related methods
+    detectRdp: vi.fn(),
+    checkWslConfigTimeouts: vi.fn(),
+    openTerminalWithMessage: vi.fn(),
+    openRdp: vi.fn(),
+  },
+}));
+
+// Mock the notification store
+vi.mock("./notificationStore", () => ({
+  useNotificationStore: {
+    getState: vi.fn(() => ({
+      notifications: [],
+      addNotification: vi.fn(),
+      removeNotification: vi.fn(),
+    })),
   },
 }));
 
@@ -34,6 +50,7 @@ vi.mock("../utils/logger", () => ({
 // Import after mocking
 import { wslService } from "../services/wslService";
 import { logger } from "../utils/logger";
+import { useNotificationStore } from "./notificationStore";
 
 const mockDistributions: Distribution[] = [
   { name: "Ubuntu", state: "Running", version: 2, isDefault: true },
@@ -1058,6 +1075,216 @@ describe("distroStore", () => {
       // Should only have Ubuntu
       // Use toMatchObject since background fetch may have added diskSize/osInfo
       expect(useDistroStore.getState().distributions).toMatchObject(updatedDistros);
+    });
+  });
+
+  describe("openRemoteDesktop", () => {
+    const mockAddNotification = vi.fn();
+
+    beforeEach(() => {
+      // Reset notification store mock
+      mockAddNotification.mockClear();
+      vi.mocked(useNotificationStore.getState).mockReturnValue({
+        notifications: [],
+        addNotification: mockAddNotification,
+        removeNotification: vi.fn(),
+        clearAll: vi.fn(),
+      });
+    });
+
+    it("starts distro if not running", async () => {
+      // Set up stopped distro
+      useDistroStore.setState({
+        distributions: [{ name: "Ubuntu", state: "Stopped", version: 2, isDefault: true }],
+      });
+
+      vi.mocked(wslService.startDistribution).mockResolvedValue(undefined);
+      vi.mocked(wslService.detectRdp).mockResolvedValue({ type: "xrdp", port: 3390 });
+      vi.mocked(wslService.checkWslConfigTimeouts).mockResolvedValue({ timeoutsConfigured: true });
+      vi.mocked(wslService.openRdp).mockResolvedValue(undefined);
+      vi.mocked(wslService.listDistributions).mockResolvedValue([]);
+      vi.mocked(wslService.getDistributionDiskSize).mockResolvedValue(0);
+
+      await useDistroStore.getState().openRemoteDesktop("Ubuntu");
+
+      expect(wslService.startDistribution).toHaveBeenCalledWith("Ubuntu", undefined);
+    });
+
+    it("does not start distro if already running", async () => {
+      useDistroStore.setState({
+        distributions: [{ name: "Ubuntu", state: "Running", version: 2, isDefault: true }],
+      });
+
+      vi.mocked(wslService.detectRdp).mockResolvedValue({ type: "xrdp", port: 3390 });
+      vi.mocked(wslService.checkWslConfigTimeouts).mockResolvedValue({ timeoutsConfigured: true });
+      vi.mocked(wslService.openRdp).mockResolvedValue(undefined);
+      vi.mocked(wslService.listDistributions).mockResolvedValue([]);
+      vi.mocked(wslService.getDistributionDiskSize).mockResolvedValue(0);
+
+      await useDistroStore.getState().openRemoteDesktop("Ubuntu");
+
+      expect(wslService.startDistribution).not.toHaveBeenCalled();
+    });
+
+    it("returns success for xrdp detection", async () => {
+      useDistroStore.setState({
+        distributions: [{ name: "Ubuntu", state: "Running", version: 2, isDefault: true }],
+      });
+
+      vi.mocked(wslService.detectRdp).mockResolvedValue({ type: "xrdp", port: 3390 });
+      vi.mocked(wslService.checkWslConfigTimeouts).mockResolvedValue({ timeoutsConfigured: true });
+      vi.mocked(wslService.openRdp).mockResolvedValue(undefined);
+      vi.mocked(wslService.listDistributions).mockResolvedValue([]);
+      vi.mocked(wslService.getDistributionDiskSize).mockResolvedValue(0);
+
+      const result = await useDistroStore.getState().openRemoteDesktop("Ubuntu");
+
+      expect(result.success).toBe(true);
+      expect(result.type).toBe("xrdp");
+    });
+
+    it("returns failure for no desktop environment", async () => {
+      useDistroStore.setState({
+        distributions: [{ name: "Ubuntu", state: "Running", version: 2, isDefault: true }],
+      });
+
+      vi.mocked(wslService.detectRdp).mockResolvedValue({ type: "none" });
+
+      const result = await useDistroStore.getState().openRemoteDesktop("Ubuntu");
+
+      expect(result.success).toBe(false);
+      expect(result.type).toBe("none");
+      expect(result.error).toContain("No desktop environment");
+    });
+
+    it("returns failure and shows notification for port conflict", async () => {
+      useDistroStore.setState({
+        distributions: [{ name: "Ubuntu", state: "Running", version: 2, isDefault: true }],
+      });
+
+      vi.mocked(wslService.detectRdp).mockResolvedValue({ type: "port_conflict", port: 3390 });
+
+      const result = await useDistroStore.getState().openRemoteDesktop("Ubuntu");
+
+      expect(result.success).toBe(false);
+      expect(result.type).toBe("port_conflict");
+      expect(result.error).toContain("already in use");
+      expect(mockAddNotification).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: "error",
+          title: "RDP Port Conflict",
+        })
+      );
+    });
+
+    it("opens terminal with message when timeouts not configured", async () => {
+      useDistroStore.setState({
+        distributions: [{ name: "Ubuntu", state: "Running", version: 2, isDefault: true }],
+      });
+
+      vi.mocked(wslService.detectRdp).mockResolvedValue({ type: "xrdp", port: 3390 });
+      vi.mocked(wslService.checkWslConfigTimeouts).mockResolvedValue({ timeoutsConfigured: false });
+      vi.mocked(wslService.openTerminalWithMessage).mockResolvedValue(undefined);
+      vi.mocked(wslService.openRdp).mockResolvedValue(undefined);
+      vi.mocked(wslService.listDistributions).mockResolvedValue([]);
+      vi.mocked(wslService.getDistributionDiskSize).mockResolvedValue(0);
+
+      await useDistroStore.getState().openRemoteDesktop("Ubuntu");
+
+      expect(wslService.openTerminalWithMessage).toHaveBeenCalledWith(
+        "Ubuntu",
+        undefined,
+        expect.stringContaining("keeps your WSL distro running")
+      );
+    });
+
+    it("does not open terminal when timeouts are configured", async () => {
+      useDistroStore.setState({
+        distributions: [{ name: "Ubuntu", state: "Running", version: 2, isDefault: true }],
+      });
+
+      vi.mocked(wslService.detectRdp).mockResolvedValue({ type: "xrdp", port: 3390 });
+      vi.mocked(wslService.checkWslConfigTimeouts).mockResolvedValue({ timeoutsConfigured: true });
+      vi.mocked(wslService.openRdp).mockResolvedValue(undefined);
+      vi.mocked(wslService.listDistributions).mockResolvedValue([]);
+      vi.mocked(wslService.getDistributionDiskSize).mockResolvedValue(0);
+
+      await useDistroStore.getState().openRemoteDesktop("Ubuntu");
+
+      expect(wslService.openTerminalWithMessage).not.toHaveBeenCalled();
+    });
+
+    it("opens RDP with detected port", async () => {
+      useDistroStore.setState({
+        distributions: [{ name: "Ubuntu", state: "Running", version: 2, isDefault: true }],
+      });
+
+      vi.mocked(wslService.detectRdp).mockResolvedValue({ type: "xrdp", port: 3391 });
+      vi.mocked(wslService.checkWslConfigTimeouts).mockResolvedValue({ timeoutsConfigured: true });
+      vi.mocked(wslService.openRdp).mockResolvedValue(undefined);
+      vi.mocked(wslService.listDistributions).mockResolvedValue([]);
+      vi.mocked(wslService.getDistributionDiskSize).mockResolvedValue(0);
+
+      await useDistroStore.getState().openRemoteDesktop("Ubuntu");
+
+      expect(wslService.openRdp).toHaveBeenCalledWith(3391);
+    });
+
+    it("uses default port 3389 when port not specified", async () => {
+      useDistroStore.setState({
+        distributions: [{ name: "Ubuntu", state: "Running", version: 2, isDefault: true }],
+      });
+
+      vi.mocked(wslService.detectRdp).mockResolvedValue({ type: "xrdp" });
+      vi.mocked(wslService.checkWslConfigTimeouts).mockResolvedValue({ timeoutsConfigured: true });
+      vi.mocked(wslService.openRdp).mockResolvedValue(undefined);
+      vi.mocked(wslService.listDistributions).mockResolvedValue([]);
+      vi.mocked(wslService.getDistributionDiskSize).mockResolvedValue(0);
+
+      await useDistroStore.getState().openRemoteDesktop("Ubuntu");
+
+      expect(wslService.openRdp).toHaveBeenCalledWith(3389);
+    });
+
+    it("handles errors gracefully", async () => {
+      useDistroStore.setState({
+        distributions: [{ name: "Ubuntu", state: "Running", version: 2, isDefault: true }],
+      });
+
+      vi.mocked(wslService.detectRdp).mockRejectedValue(new Error("Connection failed"));
+
+      const result = await useDistroStore.getState().openRemoteDesktop("Ubuntu");
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain("Connection failed");
+    });
+
+    it("clears actionInProgress after completion", async () => {
+      useDistroStore.setState({
+        distributions: [{ name: "Ubuntu", state: "Running", version: 2, isDefault: true }],
+      });
+
+      vi.mocked(wslService.detectRdp).mockResolvedValue({ type: "xrdp", port: 3390 });
+      vi.mocked(wslService.checkWslConfigTimeouts).mockResolvedValue({ timeoutsConfigured: true });
+      vi.mocked(wslService.openRdp).mockResolvedValue(undefined);
+      vi.mocked(wslService.listDistributions).mockResolvedValue([]);
+      vi.mocked(wslService.getDistributionDiskSize).mockResolvedValue(0);
+
+      await useDistroStore.getState().openRemoteDesktop("Ubuntu");
+
+      expect(useDistroStore.getState().actionInProgress).toBeNull();
+    });
+
+    it("clears actionInProgress even on error", async () => {
+      useDistroStore.setState({
+        distributions: [{ name: "Ubuntu", state: "Running", version: 2, isDefault: true }],
+      });
+
+      vi.mocked(wslService.detectRdp).mockRejectedValue(new Error("Failed"));
+
+      await useDistroStore.getState().openRemoteDesktop("Ubuntu");
+
+      expect(useDistroStore.getState().actionInProgress).toBeNull();
     });
   });
 });

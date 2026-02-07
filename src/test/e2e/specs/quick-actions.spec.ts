@@ -8,100 +8,104 @@
  */
 
 import {
-  waitForAppReady,
-  resetMockState,
   selectors,
-  safeRefresh,
   waitForDistroState,
   waitForDialog,
   waitForDialogToDisappear,
   verifyDistroCardState,
   mockDistributions,
 } from "../utils";
+import { setupHooks, actions } from "../base";
 
 describe("Quick Actions Menu", () => {
-  beforeEach(async () => {
-    await safeRefresh();
-    await browser.pause(300);
-    await resetMockState();
-    // Refresh again to load the clean mock data
-    await safeRefresh();
-    await waitForAppReady();
-    await browser.pause(500);
-  });
+  setupHooks.standard();
+
+  /**
+   * Helper to close menu by clicking outside.
+   * This is specific to this test file for verifying click-outside behavior.
+   * Note: actions.closeQuickActionsMenu uses Escape key instead.
+   */
+  async function closeMenuByClickingOutside(): Promise<void> {
+    const main = await $("main");
+    await main.click();
+    // Wait for menu to disappear
+    await browser.waitUntil(
+      async () => {
+        const menu = await $(selectors.quickActionsMenu);
+        try {
+          return !(await menu.isDisplayed());
+        } catch {
+          return true;
+        }
+      },
+      { timeout: 3000, timeoutMsg: "Menu did not close" }
+    );
+  }
 
   describe("Menu Toggle", () => {
     it("should have quick actions button on distro cards", async () => {
       const ubuntuCard = await $(selectors.distroCardByName("Ubuntu"));
-      const quickActionsButton = await ubuntuCard.$('[data-testid="quick-actions-button"]');
+      const quickActionsButton = await ubuntuCard.$(selectors.quickActionsButton);
       await expect(quickActionsButton).toBeDisplayed();
     });
 
     it("should open quick actions menu when clicked", async () => {
-      const ubuntuCard = await $(selectors.distroCardByName("Ubuntu"));
-      const quickActionsButton = await ubuntuCard.$('[data-testid="quick-actions-button"]');
-      await quickActionsButton.click();
-      await browser.pause(300);
-
-      const menu = await $('[data-testid="quick-actions-menu"]');
+      await actions.openQuickActionsMenu("Ubuntu");
+      const menu = await $(selectors.quickActionsMenu);
       await expect(menu).toBeDisplayed();
     });
 
     it("should close menu when clicking outside", async () => {
-      const ubuntuCard = await $(selectors.distroCardByName("Ubuntu"));
-      const quickActionsButton = await ubuntuCard.$('[data-testid="quick-actions-button"]');
-      await quickActionsButton.click();
-      await browser.pause(300);
-
-      const menu = await $('[data-testid="quick-actions-menu"]');
+      await actions.openQuickActionsMenu("Ubuntu");
+      const menu = await $(selectors.quickActionsMenu);
       await expect(menu).toBeDisplayed();
 
-      // Click outside to close
-      const main = await $("main");
-      await main.click();
-      await browser.pause(300);
+      // Click outside to close (testing specific click-outside behavior)
+      await closeMenuByClickingOutside();
 
-      const menuAfter = await $('[data-testid="quick-actions-menu"]');
-      const isDisplayed = await menuAfter.isDisplayed().catch(() => false);
+      const menuAfter = await $(selectors.quickActionsMenu);
+      let isDisplayed = false;
+      try {
+        isDisplayed = await menuAfter.isDisplayed();
+      } catch {
+        isDisplayed = false;
+      }
       expect(isDisplayed).toBe(false);
     });
   });
 
   describe("Available Actions", () => {
     beforeEach(async () => {
-      const ubuntuCard = await $(selectors.distroCardByName("Ubuntu"));
-      const quickActionsButton = await ubuntuCard.$('[data-testid="quick-actions-button"]');
-      await quickActionsButton.click();
-      await browser.pause(300);
+      await actions.openQuickActionsMenu("Ubuntu");
     });
 
     it("should have Open File Explorer action", async () => {
-      const action = await $('[data-testid="quick-action-explorer"]');
+      const action = await $(selectors.explorerAction);
       await expect(action).toBeDisplayed();
     });
 
     it("should have Open in IDE action", async () => {
-      const action = await $('[data-testid="quick-action-ide"]');
+      const action = await $(selectors.ideAction);
       await expect(action).toBeDisplayed();
     });
 
     it("should have Restart action", async () => {
-      const action = await $('[data-testid="quick-action-restart"]');
+      const action = await $(selectors.restartAction);
       await expect(action).toBeDisplayed();
     });
 
     it("should have Export action", async () => {
-      const action = await $('[data-testid="quick-action-export"]');
+      const action = await $(selectors.exportAction);
       await expect(action).toBeDisplayed();
     });
 
     it("should have Clone action", async () => {
-      const action = await $('[data-testid="quick-action-clone"]');
+      const action = await $(selectors.cloneAction);
       await expect(action).toBeDisplayed();
     });
 
     it("should have Set as Default action", async () => {
-      const action = await $('[data-testid="quick-action-default"]');
+      const action = await $(selectors.setDefaultAction);
       await expect(action).toBeDisplayed();
     });
   });
@@ -109,12 +113,9 @@ describe("Quick Actions Menu", () => {
   describe("Clone Dialog", () => {
     it("should open clone dialog when Clone action is clicked", async () => {
       // Use stopped distro to avoid stop confirmation
-      const debianCard = await $(selectors.distroCardByName("Debian"));
-      const quickActionsButton = await debianCard.$('[data-testid="quick-actions-button"]');
-      await quickActionsButton.click();
-      await browser.pause(300);
+      await actions.openQuickActionsMenu("Debian");
 
-      const cloneAction = await $('[data-testid="quick-action-clone"]');
+      const cloneAction = await $(selectors.cloneAction);
       await expect(cloneAction).toBeDisplayed();
       await cloneAction.click();
 
@@ -140,12 +141,9 @@ describe("Quick Actions Menu", () => {
       // Ubuntu is running
       await verifyDistroCardState("Ubuntu", "ONLINE");
 
-      const ubuntuCard = await $(selectors.distroCardByName("Ubuntu"));
-      const quickActionsButton = await ubuntuCard.$('[data-testid="quick-actions-button"]');
-      await quickActionsButton.click();
-      await browser.pause(300);
+      await actions.openQuickActionsMenu("Ubuntu");
 
-      const cloneAction = await $('[data-testid="quick-action-clone"]');
+      const cloneAction = await $(selectors.cloneAction);
       await cloneAction.click();
 
       // Should show stop confirmation dialog first
@@ -163,12 +161,9 @@ describe("Quick Actions Menu", () => {
   describe("Set Default", () => {
     it("should have Set Default action available", async () => {
       // Debian is not default initially
-      const debianCard = await $(selectors.distroCardByName("Debian"));
-      const quickActionsButton = await debianCard.$('[data-testid="quick-actions-button"]');
-      await quickActionsButton.click();
-      await browser.pause(300);
+      await actions.openQuickActionsMenu("Debian");
 
-      const defaultAction = await $('[data-testid="quick-action-default"]');
+      const defaultAction = await $(selectors.setDefaultAction);
       await expect(defaultAction).toBeDisplayed();
 
       // Verify text says "Set as Default" (not disabled)
@@ -182,16 +177,20 @@ describe("Quick Actions Menu", () => {
       expect(defaultDistro?.name).toBe("Ubuntu");
 
       // Set Debian as default
-      const debianCard = await $(selectors.distroCardByName("Debian"));
-      const quickActionsButton = await debianCard.$('[data-testid="quick-actions-button"]');
-      await quickActionsButton.click();
-      await browser.pause(300);
+      await actions.openQuickActionsMenu("Debian");
 
-      const defaultAction = await $('[data-testid="quick-action-default"]');
+      const defaultAction = await $(selectors.setDefaultAction);
       await defaultAction.click();
 
-      // Wait for the action to complete (menu should close)
-      await browser.pause(1000);
+      // Wait for Debian to show as primary
+      await browser.waitUntil(
+        async () => {
+          const debianCard = await $(selectors.distroCardByName("Debian"));
+          const text = await debianCard.getText();
+          return text.toLowerCase().includes("primary");
+        },
+        { timeout: 5000, timeoutMsg: "Debian did not become primary" }
+      );
 
       // Verify Debian now shows as primary (default)
       const debianCardAfter = await $(selectors.distroCardByName("Debian"));
@@ -210,17 +209,10 @@ describe("Quick Actions Menu", () => {
       // Ubuntu is running
       await verifyDistroCardState("Ubuntu", "ONLINE");
 
-      const ubuntuCard = await $(selectors.distroCardByName("Ubuntu"));
-      const quickActionsButton = await ubuntuCard.$('[data-testid="quick-actions-button"]');
-      await quickActionsButton.click();
-      await browser.pause(300);
+      await actions.openQuickActionsMenu("Ubuntu");
 
-      const restartAction = await $('[data-testid="quick-action-restart"]');
+      const restartAction = await $(selectors.restartAction);
       await restartAction.click();
-
-      // Should show confirmation or start restart
-      // Wait for operation - may briefly go offline then back online
-      await browser.pause(2000);
 
       // After restart, should be running again
       await waitForDistroState("Ubuntu", "ONLINE", 15000);
@@ -229,35 +221,47 @@ describe("Quick Actions Menu", () => {
 
   describe("Action Execution Verification", () => {
     it("should close menu after action is executed", async () => {
-      const debianCard = await $(selectors.distroCardByName("Debian"));
-      const quickActionsButton = await debianCard.$('[data-testid="quick-actions-button"]');
-      await quickActionsButton.click();
+      await actions.openQuickActionsMenu("Debian");
 
       // Menu should be open
-      const menu = await $('[data-testid="quick-actions-menu"]');
+      const menu = await $(selectors.quickActionsMenu);
       await expect(menu).toBeDisplayed();
 
       // Click an action that doesn't open a dialog (Set Default)
-      const defaultAction = await $('[data-testid="quick-action-default"]');
+      const defaultAction = await $(selectors.setDefaultAction);
       await defaultAction.click();
-      await browser.pause(500);
+
+      // Wait for menu to close after action
+      await browser.waitUntil(
+        async () => {
+          const menuAfter = await $(selectors.quickActionsMenu);
+          try {
+            return !(await menuAfter.isDisplayed());
+          } catch {
+            return true;
+          }
+        },
+        { timeout: 5000, timeoutMsg: "Menu did not close after action" }
+      );
 
       // Menu should close after action
-      const menuAfter = await $('[data-testid="quick-actions-menu"]');
-      const isMenuVisible = await menuAfter.isDisplayed().catch(() => false);
+      const menuAfter = await $(selectors.quickActionsMenu);
+      let isMenuVisible = false;
+      try {
+        isMenuVisible = await menuAfter.isDisplayed();
+      } catch {
+        isMenuVisible = false;
+      }
       expect(isMenuVisible).toBe(false);
     });
 
     it("should disable actions during operation", async () => {
       const ubuntuCard = await $(selectors.distroCardByName("Ubuntu"));
-      const quickActionsButton = await ubuntuCard.$('[data-testid="quick-actions-button"]');
+      const quickActionsButton = await ubuntuCard.$(selectors.quickActionsButton);
 
       // Start an operation (stop)
       const stopButton = await ubuntuCard.$(selectors.stopButton);
       await stopButton.click();
-
-      // Immediately try to open quick actions
-      await browser.pause(50);
 
       // Quick actions button should be disabled during operation
       const isDisabled = await quickActionsButton.getAttribute("disabled");
@@ -269,13 +273,23 @@ describe("Quick Actions Menu", () => {
   });
 
   describe("Distribution Info Dialog", () => {
-    it("should have Distribution Info action in quick actions menu", async () => {
-      const ubuntuCard = await $(selectors.distroCardByName("Ubuntu"));
-      const quickActionsButton = await ubuntuCard.$('[data-testid="quick-actions-button"]');
-      await quickActionsButton.click();
-      await browser.pause(300);
+    /**
+     * Helper to open info dialog for a distro.
+     * This is specific to this test file for info dialog tests.
+     */
+    async function openInfoDialog(distroName: string): Promise<void> {
+      await actions.openQuickActionsMenu(distroName);
 
-      const infoAction = await $('[data-testid="quick-action-info"]');
+      const infoAction = await $(selectors.infoAction);
+      await infoAction.click();
+
+      await waitForDialog(selectors.distroInfoDialog, 5000);
+    }
+
+    it("should have Distribution Info action in quick actions menu", async () => {
+      await actions.openQuickActionsMenu("Ubuntu");
+
+      const infoAction = await $(selectors.infoAction);
       await expect(infoAction).toBeDisplayed();
 
       const text = await infoAction.getText();
@@ -283,28 +297,14 @@ describe("Quick Actions Menu", () => {
     });
 
     it("should open info dialog when Distribution Info action is clicked", async () => {
-      const ubuntuCard = await $(selectors.distroCardByName("Ubuntu"));
-      const quickActionsButton = await ubuntuCard.$('[data-testid="quick-actions-button"]');
-      await quickActionsButton.click();
-      await browser.pause(300);
-
-      const infoAction = await $('[data-testid="quick-action-info"]');
-      await infoAction.click();
-      await browser.pause(300);
+      await openInfoDialog("Ubuntu");
 
       const infoDialog = await $(selectors.distroInfoDialog);
       await expect(infoDialog).toBeDisplayed();
     });
 
     it("should display distribution name in info dialog", async () => {
-      const ubuntuCard = await $(selectors.distroCardByName("Ubuntu"));
-      const quickActionsButton = await ubuntuCard.$('[data-testid="quick-actions-button"]');
-      await quickActionsButton.click();
-      await browser.pause(300);
-
-      const infoAction = await $('[data-testid="quick-action-info"]');
-      await infoAction.click();
-      await browser.pause(300);
+      await openInfoDialog("Ubuntu");
 
       const infoDialog = await $(selectors.distroInfoDialog);
       await expect(infoDialog).toBeDisplayed();
@@ -316,14 +316,7 @@ describe("Quick Actions Menu", () => {
     });
 
     it("should display distribution ID (GUID) in info dialog", async () => {
-      const ubuntuCard = await $(selectors.distroCardByName("Ubuntu"));
-      const quickActionsButton = await ubuntuCard.$('[data-testid="quick-actions-button"]');
-      await quickActionsButton.click();
-      await browser.pause(300);
-
-      const infoAction = await $('[data-testid="quick-action-info"]');
-      await infoAction.click();
-      await browser.pause(300);
+      await openInfoDialog("Ubuntu");
 
       // Check ID is displayed (mock returns GUIDs like {mock-guid-XXXX-...})
       const idRow = await $(selectors.infoId);
@@ -332,14 +325,7 @@ describe("Quick Actions Menu", () => {
     });
 
     it("should display WSL version in info dialog", async () => {
-      const ubuntuCard = await $(selectors.distroCardByName("Ubuntu"));
-      const quickActionsButton = await ubuntuCard.$('[data-testid="quick-actions-button"]');
-      await quickActionsButton.click();
-      await browser.pause(300);
-
-      const infoAction = await $('[data-testid="quick-action-info"]');
-      await infoAction.click();
-      await browser.pause(300);
+      await openInfoDialog("Ubuntu");
 
       const versionRow = await $(selectors.infoVersion);
       const versionText = await versionRow.getText();
@@ -347,14 +333,7 @@ describe("Quick Actions Menu", () => {
     });
 
     it("should display install location in info dialog", async () => {
-      const ubuntuCard = await $(selectors.distroCardByName("Ubuntu"));
-      const quickActionsButton = await ubuntuCard.$('[data-testid="quick-actions-button"]');
-      await quickActionsButton.click();
-      await browser.pause(300);
-
-      const infoAction = await $('[data-testid="quick-action-info"]');
-      await infoAction.click();
-      await browser.pause(300);
+      await openInfoDialog("Ubuntu");
 
       // Mock location is like C:\Users\MockUser\AppData\Local\Packages\Ubuntu
       const locationRow = await $(selectors.infoLocation);
@@ -363,14 +342,7 @@ describe("Quick Actions Menu", () => {
     });
 
     it("should display disk size in info dialog", async () => {
-      const ubuntuCard = await $(selectors.distroCardByName("Ubuntu"));
-      const quickActionsButton = await ubuntuCard.$('[data-testid="quick-actions-button"]');
-      await quickActionsButton.click();
-      await browser.pause(300);
-
-      const infoAction = await $('[data-testid="quick-action-info"]');
-      await infoAction.click();
-      await browser.pause(300);
+      await openInfoDialog("Ubuntu");
 
       // Mock disk size for Ubuntu is 8GB
       const diskRow = await $(selectors.infoDiskSize);
@@ -379,14 +351,7 @@ describe("Quick Actions Menu", () => {
     });
 
     it("should display install source in info dialog", async () => {
-      const ubuntuCard = await $(selectors.distroCardByName("Ubuntu"));
-      const quickActionsButton = await ubuntuCard.$('[data-testid="quick-actions-button"]');
-      await quickActionsButton.click();
-      await browser.pause(300);
-
-      const infoAction = await $('[data-testid="quick-action-info"]');
-      await infoAction.click();
-      await browser.pause(300);
+      await openInfoDialog("Ubuntu");
 
       // Ubuntu's mock source is "store" which displays as "Microsoft Store"
       const sourceRow = await $(selectors.infoSource);
@@ -395,14 +360,7 @@ describe("Quick Actions Menu", () => {
     });
 
     it("should close info dialog when close button is clicked", async () => {
-      const ubuntuCard = await $(selectors.distroCardByName("Ubuntu"));
-      const quickActionsButton = await ubuntuCard.$('[data-testid="quick-actions-button"]');
-      await quickActionsButton.click();
-      await browser.pause(300);
-
-      const infoAction = await $('[data-testid="quick-action-info"]');
-      await infoAction.click();
-      await browser.pause(300);
+      await openInfoDialog("Ubuntu");
 
       const infoDialog = await $(selectors.distroInfoDialog);
       await expect(infoDialog).toBeDisplayed();
@@ -410,34 +368,37 @@ describe("Quick Actions Menu", () => {
       // Click close button
       const closeButton = await $(selectors.infoCloseButton);
       await closeButton.click();
-      await browser.pause(300);
+      await waitForDialogToDisappear(selectors.distroInfoDialog, 3000);
 
       // Dialog should be closed
       const dialogAfter = await $(selectors.distroInfoDialog);
-      const isDisplayed = await dialogAfter.isDisplayed().catch(() => false);
+      let isDisplayed = false;
+      try {
+        isDisplayed = await dialogAfter.isDisplayed();
+      } catch {
+        isDisplayed = false;
+      }
       expect(isDisplayed).toBe(false);
     });
 
     it("should close info dialog when Escape key is pressed", async () => {
-      const ubuntuCard = await $(selectors.distroCardByName("Ubuntu"));
-      const quickActionsButton = await ubuntuCard.$('[data-testid="quick-actions-button"]');
-      await quickActionsButton.click();
-      await browser.pause(300);
-
-      const infoAction = await $('[data-testid="quick-action-info"]');
-      await infoAction.click();
-      await browser.pause(300);
+      await openInfoDialog("Ubuntu");
 
       const infoDialog = await $(selectors.distroInfoDialog);
       await expect(infoDialog).toBeDisplayed();
 
       // Press Escape
       await browser.keys("Escape");
-      await browser.pause(300);
+      await waitForDialogToDisappear(selectors.distroInfoDialog, 3000);
 
       // Dialog should be closed
       const dialogAfter = await $(selectors.distroInfoDialog);
-      const isDisplayed = await dialogAfter.isDisplayed().catch(() => false);
+      let isDisplayed = false;
+      try {
+        isDisplayed = await dialogAfter.isDisplayed();
+      } catch {
+        isDisplayed = false;
+      }
       expect(isDisplayed).toBe(false);
     });
   });

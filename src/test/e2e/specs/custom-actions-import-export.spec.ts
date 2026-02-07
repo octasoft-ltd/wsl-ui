@@ -6,14 +6,8 @@
  * so these tests focus on button accessibility and UI state.
  */
 
-import {
-  waitForAppReady,
-  resetMockState,
-  selectors,
-  byText,
-  byButtonText,
-  safeRefresh,
-} from "../utils";
+import { selectors, byText, byButtonText } from "../utils";
+import { setupHooks, isElementDisplayed } from "../base";
 
 const customActionsSelectors = {
   settingsButton: '[data-testid="settings-button"]',
@@ -32,20 +26,37 @@ async function navigateToCustomActions(): Promise<void> {
   await settingsButton.waitForClickable({ timeout: 5000 });
   await settingsButton.click();
 
-  // Wait for settings to be displayed
-  await browser.pause(500);
+  // Wait for settings tabs to be displayed
+  await browser.waitUntil(
+    async () => {
+      const tab = await $(customActionsSelectors.customActionsTab);
+      return await tab.isDisplayed();
+    },
+    { timeout: 5000, timeoutMsg: "Settings tabs did not appear" }
+  );
 
   // Click on Custom Actions tab
   const customActionsTab = await $(customActionsSelectors.customActionsTab);
   await customActionsTab.waitForClickable({ timeout: 5000 });
   await customActionsTab.click();
-  await browser.pause(500);
+
+  // Wait for custom actions content to load
+  await browser.waitUntil(
+    async () => isElementDisplayed(customActionsSelectors.newActionButton),
+    { timeout: 5000, timeoutMsg: "Custom actions tab content did not load" }
+  );
 }
 
 async function createTestAction(name: string, command: string): Promise<void> {
   const newActionButton = await $(customActionsSelectors.newActionButton);
+  await newActionButton.waitForClickable({ timeout: 5000 });
   await newActionButton.click();
-  await browser.pause(300);
+
+  // Wait for action form to appear
+  await browser.waitUntil(
+    async () => isElementDisplayed(customActionsSelectors.actionNameInput),
+    { timeout: 5000, timeoutMsg: "Action form did not appear" }
+  );
 
   const nameInput = await $(customActionsSelectors.actionNameInput);
   await nameInput.setValue(name);
@@ -54,18 +65,18 @@ async function createTestAction(name: string, command: string): Promise<void> {
   await commandInput.setValue(command);
 
   const saveButton = await $(customActionsSelectors.saveActionButton);
+  await saveButton.waitForClickable({ timeout: 5000 });
   await saveButton.click();
-  await browser.pause(500);
+
+  // Wait for action to be saved and form to close
+  await browser.waitUntil(
+    async () => isElementDisplayed(customActionsSelectors.newActionButton),
+    { timeout: 5000, timeoutMsg: "Action form did not close after save" }
+  );
 }
 
 describe("Custom Actions Import/Export", () => {
-  beforeEach(async () => {
-    await safeRefresh();
-    await browser.pause(500);
-    await resetMockState();
-    await waitForAppReady();
-    await browser.pause(500);
-  });
+  setupHooks.standard();
 
   describe("Export Button", () => {
     beforeEach(async () => {
@@ -184,10 +195,16 @@ describe("Custom Actions Import/Export", () => {
 
     it("should display helper text about custom actions", async () => {
       // Look for instructional text about custom actions
-      const helperText = await $(byText("Create custom actions"));
-      const isDisplayed = await helperText.isDisplayed().catch(() => false);
+      let helperTextDisplayed = false;
+      try {
+        const helperText = await $(byText("Create custom actions"));
+        helperTextDisplayed = await helperText.isDisplayed();
+      } catch {
+        helperTextDisplayed = false;
+      }
 
-      if (isDisplayed) {
+      if (helperTextDisplayed) {
+        const helperText = await $(byText("Create custom actions"));
         await expect(helperText).toBeDisplayed();
       }
     });

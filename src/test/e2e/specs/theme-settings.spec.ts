@@ -7,29 +7,25 @@
  * - Custom theme option
  */
 
-import {
-  waitForAppReady,
-  resetMockState,
-  selectors,
-  safeRefresh,
-} from "../utils";
+import { setupHooks, actions, isElementDisplayed } from "../base";
+import { selectors } from "../utils";
 
 describe("Theme Settings", () => {
-  beforeEach(async () => {
-    await safeRefresh();
-    await browser.pause(500);
-    await resetMockState();
-    await waitForAppReady();
-    await browser.pause(500);
+  setupHooks.standard();
 
+  beforeEach(async () => {
     // Navigate to settings > appearance
-    const settingsButton = await $(selectors.settingsButton);
-    await settingsButton.click();
-    await browser.pause(500);
+    await actions.goToSettings();
 
     const appearanceTab = await $(selectors.settingsTab("appearance"));
+    await appearanceTab.waitForClickable({ timeout: 5000 });
     await appearanceTab.click();
-    await browser.pause(500);
+
+    // Wait for theme grid to be displayed
+    await browser.waitUntil(
+      async () => isElementDisplayed('[data-testid="theme-obsidian"]'),
+      { timeout: 5000, timeoutMsg: "Theme grid did not appear" }
+    );
   });
 
   describe("Theme Grid", () => {
@@ -55,21 +51,37 @@ describe("Theme Settings", () => {
     it("should switch to Dracula theme", async () => {
       const draculaTheme = await $('[data-testid="theme-dracula"]');
       await draculaTheme.click();
-      await browser.pause(500);
+
+      // Wait for theme selection to update (selected theme has accent-primary border)
+      await browser.waitUntil(
+        async () => {
+          const classes = await draculaTheme.getAttribute("class");
+          return classes.includes("accent-primary");
+        },
+        { timeout: 3000, timeoutMsg: "Dracula theme selection did not update" }
+      );
 
       // Verify Dracula is now selected
       const classes = await draculaTheme.getAttribute("class");
-      expect(classes).toContain("border-");
+      expect(classes).toContain("accent-primary");
     });
 
     it("should switch to Cobalt theme", async () => {
       const cobaltTheme = await $('[data-testid="theme-cobalt"]');
       await cobaltTheme.click();
-      await browser.pause(500);
+
+      // Wait for theme selection to update (selected theme has accent-primary border)
+      await browser.waitUntil(
+        async () => {
+          const classes = await cobaltTheme.getAttribute("class");
+          return classes.includes("accent-primary");
+        },
+        { timeout: 3000, timeoutMsg: "Cobalt theme selection did not update" }
+      );
 
       // Verify Cobalt is now selected
       const classes = await cobaltTheme.getAttribute("class");
-      expect(classes).toContain("border-");
+      expect(classes).toContain("accent-primary");
     });
 
     it("should have Custom theme option", async () => {
@@ -80,11 +92,19 @@ describe("Theme Settings", () => {
     it("should select Custom theme when clicked", async () => {
       const customTheme = await $('[data-testid="theme-custom"]');
       await customTheme.click();
-      await browser.pause(500);
+
+      // Wait for theme selection to update (selected theme has accent-primary border)
+      await browser.waitUntil(
+        async () => {
+          const classes = await customTheme.getAttribute("class");
+          return classes.includes("accent-primary");
+        },
+        { timeout: 3000, timeoutMsg: "Custom theme selection did not update" }
+      );
 
       // Custom theme should now be selected
       const classes = await customTheme.getAttribute("class");
-      expect(classes).toContain("border-");
+      expect(classes).toContain("accent-primary");
     });
   });
 
@@ -99,7 +119,3 @@ describe("Theme Settings", () => {
     });
   });
 });
-
-
-
-

@@ -10,26 +10,18 @@
  * These tests focus on UI accessibility and error handling.
  */
 
+import { setupHooks, actions, isElementDisplayed } from "../base";
 import {
-  waitForAppReady,
-  resetMockState,
   setMockError,
   clearMockErrors,
   selectors,
-  byText,
   mockDistributions,
-  safeRefresh,
+  captureDistroStates,
+  verifyStatesUnchanged,
 } from "../utils";
 
 describe("Export Distribution", () => {
-  beforeEach(async () => {
-    await safeRefresh();
-    await browser.pause(500);
-    await resetMockState();
-    await clearMockErrors();
-    await waitForAppReady();
-    await browser.pause(500);
-  });
+  setupHooks.standard();
 
   afterEach(async () => {
     await clearMockErrors();
@@ -37,11 +29,7 @@ describe("Export Distribution", () => {
 
   describe("Quick Actions Menu Access", () => {
     it("should display Export option in quick actions menu", async () => {
-      // Open quick actions for first distribution
-      const ubuntuCard = await $(selectors.distroCardByName("Ubuntu"));
-      const quickActionsButton = await ubuntuCard.$(selectors.quickActionsButton);
-      await quickActionsButton.click();
-      await browser.pause(300);
+      await actions.openQuickActionsMenu("Ubuntu");
 
       // Verify export option is visible
       const exportAction = await $(selectors.quickAction("export"));
@@ -49,10 +37,7 @@ describe("Export Distribution", () => {
     });
 
     it("should show Export to File label", async () => {
-      const ubuntuCard = await $(selectors.distroCardByName("Ubuntu"));
-      const quickActionsButton = await ubuntuCard.$(selectors.quickActionsButton);
-      await quickActionsButton.click();
-      await browser.pause(300);
+      await actions.openQuickActionsMenu("Ubuntu");
 
       const exportAction = await $(selectors.quickAction("export"));
       const text = await exportAction.getText();
@@ -60,10 +45,7 @@ describe("Export Distribution", () => {
     });
 
     it("should have Export option clickable", async () => {
-      const ubuntuCard = await $(selectors.distroCardByName("Ubuntu"));
-      const quickActionsButton = await ubuntuCard.$(selectors.quickActionsButton);
-      await quickActionsButton.click();
-      await browser.pause(300);
+      await actions.openQuickActionsMenu("Ubuntu");
 
       const exportAction = await $(selectors.quickAction("export"));
       await expect(exportAction).toBeClickable();
@@ -84,10 +66,7 @@ describe("Export Distribution", () => {
     });
 
     it("should show export option for running distribution", async () => {
-      const ubuntuCard = await $(selectors.distroCardByName("Ubuntu"));
-      const quickActionsButton = await ubuntuCard.$(selectors.quickActionsButton);
-      await quickActionsButton.click();
-      await browser.pause(300);
+      await actions.openQuickActionsMenu("Ubuntu");
 
       const exportAction = await $(selectors.quickAction("export"));
       await expect(exportAction).toBeDisplayed();
@@ -109,10 +88,7 @@ describe("Export Distribution", () => {
     });
 
     it("should show export option for stopped distribution", async () => {
-      const debianCard = await $(selectors.distroCardByName("Debian"));
-      const quickActionsButton = await debianCard.$(selectors.quickActionsButton);
-      await quickActionsButton.click();
-      await browser.pause(300);
+      await actions.openQuickActionsMenu("Debian");
 
       const exportAction = await $(selectors.quickAction("export"));
       await expect(exportAction).toBeDisplayed();
@@ -123,28 +99,56 @@ describe("Export Distribution", () => {
   describe("Export for Multiple Distributions", () => {
     it("should show export option for all distributions", async () => {
       for (const distro of mockDistributions) {
+        // Press Escape to close any open menus/dialogs
+        await browser.keys("Escape");
+
+        // Wait for any lingering overlays to disappear
+        await browser.waitUntil(
+          async () => !(await isElementDisplayed('[class*="backdrop"]')),
+          { timeout: 3000, interval: 100 }
+        ).catch(() => {}); // Ignore if no overlay found
+
         const card = await $(selectors.distroCardByName(distro.name));
         const quickActionsButton = await card.$(selectors.quickActionsButton);
+
+        // Wait for button to be enabled (not disabled)
+        await browser.waitUntil(
+          async () => {
+            const disabled = await quickActionsButton.getAttribute("disabled");
+            return disabled === null;
+          },
+          { timeout: 5000 }
+        ).catch(() => {});
+
+        await quickActionsButton.waitForClickable({ timeout: 5000 });
         await quickActionsButton.click();
-        await browser.pause(300);
+
+        // Wait for quick actions menu to appear
+        await browser.waitUntil(
+          async () => isElementDisplayed(selectors.quickActionsMenu),
+          { timeout: 5000, timeoutMsg: `Quick actions menu did not appear for ${distro.name}` }
+        );
 
         const exportAction = await $(selectors.quickAction("export"));
+        await exportAction.waitForDisplayed({ timeout: 3000 });
         const isDisplayed = await exportAction.isDisplayed();
         expect(isDisplayed).toBe(true);
 
-        // Close menu by clicking elsewhere
-        await $("main").click();
-        await browser.pause(200);
+        // Close menu by pressing Escape (more reliable than clicking)
+        await browser.keys("Escape");
+
+        // Wait for menu to close
+        await browser.waitUntil(
+          async () => !(await isElementDisplayed(selectors.quickActionsMenu)),
+          { timeout: 3000 }
+        ).catch(() => {}); // Ignore if menu already closed
       }
     });
   });
 
   describe("Quick Actions Menu Behavior", () => {
     it("should close menu when clicking outside", async () => {
-      const ubuntuCard = await $(selectors.distroCardByName("Ubuntu"));
-      const quickActionsButton = await ubuntuCard.$(selectors.quickActionsButton);
-      await quickActionsButton.click();
-      await browser.pause(300);
+      await actions.openQuickActionsMenu("Ubuntu");
 
       // Verify menu is open
       const menu = await $(selectors.quickActionsMenu);
@@ -152,19 +156,20 @@ describe("Export Distribution", () => {
 
       // Click outside
       await $("main").click();
-      await browser.pause(300);
+
+      // Wait for menu to close
+      await browser.waitUntil(
+        async () => !(await isElementDisplayed(selectors.quickActionsMenu)),
+        { timeout: 3000, timeoutMsg: "Menu did not close when clicking outside" }
+      );
 
       // Menu should be closed
-      const menuAfter = await $(selectors.quickActionsMenu);
-      const isDisplayed = await menuAfter.isDisplayed().catch(() => false);
-      expect(isDisplayed).toBe(false);
+      const menuVisible = await isElementDisplayed(selectors.quickActionsMenu);
+      expect(menuVisible).toBe(false);
     });
 
     it("should show all built-in actions including export", async () => {
-      const ubuntuCard = await $(selectors.distroCardByName("Ubuntu"));
-      const quickActionsButton = await ubuntuCard.$(selectors.quickActionsButton);
-      await quickActionsButton.click();
-      await browser.pause(300);
+      await actions.openQuickActionsMenu("Ubuntu");
 
       // Check for main actions
       const explorerAction = await $(selectors.quickAction("explorer"));
@@ -186,10 +191,7 @@ describe("Export Distribution", () => {
       // Configure mock to return error for export operation
       await setMockError("export", "command_failed", 100);
 
-      const debianCard = await $(selectors.distroCardByName("Debian"));
-      const quickActionsButton = await debianCard.$(selectors.quickActionsButton);
-      await quickActionsButton.click();
-      await browser.pause(300);
+      await actions.openQuickActionsMenu("Debian");
 
       // Click export (this will fail in mock due to error configuration)
       // Note: In mock mode, native file dialog is still shown
@@ -202,10 +204,7 @@ describe("Export Distribution", () => {
       // Configure mock to return timeout error
       await setMockError("export", "timeout", 100);
 
-      const debianCard = await $(selectors.distroCardByName("Debian"));
-      const quickActionsButton = await debianCard.$(selectors.quickActionsButton);
-      await quickActionsButton.click();
-      await browser.pause(300);
+      await actions.openQuickActionsMenu("Debian");
 
       const exportAction = await $(selectors.quickAction("export"));
       await expect(exportAction).toBeClickable();
@@ -219,8 +218,16 @@ describe("Export Distribution", () => {
       const startButton = await debianCard.$('[data-testid="start-button"]');
       await startButton.click();
 
-      // Quick actions should be disabled while operation is in progress
-      await browser.pause(100);
+      // Wait a moment for operation to start
+      await browser.waitUntil(
+        async () => {
+          const quickActionsButton = await debianCard.$(selectors.quickActionsButton);
+          return quickActionsButton !== null;
+        },
+        { timeout: 3000, timeoutMsg: "Quick actions button not found" }
+      );
+
+      // Quick actions button should exist
       const quickActionsButton = await debianCard.$(selectors.quickActionsButton);
       const isDisabled = await quickActionsButton.getAttribute("disabled");
 
@@ -242,15 +249,60 @@ describe("Export Distribution", () => {
     });
 
     it("should be keyboard accessible", async () => {
-      const ubuntuCard = await $(selectors.distroCardByName("Ubuntu"));
-      const quickActionsButton = await ubuntuCard.$(selectors.quickActionsButton);
-
-      // Focus and activate with keyboard
-      await quickActionsButton.click();
-      await browser.pause(300);
+      await actions.openQuickActionsMenu("Ubuntu");
 
       const menu = await $(selectors.quickActionsMenu);
       await expect(menu).toBeDisplayed();
+    });
+  });
+
+  describe("Export State Consistency", () => {
+    it("should not change any distro states when opening export menu for running distro", async () => {
+      // Capture initial state of all distros
+      const snapshot = await captureDistroStates();
+
+      // Open export menu for running distro
+      await actions.openQuickActionsMenu("Ubuntu");
+      const exportAction = await $(selectors.quickAction("export"));
+      await expect(exportAction).toBeDisplayed();
+
+      // Close menu
+      await actions.closeQuickActionsMenu();
+
+      // Verify no distro states changed
+      await verifyStatesUnchanged(snapshot);
+    });
+
+    it("should not change any distro states when opening export menu for stopped distro", async () => {
+      // Capture initial state of all distros
+      const snapshot = await captureDistroStates();
+
+      // Open export menu for stopped distro
+      await actions.openQuickActionsMenu("Debian");
+      const exportAction = await $(selectors.quickAction("export"));
+      await expect(exportAction).toBeDisplayed();
+
+      // Close menu
+      await actions.closeQuickActionsMenu();
+
+      // Verify no distro states changed
+      await verifyStatesUnchanged(snapshot);
+    });
+
+    it("should preserve all distro states when iterating through export menus", async () => {
+      // Capture initial state of all distros
+      const snapshot = await captureDistroStates();
+
+      // Open and close export menu for multiple distros
+      for (const distro of mockDistributions.slice(0, 3)) {
+        await actions.openQuickActionsMenu(distro.name);
+        const exportAction = await $(selectors.quickAction("export"));
+        await expect(exportAction).toBeDisplayed();
+        await actions.closeQuickActionsMenu();
+      }
+
+      // Verify no distro states changed after iterating through multiple menus
+      await verifyStatesUnchanged(snapshot);
     });
   });
 });

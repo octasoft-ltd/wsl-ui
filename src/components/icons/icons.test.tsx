@@ -20,6 +20,7 @@ import {
   WarningIcon,
   ServerIcon,
   GridIcon,
+  MonitorIcon,
 } from './index';
 
 describe('Icon Components', () => {
@@ -44,6 +45,7 @@ describe('Icon Components', () => {
     { name: 'WarningIcon', Component: WarningIcon },
     { name: 'ServerIcon', Component: ServerIcon },
     { name: 'GridIcon', Component: GridIcon },
+    { name: 'MonitorIcon', Component: MonitorIcon },
   ];
 
   icons.forEach(({ name, Component }) => {
