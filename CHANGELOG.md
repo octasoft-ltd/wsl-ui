@@ -5,6 +5,14 @@ All notable changes to WSL UI will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.16.1](https://github.com/octasoft-ltd/wsl-ui/compare/v0.16.0...v0.16.1) (2026-02-08)
+
+
+### Bug Fixes
+
+* remove defunct generate-store-icons step from release pipelines ([43b0dc2](https://github.com/octasoft-ltd/wsl-ui/commit/43b0dc2b5c90c8461c446f3da871084b042bcf06))
+* remove defunct generate-store-icons step from release pipelines ([bcce14f](https://github.com/octasoft-ltd/wsl-ui/commit/bcce14f9a43c6b3b94bbfd6a89feefdf0d06e3f2))
+
 ## [0.16.0](https://github.com/octasoft-ltd/wsl-ui/compare/v0.15.0...v0.16.0) (2026-02-07)
 
 
