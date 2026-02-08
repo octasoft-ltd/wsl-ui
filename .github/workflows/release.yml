@@ -73,10 +73,6 @@ jobs:
           includeDebug: false
           args: --target ${{ matrix.target }}
 
-      - name: Generate store icons
-        shell: pwsh
-        run: .\scripts\generate-store-icons.ps1
-
       - name: Convert version to MSIX format
         id: msix-version
         shell: pwsh

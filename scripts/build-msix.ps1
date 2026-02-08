@@ -82,7 +82,7 @@ if (Test-Path $WebView2Loader) {
 }
 
 # Copy icons/assets - these must be exact sizes per Microsoft Store requirements
-# Run generate-store-icons.ps1 first to ensure correct sizes
+# Run `npm run generate:icons` first if regenerating from SVG source
 $RequiredAssets = @(
     # Base tile icons (referenced in AppxManifest.xml)
     "Square44x44Logo.png",   # 44x44 - required
@@ -110,7 +110,7 @@ foreach ($asset in $RequiredAssets) {
 }
 
 if ($missingAssets.Count -gt 0) {
-    Write-Host "WARNING: Missing $($missingAssets.Count) icon(s) - run generate-store-icons.ps1 first" -ForegroundColor Yellow
+    Write-Host "WARNING: Missing $($missingAssets.Count) icon(s) - run 'npm run generate:icons' first" -ForegroundColor Yellow
     foreach ($missing in $missingAssets) {
         Write-Host "  - $missing" -ForegroundColor Yellow
     }
