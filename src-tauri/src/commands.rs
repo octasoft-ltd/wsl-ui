@@ -434,7 +434,6 @@ pub fn check_wsl_config_timeouts() -> WslConfigStatus {
 #[tauri::command]
 pub async fn check_wsl_config_pending() -> Result<WslConfigPendingStatus, String> {
     use std::fs;
-    use std::process::Command;
 
     tokio::task::spawn_blocking(|| {
         let wslconfig_path = utils::get_user_profile().join(".wslconfig");
@@ -456,7 +455,7 @@ pub async fn check_wsl_config_pending() -> Result<WslConfigPendingStatus, String
         };
 
         // Get earliest WSL process start time via PowerShell
-        let ps_output = Command::new("powershell")
+        let ps_output = utils::hidden_command("powershell")
             .args([
                 "-NoProfile",
                 "-Command",
@@ -522,11 +521,12 @@ pub async fn check_wsl_config_pending() -> Result<WslConfigPendingStatus, String
 #[tauri::command]
 pub async fn open_rdp(port: u16) -> Result<(), String> {
     tokio::task::spawn_blocking(move || {
-        use crate::utils::hidden_command;
-
         let connection = format!("localhost:{}", port);
 
-        hidden_command("mstsc.exe")
+        // Use a plain Command (not hidden_command) because mstsc.exe is a GUI app.
+        // CREATE_NO_WINDOW is intended for console apps and can cause a brief
+        // console window flash when the GUI process exits.
+        std::process::Command::new("mstsc.exe")
             .arg("/v")
             .arg(&connection)
             .spawn()
@@ -1969,7 +1969,7 @@ pub fn open_store_review() -> Result<(), String> {
 
     log::info!("Opening Microsoft Store review page");
 
-    std::process::Command::new("cmd")
+    utils::hidden_command("cmd")
         .args(["/c", "start", "", &url])
         .spawn()
         .map_err(|e| format!("Failed to open Store review page: {}", e))?;
