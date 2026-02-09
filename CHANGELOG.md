@@ -5,6 +5,14 @@ All notable changes to WSL UI will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.16.2](https://github.com/octasoft-ltd/wsl-ui/compare/v0.16.1...v0.16.2) (2026-02-09)
+
+
+### Bug Fixes
+
+* Hide terminal when checking wslconfig update status. ([5d1204b](https://github.com/octasoft-ltd/wsl-ui/commit/5d1204bf0774cd539a09682e36223e6ba4a2b783))
+* Hide terminal when checking wslconfig update status. ([9eddd49](https://github.com/octasoft-ltd/wsl-ui/commit/9eddd498b0e444028099563144dc30ecd7067445))
+
 ## [0.16.1](https://github.com/octasoft-ltd/wsl-ui/compare/v0.16.0...v0.16.1) (2026-02-08)
 
 
