@@ -281,13 +281,14 @@ pub async fn detect_rdp(name: String, id: Option<String>) -> Result<RdpDetection
 fn check_xrdp_listening(name: &str, id: Option<&str>) -> Result<Option<u16>, String> {
     // Single command: check if xrdp process is running, if so get port from config
     // - ps aux: POSIX standard, works on all Linux
-    // - grep 'xrdp$': matches process names ending in "xrdp"
+    // - grep regex: matches '/xrdp' or 'xrdp' with or without arguments
+    //   (handles common service mode '/usr/bin/xrdp --nodaemon')
     // - /etc/xrdp/xrdp.ini: standardized config path for xrdp
     let output = wsl_executor()
         .exec(
             name,
             id,
-            r#"ps aux 2>/dev/null | grep -v grep | grep -q 'xrdp$' && grep -i '^port=' /etc/xrdp/xrdp.ini 2>/dev/null | head -1 | cut -d'=' -f2 | tr -d ' ' || echo ''"#
+            r#"ps aux 2>/dev/null | grep -v grep | grep -Eq '(^|[[:space:]]|/)xrdp([[:space:]]|$)' && grep -i '^port=' /etc/xrdp/xrdp.ini 2>/dev/null | head -1 | cut -d'=' -f2 | tr -d ' ' || echo ''"#
         )
         .map_err(|e| e.to_string())?;
 
