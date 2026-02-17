@@ -376,6 +376,15 @@ export function HelpDialog({ onClose }: HelpDialogProps) {
                 Try restarting WSL with <code className="bg-theme-bg-tertiary px-1 rounded">wsl --shutdown</code>,
                 then start the distribution again.
               </HelpItem>
+              <div className="mt-3 pt-3 border-t border-theme-border-secondary/30">
+                <button
+                  onClick={() => open("https://wsl-ui.octasoft.co.uk/docs/troubleshooting")}
+                  className="flex items-center gap-2 text-theme-accent-primary hover:underline"
+                >
+                  <ExternalLinkIcon size="sm" />
+                  Full Troubleshooting Guide
+                </button>
+              </div>
             </HelpSection>
 
             {/* Resources */}
@@ -384,6 +393,13 @@ export function HelpDialog({ onClose }: HelpDialogProps) {
               icon={<ExternalLinkIcon size="md" />}
             >
               <div className="space-y-3">
+                <button
+                  onClick={() => open("https://wsl-ui.octasoft.co.uk")}
+                  className="flex items-center gap-2 text-theme-accent-primary hover:underline"
+                >
+                  <ExternalLinkIcon size="sm" />
+                  WSL UI Website
+                </button>
                 <button
                   onClick={() => open("https://github.com/octasoft-ltd/wsl-ui")}
                   className="flex items-center gap-2 text-theme-accent-primary hover:underline"

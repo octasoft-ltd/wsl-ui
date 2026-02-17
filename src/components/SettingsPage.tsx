@@ -373,16 +373,27 @@ export function SettingsPage({ onBack }: SettingsPageProps) {
                         </label>
                       </div>
 
-                      <button
-                        onClick={async () => {
-                          const logPath = await wslService.getLogPath();
-                          wslService.openFolder(logPath);
-                        }}
-                        className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-stone-300 bg-stone-800/50 hover:bg-stone-700/50 border border-stone-700 rounded-lg transition-colors"
-                      >
-                        <FolderIcon size="sm" />
-                        <span>Open Log Folder</span>
-                      </button>
+                      <div className="flex gap-3">
+                        <button
+                          onClick={async () => {
+                            const logPath = await wslService.getLogPath();
+                            wslService.openFolder(logPath);
+                          }}
+                          className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-stone-300 bg-stone-800/50 hover:bg-stone-700/50 border border-stone-700 rounded-lg transition-colors"
+                        >
+                          <FolderIcon size="sm" />
+                          <span>Open Log Folder</span>
+                        </button>
+                        <a
+                          href="https://wsl-ui.octasoft.co.uk/docs/troubleshooting"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-stone-300 bg-stone-800/50 hover:bg-stone-700/50 border border-stone-700 rounded-lg transition-colors"
+                        >
+                          <ExternalLinkIcon size="sm" />
+                          <span>Troubleshooting Guide</span>
+                        </a>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -447,15 +458,26 @@ export function SettingsPage({ onBack }: SettingsPageProps) {
                     </div>
                   </div>
                   <div className="relative mt-6 pt-4 border-t border-stone-700/50 flex items-center justify-between">
-                    <a
-                      href="https://github.com/octasoft-ltd/wsl-ui"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-stone-300 bg-stone-800/50 hover:bg-stone-700/50 border border-stone-700 rounded-lg transition-colors"
-                    >
-                      <ExternalLinkIcon size="sm" />
-                      <span>View on GitHub</span>
-                    </a>
+                    <div className="flex items-center gap-3">
+                      <a
+                        href="https://wsl-ui.octasoft.co.uk"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-stone-300 bg-stone-800/50 hover:bg-stone-700/50 border border-stone-700 rounded-lg transition-colors"
+                      >
+                        <ExternalLinkIcon size="sm" />
+                        <span>Website</span>
+                      </a>
+                      <a
+                        href="https://github.com/octasoft-ltd/wsl-ui"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-stone-300 bg-stone-800/50 hover:bg-stone-700/50 border border-stone-700 rounded-lg transition-colors"
+                      >
+                        <ExternalLinkIcon size="sm" />
+                        <span>GitHub</span>
+                      </a>
+                    </div>
                     <a
                       href="http://www.octasoft.co.uk"
                       target="_blank"
