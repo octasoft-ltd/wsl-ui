@@ -6,7 +6,7 @@ distributions.
 Built with [Tauri](https://tauri.app/) (Rust) and [React](https://react.dev/)
 (TypeScript).
 
-**Developed by [Octasoft Ltd](https://www.octasoft.co.uk)**
+**Developed by [Octasoft Ltd](https://www.octasoft.co.uk)** | **[Website](https://wsl-ui.octasoft.co.uk)**
 
 [![Watch the demo](https://img.youtube.com/vi/q59ZtKr7aqw/maxresdefault.jpg)](https://youtu.be/q59ZtKr7aqw)
 
@@ -105,6 +105,7 @@ see the [LICENSE](LICENSE) file for details.
 
 ## Links
 
+- [Website](https://wsl-ui.octasoft.co.uk)
 - [Report Issues](https://github.com/octasoft-ltd/wsl-ui/issues)
 - [Security Policy](SECURITY.md)
 - [Changelog](CHANGELOG.md)
