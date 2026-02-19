@@ -8,6 +8,7 @@ A complete guide to managing your WSL distributions with WSL UI.
 - [Managing Distributions](#managing-distributions)
 - [Quick Actions](#quick-actions)
 - [Installing New Distributions](#installing-new-distributions)
+- [Linux Desktop Setup Scripts](#linux-desktop-setup-scripts)
 - [Backup and Restore](#backup-and-restore)
 - [Custom Actions](#custom-actions)
 - [Settings](#settings)
@@ -132,6 +133,35 @@ Add your own rootfs download URLs with optional checksum verification.
 
 ---
 
+## Linux Desktop Setup Scripts
+
+If you start from a vanilla distro install and want a full Linux desktop over RDP, use the distro-specific scripts in `scripts/`.
+
+| Distro | Script | Matching Blog Guide |
+|---|---|---|
+| Ubuntu | `scripts/wsl2-ubuntu-desktop-xrdp.sh` | [wsl2-ubuntu-desktop-xrdp](https://wsl-ui.octasoft.co.uk/blog/wsl2-ubuntu-desktop-xrdp) |
+| Fedora | `scripts/wsl2-fedora-desktop-xrdp.sh` | [wsl2-fedora-desktop-xrdp](https://wsl-ui.octasoft.co.uk/blog/wsl2-fedora-desktop-xrdp) |
+| Kali | `scripts/wsl2-kali-desktop-winkex.sh` | [wsl2-kali-desktop-winkex](https://wsl-ui.octasoft.co.uk/blog/wsl2-kali-desktop-winkex) |
+| Arch | `scripts/wsl2-arch-desktop-xrdp.sh` | [wsl2-arch-desktop-xrdp](https://wsl-ui.octasoft.co.uk/blog/wsl2-arch-desktop-xrdp) |
+| openSUSE | `scripts/wsl2-opensuse-desktop-xrdp.sh` | [wsl2-opensuse-desktop-xrdp](https://wsl-ui.octasoft.co.uk/blog/wsl2-opensuse-desktop-xrdp) |
+
+Run the script inside the target distro shell as your normal Linux user:
+
+```bash
+bash /path/to/wsl2-ui/scripts/wsl2-ubuntu-desktop-xrdp.sh
+```
+
+Each script includes:
+- End-to-end desktop + XRDP/Win-KeX install flow for that distro
+- Automatic `/tmp/.X11-unix` repair for the common WSLg/XRDP socket conflict
+- XRDP port conflict handling (defaults to 3390, auto-shifts if already used)
+- Service startup validation and troubleshooting hints
+- Reminder for `.wslconfig` idle-timeout settings needed for stable RDP sessions
+
+For common fixes after setup (black screen, auth failures, port conflicts), see:
+- [WSL2 Desktop Troubleshooting](https://wsl-ui.octasoft.co.uk/blog/wsl2-gui-troubleshooting)
+
+---
 ## Backup and Restore
 
 ### Export
@@ -310,3 +340,4 @@ See [TROUBLESHOOTING.md](TROUBLESHOOTING.md) for solutions to common issues.
 - [Privacy Policy](PRIVACY.md)
 - [GitHub Repository](https://github.com/octasoft-ltd/wsl-ui)
 - [Report Issues](https://github.com/octasoft-ltd/wsl-ui/issues)
+
