@@ -151,3 +151,188 @@ jobs:
               "https://github.com/octasoft-ltd/wsl-ui/releases/download/${tag}/WSL.UI_${version}_arm64-setup.exe" `
             --submit `
             --token "${{ secrets.WINGET_CREATE_PAT }}"
+
+  publish-chocolatey:
+    needs: [release-please, build-release]
+    if: ${{ needs.release-please.outputs.release_created }}
+    runs-on: windows-latest
+    steps:
+      - name: Extract version
+        id: version
+        shell: pwsh
+        run: |
+          $tag = "${{ needs.release-please.outputs.tag_name }}"
+          $version = $tag -replace '^v', ''
+          "version=$version" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          "tag=$tag" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+
+      - name: Download MSI and compute checksum
+        id: checksum
+        shell: pwsh
+        run: |
+          $version = "${{ steps.version.outputs.version }}"
+          $tag = "${{ steps.version.outputs.tag }}"
+          $url = "https://github.com/octasoft-ltd/wsl-ui/releases/download/${tag}/WSL.UI_${version}_x64_en-US.msi"
+          Invoke-WebRequest -Uri $url -OutFile "wsl-ui.msi"
+          $hash = (Get-FileHash -Path "wsl-ui.msi" -Algorithm SHA256).Hash.ToLower()
+          "hash=$hash" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+
+      - name: Generate Chocolatey package files
+        shell: pwsh
+        run: |
+          $version = "${{ steps.version.outputs.version }}"
+          $hash = "${{ steps.checksum.outputs.hash }}"
+
+          # Create tools directory
+          New-Item -ItemType Directory -Path "choco/tools" -Force
+
+          # Generate nuspec
+          @"
+          <?xml version="1.0" encoding="utf-8"?>
+          <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+            <metadata>
+              <id>wsl-ui</id>
+              <version>$version</version>
+              <title>WSL UI</title>
+              <authors>Octasoft Ltd</authors>
+              <owners>octasoft</owners>
+              <requireLicenseAcceptance>false</requireLicenseAcceptance>
+              <licenseUrl>https://github.com/octasoft-ltd/wsl-ui/blob/main/LICENSE</licenseUrl>
+              <projectUrl>https://wsl-ui.octasoft.co.uk</projectUrl>
+              <iconUrl>https://cdn.jsdelivr.net/gh/octasoft-ltd/wsl-ui@main/src/assets/icon.png</iconUrl>
+              <packageSourceUrl>https://github.com/octasoft-ltd/chocolatey-wsl-ui</packageSourceUrl>
+              <docsUrl>https://wsl-ui.octasoft.co.uk/docs</docsUrl>
+              <bugTrackerUrl>https://github.com/octasoft-ltd/wsl-ui/issues</bugTrackerUrl>
+              <projectSourceUrl>https://github.com/octasoft-ltd/wsl-ui</projectSourceUrl>
+              <description>WSL UI is a modern GUI dashboard for managing Windows Subsystem for Linux (WSL) distributions.
+
+          Built with Tauri, it provides a visual interface for managing WSL instances instead of using command-line tools.
+
+          ## Features
+
+          - **Dashboard** - View all distributions with real-time status, CPU, memory, and disk usage
+          - **Quick Actions** - Terminal, file explorer, IDE, restart, export, clone
+          - **Install from Anywhere** - Microsoft Store, Docker/Podman images, LXC catalog, custom URLs
+          - **Backup and Restore** - Export, import, and clone distributions
+          - **Custom Actions** - Define reusable commands with variable substitution
+          - **WSL Settings** - Edit .wslconfig and wsl.conf from a visual interface
+          - **17 Themes** - Dark, light, and custom themes with live preview
+          - **System Tray** - Minimize to tray for quick access
+          - **Disk Mounting** - Mount VHD files and physical disks into WSL
+
+          ## Notes
+
+          - Requires Windows 10 version 1903 (build 18362) or later
+          - Requires Windows Subsystem for Linux (WSL) to be installed and enabled
+          - Also available on the [Microsoft Store](https://apps.microsoft.com/detail/9p8548knj2m9)
+
+          ## Links
+
+          - [Website](https://wsl-ui.octasoft.co.uk)
+          - [Source Code](https://github.com/octasoft-ltd/wsl-ui)
+          - [Bug Tracker](https://github.com/octasoft-ltd/wsl-ui/issues)
+          - [Documentation](https://wsl-ui.octasoft.co.uk/docs)
+              </description>
+              <summary>A modern GUI dashboard for managing Windows Subsystem for Linux (WSL) distributions.</summary>
+              <releaseNotes>https://github.com/octasoft-ltd/wsl-ui/releases/tag/v$version</releaseNotes>
+              <copyright>Copyright 2025-2026 Octasoft Ltd</copyright>
+              <tags>wsl wsl2 linux windows gui dashboard manager tauri admin</tags>
+            </metadata>
+          </package>
+          "@ | Out-File -FilePath "choco/wsl-ui.nuspec" -Encoding utf8
+
+          # Generate chocolateyInstall.ps1
+          @"
+          `$ErrorActionPreference = 'Stop'
+
+          `$packageArgs = @{
+            packageName    = `$env:ChocolateyPackageName
+            fileType       = 'msi'
+            url64bit       = "https://github.com/octasoft-ltd/wsl-ui/releases/download/v`$(`$env:ChocolateyPackageVersion)/WSL.UI_`$(`$env:ChocolateyPackageVersion)_x64_en-US.msi"
+            softwareName   = 'WSL UI*'
+            checksum64     = '$hash'
+            checksumType64 = 'sha256'
+            silentArgs     = "/qn /norestart /l*v ```"`$(`$env:TEMP)\`$(`$env:ChocolateyPackageName).`$(`$env:ChocolateyPackageVersion).MsiInstall.log```""
+            validExitCodes = @(0, 3010, 1641)
+          }
+
+          Install-ChocolateyPackage @packageArgs
+          "@ | Out-File -FilePath "choco/tools/chocolateyInstall.ps1" -Encoding utf8
+
+          # Generate chocolateyUninstall.ps1
+          @"
+          `$ErrorActionPreference = 'Stop'
+
+          `$packageArgs = @{
+            packageName    = `$env:ChocolateyPackageName
+            softwareName   = 'WSL UI*'
+            fileType       = 'msi'
+            silentArgs     = "/qn /norestart"
+            validExitCodes = @(0, 3010, 1605, 1614, 1641)
+          }
+
+          [array]`$key = Get-UninstallRegistryKey -SoftwareName `$packageArgs['softwareName']
+
+          if (`$key.Count -eq 1) {
+            `$key | ForEach-Object {
+              `$packageArgs['file'] = "`$(`$_.UninstallString)"
+              if (`$packageArgs['fileType'] -eq 'msi') {
+                `$packageArgs['silentArgs'] = "`$(`$_.PSChildName) `$(`$packageArgs['silentArgs'])"
+                `$packageArgs['file'] = ''
+              }
+              Uninstall-ChocolateyPackage @packageArgs
+            }
+          } elseif (`$key.Count -eq 0) {
+            Write-Warning "`$(`$env:ChocolateyPackageName) has already been uninstalled by other means."
+          } elseif (`$key.Count -gt 1) {
+            Write-Warning "`$(`$key.Count) matches found!"
+            Write-Warning "To prevent accidental data loss, no programs will be uninstalled."
+            Write-Warning "Please alert package maintainer the following keys were matched:"
+            `$key | ForEach-Object { Write-Warning "- `$(`$_.DisplayName)" }
+          }
+          "@ | Out-File -FilePath "choco/tools/chocolateyUninstall.ps1" -Encoding utf8
+
+          # Generate VERIFICATION.txt
+          @"
+          VERIFICATION
+
+          Verification is intended to assist the Chocolatey moderators and community in
+          verifying that this package's contents are trustworthy.
+
+          This package does not embed any binaries. Instead, it downloads the official
+          MSI installer directly from the WSL UI GitHub releases at install time.
+
+          To verify the download:
+
+          1. Go to the official GitHub releases page:
+             https://github.com/octasoft-ltd/wsl-ui/releases
+
+          2. Download the x64 MSI for the version matching this package:
+             WSL.UI_${version}_x64_en-US.msi
+
+          3. Compute the SHA256 hash of the downloaded file and compare it to the
+             checksum64 value in tools/chocolateyInstall.ps1:
+
+             Expected: $hash
+
+             PowerShell:
+               Get-FileHash -Path WSL.UI_${version}_x64_en-US.msi -Algorithm SHA256
+
+          4. The hashes should match, confirming the file has not been tampered with.
+
+          The installer is published by Octasoft Ltd from their official GitHub repository:
+          https://github.com/octasoft-ltd/wsl-ui
+
+          License: Business Source License 1.1
+          https://github.com/octasoft-ltd/wsl-ui/blob/main/LICENSE
+          "@ | Out-File -FilePath "choco/tools/VERIFICATION.txt" -Encoding utf8
+
+          # Copy LICENSE from repo
+          Invoke-WebRequest -Uri "https://raw.githubusercontent.com/octasoft-ltd/wsl-ui/main/LICENSE" -OutFile "choco/tools/LICENSE.txt"
+
+      - name: Pack and push to Chocolatey
+        shell: pwsh
+        run: |
+          choco pack "choco/wsl-ui.nuspec" --output-directory "choco"
+          $version = "${{ steps.version.outputs.version }}"
+          choco push "choco/wsl-ui.${version}.nupkg" --source "https://push.chocolatey.org/" --api-key "${{ secrets.CHOCOLATEY_API_KEY }}"
