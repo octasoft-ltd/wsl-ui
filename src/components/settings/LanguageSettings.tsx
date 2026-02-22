@@ -6,7 +6,7 @@
 
 import { useTranslation } from "react-i18next";
 import { useSettingsStore } from "../../store/settingsStore";
-import { supportedLanguages, loadLanguage } from "../../i18n";
+import { supportedLanguages, loadLanguage, resolveLanguage } from "../../i18n";
 import { GlobeIcon } from "../icons";
 
 export function LanguageSettings() {
@@ -22,11 +22,7 @@ export function LanguageSettings() {
 
     if (locale === "auto") {
       // Reset to browser-detected language
-      const detected = navigator.language || "en";
-      const matchedLang = supportedLanguages.find(
-        (l) => l.code === detected || detected.startsWith(l.code.split("-")[0])
-      );
-      const targetLang = matchedLang?.code || "en";
+      const targetLang = resolveLanguage(navigator.language || "en");
       await loadLanguage(targetLang);
       i18n.changeLanguage(targetLang);
     } else {

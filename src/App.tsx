@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { listen } from "@tauri-apps/api/event";
-import { loadLanguage, supportedLanguages } from "./i18n";
+import { loadLanguage, supportedLanguages, resolveLanguage } from "./i18n";
 import { useDistroStore } from "./store/distroStore";
 import { useMountStore } from "./store/mountStore";
 import { useSettingsStore } from "./store/settingsStore";
@@ -115,7 +115,7 @@ function App() {
     if (!settings) return;
     const locale = settings.locale || "auto";
     const targetLang = locale === "auto"
-      ? supportedLanguages.find((l) => navigator.language.startsWith(l.code.split("-")[0]))?.code || "en"
+      ? resolveLanguage(navigator.language)
       : locale;
     if (i18n.language !== targetLang) {
       loadLanguage(targetLang).then(() => i18n.changeLanguage(targetLang));

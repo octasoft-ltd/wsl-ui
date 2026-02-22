@@ -44,6 +44,38 @@ export const supportedLanguages = [
 
 export type SupportedLanguage = (typeof supportedLanguages)[number]["code"];
 
+/**
+ * Resolve a browser language tag (e.g. "zh-TW", "zh-Hant", "pt-BR", "en-US")
+ * to the best matching supported language code, or "en" as fallback.
+ *
+ * Priority: exact match → script-based match (zh-Hant→zh-TW) → base-language match → "en"
+ */
+export function resolveLanguage(browserLang: string): SupportedLanguage {
+  // 1. Exact match (e.g. "zh-TW" → "zh-TW", "pt-BR" → "pt-BR")
+  const exact = supportedLanguages.find((l) => l.code === browserLang);
+  if (exact) return exact.code;
+
+  // 2. Script-based mapping for Chinese (zh-Hant → zh-TW, zh-Hans → zh-CN)
+  const lower = browserLang.toLowerCase();
+  if (lower.includes("hant") || lower.includes("tw") || lower.includes("hk") || lower.includes("mo")) {
+    return "zh-TW";
+  }
+  if (lower.includes("hans") || lower.includes("cn") || lower.includes("sg")) {
+    return "zh-CN";
+  }
+
+  // 3. Base language match (e.g. "fr-CA" → "fr", "de-AT" → "de", "es-MX" → "es")
+  const baseLang = browserLang.split("-")[0];
+  const baseMatch = supportedLanguages.find((l) => l.code === baseLang);
+  if (baseMatch) return baseMatch.code;
+
+  // 4. Base language prefix match (e.g. "pt" → "pt-BR", "zh" → "zh-CN")
+  const prefixMatch = supportedLanguages.find((l) => l.code.split("-")[0] === baseLang);
+  if (prefixMatch) return prefixMatch.code;
+
+  return "en";
+}
+
 // Lazy-load translations for non-English languages
 const languageImports: Record<string, () => Promise<Record<string, Record<string, unknown>>>> = {
   "zh-CN": () => import("./locales/zh-CN/index").then((m) => m.default),

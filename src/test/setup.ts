@@ -124,6 +124,7 @@ vi.mock("../i18n", () => ({
     changeLanguage: vi.fn(),
   },
   loadLanguage: vi.fn().mockResolvedValue(undefined),
+  resolveLanguage: vi.fn().mockReturnValue("en"),
   supportedLanguages: [
     { code: "en", name: "English", nativeName: "English" },
   ],
