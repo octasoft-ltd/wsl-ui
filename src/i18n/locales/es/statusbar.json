@@ -7,7 +7,7 @@
   "dev": "Dev",
   "disk": "DISCO",
   "updateWsl": {
-    "updating": "Esperando aprobaci\u00f3n del administrador... Busque un di\u00e1logo UAC",
+    "updating": "Esperando aprobación del administrador... Busque un diálogo UAC",
     "preRelease": "Actualizar WSL (preliminar) - Requiere administrador",
     "default": "Actualizar WSL - Requiere administrador",
     "uac": "UAC"
@@ -17,6 +17,6 @@
     "count": "Montajes de disco ({{count}} montados)"
   },
   "preflight": {
-    "retry": "Reintentar verificaci\u00f3n"
+    "retry": "Reintentar verificación"
   }
 }

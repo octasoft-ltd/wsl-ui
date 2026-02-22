@@ -4,24 +4,24 @@
   "mode": {
     "quickInstall": "Installation rapide",
     "quickInstallDesc": "Installer depuis le Microsoft Store",
-    "download": "T\u00e9l\u00e9charger",
-    "downloadDesc": "T\u00e9l\u00e9chargement direct avec nom personnalis\u00e9",
-    "community": "Communaut\u00e9",
+    "download": "Télécharger",
+    "downloadDesc": "Téléchargement direct avec nom personnalisé",
+    "community": "Communauté",
     "communityDesc": "Parcourir le catalogue d'images LXC",
     "container": "Conteneur",
-    "containerDesc": "Cr\u00e9er \u00e0 partir d'une image de conteneur"
+    "containerDesc": "Créer à partir d'une image de conteneur"
   },
   "info": {
-    "quickInstall": "Distributions officielles du Microsoft Store. Installation dans l'emplacement par d\u00e9faut g\u00e9r\u00e9 par Windows.",
-    "download": "Ce catalogue peut \u00eatre personnalis\u00e9 dans Param\u00e8tres > Sources de distributions. Les URL personnalis\u00e9es sont enregistr\u00e9es pour une utilisation future.",
-    "community": "Images depuis {{url}}. Configurer dans Param\u00e8tres > Sources de distributions.",
-    "container": "Environnement d'ex\u00e9cution s\u00e9lectionn\u00e9 configur\u00e9 dans les param\u00e8tres : {{runtime}}"
+    "quickInstall": "Distributions officielles du Microsoft Store. Installation dans l'emplacement par défaut géré par Windows.",
+    "download": "Ce catalogue peut être personnalisé dans Paramètres > Sources de distributions. Les URL personnalisées sont enregistrées pour une utilisation future.",
+    "community": "Images depuis {{url}}. Configurer dans Paramètres > Sources de distributions.",
+    "container": "Environnement d'exécution sélectionné configuré dans les paramètres : {{runtime}}"
   },
   "containerRuntime": {
-    "builtin": "OCI int\u00e9gr\u00e9 (registres publics uniquement)",
-    "docker": "Docker (prend en charge les registres authentifi\u00e9s)",
-    "podman": "Podman (prend en charge les registres authentifi\u00e9s)",
-    "custom": "Personnalis\u00e9 : {{path}}"
+    "builtin": "OCI intégré (registres publics uniquement)",
+    "docker": "Docker (prend en charge les registres authentifiés)",
+    "podman": "Podman (prend en charge les registres authentifiés)",
+    "custom": "Personnalisé : {{path}}"
   },
   "filter": {
     "all": "Toutes"
@@ -36,40 +36,121 @@
     "image": "ex., alpine:latest, gitlab/gitlab-runner:latest"
   },
   "customUrl": {
-    "label": "URL personnalis\u00e9e",
+    "label": "URL personnalisée",
     "description": "Entrez un lien direct vers une archive rootfs"
   },
   "customImage": {
-    "label": "Image personnalis\u00e9e",
-    "description": "Entrez une r\u00e9f\u00e9rence d'image OCI"
+    "label": "Image personnalisée",
+    "description": "Entrez une référence d'image OCI"
   },
-  "alreadyInstalled": "\"{{name}}\" est d\u00e9j\u00e0 install\u00e9",
+  "alreadyInstalled": "\"{{name}}\" est déjà installé",
   "progress": {
     "installingStore": "Installation depuis le Microsoft Store...",
-    "success": "Installation r\u00e9ussie !",
-    "downloading": "T\u00e9l\u00e9chargement : {{percent}}% ({{downloaded}} / {{total}})",
+    "success": "Installation réussie !",
+    "downloading": "Téléchargement : {{percent}}% ({{downloaded}} / {{total}})",
     "importing": "Importation dans WSL...",
-    "pullingImage": "T\u00e9l\u00e9chargement de l'image de conteneur...",
-    "downloadFailed": "Le t\u00e9l\u00e9chargement a \u00e9chou\u00e9"
+    "pullingImage": "Téléchargement de l'image de conteneur...",
+    "downloadFailed": "Le téléchargement a échoué"
   },
-  "trademarkDisclaimer": "Les logos des distributions Linux sont des marques d\u00e9pos\u00e9es de leurs propri\u00e9taires respectifs et sont utilis\u00e9s ici uniquement \u00e0 des fins d'identification.\nCette application n'est ni affili\u00e9e ni approuv\u00e9e par aucun projet de distribution.",
+  "trademarkDisclaimer": "Les logos des distributions Linux sont des marques déposées de leurs propriétaires respectifs et sont utilisés ici uniquement à des fins d'identification.\nCette application n'est ni affiliée ni approuvée par aucun projet de distribution.",
   "installingAs": "Installation en tant que \"{{name}}\"",
-  "noDownloadable": "Aucune distribution t\u00e9l\u00e9chargeable configur\u00e9e",
-  "noContainerImages": "Aucune image de conteneur configur\u00e9e",
-  "communityDisabled": "Le catalogue communautaire est d\u00e9sactiv\u00e9",
-  "communityDisabledHint": "Activez-le dans Param\u00e8tres > Sources de distributions",
-  "useCustomUrl": "Utiliser une URL personnalis\u00e9e \u00e0 la place",
-  "useCustomImage": "Utiliser une image personnalis\u00e9e \u00e0 la place",
+  "noDownloadable": "Aucune distribution téléchargeable configurée",
+  "noContainerImages": "Aucune image de conteneur configurée",
+  "communityDisabled": "Le catalogue communautaire est désactivé",
+  "communityDisabledHint": "Activez-le dans Paramètres > Sources de distributions",
+  "useCustomUrl": "Utiliser une URL personnalisée à la place",
+  "useCustomImage": "Utiliser une image personnalisée à la place",
+  "catalogDisabled": "Le catalogue communautaire est désactivé. Activez-le dans les Paramètres.",
+  "catalogLoadError": "Échec du chargement du catalogue",
+  "catalogNoMatch": "Aucune distribution ne correspond à « {{query}} »",
+  "catalogVersionCount_one": "{{count}} version disponible",
+  "catalogVersionCount_other": "{{count}} versions disponibles",
+  "catalogCacheInfo": "Catalogue mis en cache le {{date}} à {{time}}",
+  "errorNoDistro": "Veuillez sélectionner une distribution",
+  "errorInstallFailed": "Échec de l'installation de la distribution",
+  "errorCreateFailed": "Échec de la création de la distribution",
+  "downloadStarting": "Début du téléchargement...",
+  "downloading": "Téléchargement de {{name}} {{release}}...",
+  "customDistribution": "Distribution personnalisée",
+  "customUrlName": "URL personnalisée",
+  "customImageName": "Image personnalisée",
   "distroSources": {
     "title": "Sources de distributions",
-    "description": "Configurer les sources de t\u00e9l\u00e9chargement des distributions",
+    "description": "Configurer les sources de téléchargement des distributions",
     "addUrl": "Ajouter une URL",
     "removeUrl": "Supprimer",
     "urlPlaceholder": "https://example.com/distro-rootfs.tar.gz",
     "name": "Nom",
     "namePlaceholder": "ex., Alpine Linux",
     "url": "URL",
-    "noSources": "Aucune source personnalis\u00e9e configur\u00e9e",
-    "builtInSources": "Les sources int\u00e9gr\u00e9es sont toujours disponibles"
+    "noSources": "Aucune source personnalisée configurée",
+    "builtInSources": "Les sources intégrées sont toujours disponibles",
+    "tab": {
+      "quickInstall": "Installation rapide",
+      "container": "Conteneur",
+      "download": "Téléchargement"
+    },
+    "badge": {
+      "builtIn": "intégré"
+    },
+    "form": {
+      "nameRequired": "Nom *",
+      "description": "Description",
+      "downloadUrl": "URL de téléchargement *",
+      "sizeOptional": "Taille (optionnel)",
+      "containerImage": "Image de conteneur *",
+      "distroId": "ID de distribution *",
+      "distroIdHint": "Doit correspondre à l'ID de <code>wsl --list --online</code>",
+      "placeholder": {
+        "downloadName": "ex., Ubuntu 24.04 LTS",
+        "downloadDescription": "ex., Noble Numbat - Dernière LTS",
+        "downloadUrl": "https://example.com/distro.tar.gz",
+        "downloadSize": "ex., ~370 Mo",
+        "containerName": "ex., Rocky Linux 9",
+        "containerDescription": "ex., Linux prêt pour l'entreprise",
+        "containerImage": "ex., docker.io/library/rockylinux:9",
+        "msStoreDistroId": "ex., Ubuntu-24.04",
+        "msStoreDescription": "ex., Noble Numbat"
+      }
+    },
+    "button": {
+      "update": "Mettre à jour",
+      "add": "Ajouter",
+      "cancel": "Annuler"
+    },
+    "dialog": {
+      "editDownloadSource": "Modifier la source de téléchargement",
+      "addDownloadSource": "Ajouter une source de téléchargement",
+      "editContainerImage": "Modifier l'image de conteneur",
+      "addContainerImage": "Ajouter une image de conteneur",
+      "editQuickInstallMetadata": "Modifier les métadonnées d'installation rapide",
+      "addQuickInstallMetadata": "Ajouter des métadonnées d'installation rapide",
+      "resetDownloadSources": "Réinitialiser les sources de téléchargement",
+      "resetDownloadSourcesMessage": "Cela réinitialisera toutes les sources de téléchargement à leurs valeurs par défaut. Vos sources personnalisées seront supprimées.",
+      "resetDownloads": "Réinitialiser les téléchargements",
+      "resetContainerImages": "Réinitialiser les images de conteneur",
+      "resetContainerImagesMessage": "Cela réinitialisera toutes les images de conteneur à leurs valeurs par défaut. Vos images personnalisées seront supprimées.",
+      "resetContainers": "Réinitialiser les conteneurs",
+      "resetQuickInstallMetadata": "Réinitialiser les métadonnées d'installation rapide",
+      "resetQuickInstallMetadataMessage": "Cela réinitialisera toutes les métadonnées d'installation rapide à leurs valeurs par défaut. Vos métadonnées personnalisées seront supprimées.",
+      "resetMetadata": "Réinitialiser les métadonnées"
+    },
+    "empty": {
+      "downloads": "Aucune source de téléchargement configurée.",
+      "containers": "Aucune image de conteneur configurée.",
+      "quickInstall": "Aucune métadonnée d'installation rapide configurée."
+    },
+    "info": {
+      "quickInstall": "Les métadonnées d'installation rapide fournissent les informations d'affichage (couleur, description) pour les distributions renvoyées par <code>wsl --list --online</code>. La liste des distributions est fournie par Microsoft."
+    },
+    "toggle": {
+      "disable": "Désactiver",
+      "enable": "Activer"
+    },
+    "action": {
+      "edit": "Modifier",
+      "delete": "Supprimer",
+      "dismissError": "Ignorer l'erreur"
+    }
   }
 }

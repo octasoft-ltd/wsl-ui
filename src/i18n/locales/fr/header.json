@@ -1,17 +1,17 @@
 {
-  "subtitle": "Centre de contr\u00f4le",
+  "subtitle": "Centre de contrôle",
   "button": {
     "new": "Nouveau",
     "import": "Importer",
     "sync": "Synchroniser",
-    "shutdown": "Arr\u00eater",
-    "systemTerminal": "Ouvrir le terminal syst\u00e8me WSL",
+    "shutdown": "Arrêter",
+    "systemTerminal": "Ouvrir le terminal système WSL",
     "help": "Aide",
-    "settings": "Param\u00e8tres"
+    "settings": "Paramètres"
   },
   "shutdownAll": {
-    "title": "Arr\u00eater toutes les distributions",
-    "message": "Cela arr\u00eatera toutes les distributions WSL en cours d'ex\u00e9cution. Tout travail non enregistr\u00e9 sera perdu.",
-    "confirm": "Tout arr\u00eater"
+    "title": "Arrêter toutes les distributions",
+    "message": "Cela arrêtera toutes les distributions WSL en cours d'exécution. Tout travail non enregistré sera perdu.",
+    "confirm": "Tout arrêter"
   }
 }

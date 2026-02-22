@@ -60,6 +60,20 @@
   "communityDisabledHint": "在 设置 > 发行版来源 中启用",
   "useCustomUrl": "使用自定义 URL 代替",
   "useCustomImage": "使用自定义镜像代替",
+  "catalogDisabled": "社区目录已禁用。请在设置中启用。",
+  "catalogLoadError": "加载目录失败",
+  "catalogNoMatch": "没有发行版匹配 \"{{query}}\"",
+  "catalogVersionCount_one": "{{count}} 个版本可用",
+  "catalogVersionCount_other": "{{count}} 个版本可用",
+  "catalogCacheInfo": "目录缓存于 {{date}} {{time}}",
+  "errorNoDistro": "请选择一个发行版",
+  "errorInstallFailed": "安装发行版失败",
+  "errorCreateFailed": "创建发行版失败",
+  "downloadStarting": "正在开始下载...",
+  "downloading": "正在下载 {{name}} {{release}}...",
+  "customDistribution": "自定义发行版",
+  "customUrlName": "自定义 URL",
+  "customImageName": "自定义镜像",
   "distroSources": {
     "title": "发行版来源",
     "description": "配置下载发行版的来源",
@@ -70,6 +84,73 @@
     "namePlaceholder": "例如 Alpine Linux",
     "url": "URL",
     "noSources": "未配置自定义来源",
-    "builtInSources": "内置来源始终可用"
+    "builtInSources": "内置来源始终可用",
+    "tab": {
+      "quickInstall": "快速安装",
+      "container": "容器",
+      "download": "下载"
+    },
+    "badge": {
+      "builtIn": "内置"
+    },
+    "form": {
+      "nameRequired": "名称 *",
+      "description": "描述",
+      "downloadUrl": "下载 URL *",
+      "sizeOptional": "大小（可选）",
+      "containerImage": "容器镜像 *",
+      "distroId": "发行版 ID *",
+      "distroIdHint": "必须与 <code>wsl --list --online</code> 中的 ID 匹配",
+      "placeholder": {
+        "downloadName": "例如 Ubuntu 24.04 LTS",
+        "downloadDescription": "例如 Noble Numbat - 最新 LTS",
+        "downloadUrl": "https://example.com/distro.tar.gz",
+        "downloadSize": "例如 ~370 MB",
+        "containerName": "例如 Rocky Linux 9",
+        "containerDescription": "例如企业级 Linux",
+        "containerImage": "例如 docker.io/library/rockylinux:9",
+        "msStoreDistroId": "例如 Ubuntu-24.04",
+        "msStoreDescription": "例如 Noble Numbat"
+      }
+    },
+    "button": {
+      "update": "更新",
+      "add": "添加",
+      "cancel": "取消"
+    },
+    "dialog": {
+      "editDownloadSource": "编辑下载来源",
+      "addDownloadSource": "添加下载来源",
+      "editContainerImage": "编辑容器镜像",
+      "addContainerImage": "添加容器镜像",
+      "editQuickInstallMetadata": "编辑快速安装元数据",
+      "addQuickInstallMetadata": "添加快速安装元数据",
+      "resetDownloadSources": "重置下载来源",
+      "resetDownloadSourcesMessage": "这将把所有下载来源重置为默认值。您的自定义来源将被移除。",
+      "resetDownloads": "重置下载",
+      "resetContainerImages": "重置容器镜像",
+      "resetContainerImagesMessage": "这将把所有容器镜像重置为默认值。您的自定义镜像将被移除。",
+      "resetContainers": "重置容器",
+      "resetQuickInstallMetadata": "重置快速安装元数据",
+      "resetQuickInstallMetadataMessage": "这将把所有快速安装元数据重置为默认值。您的自定义元数据将被移除。",
+      "resetMetadata": "重置元数据"
+    },
+    "empty": {
+      "downloads": "未配置下载来源。",
+      "containers": "未配置容器镜像。",
+      "quickInstall": "未配置快速安装元数据。"
+    },
+    "info": {
+      "quickInstall": "快速安装元数据为 <code>wsl --list --online</code> 返回的发行版提供显示信息（颜色、描述）。发行版列表本身由 Microsoft 提供。"
+    },
+    "toggle": {
+      "disable": "禁用",
+      "enable": "启用"
+    },
+    "action": {
+      "edit": "编辑",
+      "delete": "删除",
+      "dismissError": "忽略错误"
+    }
   }
 }

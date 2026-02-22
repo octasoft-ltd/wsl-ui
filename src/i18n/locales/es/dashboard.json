@@ -2,14 +2,14 @@
   "loading": "Inicializando sistemas...",
   "emptyState": {
     "title": "No se detectaron instancias",
-    "description": "Implemente una distribuci\u00f3n WSL para comenzar"
+    "description": "Implemente una distribución WSL para comenzar"
   },
   "filter": {
     "all": "Todas",
-    "allSources": "Todos los or\u00edgenes",
+    "allSources": "Todos los orígenes",
     "allSourcesMobile": "Todos",
-    "onlineTooltip": "En l\u00ednea ({{count}})",
-    "offlineTooltip": "Sin conexi\u00f3n ({{count}})",
+    "onlineTooltip": "En línea ({{count}})",
+    "offlineTooltip": "Sin conexión ({{count}})",
     "showWsl1": "Mostrar WSL 1 ({{count}})",
     "hideWsl1": "Ocultar WSL 1 ({{count}})",
     "showWsl2": "Mostrar WSL 2 ({{count}})",
@@ -19,7 +19,7 @@
   },
   "emptyFilter": {
     "noDistros": "No se encontraron distribuciones",
-    "noMatch": "Ninguna distribuci\u00f3n coincide con los filtros actuales",
+    "noMatch": "Ninguna distribución coincide con los filtros actuales",
     "clearFilters": "Limpiar filtros"
   },
   "card": {
@@ -27,14 +27,14 @@
     "launch": "Iniciar",
     "openTerminal": "Abrir terminal",
     "openRdp": "Abrir Escritorio remoto",
-    "quickActions": "Acciones r\u00e1pidas",
-    "deleteDistro": "Eliminar distribuci\u00f3n",
-    "ipTooltip": "Clic para copiar la direcci\u00f3n IP"
+    "quickActions": "Acciones rápidas",
+    "deleteDistro": "Eliminar distribución",
+    "ipTooltip": "Clic para copiar la dirección IP"
   },
   "deleteDialog": {
-    "title": "Eliminar distribuci\u00f3n",
-    "message": "\u00bfEst\u00e1 seguro de que desea eliminar \"{{name}}\"? Esta acci\u00f3n no se puede deshacer y todos los datos de esta distribuci\u00f3n se perder\u00e1n permanentemente.",
-    "messageDefault": "\u00bfEst\u00e1 seguro de que desea eliminar \"{{name}}\"? Esta acci\u00f3n no se puede deshacer y todos los datos de esta distribuci\u00f3n se perder\u00e1n permanentemente.\n\nAdvertencia: Esta es su distribuci\u00f3n predeterminada. Despu\u00e9s de la eliminaci\u00f3n, los comandos WSL fallar\u00e1n a menos que establezca otra distribuci\u00f3n como predeterminada.",
+    "title": "Eliminar distribución",
+    "message": "¿Está seguro de que desea eliminar \"{{name}}\"? Esta acción no se puede deshacer y todos los datos de esta distribución se perderán permanentemente.",
+    "messageDefault": "¿Está seguro de que desea eliminar \"{{name}}\"? Esta acción no se puede deshacer y todos los datos de esta distribución se perderán permanentemente.\n\nAdvertencia: Esta es su distribución predeterminada. Después de la eliminación, los comandos WSL fallarán a menos que establezca otra distribución como predeterminada.",
     "confirm": "Eliminar"
   }
 }

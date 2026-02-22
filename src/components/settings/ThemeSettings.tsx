@@ -11,68 +11,68 @@ import type { ThemeColors, ThemeId } from "../../themes";
 import { PaletteIcon, CheckIcon, ResetIcon, ChevronDownIcon, ChevronUpIcon } from "../icons";
 
 // Color groups for the custom theme editor
-const COLOR_GROUPS = [
+const COLOR_GROUP_KEYS = [
   {
-    name: "Background",
+    nameKey: "theme.colors.background",
     colors: [
-      { key: "bgPrimary" as const, label: "Primary" },
-      { key: "bgSecondary" as const, label: "Secondary" },
-      { key: "bgTertiary" as const, label: "Tertiary" },
-      { key: "bgHover" as const, label: "Hover" },
-      { key: "bgSelected" as const, label: "Selected" },
+      { key: "bgPrimary" as const, labelKey: "theme.colors.primary" },
+      { key: "bgSecondary" as const, labelKey: "theme.colors.secondary" },
+      { key: "bgTertiary" as const, labelKey: "theme.colors.tertiary" },
+      { key: "bgHover" as const, labelKey: "theme.colors.hover" },
+      { key: "bgSelected" as const, labelKey: "theme.colors.selected" },
     ],
   },
   {
-    name: "Text",
+    nameKey: "theme.colors.text",
     colors: [
-      { key: "textPrimary" as const, label: "Primary" },
-      { key: "textSecondary" as const, label: "Secondary" },
-      { key: "textMuted" as const, label: "Muted" },
-      { key: "textAccent" as const, label: "Accent" },
+      { key: "textPrimary" as const, labelKey: "theme.colors.primary" },
+      { key: "textSecondary" as const, labelKey: "theme.colors.secondary" },
+      { key: "textMuted" as const, labelKey: "theme.colors.muted" },
+      { key: "textAccent" as const, labelKey: "theme.colors.accent" },
     ],
   },
   {
-    name: "Border",
+    nameKey: "theme.colors.border",
     colors: [
-      { key: "borderPrimary" as const, label: "Primary" },
-      { key: "borderSecondary" as const, label: "Secondary" },
-      { key: "borderAccent" as const, label: "Accent" },
+      { key: "borderPrimary" as const, labelKey: "theme.colors.primary" },
+      { key: "borderSecondary" as const, labelKey: "theme.colors.secondary" },
+      { key: "borderAccent" as const, labelKey: "theme.colors.accent" },
     ],
   },
   {
-    name: "Accent",
+    nameKey: "theme.colors.accent",
     colors: [
-      { key: "accentPrimary" as const, label: "Primary" },
-      { key: "accentSecondary" as const, label: "Secondary" },
+      { key: "accentPrimary" as const, labelKey: "theme.colors.primary" },
+      { key: "accentSecondary" as const, labelKey: "theme.colors.secondary" },
     ],
   },
   {
-    name: "Status",
+    nameKey: "theme.colors.status",
     colors: [
-      { key: "statusRunning" as const, label: "Running" },
-      { key: "statusStopped" as const, label: "Stopped" },
-      { key: "statusWarning" as const, label: "Warning" },
-      { key: "statusError" as const, label: "Error" },
-      { key: "statusSuccess" as const, label: "Success" },
+      { key: "statusRunning" as const, labelKey: "theme.colors.running" },
+      { key: "statusStopped" as const, labelKey: "theme.colors.stopped" },
+      { key: "statusWarning" as const, labelKey: "theme.colors.warning" },
+      { key: "statusError" as const, labelKey: "theme.colors.error" },
+      { key: "statusSuccess" as const, labelKey: "theme.colors.success" },
     ],
   },
   {
-    name: "Buttons",
+    nameKey: "theme.colors.buttons",
     colors: [
-      { key: "buttonPrimary" as const, label: "Primary" },
-      { key: "buttonPrimaryHover" as const, label: "Primary Hover" },
-      { key: "buttonSecondary" as const, label: "Secondary" },
-      { key: "buttonSecondaryHover" as const, label: "Secondary Hover" },
-      { key: "buttonDanger" as const, label: "Danger" },
-      { key: "buttonDangerHover" as const, label: "Danger Hover" },
+      { key: "buttonPrimary" as const, labelKey: "theme.colors.primary" },
+      { key: "buttonPrimaryHover" as const, labelKey: "theme.colors.primaryHover" },
+      { key: "buttonSecondary" as const, labelKey: "theme.colors.secondary" },
+      { key: "buttonSecondaryHover" as const, labelKey: "theme.colors.secondaryHover" },
+      { key: "buttonDanger" as const, labelKey: "theme.colors.danger" },
+      { key: "buttonDangerHover" as const, labelKey: "theme.colors.dangerHover" },
     ],
   },
   {
-    name: "Scrollbar",
+    nameKey: "theme.colors.scrollbar",
     colors: [
-      { key: "scrollbarTrack" as const, label: "Track" },
-      { key: "scrollbarThumb" as const, label: "Thumb" },
-      { key: "scrollbarThumbHover" as const, label: "Thumb Hover" },
+      { key: "scrollbarTrack" as const, labelKey: "theme.colors.track" },
+      { key: "scrollbarThumb" as const, labelKey: "theme.colors.thumb" },
+      { key: "scrollbarThumbHover" as const, labelKey: "theme.colors.thumbHover" },
     ],
   },
 ];
@@ -238,11 +238,11 @@ export function ThemeSettings() {
             </div>
 
             <div className="space-y-3">
-              {COLOR_GROUPS.map((group) => (
+              {COLOR_GROUP_KEYS.map((group) => (
                 <ColorGroup
-                  key={group.name}
-                  name={group.name}
-                  colors={group.colors}
+                  key={group.nameKey}
+                  name={t(group.nameKey)}
+                  colors={group.colors.map((c) => ({ key: c.key, label: t(c.labelKey) }))}
                   values={customColors}
                   onChange={handleColorChange}
                 />

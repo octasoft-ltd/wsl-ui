@@ -22,7 +22,9 @@
     "note": "참고: 공백이 포함된 경로는 따옴표로 감싸야 합니다.",
     "placeholders": "자리 표시자:",
     "wslPath": "$WSL_PATH — \\\\wsl$로 확장",
+    "wslPathDesc": "\\\\wsl$로 확장",
     "distroName": "$DISTRO_NAME — 배포판 이름",
+    "distroNameDesc": "배포판 이름",
     "example": "예시(IntelliJ):",
     "presets": {
       "vscode": "VS Code",
@@ -40,8 +42,16 @@
     "note": "참고: 공백이 포함된 경로는 따옴표로 감싸야 합니다.",
     "placeholders": "자리 표시자:",
     "wsl": "$WSL — wsl.exe 경로",
+    "wslDesc": "wsl.exe 경로",
     "distroArgs": "$DISTRO_ARGS — --distribution-id <guid> 또는 --system으로 자동 확장",
+    "distroArgsDesc": "--distribution-id <guid> 또는 --system으로 자동 확장",
     "examples": "예시:",
+    "exampleAlacrittyLabel": "Alacritty",
+    "exampleAlacrittyCmd": "alacritty -e $WSL $DISTRO_ARGS",
+    "exampleKittyLabel": "Kitty",
+    "exampleKittyCmd": "kitty $WSL $DISTRO_ARGS",
+    "exampleWeztermLabel": "WezTerm",
+    "exampleWeztermCmd": "wezterm start -- $WSL $DISTRO_ARGS",
     "exampleAlacritty": "Alacritty: alacritty -e $WSL $DISTRO_ARGS",
     "exampleKitty": "Kitty: kitty $WSL $DISTRO_ARGS",
     "exampleWezterm": "WezTerm: wezterm start -- $WSL $DISTRO_ARGS",
@@ -92,7 +102,34 @@
     "customTheme": "사용자 지정 테마",
     "editCustomTheme": "사용자 지정 테마 편집",
     "resetAll": "모두 재설정",
-    "highContrast": "고대비"
+    "highContrast": "고대비",
+    "colors": {
+      "background": "배경",
+      "text": "텍스트",
+      "border": "테두리",
+      "accent": "강조",
+      "status": "상태",
+      "buttons": "버튼",
+      "scrollbar": "스크롤바",
+      "primary": "기본",
+      "secondary": "보조",
+      "tertiary": "3차",
+      "hover": "호버",
+      "selected": "선택됨",
+      "muted": "음소거",
+      "running": "실행 중",
+      "stopped": "중지됨",
+      "warning": "경고",
+      "error": "오류",
+      "success": "성공",
+      "primaryHover": "기본 호버",
+      "secondaryHover": "보조 호버",
+      "danger": "위험",
+      "dangerHover": "위험 호버",
+      "track": "트랙",
+      "thumb": "썸",
+      "thumbHover": "썸 호버"
+    }
   },
   "polling": {
     "title": "자동 새로고침",
@@ -113,7 +150,15 @@
     "resetDefaults": "간격을 기본값으로 재설정",
     "tip": "팁: 앱이 최소화되면 리소스 절약을 위해 폴링이 자동으로 일시 중지됩니다.",
     "seconds": "{{count}}초",
-    "disabled": "비활성화됨"
+    "disabled": "비활성화됨",
+    "intervals": {
+      "5seconds": "5초",
+      "10seconds": "10초",
+      "15seconds": "15초",
+      "30seconds": "30초",
+      "1minute": "1분",
+      "2minutes": "2분"
+    }
   },
   "timeouts": {
     "title": "WSL 시간 초과",
@@ -135,7 +180,21 @@
     "sudoShellDesc": "관리자 권한이 필요한 명령(비밀번호 입력이 필요할 수 있음)",
     "resetDefaults": "시간 초과를 기본값으로 재설정",
     "seconds": "{{count}}초",
-    "resetToDefaults": "기본값으로 재설정"
+    "resetToDefaults": "기본값으로 재설정",
+    "intervals": {
+      "5seconds": "5초",
+      "10seconds": "10초",
+      "15seconds": "15초",
+      "30seconds": "30초",
+      "1minute": "1분",
+      "2minutes": "2분",
+      "3minutes": "3분",
+      "5minutes": "5분",
+      "10minutes": "10분",
+      "15minutes": "15분",
+      "20minutes": "20분",
+      "30minutes": "30분"
+    }
   },
   "executables": {
     "title": "실행 파일 경로",
@@ -215,7 +274,13 @@
     "saveChanges": "변경 사항 저장",
     "pendingChanges": "저장하지 않은 변경 사항이 있습니다",
     "requiresShutdown": "변경 사항을 적용하려면 WSL 재시작이 필요합니다",
-    "configError": ".wslconfig 로드 오류"
+    "configError": ".wslconfig 로드 오류",
+    "loadError": "WSL 구성 로드에 실패했습니다",
+    "saveError": "WSL 구성 저장에 실패했습니다",
+    "memoryPlaceholder": "예: 8GB",
+    "processorsPlaceholder": "예: 4",
+    "swapPlaceholder": "예: 4GB",
+    "errorLabel": "오류:"
   },
   "wslDistro": {
     "title": "배포판별 구성",
@@ -267,7 +332,12 @@
     "saveChanges": "변경 사항 저장",
     "pendingChanges": "저장하지 않은 변경 사항이 있습니다",
     "noDistroSelected": "구성할 배포판을 선택하세요",
-    "configError": "wsl.conf 로드 오류"
+    "configError": "wsl.conf 로드 오류",
+    "defaultIndicator": "(기본값)",
+    "errorLabel": "오류:",
+    "defaultUserPlaceholder": "예: ubuntu",
+    "loadError": "wsl.conf 로드에 실패했습니다",
+    "saveError": "wsl.conf 저장에 실패했습니다"
   },
   "distributionSources": {
     "title": "배포판 소스",
@@ -290,7 +360,9 @@
     "noCacheData": "캐시 데이터 없음",
     "clearCache": "캐시 지우기",
     "resetDefaults": "모두 기본값으로 재설정",
-    "communityNote": "커뮤니티 이미지는 <1>Linux Containers</1>에서 제공되며 WSL 호환성이 다를 수 있습니다."
+    "communityNotePrefix": "커뮤니티 이미지 제공: ",
+    "communityNoteLinkText": "Linux Containers",
+    "communityNoteSuffix": "(WSL 호환성이 다를 수 있습니다)."
   },
   "containerRuntime": {
     "title": "컨테이너 런타임",
@@ -319,6 +391,9 @@
     "collectItem2": "배포판 수(이름 제외)",
     "collectItem3": "기능 사용 횟수",
     "neverCollect": "개인 데이터, 배포판 이름, 파일 경로 또는 식별 정보는 수집하지 않습니다.",
+    "providerPrefix": "데이터 처리: ",
+    "providerLinkText": "Aptabase",
+    "providerSuffix": "(개인정보 보호 중심 분석 제공업체).",
     "provider": "데이터는 개인정보 보호 중심 분석 제공업체인 <1>Aptabase</1>에서 처리합니다.",
     "whatWeCollect": "수집하는 정보:",
     "whatWeNever": "수집하지 않는 정보:",

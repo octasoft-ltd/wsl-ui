@@ -2,21 +2,21 @@
   "wsl": "WSL",
   "instances": "Instances",
   "active": "Actives",
-  "mem": "M\u00e9m",
+  "mem": "Mém",
   "primary": "Principal",
   "dev": "Dev",
   "disk": "DISQUE",
   "updateWsl": {
-    "updating": "En attente de l'approbation de l'administrateur... V\u00e9rifiez la pr\u00e9sence d'un dialogue UAC",
-    "preRelease": "Mettre \u00e0 jour WSL (pr\u00e9liminaire) - N\u00e9cessite un administrateur",
-    "default": "Mettre \u00e0 jour WSL - N\u00e9cessite un administrateur",
+    "updating": "En attente de l'approbation de l'administrateur... Vérifiez la présence d'un dialogue UAC",
+    "preRelease": "Mettre à jour WSL (préliminaire) - Nécessite un administrateur",
+    "default": "Mettre à jour WSL - Nécessite un administrateur",
     "uac": "UAC"
   },
   "diskMounts": {
     "empty": "Montages de disques",
-    "count": "Montages de disques ({{count}} mont\u00e9s)"
+    "count": "Montages de disques ({{count}} montés)"
   },
   "preflight": {
-    "retry": "R\u00e9essayer la v\u00e9rification"
+    "retry": "Réessayer la vérification"
   }
 }

@@ -34,7 +34,7 @@ export function WslGlobalSettings() {
       const loaded = await wslService.getWslConfig();
       setConfig(loaded);
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Failed to load WSL config";
+      const message = err instanceof Error ? err.message : t('wslGlobal.loadError');
       logger.error("Failed to load WSL config:", "WslGlobalSettings", err);
       setError(message);
     } finally {
@@ -55,7 +55,7 @@ export function WslGlobalSettings() {
       await wslService.saveWslConfig(config);
       setHasChanges(false);
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Failed to save WSL config";
+      const message = err instanceof Error ? err.message : t('wslGlobal.saveError');
       logger.error("Failed to save WSL config:", "WslGlobalSettings", err);
       setError(message);
     } finally {
@@ -126,7 +126,7 @@ export function WslGlobalSettings() {
               description={t('wslGlobal.memoryDesc')}
               value={config.memory || ""}
               onChange={(v) => updateConfig("memory", v || undefined)}
-              placeholder="e.g., 8GB"
+              placeholder={t('wslGlobal.memoryPlaceholder')}
               testId="wsl-memory"
             />
             <SettingInput
@@ -134,7 +134,7 @@ export function WslGlobalSettings() {
               description={t('wslGlobal.processorsDesc')}
               value={config.processors?.toString() || ""}
               onChange={(v) => updateConfig("processors", v ? parseInt(v) : undefined)}
-              placeholder="e.g., 4"
+              placeholder={t('wslGlobal.processorsPlaceholder')}
               type="number"
               testId="wsl-processors"
             />
@@ -143,7 +143,7 @@ export function WslGlobalSettings() {
               description={t('wslGlobal.swapDesc')}
               value={config.swap || ""}
               onChange={(v) => updateConfig("swap", v || undefined)}
-              placeholder="e.g., 4GB"
+              placeholder={t('wslGlobal.swapPlaceholder')}
               testId="wsl-swap"
             />
           </div>
@@ -245,7 +245,7 @@ export function WslGlobalSettings() {
       {error && (
         <div className="p-4 bg-red-900/30 border border-red-700/50 rounded-xl" data-testid="wsl-config-error">
           <p className="text-sm text-red-400">
-            <span className="font-medium">Error:</span> {error}
+            <span className="font-medium">{t('wslGlobal.errorLabel')}</span> {error}
           </p>
         </div>
       )}

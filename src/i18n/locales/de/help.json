@@ -4,11 +4,11 @@
   "gettingStarted": {
     "title": "Erste Schritte",
     "whatIsWslUi": "Was ist WSL UI?",
-    "whatIsWslUiText": "WSL UI ist eine Desktop-Anwendung zur Verwaltung von Windows Subsystem for Linux (WSL)-Distributionen. Sie bietet eine grafische Oberfl\u00e4che f\u00fcr g\u00e4ngige WSL-Operationen wie Starten, Stoppen, Erstellen und Konfigurieren von Linux-Distributionen.",
+    "whatIsWslUiText": "WSL UI ist eine Desktop-Anwendung zur Verwaltung von Windows Subsystem for Linux (WSL)-Distributionen. Sie bietet eine grafische Oberfläche für gängige WSL-Operationen wie Starten, Stoppen, Erstellen und Konfigurieren von Linux-Distributionen.",
     "mainDashboard": "Haupt-Dashboard",
-    "mainDashboardText": "Die Hauptansicht zeigt alle Ihre installierten WSL-Distributionen als Karten an. Jede Karte zeigt den Distributionsnamen, den Status (online/offline), die Festplattennutzung und Schnellaktionsschaltfl\u00e4chen.",
+    "mainDashboardText": "Die Hauptansicht zeigt alle Ihre installierten WSL-Distributionen als Karten an. Jede Karte zeigt den Distributionsnamen, den Status (online/offline), die Festplattennutzung und Schnellaktionsschaltflächen.",
     "quickActions": "Schnellaktionen",
-    "quickActionsText": "Klicken Sie auf die Men\u00fcschaltfl\u00e4che (drei Punkte) auf einer Distributionskarte, um auf Schnellaktionen wie \u00d6ffnen eines Terminals, Datei-Explorers, IDE oder Verwalten der Distribution zuzugreifen."
+    "quickActionsText": "Klicken Sie auf die Menüschaltfläche (drei Punkte) auf einer Distributionskarte, um auf Schnellaktionen wie Öffnen eines Terminals, Datei-Explorers, IDE oder Verwalten der Distribution zuzugreifen."
   },
   "distroManagement": {
     "title": "Distributionsverwaltung",
@@ -16,31 +16,31 @@
     "start": "Eine Distribution starten",
     "stop": "Eine laufende Distribution stoppen",
     "setAsDefault": "Als Standard festlegen",
-    "setAsDefaultText": "Legen Sie eine Distribution als Standard fest, um sie beim Ausf\u00fchren von WSL-Befehlen ohne Angabe eines Distributionsnamens zu verwenden.",
-    "resourceMonitoring": "Ressourcen\u00fcberwachung",
-    "resourceMonitoringText": "Laufende Distributionen zeigen die CPU- und Speicherauslastung in Echtzeit an. Die Festplattengr\u00f6\u00dfe wird f\u00fcr alle Distributionen angezeigt."
+    "setAsDefaultText": "Legen Sie eine Distribution als Standard fest, um sie beim Ausführen von WSL-Befehlen ohne Angabe eines Distributionsnamens zu verwenden.",
+    "resourceMonitoring": "Ressourcenüberwachung",
+    "resourceMonitoringText": "Laufende Distributionen zeigen die CPU- und Speicherauslastung in Echtzeit an. Die Festplattengröße wird für alle Distributionen angezeigt."
   },
   "advancedOps": {
     "title": "Erweiterte Operationen",
     "rename": "Umbenennen",
-    "renameText": "\u00c4ndern Sie den Namen einer Distribution. Sie k\u00f6nnen auch das Windows Terminal-Profil und die Startmen\u00fc-Verkn\u00fcpfung aktualisieren. Die Distribution muss angehalten sein.",
+    "renameText": "Ändern Sie den Namen einer Distribution. Sie können auch das Windows Terminal-Profil und die Startmenü-Verknüpfung aktualisieren. Die Distribution muss angehalten sein.",
     "move": "Verschieben",
-    "moveText": "Verschieben Sie eine Distribution auf ein anderes Laufwerk oder in einen anderen Ordner. N\u00fctzlich f\u00fcr die Verwaltung des Festplattenplatzes. WSL muss vollst\u00e4ndig heruntergefahren sein.",
-    "resizeDisk": "Festplattengr\u00f6\u00dfe \u00e4ndern",
-    "resizeDiskText": "Vergr\u00f6\u00dfern Sie die virtuelle Festplatte f\u00fcr Distributionen, die mehr Platz ben\u00f6tigen. Nur Vergr\u00f6\u00dferung wird unterst\u00fctzt (kein Verkleinern). WSL muss heruntergefahren sein.",
+    "moveText": "Verschieben Sie eine Distribution auf ein anderes Laufwerk oder in einen anderen Ordner. Nützlich für die Verwaltung des Festplattenplatzes. WSL muss vollständig heruntergefahren sein.",
+    "resizeDisk": "Festplattengröße ändern",
+    "resizeDiskText": "Vergrößern Sie die virtuelle Festplatte für Distributionen, die mehr Platz benötigen. Nur Vergrößerung wird unterstützt (kein Verkleinern). WSL muss heruntergefahren sein.",
     "setWslVersion": "WSL-Version festlegen",
-    "setWslVersionText": "Konvertieren Sie zwischen WSL 1 und WSL 2. WSL 2 bietet bessere Leistung mit einem vollst\u00e4ndigen Linux-Kernel. Die Konvertierung kann mehrere Minuten dauern.",
+    "setWslVersionText": "Konvertieren Sie zwischen WSL 1 und WSL 2. WSL 2 bietet bessere Leistung mit einem vollständigen Linux-Kernel. Die Konvertierung kann mehrere Minuten dauern.",
     "sparseMode": "Sparse-Modus",
-    "sparseModeText": "Aktivieren Sie die automatische Festplattenplatzr\u00fcckgewinnung. Die virtuelle Festplatte schrumpft, wenn Sie Dateien innerhalb der Distribution l\u00f6schen.",
+    "sparseModeText": "Aktivieren Sie die automatische Festplattenplatzrückgewinnung. Die virtuelle Festplatte schrumpft, wenn Sie Dateien innerhalb der Distribution löschen.",
     "compactDisk": "Festplatte komprimieren",
-    "compactDiskText": "Ein-Klick-Optimierung zur R\u00fcckgewinnung ungenutzten Speicherplatzes von der virtuellen Festplatte einer Distribution. F\u00fchrt automatisch fstrim aus, f\u00e4hrt WSL herunter und komprimiert die VHDX-Datei. Erfordert Administratorrechte und dauert 1-2 Minuten."
+    "compactDiskText": "Ein-Klick-Optimierung zur Rückgewinnung ungenutzten Speicherplatzes von der virtuellen Festplatte einer Distribution. Führt automatisch fstrim aus, fährt WSL herunter und komprimiert die VHDX-Datei. Erfordert Administratorrechte und dauert 1-2 Minuten."
   },
   "creatingDistros": {
     "title": "Distributionen erstellen",
     "quickInstall": "Schnellinstallation (Microsoft Store)",
     "quickInstallText": "Ein-Klick-Installation offizieller Distributionen wie Ubuntu, Debian und openSUSE.",
     "containerImages": "Container-Images",
-    "containerImagesText": "Erstellen Sie Distributionen aus Docker- oder Podman-Container-Images. Unterst\u00fctzt Docker Hub und andere Registrys.",
+    "containerImagesText": "Erstellen Sie Distributionen aus Docker- oder Podman-Container-Images. Unterstützt Docker Hub und andere Registrys.",
     "directDownload": "Direkter Download",
     "directDownloadText": "Laden Sie rootfs-Archive von konfigurierbaren URLs herunter. Beinhaltet Alpine, NixOS, Void Linux und mehr.",
     "communityCatalog": "Community-Katalog (LXC)",
@@ -49,16 +49,16 @@
   "backupRestore": {
     "title": "Sicherung und Wiederherstellung",
     "export": "Exportieren",
-    "exportText": "Speichern Sie eine Distribution in einer .tar-Archivdatei zur Sicherung oder Migration. Sie k\u00f6nnen sie sp\u00e4ter oder auf einem anderen Computer wiederherstellen.",
+    "exportText": "Speichern Sie eine Distribution in einer .tar-Archivdatei zur Sicherung oder Migration. Sie können sie später oder auf einem anderen Computer wiederherstellen.",
     "import": "Importieren",
-    "importText": "Stellen Sie eine Distribution aus einer .tar-Archivdatei wieder her. W\u00e4hlen Sie einen Namen und Installationsort f\u00fcr die importierte Distribution.",
+    "importText": "Stellen Sie eine Distribution aus einer .tar-Archivdatei wieder her. Wählen Sie einen Namen und Installationsort für die importierte Distribution.",
     "clone": "Klonen",
-    "cloneText": "Erstellen Sie eine Kopie einer vorhandenen Distribution mit einem neuen Namen. N\u00fctzlich zum Testen oder Erstellen von Varianten."
+    "cloneText": "Erstellen Sie eine Kopie einer vorhandenen Distribution mit einem neuen Namen. Nützlich zum Testen oder Erstellen von Varianten."
   },
   "customActions": {
     "title": "Benutzerdefinierte Aktionen",
     "whatAre": "Was sind benutzerdefinierte Aktionen?",
-    "whatAreText": "Benutzerdefinierte Aktionen sind vom Benutzer definierte Shell-Befehle, die im Schnellaktionen-Men\u00fc erscheinen. Erstellen Sie Aktionen f\u00fcr h\u00e4ufige Aufgaben wie Systemupdates, Sicherungen oder Entwicklungseinrichtung.",
+    "whatAreText": "Benutzerdefinierte Aktionen sind vom Benutzer definierte Shell-Befehle, die im Schnellaktionen-Menü erscheinen. Erstellen Sie Aktionen für häufige Aufgaben wie Systemupdates, Sicherungen oder Entwicklungseinrichtung.",
     "variables": "Variablen",
     "variablesText": "Verwenden Sie Variablen in Ihren Befehlen, die zur Laufzeit ersetzt werden:",
     "varDistroName": "Distributionsname",
@@ -66,62 +66,62 @@
     "varUser": "Standardbenutzer",
     "varWindowsHome": "Windows-Benutzerverzeichnis",
     "targeting": "Ziel-Distributionen",
-    "targetingText": "Aktionen k\u00f6nnen auf alle Distributionen, bestimmte Distributionen nach Name oder Distributionen abzielen, die einem Regex-Muster entsprechen."
+    "targetingText": "Aktionen können auf alle Distributionen, bestimmte Distributionen nach Name oder Distributionen abzielen, die einem Regex-Muster entsprechen."
   },
   "theming": {
     "title": "Designs und Darstellung",
     "builtinThemes": "Integrierte Designs",
-    "builtinThemesText": "W\u00e4hlen Sie aus 17 professionell gestalteten Designs, darunter dunkle, helle und mittlere Optionen. Beliebte Designs sind Obsidian, Dracula, Nord und Solarized.",
+    "builtinThemesText": "Wählen Sie aus 17 professionell gestalteten Designs, darunter dunkle, helle und mittlere Optionen. Beliebte Designs sind Obsidian, Dracula, Nord und Solarized.",
     "accessibilityThemes": "Barrierefreiheits-Designs",
-    "accessibilityThemesText": "Zwei kontraststarke Designs sind f\u00fcr Benutzer mit eingeschr\u00e4nktem Sehverm\u00f6gen verf\u00fcgbar: Hoher Kontrast (dunkel) und Hoher Kontrast hell.",
+    "accessibilityThemesText": "Zwei kontraststarke Designs sind für Benutzer mit eingeschränktem Sehvermögen verfügbar: Hoher Kontrast (dunkel) und Hoher Kontrast hell.",
     "customTheme": "Benutzerdefiniertes Design",
-    "customThemeText": "Erstellen Sie Ihr eigenes Design mit voller Kontrolle \u00fcber 29 Farbvariablen, darunter Hintergr\u00fcnde, Text, R\u00e4nder, Akzente und mehr."
+    "customThemeText": "Erstellen Sie Ihr eigenes Design mit voller Kontrolle über 29 Farbvariablen, darunter Hintergründe, Text, Ränder, Akzente und mehr."
   },
   "keyboardShortcuts": {
-    "title": "Tastaturk\u00fcrzel",
+    "title": "Tastaturkürzel",
     "tab": "Tab",
-    "tabAction": "N\u00e4chstes Element",
+    "tabAction": "Nächstes Element",
     "shiftTab": "Umschalt+Tab",
     "shiftTabAction": "Vorheriges Element",
     "enter": "Eingabe",
     "enterAction": "Aktivieren / Absenden",
     "escape": "Escape",
-    "escapeAction": "Dialog oder Men\u00fc schlie\u00dfen",
+    "escapeAction": "Dialog oder Menü schließen",
     "space": "Leertaste",
-    "spaceAction": "Kontrollk\u00e4stchen umschalten",
+    "spaceAction": "Kontrollkästchen umschalten",
     "accessibility": "Barrierefreiheit",
-    "accessibilityText": "WSL UI unterst\u00fctzt Bildschirmleser, Tastaturnavigation und respektiert Systemeinstellungen f\u00fcr reduzierte Bewegung."
+    "accessibilityText": "WSL UI unterstützt Bildschirmleser, Tastaturnavigation und respektiert Systemeinstellungen für reduzierte Bewegung."
   },
   "settingsOverview": {
-    "title": "Einstellungen\u00fcbersicht",
+    "title": "Einstellungenübersicht",
     "terminal": "Terminal: Windows Terminal, benutzerdefinierte Terminal-Anwendungen oder Eingabeaufforderung konfigurieren",
     "ide": "IDE: VS Code, Cursor oder benutzerdefinierte IDE-Integration einrichten",
     "wslGlobal": "WSL Global: Speicher, CPU, Swap, Netzwerkmodus und WSLg konfigurieren",
     "perDistro": "Pro Distribution: Automount-Optionen, Netzwerkeinstellungen, systemd und Startbefehle",
-    "polling": "Abfrage: Auto-Aktualisierungsintervalle f\u00fcr Status und Ressourcen anpassen",
-    "timeouts": "Zeitlimits: Operationszeitlimits f\u00fcr langsame Systeme konfigurieren",
-    "executables": "Programmpfade: Standardpfade f\u00fcr WSL, PowerShell und andere Tools \u00fcberschreiben"
+    "polling": "Abfrage: Auto-Aktualisierungsintervalle für Status und Ressourcen anpassen",
+    "timeouts": "Zeitlimits: Operationszeitlimits für langsame Systeme konfigurieren",
+    "executables": "Programmpfade: Standardpfade für WSL, PowerShell und andere Tools überschreiben"
   },
   "integrations": {
     "title": "Integrationen",
     "terminal": "Terminal-Integration",
-    "terminalText": "\u00d6ffnen Sie Distributionen in Windows Terminal, der Eingabeaufforderung oder einer beliebigen benutzerdefinierten Terminal-Anwendung. Konfigurieren Sie Ihr bevorzugtes Terminal in den Einstellungen.",
+    "terminalText": "Öffnen Sie Distributionen in Windows Terminal, der Eingabeaufforderung oder einer beliebigen benutzerdefinierten Terminal-Anwendung. Konfigurieren Sie Ihr bevorzugtes Terminal in den Einstellungen.",
     "ide": "IDE-Integration",
-    "ideText": "\u00d6ffnen Sie Distributionen direkt in VS Code oder anderen IDEs. Der Stammordner der Distribution wird in Ihrem Editor ge\u00f6ffnet.",
+    "ideText": "Öffnen Sie Distributionen direkt in VS Code oder anderen IDEs. Der Stammordner der Distribution wird in Ihrem Editor geöffnet.",
     "fileExplorer": "Datei-Explorer",
-    "fileExplorerText": "Durchsuchen Sie Distributionsdateien im Windows Explorer \u00fcber den Netzwerkpfad \\\\wsl$.",
+    "fileExplorerText": "Durchsuchen Sie Distributionsdateien im Windows Explorer über den Netzwerkpfad \\\\wsl$.",
     "systemTray": "Infobereich",
-    "systemTrayText": "Minimieren Sie in den Infobereich f\u00fcr schnellen Zugriff. Konfigurieren Sie das Schlie\u00dfverhalten in den Einstellungen."
+    "systemTrayText": "Minimieren Sie in den Infobereich für schnellen Zugriff. Konfigurieren Sie das Schließverhalten in den Einstellungen."
   },
   "troubleshooting": {
     "title": "Fehlerbehebung",
     "wslNotDetected": "WSL nicht erkannt",
-    "wslNotDetectedText": "Stellen Sie sicher, dass WSL installiert und aktiviert ist. F\u00fchren Sie wsl --status in PowerShell aus, um dies zu \u00fcberpr\u00fcfen. M\u00f6glicherweise m\u00fcssen Sie die Windows-Funktionen f\u00fcr WSL aktivieren.",
+    "wslNotDetectedText": "Stellen Sie sicher, dass WSL installiert und aktiviert ist. Führen Sie wsl --status in PowerShell aus, um dies zu überprüfen. Möglicherweise müssen Sie die Windows-Funktionen für WSL aktivieren.",
     "operationsTimeout": "Operationen laufen ab",
-    "operationsTimeoutText": "Wenn Operationen h\u00e4ufig ablaufen, erh\u00f6hen Sie die Zeitlimitwerte unter Einstellungen > Zeitlimits. Die App verwendet exponentielles Backoff, um die Belastung bei Problemen zu reduzieren.",
+    "operationsTimeoutText": "Wenn Operationen häufig ablaufen, erhöhen Sie die Zeitlimitwerte unter Einstellungen > Zeitlimits. Die App verwendet exponentielles Backoff, um die Belastung bei Problemen zu reduzieren.",
     "distroWontStart": "Distribution startet nicht",
     "distroWontStartText": "Versuchen Sie, WSL mit wsl --shutdown neu zu starten, und starten Sie dann die Distribution erneut.",
-    "fullGuide": "Vollst\u00e4ndiger Leitfaden zur Fehlerbehebung"
+    "fullGuide": "Vollständiger Leitfaden zur Fehlerbehebung"
   },
   "resources": {
     "title": "Ressourcen und Support",

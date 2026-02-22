@@ -11,47 +11,60 @@ import { DEFAULT_WSL_TIMEOUTS } from "../../types/settings";
 import { SettingSelect } from "./FormControls";
 
 // Timeout options in seconds
-const QUICK_TIMEOUT_OPTIONS = [
-  { value: 5, label: "5 seconds" },
-  { value: 10, label: "10 seconds" },
-  { value: 15, label: "15 seconds" },
-  { value: 30, label: "30 seconds" },
+const QUICK_TIMEOUT_OPTION_KEYS = [
+  { value: 5, labelKey: "timeouts.intervals.5seconds" },
+  { value: 10, labelKey: "timeouts.intervals.10seconds" },
+  { value: 15, labelKey: "timeouts.intervals.15seconds" },
+  { value: 30, labelKey: "timeouts.intervals.30seconds" },
 ];
 
-const DEFAULT_TIMEOUT_OPTIONS = [
-  { value: 15, label: "15 seconds" },
-  { value: 30, label: "30 seconds" },
-  { value: 60, label: "1 minute" },
-  { value: 120, label: "2 minutes" },
+const DEFAULT_TIMEOUT_OPTION_KEYS = [
+  { value: 15, labelKey: "timeouts.intervals.15seconds" },
+  { value: 30, labelKey: "timeouts.intervals.30seconds" },
+  { value: 60, labelKey: "timeouts.intervals.1minute" },
+  { value: 120, labelKey: "timeouts.intervals.2minutes" },
 ];
 
-const LONG_TIMEOUT_OPTIONS = [
-  { value: 300, label: "5 minutes" },
-  { value: 600, label: "10 minutes" },
-  { value: 900, label: "15 minutes" },
-  { value: 1200, label: "20 minutes" },
-  { value: 1800, label: "30 minutes" },
+const LONG_TIMEOUT_OPTION_KEYS = [
+  { value: 300, labelKey: "timeouts.intervals.5minutes" },
+  { value: 600, labelKey: "timeouts.intervals.10minutes" },
+  { value: 900, labelKey: "timeouts.intervals.15minutes" },
+  { value: 1200, labelKey: "timeouts.intervals.20minutes" },
+  { value: 1800, labelKey: "timeouts.intervals.30minutes" },
 ];
 
-const SHELL_TIMEOUT_OPTIONS = [
-  { value: 15, label: "15 seconds" },
-  { value: 30, label: "30 seconds" },
-  { value: 60, label: "1 minute" },
-  { value: 120, label: "2 minutes" },
-  { value: 300, label: "5 minutes" },
+const SHELL_TIMEOUT_OPTION_KEYS = [
+  { value: 15, labelKey: "timeouts.intervals.15seconds" },
+  { value: 30, labelKey: "timeouts.intervals.30seconds" },
+  { value: 60, labelKey: "timeouts.intervals.1minute" },
+  { value: 120, labelKey: "timeouts.intervals.2minutes" },
+  { value: 300, labelKey: "timeouts.intervals.5minutes" },
 ];
 
-const SUDO_TIMEOUT_OPTIONS = [
-  { value: 60, label: "1 minute" },
-  { value: 120, label: "2 minutes" },
-  { value: 180, label: "3 minutes" },
-  { value: 300, label: "5 minutes" },
+const SUDO_TIMEOUT_OPTION_KEYS = [
+  { value: 60, labelKey: "timeouts.intervals.1minute" },
+  { value: 120, labelKey: "timeouts.intervals.2minutes" },
+  { value: 180, labelKey: "timeouts.intervals.3minutes" },
+  { value: 300, labelKey: "timeouts.intervals.5minutes" },
 ];
 
+
+function resolveOptions(
+  keys: { value: number; labelKey: string }[],
+  t: (key: string) => string,
+): { value: number; label: string }[] {
+  return keys.map((opt) => ({ value: opt.value, label: t(opt.labelKey) }));
+}
 
 export function TimeoutSettings() {
   const { t } = useTranslation("settings");
   const { settings, updateSetting } = useSettingsStore();
+
+  const quickTimeoutOptions = resolveOptions(QUICK_TIMEOUT_OPTION_KEYS, t);
+  const defaultTimeoutOptions = resolveOptions(DEFAULT_TIMEOUT_OPTION_KEYS, t);
+  const longTimeoutOptions = resolveOptions(LONG_TIMEOUT_OPTION_KEYS, t);
+  const shellTimeoutOptions = resolveOptions(SHELL_TIMEOUT_OPTION_KEYS, t);
+  const sudoTimeoutOptions = resolveOptions(SUDO_TIMEOUT_OPTION_KEYS, t);
 
   const handleTimeoutChange = (key: keyof typeof settings.wslTimeouts, value: number) => {
     updateSetting("wslTimeouts", {
@@ -94,7 +107,7 @@ export function TimeoutSettings() {
               label={t('timeouts.quickLabel')}
               description={t('timeouts.quickDesc')}
               value={settings.wslTimeouts.quickSecs}
-              options={QUICK_TIMEOUT_OPTIONS}
+              options={quickTimeoutOptions}
               onChange={(v) => handleTimeoutChange("quickSecs", v as number)}
             />
           </div>
@@ -106,7 +119,7 @@ export function TimeoutSettings() {
               label={t('timeouts.defaultLabel')}
               description={t('timeouts.defaultDesc')}
               value={settings.wslTimeouts.defaultSecs}
-              options={DEFAULT_TIMEOUT_OPTIONS}
+              options={defaultTimeoutOptions}
               onChange={(v) => handleTimeoutChange("defaultSecs", v as number)}
             />
           </div>
@@ -118,7 +131,7 @@ export function TimeoutSettings() {
               label={t('timeouts.longLabel')}
               description={t('timeouts.longDesc')}
               value={settings.wslTimeouts.longSecs}
-              options={LONG_TIMEOUT_OPTIONS}
+              options={longTimeoutOptions}
               onChange={(v) => handleTimeoutChange("longSecs", v as number)}
             />
           </div>
@@ -130,7 +143,7 @@ export function TimeoutSettings() {
               label={t('timeouts.shell')}
               description={t('timeouts.shellDesc')}
               value={settings.wslTimeouts.shellSecs}
-              options={SHELL_TIMEOUT_OPTIONS}
+              options={shellTimeoutOptions}
               onChange={(v) => handleTimeoutChange("shellSecs", v as number)}
             />
 
@@ -138,7 +151,7 @@ export function TimeoutSettings() {
               label={t('timeouts.sudoShell')}
               description={t('timeouts.sudoShellDesc')}
               value={settings.wslTimeouts.sudoShellSecs}
-              options={SUDO_TIMEOUT_OPTIONS}
+              options={sudoTimeoutOptions}
               onChange={(v) => handleTimeoutChange("sudoShellSecs", v as number)}
             />
           </div>

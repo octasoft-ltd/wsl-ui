@@ -99,7 +99,7 @@ export function ContainerRuntimeSettings() {
                 type="text"
                 value={customCommand}
                 onChange={(e) => handleCustomCommandChange(e.target.value)}
-                placeholder="docker"
+                placeholder={t('containerRuntime.customPlaceholder')}
                 className="w-full px-3 py-2 bg-theme-bg-secondary border border-theme-border-secondary rounded-lg text-theme-text-primary placeholder:text-theme-text-muted/50 focus:outline-hidden focus:border-orange-500 font-mono text-sm"
               />
             </div>

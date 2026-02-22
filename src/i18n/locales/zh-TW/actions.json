@@ -34,6 +34,31 @@
     "titleSuffix": "- 輸出",
     "noOutput": "無輸出。"
   },
+  "editor": {
+    "iconLabel": "圖示",
+    "availableVars": "可用變數："
+  },
+  "exportTitle": "匯出自訂操作",
+  "importTitle": "匯入自訂操作",
+  "badge": {
+    "startup": "啟動"
+  },
+  "scope": {
+    "all": "所有發行版",
+    "pattern": "模式：{{pattern}}",
+    "count_one": "{{count}} 個發行版",
+    "count_other": "{{count}} 個發行版"
+  },
+  "sparseChanged": "稀疏模式已變更",
+  "sparseChangedMessage": "{{name}} 的稀疏模式已{{state}}",
+  "sparseToggleFailed": "切換稀疏模式失敗",
+  "sparseToggle": "切換稀疏模式",
+  "actionFailed": "操作失敗",
+  "actionFailedMessage": "執行操作失敗",
+  "distroIdUnavailable": "發行版 ID 無法使用",
+  "requiresSudo": "需要 sudo 密碼",
+  "confirmRunTitle": "執行 \"{{action}}\"？",
+  "confirmRunMessage": "確定要在 {{name}} 上執行此操作嗎？",
   "customActionsSettings": {
     "title": "自訂操作",
     "description": "定義顯示在發行版快捷操作選單中的 Shell 命令",

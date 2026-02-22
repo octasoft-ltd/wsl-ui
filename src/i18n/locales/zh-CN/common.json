@@ -10,7 +10,10 @@
     "back": "返回",
     "dismiss": "忽略",
     "learnMore": "了解更多",
-    "resetToDefault": "恢复默认"
+    "resetToDefault": "恢复默认",
+    "clear": "清除搜索",
+    "edit": "编辑",
+    "run": "运行"
   },
   "label": {
     "name": "名称",
@@ -54,6 +57,9 @@
   "wslVersion": {
     "wsl1": "WSL 1",
     "wsl2": "WSL 2"
+  },
+  "errors": {
+    "unknown": "发生未知错误"
   },
   "noOutput": "无输出",
   "output": "输出",

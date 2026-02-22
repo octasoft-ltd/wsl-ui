@@ -96,7 +96,14 @@
     "configuration": "Configuration",
     "loadingConfig": "Loading configuration...",
     "noConfig": "No configuration file (using defaults)",
-    "errorLoadConfig": "Failed to load configuration"
+    "errorLoadConfig": "Failed to load configuration",
+    "clonedFromId": "Cloned from ID: {{id}}",
+    "image": "Image",
+    "sourceUrl": "Source URL",
+    "clonedFrom": "Cloned From",
+    "importPath": "Import Path",
+    "reference": "Reference",
+    "copyToClipboard": "Copy {{field}} to clipboard"
   },
   "noRdp": {
     "title": "No Desktop Environment Detected",
@@ -241,7 +248,13 @@
     "mounting": "Mounting...",
     "errorNoVhd": "Please select a VHD file",
     "errorNoDisk": "Please select a physical disk",
-    "errorFailed": "Failed to mount disk"
+    "errorFailed": "Failed to mount disk",
+    "searchPlaceholder": "Search distributions...",
+    "refreshCatalog": "Refresh catalog",
+    "fsAutoDetect": "Auto-detect",
+    "fsLinuxDefault": "ext4 (Linux default)",
+    "fsWindows": "NTFS (Windows)",
+    "partition": "Partition {{index}}"
   },
   "installConfig": {
     "title": "Configure Installation",
@@ -263,6 +276,7 @@
     "unmountAll": "Unmount All",
     "noDisks": "No disks mounted",
     "noDisksHint": "Use \"Mount Disk\" to attach VHD or physical disks",
-    "mountDisk": "Mount Disk"
+    "mountDisk": "Mount Disk",
+    "unmountDisk": "Unmount this disk"
   }
 }

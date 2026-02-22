@@ -63,7 +63,7 @@ function ActionEditor({ action, onSave, onCancel, distros }: ActionEditorProps) 
 
       {/* Icon */}
       <div>
-        <label className="block text-sm font-medium text-stone-200 mb-2">Icon</label>
+        <label className="block text-sm font-medium text-stone-200 mb-2">{t('editor.iconLabel')}</label>
         <div className="grid grid-cols-6 gap-2">
           {ACTION_ICONS.map((icon) => (
             <button
@@ -96,7 +96,7 @@ function ActionEditor({ action, onSave, onCancel, distros }: ActionEditorProps) 
           className="w-full px-3 py-2 bg-stone-900 border border-stone-700 rounded-lg text-stone-100 placeholder-stone-600 focus:outline-hidden focus:border-orange-500 font-mono text-sm"
         />
         <div className="mt-2">
-          <p className="text-xs text-stone-500 mb-1">Available variables:</p>
+          <p className="text-xs text-stone-500 mb-1">{t('editor.availableVars')}</p>
           <div className="flex flex-wrap gap-1">
             {ACTION_VARIABLES.map((v) => (
               <button
@@ -313,7 +313,7 @@ export function CustomActionsSettings() {
       const path = await save({
         defaultPath: "wsl-ui-actions.json",
         filters: [{ name: "JSON", extensions: ["json"] }],
-        title: "Export Custom Actions",
+        title: t('exportTitle'),
       });
 
       if (path) {
@@ -329,7 +329,7 @@ export function CustomActionsSettings() {
     try {
       const path = await open({
         filters: [{ name: "JSON", extensions: ["json"] }],
-        title: "Import Custom Actions",
+        title: t('importTitle'),
         multiple: false,
       });
 
@@ -430,22 +430,22 @@ export function CustomActionsSettings() {
                   <h4 className="font-medium text-stone-100">{action.name}</h4>
                   {action.runOnStartup && (
                     <span className="px-1.5 py-0.5 text-[10px] font-medium bg-green-500/20 text-green-400 rounded">
-                      Startup
+                      {t('badge.startup')}
                     </span>
                   )}
                 </div>
                 <p className="text-xs text-stone-500 font-mono truncate">{action.command}</p>
                 <p className="text-xs text-stone-600 mt-1">
-                  {action.scope.type === "all" && "All distributions"}
-                  {action.scope.type === "pattern" && `Pattern: ${action.scope.pattern}`}
-                  {action.scope.type === "specific" && `${action.scope.distros.length} distributions`}
+                  {action.scope.type === "all" && t('scope.all')}
+                  {action.scope.type === "pattern" && t('scope.pattern', { pattern: action.scope.pattern })}
+                  {action.scope.type === "specific" && t('scope.count', { count: action.scope.distros.length })}
                 </p>
               </div>
               <div className="flex gap-1">
                 <button
                   onClick={() => setEditingAction(action)}
                   className="p-2 text-stone-500 hover:text-stone-200 hover:bg-stone-800 rounded-lg transition-colors"
-                  title="Edit"
+                  title={t('common:button.edit')}
                   data-testid={`action-edit-${action.name.replace(/\s+/g, "-")}`}
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -460,7 +460,7 @@ export function CustomActionsSettings() {
                 <button
                   onClick={() => deleteAction(action.id)}
                   className="p-2 text-stone-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
-                  title="Delete"
+                  title={t('common:button.delete')}
                   data-testid={`action-delete-${action.name.replace(/\s+/g, "-")}`}
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

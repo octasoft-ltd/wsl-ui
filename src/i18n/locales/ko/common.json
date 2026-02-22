@@ -10,7 +10,10 @@
     "back": "뒤로",
     "dismiss": "무시",
     "learnMore": "자세히 알아보기",
-    "resetToDefault": "기본값으로 재설정"
+    "resetToDefault": "기본값으로 재설정",
+    "clear": "검색 지우기",
+    "edit": "편집",
+    "run": "실행"
   },
   "label": {
     "name": "이름",
@@ -48,11 +51,15 @@
   "validation": {
     "invalidChars": "이름에는 영문자, 숫자, 점, 밑줄, 하이픈만 사용할 수 있습니다",
     "duplicateName": "\"{{name}}\" 이름의 배포판이 이미 존재합니다",
+    "nameExists": "이 이름의 배포판이 이미 존재합니다",
     "required": "이 필드는 필수입니다"
   },
   "wslVersion": {
     "wsl1": "WSL 1",
     "wsl2": "WSL 2"
+  },
+  "errors": {
+    "unknown": "알 수 없는 오류가 발생했습니다"
   },
   "noOutput": "출력 없음",
   "output": "출력",

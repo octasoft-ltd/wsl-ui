@@ -9,19 +9,19 @@ import { Button, IconButton } from "./ui/Button";
 type TabType = "msstore" | "container" | "download";
 
 // Tab configuration matching NewDistroDialog (ordered: Quick Install, Container, Download)
-const TAB_CONFIG: Record<TabType, { label: string; color: string; Icon: React.FC<{ className?: string }> }> = {
+const TAB_CONFIG: Record<TabType, { labelKey: string; color: string; Icon: React.FC<{ className?: string }> }> = {
   msstore: {
-    label: "Quick Install",
+    labelKey: "distroSources.tab.quickInstall",
     color: "emerald",
     Icon: StoreIcon,
   },
   container: {
-    label: "Container",
+    labelKey: "distroSources.tab.container",
     color: "orange",
     Icon: ContainerIcon,
   },
   download: {
-    label: "Download",
+    labelKey: "distroSources.tab.download",
     color: "blue",
     Icon: SourceDownloadIcon,
   },
@@ -37,6 +37,7 @@ function ConfirmDialog({
   title,
   message,
   confirmLabel,
+  cancelLabel,
   onConfirm,
   onCancel,
 }: {
@@ -44,6 +45,7 @@ function ConfirmDialog({
   title: string;
   message: string;
   confirmLabel: string;
+  cancelLabel: string;
   onConfirm: () => void;
   onCancel: () => void;
 }) {
@@ -57,7 +59,7 @@ function ConfirmDialog({
         <p className="text-sm text-theme-text-secondary mb-6">{message}</p>
         <div className="flex justify-end gap-3">
           <Button variant="secondary" onClick={onCancel}>
-            Cancel
+            {cancelLabel}
           </Button>
           <Button variant="primary" colorScheme="red" onClick={onConfirm}>
             {confirmLabel}
@@ -378,9 +380,9 @@ export function DistroSourcesSettings() {
   // Per-tab reset handlers
   const handleResetDownloads = () => {
     showConfirmDialog(
-      "Reset Download Sources",
-      "This will reset all download sources to their default values. Your custom sources will be removed.",
-      "Reset Downloads",
+      t('distroSources.dialog.resetDownloadSources'),
+      t('distroSources.dialog.resetDownloadSourcesMessage'),
+      t('distroSources.dialog.resetDownloads'),
       async () => {
         try {
           const updated = await wslService.resetDownloadDistros();
@@ -396,9 +398,9 @@ export function DistroSourcesSettings() {
 
   const handleResetContainers = () => {
     showConfirmDialog(
-      "Reset Container Images",
-      "This will reset all container images to their default values. Your custom images will be removed.",
-      "Reset Containers",
+      t('distroSources.dialog.resetContainerImages'),
+      t('distroSources.dialog.resetContainerImagesMessage'),
+      t('distroSources.dialog.resetContainers'),
       async () => {
         try {
           const updated = await wslService.resetContainerImages();
@@ -414,9 +416,9 @@ export function DistroSourcesSettings() {
 
   const handleResetMsStore = () => {
     showConfirmDialog(
-      "Reset Quick Install Metadata",
-      "This will reset all Quick Install metadata to their default values. Your custom metadata will be removed.",
-      "Reset Metadata",
+      t('distroSources.dialog.resetQuickInstallMetadata'),
+      t('distroSources.dialog.resetQuickInstallMetadataMessage'),
+      t('distroSources.dialog.resetMetadata'),
       async () => {
         try {
           const updated = await wslService.resetMsStoreDistros();
@@ -461,6 +463,7 @@ export function DistroSourcesSettings() {
           title={confirmDialog.title}
           message={confirmDialog.message}
           confirmLabel={confirmDialog.confirmLabel}
+          cancelLabel={t('distroSources.button.cancel')}
           onConfirm={confirmDialog.onConfirm}
           onCancel={() => setConfirmDialog(null)}
         />
@@ -477,7 +480,7 @@ export function DistroSourcesSettings() {
           <p className="text-sm text-red-200">{error}</p>
           <IconButton
             icon={<CloseIcon size="sm" />}
-            label="Dismiss error"
+            label={t('distroSources.action.dismissError')}
             variant="ghost"
             colorScheme="red"
             size="sm"
@@ -513,7 +516,7 @@ export function DistroSourcesSettings() {
                 className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 text-sm font-medium rounded-md transition-all ${colorClasses}`}
               >
                 <config.Icon className="w-4 h-4" />
-                {config.label}
+                {t(config.labelKey)}
               </button>
             );
           }
@@ -533,48 +536,48 @@ export function DistroSourcesSettings() {
                   <SourceDownloadIcon className="w-4 h-4 text-white" />
                 </div>
                 <h3 className="font-medium text-theme-text-primary">
-                  {editingId ? "Edit Download Source" : "Add Download Source"}
+                  {editingId ? t('distroSources.dialog.editDownloadSource') : t('distroSources.dialog.addDownloadSource')}
                 </h3>
               </div>
               <div>
-                <label className="block text-sm text-theme-text-muted mb-1">Name *</label>
+                <label className="block text-sm text-theme-text-muted mb-1">{t('distroSources.form.nameRequired')}</label>
                 <input
                   type="text"
                   value={downloadForm.name}
                   onChange={(e) => setDownloadForm({ ...downloadForm, name: e.target.value })}
-                  placeholder="e.g., Ubuntu 24.04 LTS"
+                  placeholder={t('distroSources.form.placeholder.downloadName')}
                   className="w-full px-3 py-2 bg-theme-bg-secondary border border-theme-border-secondary rounded-lg text-theme-text-primary focus:outline-none focus:border-blue-500"
                 />
               </div>
               <div>
-                <label className="block text-sm text-theme-text-muted mb-1">Description</label>
+                <label className="block text-sm text-theme-text-muted mb-1">{t('distroSources.form.description')}</label>
                 <input
                   type="text"
                   value={downloadForm.description}
                   onChange={(e) =>
                     setDownloadForm({ ...downloadForm, description: e.target.value })
                   }
-                  placeholder="e.g., Noble Numbat - Latest LTS"
+                  placeholder={t('distroSources.form.placeholder.downloadDescription')}
                   className="w-full px-3 py-2 bg-theme-bg-secondary border border-theme-border-secondary rounded-lg text-theme-text-primary focus:outline-none focus:border-blue-500"
                 />
               </div>
               <div>
-                <label className="block text-sm text-theme-text-muted mb-1">Download URL *</label>
+                <label className="block text-sm text-theme-text-muted mb-1">{t('distroSources.form.downloadUrl')}</label>
                 <input
                   type="url"
                   value={downloadForm.url}
                   onChange={(e) => setDownloadForm({ ...downloadForm, url: e.target.value })}
-                  placeholder="https://example.com/distro.tar.gz"
+                  placeholder={t('distroSources.form.placeholder.downloadUrl')}
                   className="w-full px-3 py-2 bg-theme-bg-secondary border border-theme-border-secondary rounded-lg text-theme-text-primary focus:outline-none focus:border-blue-500"
                 />
               </div>
               <div>
-                <label className="block text-sm text-theme-text-muted mb-1">Size (optional)</label>
+                <label className="block text-sm text-theme-text-muted mb-1">{t('distroSources.form.sizeOptional')}</label>
                 <input
                   type="text"
                   value={downloadForm.size}
                   onChange={(e) => setDownloadForm({ ...downloadForm, size: e.target.value })}
-                  placeholder="e.g., ~370 MB"
+                  placeholder={t('distroSources.form.placeholder.downloadSize')}
                   className="w-full px-3 py-2 bg-theme-bg-secondary border border-theme-border-secondary rounded-lg text-theme-text-primary focus:outline-none focus:border-blue-500"
                 />
               </div>
@@ -588,7 +591,7 @@ export function DistroSourcesSettings() {
                   onClick={editingId ? handleUpdateDownload : handleAddDownload}
                   disabled={!downloadForm.name || !downloadForm.url}
                 >
-                  {editingId ? "Update" : "Add"}
+                  {editingId ? t('distroSources.button.update') : t('distroSources.button.add')}
                 </Button>
               </div>
             </div>
@@ -611,7 +614,7 @@ export function DistroSourcesSettings() {
           {sortedDownloadDistros.length === 0 ? (
             <div className="text-center py-12 bg-theme-bg-tertiary/50 border border-theme-border-secondary rounded-xl">
               <SourceDownloadIcon className="w-8 h-8 mx-auto mb-2 text-theme-text-muted opacity-50" />
-              <p className="text-theme-text-muted">No download sources configured.</p>
+              <p className="text-theme-text-muted">{t('distroSources.empty.downloads')}</p>
             </div>
           ) : (
             <div className="space-y-2">
@@ -634,7 +637,7 @@ export function DistroSourcesSettings() {
                       <h4 className="font-medium text-theme-text-primary">{distro.name}</h4>
                       {distro.isBuiltIn && (
                         <span className="text-xs px-1.5 py-0.5 bg-theme-bg-tertiary text-theme-text-muted rounded-sm">
-                          built-in
+                          {t('distroSources.badge.builtIn')}
                         </span>
                       )}
                     </div>
@@ -643,7 +646,7 @@ export function DistroSourcesSettings() {
                   </div>
                   <IconButton
                     icon={<EditIcon size="sm" />}
-                    label="Edit"
+                    label={t('distroSources.action.edit')}
                     variant="ghost"
                     colorScheme="blue"
                     onClick={() => startEditDownload(distro)}
@@ -651,7 +654,7 @@ export function DistroSourcesSettings() {
                   {!distro.isBuiltIn && (
                     <IconButton
                       icon={<TrashIcon size="sm" />}
-                      label="Delete"
+                      label={t('distroSources.action.delete')}
                       variant="ghost"
                       colorScheme="red"
                       onClick={() => handleDeleteDownload(distro.id)}
@@ -662,7 +665,7 @@ export function DistroSourcesSettings() {
                     className={`relative w-10 h-5 rounded-full transition-colors ${
                       distro.enabled ? "bg-blue-500" : "bg-theme-border-secondary"
                     }`}
-                    title={distro.enabled ? "Disable" : "Enable"}
+                    title={distro.enabled ? t('distroSources.toggle.disable') : t('distroSources.toggle.enable')}
                   >
                     <div
                       className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-transform ${
@@ -691,38 +694,38 @@ export function DistroSourcesSettings() {
                   <ContainerIcon className="w-4 h-4 text-white" />
                 </div>
                 <h3 className="font-medium text-theme-text-primary">
-                  {editingId ? "Edit Container Image" : "Add Container Image"}
+                  {editingId ? t('distroSources.dialog.editContainerImage') : t('distroSources.dialog.addContainerImage')}
                 </h3>
               </div>
               <div>
-                <label className="block text-sm text-theme-text-muted mb-1">Name *</label>
+                <label className="block text-sm text-theme-text-muted mb-1">{t('distroSources.form.nameRequired')}</label>
                 <input
                   type="text"
                   value={containerForm.name}
                   onChange={(e) => setContainerForm({ ...containerForm, name: e.target.value })}
-                  placeholder="e.g., Rocky Linux 9"
+                  placeholder={t('distroSources.form.placeholder.containerName')}
                   className="w-full px-3 py-2 bg-theme-bg-secondary border border-theme-border-secondary rounded-lg text-theme-text-primary focus:outline-none focus:border-orange-500"
                 />
               </div>
               <div>
-                <label className="block text-sm text-theme-text-muted mb-1">Description</label>
+                <label className="block text-sm text-theme-text-muted mb-1">{t('distroSources.form.description')}</label>
                 <input
                   type="text"
                   value={containerForm.description}
                   onChange={(e) =>
                     setContainerForm({ ...containerForm, description: e.target.value })
                   }
-                  placeholder="e.g., Enterprise-ready Linux"
+                  placeholder={t('distroSources.form.placeholder.containerDescription')}
                   className="w-full px-3 py-2 bg-theme-bg-secondary border border-theme-border-secondary rounded-lg text-theme-text-primary focus:outline-none focus:border-orange-500"
                 />
               </div>
               <div>
-                <label className="block text-sm text-theme-text-muted mb-1">Container Image *</label>
+                <label className="block text-sm text-theme-text-muted mb-1">{t('distroSources.form.containerImage')}</label>
                 <input
                   type="text"
                   value={containerForm.image}
                   onChange={(e) => setContainerForm({ ...containerForm, image: e.target.value })}
-                  placeholder="e.g., docker.io/library/rockylinux:9"
+                  placeholder={t('distroSources.form.placeholder.containerImage')}
                   className="w-full px-3 py-2 bg-theme-bg-secondary border border-theme-border-secondary rounded-lg text-theme-text-primary focus:outline-none focus:border-orange-500"
                 />
               </div>
@@ -736,7 +739,7 @@ export function DistroSourcesSettings() {
                   onClick={editingId ? handleUpdateContainer : handleAddContainer}
                   disabled={!containerForm.name || !containerForm.image}
                 >
-                  {editingId ? "Update" : "Add"}
+                  {editingId ? t('distroSources.button.update') : t('distroSources.button.add')}
                 </Button>
               </div>
             </div>
@@ -759,7 +762,7 @@ export function DistroSourcesSettings() {
           {sortedContainerImages.length === 0 ? (
             <div className="text-center py-12 bg-theme-bg-tertiary/50 border border-theme-border-secondary rounded-xl">
               <ContainerIcon className="w-8 h-8 mx-auto mb-2 text-theme-text-muted opacity-50" />
-              <p className="text-theme-text-muted">No container images configured.</p>
+              <p className="text-theme-text-muted">{t('distroSources.empty.containers')}</p>
             </div>
           ) : (
             <div className="space-y-2">
@@ -782,7 +785,7 @@ export function DistroSourcesSettings() {
                       <h4 className="font-medium text-theme-text-primary">{image.name}</h4>
                       {image.isBuiltIn && (
                         <span className="text-xs px-1.5 py-0.5 bg-theme-bg-tertiary text-theme-text-muted rounded-sm">
-                          built-in
+                          {t('distroSources.badge.builtIn')}
                         </span>
                       )}
                     </div>
@@ -791,7 +794,7 @@ export function DistroSourcesSettings() {
                   </div>
                   <IconButton
                     icon={<EditIcon size="sm" />}
-                    label="Edit"
+                    label={t('distroSources.action.edit')}
                     variant="ghost"
                     colorScheme="orange"
                     onClick={() => startEditContainer(image)}
@@ -799,7 +802,7 @@ export function DistroSourcesSettings() {
                   {!image.isBuiltIn && (
                     <IconButton
                       icon={<TrashIcon size="sm" />}
-                      label="Delete"
+                      label={t('distroSources.action.delete')}
                       variant="ghost"
                       colorScheme="red"
                       onClick={() => handleDeleteContainer(image.id)}
@@ -810,7 +813,7 @@ export function DistroSourcesSettings() {
                     className={`relative w-10 h-5 rounded-full transition-colors ${
                       image.enabled ? "bg-orange-500" : "bg-theme-border-secondary"
                     }`}
-                    title={image.enabled ? "Disable" : "Enable"}
+                    title={image.enabled ? t('distroSources.toggle.disable') : t('distroSources.toggle.enable')}
                   >
                     <div
                       className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-transform ${
@@ -832,11 +835,7 @@ export function DistroSourcesSettings() {
           <div className="bg-emerald-900/20 border border-emerald-700/40 rounded-lg p-3 text-xs text-emerald-200">
             <div className="flex items-start gap-2">
               <StoreIcon className="w-4 h-4 mt-0.5 flex-shrink-0" />
-              <span>
-                Quick Install metadata provides display info (color, description) for distros
-                returned by <code className="bg-emerald-900/50 px-1 rounded-sm">wsl --list --online</code>.
-                The distro list itself is provided by Microsoft.
-              </span>
+              <span dangerouslySetInnerHTML={{ __html: t('distroSources.info.quickInstall') }} />
             </div>
           </div>
 
@@ -850,32 +849,30 @@ export function DistroSourcesSettings() {
                   <StoreIcon className="w-4 h-4 text-white" />
                 </div>
                 <h3 className="font-medium text-theme-text-primary">
-                  {editingId ? "Edit Quick Install Metadata" : "Add Quick Install Metadata"}
+                  {editingId ? t('distroSources.dialog.editQuickInstallMetadata') : t('distroSources.dialog.addQuickInstallMetadata')}
                 </h3>
               </div>
               <div>
-                <label className="block text-sm text-theme-text-muted mb-1">Distro ID *</label>
+                <label className="block text-sm text-theme-text-muted mb-1">{t('distroSources.form.distroId')}</label>
                 <input
                   type="text"
                   value={msStoreForm.distroId}
                   onChange={(e) => setMsStoreForm({ ...msStoreForm, distroId: e.target.value })}
-                  placeholder="e.g., Ubuntu-24.04"
+                  placeholder={t('distroSources.form.placeholder.msStoreDistroId')}
                   disabled={!!editingId}
                   className="w-full px-3 py-2 bg-theme-bg-secondary border border-theme-border-secondary rounded-lg text-theme-text-primary focus:outline-none focus:border-emerald-500 disabled:opacity-50"
                 />
-                <p className="text-xs text-theme-text-muted mt-1">
-                  Must match the ID from <code>wsl --list --online</code>
-                </p>
+                <p className="text-xs text-theme-text-muted mt-1" dangerouslySetInnerHTML={{ __html: t('distroSources.form.distroIdHint') }} />
               </div>
               <div>
-                <label className="block text-sm text-theme-text-muted mb-1">Description</label>
+                <label className="block text-sm text-theme-text-muted mb-1">{t('distroSources.form.description')}</label>
                 <input
                   type="text"
                   value={msStoreForm.description}
                   onChange={(e) =>
                     setMsStoreForm({ ...msStoreForm, description: e.target.value })
                   }
-                  placeholder="e.g., Noble Numbat"
+                  placeholder={t('distroSources.form.placeholder.msStoreDescription')}
                   className="w-full px-3 py-2 bg-theme-bg-secondary border border-theme-border-secondary rounded-lg text-theme-text-primary focus:outline-none focus:border-emerald-500"
                 />
               </div>
@@ -889,7 +886,7 @@ export function DistroSourcesSettings() {
                   onClick={handleAddMsStore}
                   disabled={!msStoreForm.distroId}
                 >
-                  {editingId ? "Update" : "Add"}
+                  {editingId ? t('distroSources.button.update') : t('distroSources.button.add')}
                 </Button>
               </div>
             </div>
@@ -912,7 +909,7 @@ export function DistroSourcesSettings() {
           {sortedMsStoreEntries.length === 0 ? (
             <div className="text-center py-12 bg-theme-bg-tertiary/50 border border-theme-border-secondary rounded-xl">
               <StoreIcon className="w-8 h-8 mx-auto mb-2 text-theme-text-muted opacity-50" />
-              <p className="text-theme-text-muted">No Quick Install metadata configured.</p>
+              <p className="text-theme-text-muted">{t('distroSources.empty.quickInstall')}</p>
             </div>
           ) : (
             <div className="space-y-2">
@@ -936,14 +933,14 @@ export function DistroSourcesSettings() {
                   </div>
                   <IconButton
                     icon={<EditIcon size="sm" />}
-                    label="Edit"
+                    label={t('distroSources.action.edit')}
                     variant="ghost"
                     colorScheme="emerald"
                     onClick={() => startEditMsStore(distroId, info)}
                   />
                   <IconButton
                     icon={<TrashIcon size="sm" />}
-                    label="Delete"
+                    label={t('distroSources.action.delete')}
                     variant="ghost"
                     colorScheme="red"
                     onClick={() => handleDeleteMsStore(distroId)}
@@ -953,7 +950,7 @@ export function DistroSourcesSettings() {
                     className={`relative w-10 h-5 rounded-full transition-colors ${
                       info.enabled !== false ? "bg-emerald-500" : "bg-theme-border-secondary"
                     }`}
-                    title={info.enabled !== false ? "Disable" : "Enable"}
+                    title={info.enabled !== false ? t('distroSources.toggle.disable') : t('distroSources.toggle.enable')}
                   >
                     <div
                       className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-transform ${
@@ -971,5 +968,3 @@ export function DistroSourcesSettings() {
     </div>
   );
 }
-
-

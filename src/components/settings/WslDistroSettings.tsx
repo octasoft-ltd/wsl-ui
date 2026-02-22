@@ -46,7 +46,7 @@ export function WslDistroSettings() {
       const loaded = await wslService.getWslConf(distroName, distro?.id);
       setConfig(loaded);
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Failed to load wsl.conf";
+      const message = err instanceof Error ? err.message : t('wslDistro.loadError');
       logger.error("Failed to load wsl.conf:", "WslDistroSettings", err);
       setError(message);
       setConfig(DEFAULT_WSL_CONF);
@@ -69,7 +69,7 @@ export function WslDistroSettings() {
       await wslService.saveWslConf(selectedDistro, config);
       setHasChanges(false);
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Failed to save wsl.conf";
+      const message = err instanceof Error ? err.message : t('wslDistro.saveError');
       logger.error("Failed to save wsl.conf:", "WslDistroSettings", err);
       setError(message);
     } finally {
@@ -113,7 +113,7 @@ export function WslDistroSettings() {
           >
             {distributions.map((d) => (
               <option key={d.name} value={d.name}>
-                {d.name} {d.isDefault ? "(default)" : ""}
+                {d.name} {d.isDefault ? t('wslDistro.defaultIndicator') : ""}
               </option>
             ))}
           </select>
@@ -293,7 +293,7 @@ export function WslDistroSettings() {
                   description={t('wslDistro.defaultUserDesc')}
                   value={config.userDefault || ""}
                   onChange={(v) => updateConfig("userDefault", v || undefined)}
-                  placeholder="e.g., ubuntu"
+                  placeholder={t('wslDistro.defaultUserPlaceholder')}
                   testId="distro-default-user"
                 />
               </div>
@@ -303,7 +303,7 @@ export function WslDistroSettings() {
           {error && (
             <div className="p-4 bg-red-900/30 border border-red-700/50 rounded-xl" data-testid="distro-config-error">
               <p className="text-sm text-red-400">
-                <span className="font-medium">Error:</span> {error}
+                <span className="font-medium">{t('wslDistro.errorLabel')}</span> {error}
               </p>
             </div>
           )}

@@ -182,7 +182,7 @@ export function NewDistroDialog({ isOpen, onClose }: NewDistroDialogProps) {
     setError(null);
 
     if (!selectedDistro) {
-      setError("Please select a distribution");
+      setError(t('errorNoDistro'));
       return;
     }
 
@@ -215,7 +215,7 @@ export function NewDistroDialog({ isOpen, onClose }: NewDistroDialogProps) {
         ? err.message
         : typeof err === 'string'
           ? err
-          : "Failed to install distribution";
+          : t('errorInstallFailed');
       setError(errorMessage);
       setProgress(null);
     } finally {
@@ -233,7 +233,7 @@ export function NewDistroDialog({ isOpen, onClose }: NewDistroDialogProps) {
       if (!url) return;
 
       setIsCreating(true);
-      setProgress("Starting download...");
+      setProgress(t('downloadStarting'));
       setDownloadProgress(null);
 
       const unlisten = await wslService.onDownloadProgress((progress) => {
@@ -284,7 +284,7 @@ export function NewDistroDialog({ isOpen, onClose }: NewDistroDialogProps) {
               const suggestedName = filename.replace(/\.(tar\.gz|tar\.xz|tar|rootfs)$/i, '').replace(/[^a-zA-Z0-9]/g, '-');
               const newDownloadDistro: DownloadDistro = {
                 id: `custom-${Date.now()}`,
-                name: suggestedName || 'Custom Distribution',
+                name: suggestedName || t('customDistribution'),
                 description: url,
                 url: url,
                 enabled: true,
@@ -315,7 +315,7 @@ export function NewDistroDialog({ isOpen, onClose }: NewDistroDialogProps) {
           ? err.message
           : typeof err === 'string'
             ? err
-            : "Failed to install distribution";
+            : t('errorInstallFailed');
         setError(errorMessage);
         setProgress(null);
       } finally {
@@ -328,7 +328,7 @@ export function NewDistroDialog({ isOpen, onClose }: NewDistroDialogProps) {
       }
     } else if (mode === "community" && selectedLxcDistro) {
       setIsCreating(true);
-      setProgress(`Downloading ${selectedLxcDistro.name} ${selectedLxcDistro.releaseTitle}...`);
+      setProgress(t('downloading', { name: selectedLxcDistro.name, release: selectedLxcDistro.releaseTitle }));
       setDownloadProgress(null);
 
       const unlisten = await wslService.onDownloadProgress((progress) => {
@@ -375,7 +375,7 @@ export function NewDistroDialog({ isOpen, onClose }: NewDistroDialogProps) {
           ? err.message
           : typeof err === 'string'
             ? err
-            : "Failed to install distribution";
+            : t('errorInstallFailed');
         setError(errorMessage);
         setProgress(null);
       } finally {
@@ -441,7 +441,7 @@ export function NewDistroDialog({ isOpen, onClose }: NewDistroDialogProps) {
           ? err.message
           : typeof err === 'string'
             ? err
-            : "Failed to create distribution";
+            : t('errorCreateFailed');
         setError(errorMessage);
         setProgress(null);
       } finally {
@@ -498,7 +498,7 @@ export function NewDistroDialog({ isOpen, onClose }: NewDistroDialogProps) {
     const filename = urlObj.pathname.split('/').pop() || 'custom';
     const suggestedName = filename.replace(/\.(tar\.gz|tar\.xz|tar|rootfs)$/i, '').replace(/[^a-zA-Z0-9]/g, '-');
     setPendingInstallItem({
-      name: "Custom URL",
+      name: t('customUrlName'),
       suggestedName: suggestedName || "custom-distro",
       description: customUrl.trim(),
     });
@@ -525,13 +525,13 @@ export function NewDistroDialog({ isOpen, onClose }: NewDistroDialogProps) {
     try {
       const info = await wslService.parseImageReference(customImage.trim());
       setPendingInstallItem({
-        name: "Custom Image",
+        name: t('customImageName'),
         suggestedName: info.suggestedName,
         description: info.fullReference,
       });
     } catch {
       setPendingInstallItem({
-        name: "Custom Image",
+        name: t('customImageName'),
         suggestedName: "custom-container",
         description: customImage.trim(),
       });
@@ -603,7 +603,7 @@ export function NewDistroDialog({ isOpen, onClose }: NewDistroDialogProps) {
               <h2 className="text-2xl font-semibold text-theme-text-primary">{t('title')}</h2>
               <IconButton
                 icon={<CloseIcon size="md" />}
-                label="Close"
+                label={t('common:button.close')}
                 variant="ghost"
                 onClick={handleClose}
               />
@@ -1023,8 +1023,8 @@ export function NewDistroDialog({ isOpen, onClose }: NewDistroDialogProps) {
                           </svg>
                         </div>
                         <div className="flex-1">
-                          <div className="font-medium text-theme-text-primary text-sm">Custom URL</div>
-                          <div className="text-xs text-theme-text-muted">Enter a direct link to a rootfs tarball</div>
+                          <div className="font-medium text-theme-text-primary text-sm">{t('customUrl.label')}</div>
+                          <div className="text-xs text-theme-text-muted">{t('customUrl.description')}</div>
                         </div>
                         {customUrl.trim() && (
                           <button

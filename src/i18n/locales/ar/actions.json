@@ -34,6 +34,31 @@
     "titleSuffix": "- المخرجات",
     "noOutput": "لا توجد مخرجات."
   },
+  "editor": {
+    "iconLabel": "الأيقونة",
+    "availableVars": "المتغيرات المتاحة:"
+  },
+  "exportTitle": "تصدير الإجراءات المخصصة",
+  "importTitle": "استيراد الإجراءات المخصصة",
+  "badge": {
+    "startup": "بدء التشغيل"
+  },
+  "scope": {
+    "all": "جميع التوزيعات",
+    "pattern": "النمط: {{pattern}}",
+    "count_one": "{{count}} توزيعة",
+    "count_other": "{{count}} توزيعات"
+  },
+  "sparseChanged": "تم تغيير الوضع المتناثر",
+  "sparseChangedMessage": "الوضع المتناثر {{state}} لـ {{name}}",
+  "sparseToggleFailed": "فشل تبديل الوضع المتناثر",
+  "sparseToggle": "تبديل الوضع المتناثر",
+  "actionFailed": "فشل الإجراء",
+  "actionFailedMessage": "فشل تشغيل الإجراء",
+  "distroIdUnavailable": "معرّف التوزيعة غير متاح",
+  "requiresSudo": "يتطلب كلمة مرور sudo",
+  "confirmRunTitle": "تشغيل \"{{action}}\"؟",
+  "confirmRunMessage": "هل أنت متأكد من رغبتك في تشغيل هذا الإجراء على {{name}}؟",
   "customActionsSettings": {
     "title": "إجراءات مخصصة",
     "description": "حدد أوامر الصدفة التي تظهر في قائمة الإجراءات السريعة للتوزيعة",

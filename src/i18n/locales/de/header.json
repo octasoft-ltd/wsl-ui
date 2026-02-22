@@ -5,13 +5,13 @@
     "import": "Importieren",
     "sync": "Synchronisieren",
     "shutdown": "Herunterfahren",
-    "systemTerminal": "WSL-Systemshell \u00f6ffnen",
+    "systemTerminal": "WSL-Systemshell öffnen",
     "help": "Hilfe",
     "settings": "Einstellungen"
   },
   "shutdownAll": {
     "title": "Alle Distributionen herunterfahren",
-    "message": "Dies f\u00e4hrt alle laufenden WSL-Distributionen herunter. Nicht gespeicherte Arbeit geht verloren.",
+    "message": "Dies fährt alle laufenden WSL-Distributionen herunter. Nicht gespeicherte Arbeit geht verloren.",
     "confirm": "Alle herunterfahren"
   }
 }

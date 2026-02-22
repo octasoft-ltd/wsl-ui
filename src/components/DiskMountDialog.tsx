@@ -13,15 +13,15 @@ interface DiskMountDialogProps {
 type MountTab = "vhd" | "physical";
 
 const FILESYSTEM_TYPES = [
-  { value: "", label: "Auto-detect" },
-  { value: "ext4", label: "ext4 (Linux default)" },
+  { value: "", labelKey: "diskMount.fsAutoDetect" },
+  { value: "ext4", labelKey: "diskMount.fsLinuxDefault" },
   { value: "ext3", label: "ext3" },
-  { value: "ntfs", label: "NTFS (Windows)" },
+  { value: "ntfs", labelKey: "diskMount.fsWindows" },
   { value: "vfat", label: "FAT32" },
   { value: "exfat", label: "exFAT" },
   { value: "btrfs", label: "Btrfs" },
   { value: "xfs", label: "XFS" },
-];
+] as const;
 
 function formatBytes(bytes: number): string {
   if (bytes === 0) return "0 B";
@@ -256,7 +256,7 @@ export function DiskMountDialog({ isOpen, onClose }: DiskMountDialogProps) {
                     <option value="">{t('diskMount.wholeDisk')}</option>
                     {selectedDisk.partitions.map((partition) => (
                       <option key={partition.index} value={partition.index}>
-                        Partition {partition.index}: {formatBytes(partition.sizeBytes)}
+                        {t('diskMount.partition', { index: partition.index })}: {formatBytes(partition.sizeBytes)}
                         {partition.filesystem ? ` (${partition.filesystem})` : ""}
                         {partition.driveLetter ? ` - ${partition.driveLetter}` : ""}
                       </option>
@@ -298,7 +298,7 @@ export function DiskMountDialog({ isOpen, onClose }: DiskMountDialogProps) {
             >
               {FILESYSTEM_TYPES.map((fs) => (
                 <option key={fs.value} value={fs.value}>
-                  {fs.label}
+                  {"labelKey" in fs ? t(fs.labelKey) : fs.label}
                 </option>
               ))}
             </select>

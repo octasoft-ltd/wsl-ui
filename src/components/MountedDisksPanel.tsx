@@ -173,7 +173,7 @@ export function MountedDisksPanel({ isOpen, onClose, onMountNew, anchorRef }: Mo
                         disabled={isUnmounting}
                         data-testid={`unmount-disk-${index}`}
                         className="p-1 text-theme-text-muted hover:text-theme-status-error hover:bg-[rgba(var(--status-error-rgb),0.1)] rounded transition-colors disabled:opacity-50"
-                        title="Unmount this disk"
+                        title={t('mountedDisks.unmountDisk')}
                       >
                         {isThisUnmounting ? (
                           <div className="w-3 h-3 border border-theme-text-muted border-t-transparent rounded-full animate-spin" />

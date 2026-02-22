@@ -10,7 +10,10 @@
     "back": "Back",
     "dismiss": "Dismiss",
     "learnMore": "Learn More",
-    "resetToDefault": "Reset to default"
+    "resetToDefault": "Reset to default",
+    "clear": "Clear search",
+    "edit": "Edit",
+    "run": "Run"
   },
   "label": {
     "name": "Name",
@@ -54,6 +57,9 @@
   "wslVersion": {
     "wsl1": "WSL 1",
     "wsl2": "WSL 2"
+  },
+  "errors": {
+    "unknown": "Unknown error occurred"
   },
   "noOutput": "No output",
   "output": "Output",

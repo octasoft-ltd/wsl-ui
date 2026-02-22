@@ -1,14 +1,14 @@
 {
   "wsl": "WSL",
-  "instances": "Inst\u00e2ncias",
+  "instances": "Instâncias",
   "active": "Ativas",
   "mem": "Mem",
   "primary": "Principal",
   "dev": "Dev",
   "disk": "DISCO",
   "updateWsl": {
-    "updating": "Aguardando aprova\u00e7\u00e3o do administrador... Verifique se h\u00e1 um di\u00e1logo UAC",
-    "preRelease": "Atualizar WSL (pr\u00e9-lan\u00e7amento) - Requer administrador",
+    "updating": "Aguardando aprovação do administrador... Verifique se há um diálogo UAC",
+    "preRelease": "Atualizar WSL (pré-lançamento) - Requer administrador",
     "default": "Atualizar WSL - Requer administrador",
     "uac": "UAC"
   },
@@ -17,6 +17,6 @@
     "count": "Montagens de disco ({{count}} montados)"
   },
   "preflight": {
-    "retry": "Repetir verifica\u00e7\u00e3o"
+    "retry": "Repetir verificação"
   }
 }

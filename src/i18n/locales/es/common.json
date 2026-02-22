@@ -7,26 +7,29 @@
     "confirm": "Confirmar",
     "retry": "Reintentar",
     "browse": "Examinar",
-    "back": "Atr\u00e1s",
+    "back": "Atrás",
     "dismiss": "Descartar",
-    "learnMore": "M\u00e1s informaci\u00f3n",
-    "resetToDefault": "Restablecer valores predeterminados"
+    "learnMore": "Más información",
+    "resetToDefault": "Restablecer valores predeterminados",
+    "clear": "Limpiar búsqueda",
+    "edit": "Editar",
+    "run": "Ejecutar"
   },
   "label": {
     "name": "Nombre",
     "status": "Estado",
-    "version": "Versi\u00f3n",
-    "size": "Tama\u00f1o",
-    "location": "Ubicaci\u00f3n",
+    "version": "Versión",
+    "size": "Tamaño",
+    "location": "Ubicación",
     "default": "Predeterminado",
-    "yes": "S\u00ed",
+    "yes": "Sí",
     "no": "No",
     "on": "Activado",
     "off": "Desactivado",
     "loading": "Cargando...",
     "none": "Ninguno",
     "ip": "IP",
-    "copied": "\u00a1Copiado!",
+    "copied": "¡Copiado!",
     "disk": "Disco",
     "memory": "Memoria",
     "cpu": "CPU",
@@ -34,8 +37,8 @@
     "notInstalled": "No instalado"
   },
   "status": {
-    "online": "En l\u00ednea",
-    "offline": "Sin conexi\u00f3n",
+    "online": "En línea",
+    "offline": "Sin conexión",
     "primary": "Principal",
     "compacting": "Compactando",
     "operational": "OPERATIVO",
@@ -46,14 +49,17 @@
     "tb": "TB"
   },
   "validation": {
-    "invalidChars": "El nombre solo puede contener letras, n\u00fameros, puntos, guiones bajos y guiones",
-    "duplicateName": "Ya existe una distribuci\u00f3n llamada \"{{name}}\"",
-    "nameExists": "Ya existe una distribuci\u00f3n con este nombre",
+    "invalidChars": "El nombre solo puede contener letras, números, puntos, guiones bajos y guiones",
+    "duplicateName": "Ya existe una distribución llamada \"{{name}}\"",
+    "nameExists": "Ya existe una distribución con este nombre",
     "required": "Este campo es obligatorio"
   },
   "wslVersion": {
     "wsl1": "WSL 1",
     "wsl2": "WSL 2"
+  },
+  "errors": {
+    "unknown": "Ocurrió un error desconocido"
   },
   "noOutput": "Sin salida",
   "output": "Salida",

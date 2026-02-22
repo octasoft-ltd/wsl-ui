@@ -3,7 +3,7 @@
   "instances": "Instanzen",
   "active": "Aktiv",
   "mem": "Spch",
-  "primary": "Prim\u00e4r",
+  "primary": "Primär",
   "dev": "Dev",
   "disk": "DISK",
   "updateWsl": {
@@ -17,6 +17,6 @@
     "count": "Festplatteneinbindungen ({{count}} eingebunden)"
   },
   "preflight": {
-    "retry": "Pr\u00fcfung wiederholen"
+    "retry": "Prüfung wiederholen"
   }
 }

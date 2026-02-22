@@ -1,8 +1,8 @@
 {
   "loading": "Inicializando sistemas...",
   "emptyState": {
-    "title": "Nenhuma inst\u00e2ncia detectada",
-    "description": "Implante uma distribui\u00e7\u00e3o WSL para come\u00e7ar"
+    "title": "Nenhuma instância detectada",
+    "description": "Implante uma distribuição WSL para começar"
   },
   "filter": {
     "all": "Todas",
@@ -18,23 +18,23 @@
     "v2": "v2"
   },
   "emptyFilter": {
-    "noDistros": "Nenhuma distribui\u00e7\u00e3o encontrada",
-    "noMatch": "Nenhuma distribui\u00e7\u00e3o corresponde aos filtros atuais",
+    "noDistros": "Nenhuma distribuição encontrada",
+    "noMatch": "Nenhuma distribuição corresponde aos filtros atuais",
     "clearFilters": "Limpar filtros"
   },
   "card": {
     "suspend": "Suspender",
     "launch": "Iniciar",
     "openTerminal": "Abrir terminal",
-    "openRdp": "\u00c1rea de Trabalho Remota",
-    "quickActions": "A\u00e7\u00f5es r\u00e1pidas",
-    "deleteDistro": "Excluir distribui\u00e7\u00e3o",
-    "ipTooltip": "Clique para copiar o endere\u00e7o IP"
+    "openRdp": "Área de Trabalho Remota",
+    "quickActions": "Ações rápidas",
+    "deleteDistro": "Excluir distribuição",
+    "ipTooltip": "Clique para copiar o endereço IP"
   },
   "deleteDialog": {
-    "title": "Excluir distribui\u00e7\u00e3o",
-    "message": "Tem certeza de que deseja excluir \"{{name}}\"? Esta a\u00e7\u00e3o n\u00e3o pode ser desfeita e todos os dados nesta distribui\u00e7\u00e3o ser\u00e3o permanentemente perdidos.",
-    "messageDefault": "Tem certeza de que deseja excluir \"{{name}}\"? Esta a\u00e7\u00e3o n\u00e3o pode ser desfeita e todos os dados nesta distribui\u00e7\u00e3o ser\u00e3o permanentemente perdidos.\n\nAviso: Esta \u00e9 sua distribui\u00e7\u00e3o padr\u00e3o. Ap\u00f3s a exclus\u00e3o, os comandos WSL falhar\u00e3o a menos que voc\u00ea defina outra distribui\u00e7\u00e3o como padr\u00e3o.",
+    "title": "Excluir distribuição",
+    "message": "Tem certeza de que deseja excluir \"{{name}}\"? Esta ação não pode ser desfeita e todos os dados nesta distribuição serão permanentemente perdidos.",
+    "messageDefault": "Tem certeza de que deseja excluir \"{{name}}\"? Esta ação não pode ser desfeita e todos os dados nesta distribuição serão permanentemente perdidos.\n\nAviso: Esta é sua distribuição padrão. Após a exclusão, os comandos WSL falharão a menos que você defina outra distribuição como padrão.",
     "confirm": "Excluir"
   }
 }

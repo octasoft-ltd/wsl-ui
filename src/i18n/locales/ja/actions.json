@@ -34,6 +34,31 @@
     "titleSuffix": "- 出力",
     "noOutput": "出力なし。"
   },
+  "editor": {
+    "iconLabel": "アイコン",
+    "availableVars": "利用可能な変数："
+  },
+  "exportTitle": "カスタムアクションをエクスポート",
+  "importTitle": "カスタムアクションをインポート",
+  "badge": {
+    "startup": "起動時"
+  },
+  "scope": {
+    "all": "すべてのディストリビューション",
+    "pattern": "パターン：{{pattern}}",
+    "count_one": "{{count}} 個のディストリビューション",
+    "count_other": "{{count}} 個のディストリビューション"
+  },
+  "sparseChanged": "スパースモードが変更されました",
+  "sparseChangedMessage": "{{name}} のスパースモードを {{state}} に変更しました",
+  "sparseToggleFailed": "スパースモードの切り替えに失敗しました",
+  "sparseToggle": "スパースモードを切り替え",
+  "actionFailed": "アクションに失敗しました",
+  "actionFailedMessage": "アクションの実行に失敗しました",
+  "distroIdUnavailable": "ディストリビューション ID が利用できません",
+  "requiresSudo": "sudo パスワードが必要です",
+  "confirmRunTitle": "「{{action}}」を実行しますか？",
+  "confirmRunMessage": "{{name}} でこのアクションを実行してもよろしいですか？",
   "customActionsSettings": {
     "title": "カスタムアクション",
     "description": "ディストリビューションのクイックアクションメニューに表示されるシェルコマンドを定義",

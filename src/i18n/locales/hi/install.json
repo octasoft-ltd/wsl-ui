@@ -60,6 +60,20 @@
   "communityDisabledHint": "सेटिंग्स > डिस्ट्रिब्यूशन स्रोत में इसे सक्षम करें",
   "useCustomUrl": "इसके बजाय कस्टम URL उपयोग करें",
   "useCustomImage": "इसके बजाय कस्टम इमेज उपयोग करें",
+  "catalogDisabled": "समुदाय कैटलॉग अक्षम है। इसे सेटिंग्स में सक्षम करें।",
+  "catalogLoadError": "कैटलॉग लोड करने में विफल",
+  "catalogNoMatch": "\"{{query}}\" से कोई डिस्ट्रिब्यूशन मेल नहीं खाता",
+  "catalogVersionCount_one": "{{count}} संस्करण उपलब्ध",
+  "catalogVersionCount_other": "{{count}} संस्करण उपलब्ध",
+  "catalogCacheInfo": "कैटलॉग {{date}} को {{time}} पर कैश किया गया",
+  "errorNoDistro": "कृपया एक डिस्ट्रिब्यूशन चुनें",
+  "errorInstallFailed": "डिस्ट्रिब्यूशन इंस्टॉल करने में विफल",
+  "errorCreateFailed": "डिस्ट्रिब्यूशन बनाने में विफल",
+  "downloadStarting": "डाउनलोड शुरू हो रहा है...",
+  "downloading": "{{name}} {{release}} डाउनलोड हो रहा है...",
+  "customDistribution": "कस्टम डिस्ट्रिब्यूशन",
+  "customUrlName": "कस्टम URL",
+  "customImageName": "कस्टम इमेज",
   "distroSources": {
     "title": "डिस्ट्रिब्यूशन स्रोत",
     "description": "कॉन्फ़िगर करें कि डिस्ट्रिब्यूशन कहां से डाउनलोड करें",
@@ -70,6 +84,73 @@
     "namePlaceholder": "उदा., Alpine Linux",
     "url": "URL",
     "noSources": "कोई कस्टम स्रोत कॉन्फ़िगर नहीं किया गया",
-    "builtInSources": "बिल्ट-इन स्रोत हमेशा उपलब्ध हैं"
+    "builtInSources": "बिल्ट-इन स्रोत हमेशा उपलब्ध हैं",
+    "tab": {
+      "quickInstall": "त्वरित इंस्टॉल",
+      "container": "कंटेनर",
+      "download": "डाउनलोड"
+    },
+    "badge": {
+      "builtIn": "बिल्ट-इन"
+    },
+    "form": {
+      "nameRequired": "नाम *",
+      "description": "विवरण",
+      "downloadUrl": "डाउनलोड URL *",
+      "sizeOptional": "आकार (वैकल्पिक)",
+      "containerImage": "कंटेनर इमेज *",
+      "distroId": "डिस्ट्रो ID *",
+      "distroIdHint": "<code>wsl --list --online</code> से ID मेल खानी चाहिए",
+      "placeholder": {
+        "downloadName": "जैसे, Ubuntu 24.04 LTS",
+        "downloadDescription": "जैसे, Noble Numbat - नवीनतम LTS",
+        "downloadUrl": "https://example.com/distro.tar.gz",
+        "downloadSize": "जैसे, ~370 MB",
+        "containerName": "जैसे, Rocky Linux 9",
+        "containerDescription": "जैसे, एंटरप्राइज़-रेडी Linux",
+        "containerImage": "जैसे, docker.io/library/rockylinux:9",
+        "msStoreDistroId": "जैसे, Ubuntu-24.04",
+        "msStoreDescription": "जैसे, Noble Numbat"
+      }
+    },
+    "button": {
+      "update": "अपडेट करें",
+      "add": "जोड़ें",
+      "cancel": "रद्द करें"
+    },
+    "dialog": {
+      "editDownloadSource": "डाउनलोड स्रोत संपादित करें",
+      "addDownloadSource": "डाउनलोड स्रोत जोड़ें",
+      "editContainerImage": "कंटेनर इमेज संपादित करें",
+      "addContainerImage": "कंटेनर इमेज जोड़ें",
+      "editQuickInstallMetadata": "त्वरित इंस्टॉल मेटाडेटा संपादित करें",
+      "addQuickInstallMetadata": "त्वरित इंस्टॉल मेटाडेटा जोड़ें",
+      "resetDownloadSources": "डाउनलोड स्रोत रीसेट करें",
+      "resetDownloadSourcesMessage": "यह सभी डाउनलोड स्रोतों को उनके डिफ़ॉल्ट मानों पर रीसेट कर देगा। आपके कस्टम स्रोत हटा दिए जाएंगे।",
+      "resetDownloads": "डाउनलोड रीसेट करें",
+      "resetContainerImages": "कंटेनर इमेज रीसेट करें",
+      "resetContainerImagesMessage": "यह सभी कंटेनर इमेज को उनके डिफ़ॉल्ट मानों पर रीसेट कर देगा। आपकी कस्टम इमेज हटा दी जाएंगी।",
+      "resetContainers": "कंटेनर रीसेट करें",
+      "resetQuickInstallMetadata": "त्वरित इंस्टॉल मेटाडेटा रीसेट करें",
+      "resetQuickInstallMetadataMessage": "यह सभी त्वरित इंस्टॉल मेटाडेटा को उनके डिफ़ॉल्ट मानों पर रीसेट कर देगा। आपका कस्टम मेटाडेटा हटा दिया जाएगा।",
+      "resetMetadata": "मेटाडेटा रीसेट करें"
+    },
+    "empty": {
+      "downloads": "कोई डाउनलोड स्रोत कॉन्फ़िगर नहीं किया गया।",
+      "containers": "कोई कंटेनर इमेज कॉन्फ़िगर नहीं की गई।",
+      "quickInstall": "कोई त्वरित इंस्टॉल मेटाडेटा कॉन्फ़िगर नहीं किया गया।"
+    },
+    "info": {
+      "quickInstall": "त्वरित इंस्टॉल मेटाडेटा <code>wsl --list --online</code> द्वारा दिए गए डिस्ट्रो के लिए प्रदर्शन जानकारी (रंग, विवरण) प्रदान करता है। डिस्ट्रो सूची स्वयं Microsoft द्वारा प्रदान की जाती है।"
+    },
+    "toggle": {
+      "disable": "अक्षम करें",
+      "enable": "सक्षम करें"
+    },
+    "action": {
+      "edit": "संपादित करें",
+      "delete": "हटाएं",
+      "dismissError": "त्रुटि खारिज करें"
+    }
   }
 }

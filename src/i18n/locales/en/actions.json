@@ -34,6 +34,31 @@
     "titleSuffix": "- Output",
     "noOutput": "No output."
   },
+  "editor": {
+    "iconLabel": "Icon",
+    "availableVars": "Available variables:"
+  },
+  "exportTitle": "Export Custom Actions",
+  "importTitle": "Import Custom Actions",
+  "badge": {
+    "startup": "Startup"
+  },
+  "scope": {
+    "all": "All distributions",
+    "pattern": "Pattern: {{pattern}}",
+    "count_one": "{{count}} distribution",
+    "count_other": "{{count}} distributions"
+  },
+  "sparseChanged": "Sparse Mode Changed",
+  "sparseChangedMessage": "Sparse mode {{state}} for {{name}}",
+  "sparseToggleFailed": "Failed to Toggle Sparse Mode",
+  "sparseToggle": "Toggle Sparse Mode",
+  "actionFailed": "Action Failed",
+  "actionFailedMessage": "Failed to run action",
+  "distroIdUnavailable": "Distribution ID not available",
+  "requiresSudo": "Requires sudo password",
+  "confirmRunTitle": "Run \"{{action}}\"?",
+  "confirmRunMessage": "Are you sure you want to run this action on {{name}}?",
   "customActionsSettings": {
     "title": "Custom Actions",
     "description": "Define shell commands that appear in the distribution quick actions menu",

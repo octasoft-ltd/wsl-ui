@@ -10,7 +10,10 @@
     "back": "戻る",
     "dismiss": "閉じる",
     "learnMore": "詳細を見る",
-    "resetToDefault": "デフォルトに戻す"
+    "resetToDefault": "デフォルトに戻す",
+    "clear": "検索をクリア",
+    "edit": "編集",
+    "run": "実行"
   },
   "label": {
     "name": "名前",
@@ -48,11 +51,15 @@
   "validation": {
     "invalidChars": "名前には英字、数字、ドット、アンダースコア、ハイフンのみ使用できます",
     "duplicateName": "\"{{name}}\" という名前のディストリビューションは既に存在します",
+    "nameExists": "この名前のディストリビューションは既に存在します",
     "required": "この項目は必須です"
   },
   "wslVersion": {
     "wsl1": "WSL 1",
     "wsl2": "WSL 2"
+  },
+  "errors": {
+    "unknown": "不明なエラーが発生しました"
   },
   "noOutput": "出力なし",
   "output": "出力",

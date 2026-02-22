@@ -34,6 +34,31 @@
     "titleSuffix": "- 출력",
     "noOutput": "출력 없음."
   },
+  "editor": {
+    "iconLabel": "아이콘",
+    "availableVars": "사용 가능한 변수:"
+  },
+  "exportTitle": "사용자 지정 작업 내보내기",
+  "importTitle": "사용자 지정 작업 가져오기",
+  "badge": {
+    "startup": "시작 시"
+  },
+  "scope": {
+    "all": "모든 배포판",
+    "pattern": "패턴: {{pattern}}",
+    "count_one": "배포판 {{count}}개",
+    "count_other": "배포판 {{count}}개"
+  },
+  "sparseChanged": "스파스 모드가 변경되었습니다",
+  "sparseChangedMessage": "{{name}}의 스파스 모드가 {{state}}(으)로 변경되었습니다",
+  "sparseToggleFailed": "스파스 모드 전환에 실패했습니다",
+  "sparseToggle": "스파스 모드 전환",
+  "actionFailed": "작업 실패",
+  "actionFailedMessage": "작업 실행에 실패했습니다",
+  "distroIdUnavailable": "배포판 ID를 사용할 수 없습니다",
+  "requiresSudo": "sudo 비밀번호가 필요합니다",
+  "confirmRunTitle": "\"{{action}}\"을(를) 실행하시겠습니까?",
+  "confirmRunMessage": "{{name}}에서 이 작업을 실행하시겠습니까?",
   "customActionsSettings": {
     "title": "사용자 지정 작업",
     "description": "배포판 빠른 작업 메뉴에 표시되는 셸 명령 정의",

@@ -7,11 +7,11 @@
     "shutdown": "Apagar",
     "systemTerminal": "Abrir terminal del sistema WSL",
     "help": "Ayuda",
-    "settings": "Configuraci\u00f3n"
+    "settings": "Configuración"
   },
   "shutdownAll": {
     "title": "Apagar todas las distribuciones",
-    "message": "Esto apagar\u00e1 todas las distribuciones WSL en ejecuci\u00f3n. Se perder\u00e1 cualquier trabajo no guardado.",
+    "message": "Esto apagará todas las distribuciones WSL en ejecución. Se perderá cualquier trabajo no guardado.",
     "confirm": "Apagar todo"
   }
 }

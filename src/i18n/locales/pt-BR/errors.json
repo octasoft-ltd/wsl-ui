@@ -6,16 +6,16 @@
   },
   "system": {
     "title": "Erro do sistema",
-    "timeoutTip": "Dica: Se voc\u00ea instalou recentemente uma nova distribui\u00e7\u00e3o, feche as janelas de terminal que foram abertas automaticamente durante a instala\u00e7\u00e3o.",
-    "forceShutdown": "For\u00e7ar desligamento do WSL",
-    "forceShutdownTitle": "For\u00e7ar desligamento do WSL",
-    "forceShutdownMessage": "Isso encerrar\u00e1 for\u00e7adamente todos os processos WSL usando 'wsl --shutdown --force'. Qualquer trabalho n\u00e3o salvo em suas distribui\u00e7\u00f5es Linux pode ser perdido. Esta a\u00e7\u00e3o n\u00e3o pode ser desfeita.",
-    "forceShutdownConfirm": "For\u00e7ar desligamento"
+    "timeoutTip": "Dica: Se você instalou recentemente uma nova distribuição, feche as janelas de terminal que foram abertas automaticamente durante a instalação.",
+    "forceShutdown": "Forçar desligamento do WSL",
+    "forceShutdownTitle": "Forçar desligamento do WSL",
+    "forceShutdownMessage": "Isso encerrará forçadamente todos os processos WSL usando 'wsl --shutdown --force'. Qualquer trabalho não salvo em suas distribuições Linux pode ser perdido. Esta ação não pode ser desfeita.",
+    "forceShutdownConfirm": "Forçar desligamento"
   },
   "wslUpdate": {
-    "title": "Atualiza\u00e7\u00e3o do WSL",
-    "success": "Atualiza\u00e7\u00e3o conclu\u00edda com sucesso",
-    "cancelled": "Atualiza\u00e7\u00e3o do WSL",
-    "failedTitle": "A atualiza\u00e7\u00e3o do WSL falhou"
+    "title": "Atualização do WSL",
+    "success": "Atualização concluída com sucesso",
+    "cancelled": "Atualização do WSL",
+    "failedTitle": "A atualização do WSL falhou"
   }
 }

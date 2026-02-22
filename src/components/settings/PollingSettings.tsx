@@ -12,13 +12,13 @@ import { Toggle, SettingSelect } from "./FormControls";
 import { DEFAULT_POLLING_INTERVALS } from "../../types/polling";
 
 // Interval options in seconds
-const INTERVAL_OPTIONS = [
-  { value: 5000, label: "5 seconds" },
-  { value: 10000, label: "10 seconds" },
-  { value: 15000, label: "15 seconds" },
-  { value: 30000, label: "30 seconds" },
-  { value: 60000, label: "1 minute" },
-  { value: 120000, label: "2 minutes" },
+const INTERVAL_OPTION_KEYS = [
+  { value: 5000, labelKey: "polling.intervals.5seconds" },
+  { value: 10000, labelKey: "polling.intervals.10seconds" },
+  { value: 15000, labelKey: "polling.intervals.15seconds" },
+  { value: 30000, labelKey: "polling.intervals.30seconds" },
+  { value: 60000, labelKey: "polling.intervals.1minute" },
+  { value: 120000, labelKey: "polling.intervals.2minutes" },
 ];
 
 
@@ -26,6 +26,11 @@ export function PollingSettings() {
   const { t } = useTranslation("settings");
   const { settings, updateSetting } = useSettingsStore();
   const { polls, hasBackoff, resetAllBackoff } = usePollingStore();
+
+  const intervalOptions = INTERVAL_OPTION_KEYS.map((opt) => ({
+    value: opt.value,
+    label: t(opt.labelKey),
+  }));
 
   const isBackedOff = hasBackoff();
 
@@ -97,7 +102,7 @@ export function PollingSettings() {
               label={t('polling.distros')}
               description={t('polling.distrosDesc')}
               value={settings.pollingIntervals.distros}
-              options={INTERVAL_OPTIONS}
+              options={intervalOptions}
               onChange={(v) => handleIntervalChange("distros", v as number)}
               disabled={!settings.pollingEnabled}
               testId="polling-interval-distros"
@@ -107,7 +112,7 @@ export function PollingSettings() {
               label={t('polling.resources')}
               description={t('polling.resourcesDesc')}
               value={settings.pollingIntervals.resources}
-              options={INTERVAL_OPTIONS}
+              options={intervalOptions}
               onChange={(v) => handleIntervalChange("resources", v as number)}
               disabled={!settings.pollingEnabled}
               testId="polling-interval-resources"
@@ -117,7 +122,7 @@ export function PollingSettings() {
               label={t('polling.health')}
               description={t('polling.healthDesc')}
               value={settings.pollingIntervals.health}
-              options={INTERVAL_OPTIONS}
+              options={intervalOptions}
               onChange={(v) => handleIntervalChange("health", v as number)}
               disabled={!settings.pollingEnabled}
               testId="polling-interval-health"

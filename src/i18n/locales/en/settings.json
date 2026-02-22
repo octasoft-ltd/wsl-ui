@@ -102,7 +102,34 @@
     "customTheme": "Custom Theme",
     "editCustomTheme": "Edit Custom Theme",
     "resetAll": "Reset All",
-    "highContrast": "High Contrast"
+    "highContrast": "High Contrast",
+    "colors": {
+      "background": "Background",
+      "text": "Text",
+      "border": "Border",
+      "accent": "Accent",
+      "status": "Status",
+      "buttons": "Buttons",
+      "scrollbar": "Scrollbar",
+      "primary": "Primary",
+      "secondary": "Secondary",
+      "tertiary": "Tertiary",
+      "hover": "Hover",
+      "selected": "Selected",
+      "muted": "Muted",
+      "running": "Running",
+      "stopped": "Stopped",
+      "warning": "Warning",
+      "error": "Error",
+      "success": "Success",
+      "primaryHover": "Primary Hover",
+      "secondaryHover": "Secondary Hover",
+      "danger": "Danger",
+      "dangerHover": "Danger Hover",
+      "track": "Track",
+      "thumb": "Thumb",
+      "thumbHover": "Thumb Hover"
+    }
   },
   "polling": {
     "title": "Auto-Refresh",
@@ -123,7 +150,15 @@
     "resetDefaults": "Reset intervals to defaults",
     "tip": "Tip: Polling automatically pauses when the app is minimized to save resources.",
     "seconds": "{{count}}s",
-    "disabled": "Disabled"
+    "disabled": "Disabled",
+    "intervals": {
+      "5seconds": "5 seconds",
+      "10seconds": "10 seconds",
+      "15seconds": "15 seconds",
+      "30seconds": "30 seconds",
+      "1minute": "1 minute",
+      "2minutes": "2 minutes"
+    }
   },
   "timeouts": {
     "title": "WSL Timeouts",
@@ -145,7 +180,21 @@
     "sudoShellDesc": "Commands that require elevated privileges (may prompt for password)",
     "resetDefaults": "Reset timeouts to defaults",
     "seconds": "{{count}}s",
-    "resetToDefaults": "Reset to Defaults"
+    "resetToDefaults": "Reset to Defaults",
+    "intervals": {
+      "5seconds": "5 seconds",
+      "10seconds": "10 seconds",
+      "15seconds": "15 seconds",
+      "30seconds": "30 seconds",
+      "1minute": "1 minute",
+      "2minutes": "2 minutes",
+      "3minutes": "3 minutes",
+      "5minutes": "5 minutes",
+      "10minutes": "10 minutes",
+      "15minutes": "15 minutes",
+      "20minutes": "20 minutes",
+      "30minutes": "30 minutes"
+    }
   },
   "executables": {
     "title": "Executable Paths",
@@ -225,7 +274,13 @@
     "saveChanges": "Save Changes",
     "pendingChanges": "You have unsaved changes",
     "requiresShutdown": "Changes require WSL restart to take effect",
-    "configError": "Error loading .wslconfig"
+    "configError": "Error loading .wslconfig",
+    "loadError": "Failed to load WSL config",
+    "saveError": "Failed to save WSL config",
+    "memoryPlaceholder": "e.g., 8GB",
+    "processorsPlaceholder": "e.g., 4",
+    "swapPlaceholder": "e.g., 4GB",
+    "errorLabel": "Error:"
   },
   "wslDistro": {
     "title": "Per-Distribution Configuration",
@@ -277,7 +332,12 @@
     "saveChanges": "Save Changes",
     "pendingChanges": "You have unsaved changes",
     "noDistroSelected": "Select a distribution to configure",
-    "configError": "Error loading wsl.conf"
+    "configError": "Error loading wsl.conf",
+    "defaultIndicator": "(default)",
+    "errorLabel": "Error:",
+    "defaultUserPlaceholder": "e.g., ubuntu",
+    "loadError": "Failed to load wsl.conf",
+    "saveError": "Failed to save wsl.conf"
   },
   "distributionSources": {
     "title": "Distribution Sources",

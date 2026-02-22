@@ -10,17 +10,20 @@
     "back": "Voltar",
     "dismiss": "Dispensar",
     "learnMore": "Saiba mais",
-    "resetToDefault": "Restaurar padr\u00e3o"
+    "resetToDefault": "Restaurar padrão",
+    "clear": "Limpar busca",
+    "edit": "Editar",
+    "run": "Executar"
   },
   "label": {
     "name": "Nome",
     "status": "Status",
-    "version": "Vers\u00e3o",
+    "version": "Versão",
     "size": "Tamanho",
-    "location": "Localiza\u00e7\u00e3o",
-    "default": "Padr\u00e3o",
+    "location": "Localização",
+    "default": "Padrão",
     "yes": "Sim",
-    "no": "N\u00e3o",
+    "no": "Não",
     "on": "Ativado",
     "off": "Desativado",
     "loading": "Carregando...",
@@ -28,10 +31,10 @@
     "ip": "IP",
     "copied": "Copiado!",
     "disk": "Disco",
-    "memory": "Mem\u00f3ria",
+    "memory": "Memória",
     "cpu": "CPU",
     "installed": "Instalado",
-    "notInstalled": "N\u00e3o instalado"
+    "notInstalled": "Não instalado"
   },
   "status": {
     "online": "Online",
@@ -46,15 +49,19 @@
     "tb": "TB"
   },
   "validation": {
-    "invalidChars": "O nome s\u00f3 pode conter letras, n\u00fameros, pontos, sublinhados e h\u00edfens",
-    "duplicateName": "J\u00e1 existe uma distribui\u00e7\u00e3o chamada \"{{name}}\"",
-    "required": "Este campo \u00e9 obrigat\u00f3rio"
+    "invalidChars": "O nome só pode conter letras, números, pontos, sublinhados e hífens",
+    "duplicateName": "Já existe uma distribuição chamada \"{{name}}\"",
+    "nameExists": "Já existe uma distribuição com este nome",
+    "required": "Este campo é obrigatório"
   },
   "wslVersion": {
     "wsl1": "WSL 1",
     "wsl2": "WSL 2"
   },
-  "noOutput": "Sem sa\u00edda",
-  "output": "Sa\u00edda",
+  "errors": {
+    "unknown": "Ocorreu um erro desconhecido"
+  },
+  "noOutput": "Sem saída",
+  "output": "Saída",
   "ranOn": "Executado em: {{distro}}"
 }

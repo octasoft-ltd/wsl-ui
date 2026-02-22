@@ -1,21 +1,21 @@
 {
   "boundary": {
     "title": "Une erreur est survenue",
-    "message": "L'application a rencontr\u00e9 une erreur inattendue. Veuillez r\u00e9essayer.",
-    "tryAgain": "R\u00e9essayer"
+    "message": "L'application a rencontré une erreur inattendue. Veuillez réessayer.",
+    "tryAgain": "Réessayer"
   },
   "system": {
-    "title": "Erreur syst\u00e8me",
-    "timeoutTip": "Astuce : Si vous avez r\u00e9cemment install\u00e9 une nouvelle distribution, fermez les fen\u00eatres de terminal qui ont \u00e9t\u00e9 ouvertes automatiquement lors de l'installation.",
-    "forceShutdown": "Forcer l'arr\u00eat de WSL",
-    "forceShutdownTitle": "Forcer l'arr\u00eat de WSL",
-    "forceShutdownMessage": "Cela terminera de force tous les processus WSL en utilisant 'wsl --shutdown --force'. Tout travail non enregistr\u00e9 dans vos distributions Linux peut \u00eatre perdu. Cette action est irr\u00e9versible.",
-    "forceShutdownConfirm": "Forcer l'arr\u00eat"
+    "title": "Erreur système",
+    "timeoutTip": "Astuce : Si vous avez récemment installé une nouvelle distribution, fermez les fenêtres de terminal qui ont été ouvertes automatiquement lors de l'installation.",
+    "forceShutdown": "Forcer l'arrêt de WSL",
+    "forceShutdownTitle": "Forcer l'arrêt de WSL",
+    "forceShutdownMessage": "Cela terminera de force tous les processus WSL en utilisant 'wsl --shutdown --force'. Tout travail non enregistré dans vos distributions Linux peut être perdu. Cette action est irréversible.",
+    "forceShutdownConfirm": "Forcer l'arrêt"
   },
   "wslUpdate": {
-    "title": "Mise \u00e0 jour WSL",
-    "success": "Mise \u00e0 jour termin\u00e9e avec succ\u00e8s",
-    "cancelled": "Mise \u00e0 jour WSL",
-    "failedTitle": "La mise \u00e0 jour WSL a \u00e9chou\u00e9"
+    "title": "Mise à jour WSL",
+    "success": "Mise à jour terminée avec succès",
+    "cancelled": "Mise à jour WSL",
+    "failedTitle": "La mise à jour WSL a échoué"
   }
 }

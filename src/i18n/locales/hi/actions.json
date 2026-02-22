@@ -34,6 +34,31 @@
     "titleSuffix": "- आउटपुट",
     "noOutput": "कोई आउटपुट नहीं।"
   },
+  "editor": {
+    "iconLabel": "आइकन",
+    "availableVars": "उपलब्ध वेरिएबल:"
+  },
+  "exportTitle": "कस्टम कार्य निर्यात करें",
+  "importTitle": "कस्टम कार्य आयात करें",
+  "badge": {
+    "startup": "स्टार्टअप"
+  },
+  "scope": {
+    "all": "सभी डिस्ट्रिब्यूशन",
+    "pattern": "पैटर्न: {{pattern}}",
+    "count_one": "{{count}} डिस्ट्रिब्यूशन",
+    "count_other": "{{count}} डिस्ट्रिब्यूशन"
+  },
+  "sparseChanged": "स्पार्स मोड बदल दिया गया",
+  "sparseChangedMessage": "{{name}} के लिए स्पार्स मोड {{state}}",
+  "sparseToggleFailed": "स्पार्स मोड टॉगल करने में विफल",
+  "sparseToggle": "स्पार्स मोड टॉगल करें",
+  "actionFailed": "कार्य विफल",
+  "actionFailedMessage": "कार्य चलाने में विफल",
+  "distroIdUnavailable": "डिस्ट्रिब्यूशन ID उपलब्ध नहीं",
+  "requiresSudo": "Sudo पासवर्ड आवश्यक है",
+  "confirmRunTitle": "\"{{action}}\" चलाएं?",
+  "confirmRunMessage": "क्या आप वाकई {{name}} पर यह कार्य चलाना चाहते हैं?",
   "customActionsSettings": {
     "title": "कस्टम कार्य",
     "description": "डिस्ट्रिब्यूशन त्वरित कार्य मेनू में दिखाई देने वाले शेल कमांड परिभाषित करें",

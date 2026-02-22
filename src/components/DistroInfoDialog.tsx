@@ -52,7 +52,7 @@ function stripExtendedPathPrefix(path: string): string {
 }
 
 /** Get the source reference display based on install source type */
-function getSourceReference(distro: Distribution): string | null {
+function getSourceReference(distro: Distribution, t: (key: string, options?: Record<string, string>) => string): string | null {
   const metadata = distro.metadata;
   if (!metadata) return null;
 
@@ -63,7 +63,7 @@ function getSourceReference(distro: Distribution): string | null {
     case "lxc":
       return metadata.downloadUrl || null;
     case "clone":
-      return metadata.clonedFrom ? `Cloned from ID: ${metadata.clonedFrom}` : null;
+      return metadata.clonedFrom ? t('distroInfo.clonedFromId', { id: metadata.clonedFrom }) : null;
     case "import":
       return metadata.importPath || null;
     default:
@@ -72,19 +72,19 @@ function getSourceReference(distro: Distribution): string | null {
 }
 
 /** Get a label for the source reference based on install source type */
-function getSourceReferenceLabel(source: string): string {
+function getSourceReferenceLabel(source: string, t: (key: string) => string): string {
   switch (source) {
     case "container":
-      return "Image";
+      return t('distroInfo.image');
     case "download":
     case "lxc":
-      return "Source URL";
+      return t('distroInfo.sourceUrl');
     case "clone":
-      return "Cloned From";
+      return t('distroInfo.clonedFrom');
     case "import":
-      return "Import Path";
+      return t('distroInfo.importPath');
     default:
-      return "Reference";
+      return t('distroInfo.reference');
   }
 }
 
@@ -114,6 +114,7 @@ interface CopyButtonProps {
 }
 
 function CopyButton({ text, label }: CopyButtonProps) {
+  const { t } = useTranslation("dialogs");
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async () => {
@@ -130,7 +131,7 @@ function CopyButton({ text, label }: CopyButtonProps) {
     <button
       onClick={handleCopy}
       className="ml-2 p-1.5 text-theme-text-tertiary hover:text-theme-accent-primary hover:bg-theme-accent-primary/10 transition-all rounded-md border border-transparent hover:border-theme-accent-primary/30"
-      title={copied ? "Copied!" : `Copy ${label || "to clipboard"}`}
+      title={copied ? t('common:label.copied') : t('distroInfo.copyToClipboard', { field: label || "" })}
       data-testid="copy-button"
     >
       {copied ? (
@@ -152,7 +153,7 @@ export function DistroInfoDialog({
   const isRunning = distro.state === "Running";
   const resources = isRunning ? getDistroResources(distro.name) : undefined;
   const metadata = distro.metadata;
-  const sourceReference = getSourceReference(distro);
+  const sourceReference = getSourceReference(distro, t);
 
   // WSL configuration state (raw file content)
   const [wslConfRaw, setWslConfRaw] = useState<string | null>(null);
@@ -338,7 +339,7 @@ export function DistroInfoDialog({
               />
               {sourceReference && (
                 <InfoRow
-                  label={getSourceReferenceLabel(installSource)}
+                  label={getSourceReferenceLabel(installSource, t)}
                   value={
                     <span className="flex items-center gap-1">
                       {(installSource === "download" || installSource === "lxc") ? (

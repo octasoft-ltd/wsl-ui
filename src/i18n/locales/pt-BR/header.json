@@ -7,11 +7,11 @@
     "shutdown": "Desligar",
     "systemTerminal": "Abrir terminal do sistema WSL",
     "help": "Ajuda",
-    "settings": "Configura\u00e7\u00f5es"
+    "settings": "Configurações"
   },
   "shutdownAll": {
-    "title": "Desligar todas as distribui\u00e7\u00f5es",
-    "message": "Isso desligar\u00e1 todas as distribui\u00e7\u00f5es WSL em execu\u00e7\u00e3o. Qualquer trabalho n\u00e3o salvo ser\u00e1 perdido.",
+    "title": "Desligar todas as distribuições",
+    "message": "Isso desligará todas as distribuições WSL em execução. Qualquer trabalho não salvo será perdido.",
     "confirm": "Desligar tudo"
   }
 }

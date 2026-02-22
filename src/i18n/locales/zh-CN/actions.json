@@ -34,6 +34,31 @@
     "titleSuffix": "- 输出",
     "noOutput": "无输出。"
   },
+  "editor": {
+    "iconLabel": "图标",
+    "availableVars": "可用变量："
+  },
+  "exportTitle": "导出自定义操作",
+  "importTitle": "导入自定义操作",
+  "badge": {
+    "startup": "启动"
+  },
+  "scope": {
+    "all": "所有发行版",
+    "pattern": "模式：{{pattern}}",
+    "count_one": "{{count}} 个发行版",
+    "count_other": "{{count}} 个发行版"
+  },
+  "sparseChanged": "稀疏模式已更改",
+  "sparseChangedMessage": "{{name}} 的稀疏模式已{{state}}",
+  "sparseToggleFailed": "切换稀疏模式失败",
+  "sparseToggle": "切换稀疏模式",
+  "actionFailed": "操作失败",
+  "actionFailedMessage": "运行操作失败",
+  "distroIdUnavailable": "发行版 ID 不可用",
+  "requiresSudo": "需要 sudo 密码",
+  "confirmRunTitle": "运行 \"{{action}}\"？",
+  "confirmRunMessage": "确定要在 {{name}} 上运行此操作吗？",
   "customActionsSettings": {
     "title": "自定义操作",
     "description": "定义显示在发行版快捷操作菜单中的 Shell 命令",

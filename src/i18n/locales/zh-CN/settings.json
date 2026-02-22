@@ -22,7 +22,9 @@
     "note": "注意：包含空格的路径必须用引号括起来。",
     "placeholders": "占位符：",
     "wslPath": "$WSL_PATH — 展开为 \\\\wsl$",
+    "wslPathDesc": "展开为 \\\\wsl$",
     "distroName": "$DISTRO_NAME — 发行版名称",
+    "distroNameDesc": "发行版名称",
     "example": "示例（IntelliJ）：",
     "presets": {
       "vscode": "VS Code",
@@ -40,8 +42,16 @@
     "note": "注意：包含空格的路径必须用引号括起来。",
     "placeholders": "占位符：",
     "wsl": "$WSL — wsl.exe 的路径",
+    "wslDesc": "wsl.exe 的路径",
     "distroArgs": "$DISTRO_ARGS — 自动展开为 --distribution-id <guid> 或 --system",
+    "distroArgsDesc": "自动展开为 --distribution-id <guid> 或 --system",
     "examples": "示例：",
+    "exampleAlacrittyLabel": "Alacritty",
+    "exampleAlacrittyCmd": "alacritty -e $WSL $DISTRO_ARGS",
+    "exampleKittyLabel": "Kitty",
+    "exampleKittyCmd": "kitty $WSL $DISTRO_ARGS",
+    "exampleWeztermLabel": "WezTerm",
+    "exampleWeztermCmd": "wezterm start -- $WSL $DISTRO_ARGS",
     "exampleAlacritty": "Alacritty：alacritty -e $WSL $DISTRO_ARGS",
     "exampleKitty": "Kitty：kitty $WSL $DISTRO_ARGS",
     "exampleWezterm": "WezTerm：wezterm start -- $WSL $DISTRO_ARGS",
@@ -92,7 +102,34 @@
     "customTheme": "自定义主题",
     "editCustomTheme": "编辑自定义主题",
     "resetAll": "全部重置",
-    "highContrast": "高对比度"
+    "highContrast": "高对比度",
+    "colors": {
+      "background": "背景",
+      "text": "文本",
+      "border": "边框",
+      "accent": "强调色",
+      "status": "状态",
+      "buttons": "按钮",
+      "scrollbar": "滚动条",
+      "primary": "主要",
+      "secondary": "次要",
+      "tertiary": "第三",
+      "hover": "悬停",
+      "selected": "选中",
+      "muted": "柔和",
+      "running": "运行中",
+      "stopped": "已停止",
+      "warning": "警告",
+      "error": "错误",
+      "success": "成功",
+      "primaryHover": "主要悬停",
+      "secondaryHover": "次要悬停",
+      "danger": "危险",
+      "dangerHover": "危险悬停",
+      "track": "轨道",
+      "thumb": "滑块",
+      "thumbHover": "滑块悬停"
+    }
   },
   "polling": {
     "title": "自动刷新",
@@ -113,7 +150,15 @@
     "resetDefaults": "将间隔重置为默认值",
     "tip": "提示：应用最小化时轮询会自动暂停以节省资源。",
     "seconds": "{{count}}秒",
-    "disabled": "已禁用"
+    "disabled": "已禁用",
+    "intervals": {
+      "5seconds": "5 秒",
+      "10seconds": "10 秒",
+      "15seconds": "15 秒",
+      "30seconds": "30 秒",
+      "1minute": "1 分钟",
+      "2minutes": "2 分钟"
+    }
   },
   "timeouts": {
     "title": "WSL 超时",
@@ -135,7 +180,21 @@
     "sudoShellDesc": "需要提升权限的命令（可能提示输入密码）",
     "resetDefaults": "将超时重置为默认值",
     "seconds": "{{count}}秒",
-    "resetToDefaults": "恢复默认"
+    "resetToDefaults": "恢复默认",
+    "intervals": {
+      "5seconds": "5 秒",
+      "10seconds": "10 秒",
+      "15seconds": "15 秒",
+      "30seconds": "30 秒",
+      "1minute": "1 分钟",
+      "2minutes": "2 分钟",
+      "3minutes": "3 分钟",
+      "5minutes": "5 分钟",
+      "10minutes": "10 分钟",
+      "15minutes": "15 分钟",
+      "20minutes": "20 分钟",
+      "30minutes": "30 分钟"
+    }
   },
   "executables": {
     "title": "可执行文件路径",
@@ -215,7 +274,13 @@
     "saveChanges": "保存更改",
     "pendingChanges": "您有未保存的更改",
     "requiresShutdown": "更改需要重启 WSL 才能生效",
-    "configError": "加载 .wslconfig 出错"
+    "configError": "加载 .wslconfig 出错",
+    "loadError": "加载 WSL 配置失败",
+    "saveError": "保存 WSL 配置失败",
+    "memoryPlaceholder": "例如 8GB",
+    "processorsPlaceholder": "例如 4",
+    "swapPlaceholder": "例如 4GB",
+    "errorLabel": "错误："
   },
   "wslDistro": {
     "title": "按发行版配置",
@@ -267,7 +332,12 @@
     "saveChanges": "保存更改",
     "pendingChanges": "您有未保存的更改",
     "noDistroSelected": "选择一个发行版进行配置",
-    "configError": "加载 wsl.conf 出错"
+    "configError": "加载 wsl.conf 出错",
+    "defaultIndicator": "（默认）",
+    "errorLabel": "错误：",
+    "defaultUserPlaceholder": "例如 ubuntu",
+    "loadError": "加载 wsl.conf 失败",
+    "saveError": "保存 wsl.conf 失败"
   },
   "distributionSources": {
     "title": "发行版来源",
@@ -290,7 +360,9 @@
     "noCacheData": "无缓存数据",
     "clearCache": "清除缓存",
     "resetDefaults": "全部重置为默认值",
-    "communityNote": "社区镜像由 <1>Linux Containers</1> 提供，WSL 兼容性可能有所不同。"
+    "communityNotePrefix": "社区镜像由 ",
+    "communityNoteLinkText": "Linux Containers",
+    "communityNoteSuffix": " 提供，WSL 兼容性可能有所不同。"
   },
   "containerRuntime": {
     "title": "容器运行时",
@@ -319,6 +391,9 @@
     "collectItem2": "发行版数量（不包含名称）",
     "collectItem3": "功能使用次数",
     "neverCollect": "我们不会收集任何个人数据、发行版名称、文件路径或身份识别信息。",
+    "providerPrefix": "数据由 ",
+    "providerLinkText": "Aptabase",
+    "providerSuffix": "（注重隐私的分析服务商）处理。",
     "provider": "数据由 <1>Aptabase</1> 处理，这是一个注重隐私的分析服务商。",
     "whatWeCollect": "我们收集的信息：",
     "whatWeNever": "我们从不收集：",

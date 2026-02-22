@@ -1,22 +1,25 @@
 {
   "button": {
     "cancel": "Abbrechen",
-    "close": "Schlie\u00dfen",
+    "close": "Schließen",
     "save": "Speichern",
-    "delete": "L\u00f6schen",
-    "confirm": "Best\u00e4tigen",
+    "delete": "Löschen",
+    "confirm": "Bestätigen",
     "retry": "Erneut versuchen",
     "browse": "Durchsuchen",
-    "back": "Zur\u00fcck",
+    "back": "Zurück",
     "dismiss": "Verwerfen",
     "learnMore": "Mehr erfahren",
-    "resetToDefault": "Auf Standard zur\u00fccksetzen"
+    "resetToDefault": "Auf Standard zurücksetzen",
+    "clear": "Suche löschen",
+    "edit": "Bearbeiten",
+    "run": "Ausführen"
   },
   "label": {
     "name": "Name",
     "status": "Status",
     "version": "Version",
-    "size": "Gr\u00f6\u00dfe",
+    "size": "Größe",
     "location": "Speicherort",
     "default": "Standard",
     "yes": "Ja",
@@ -36,7 +39,7 @@
   "status": {
     "online": "Online",
     "offline": "Offline",
-    "primary": "Prim\u00e4r",
+    "primary": "Primär",
     "compacting": "Komprimierung",
     "operational": "BETRIEBSBEREIT",
     "standby": "BEREITSCHAFT"
@@ -48,13 +51,17 @@
   "validation": {
     "invalidChars": "Der Name darf nur Buchstaben, Zahlen, Punkte, Unterstriche und Bindestriche enthalten",
     "duplicateName": "Eine Distribution mit dem Namen \"{{name}}\" existiert bereits",
+    "nameExists": "Eine Distribution mit diesem Namen existiert bereits",
     "required": "Dieses Feld ist erforderlich"
   },
   "wslVersion": {
     "wsl1": "WSL 1",
     "wsl2": "WSL 2"
   },
+  "errors": {
+    "unknown": "Ein unbekannter Fehler ist aufgetreten"
+  },
   "noOutput": "Keine Ausgabe",
   "output": "Ausgabe",
-  "ranOn": "Ausgef\u00fchrt auf: {{distro}}"
+  "ranOn": "Ausgeführt auf: {{distro}}"
 }

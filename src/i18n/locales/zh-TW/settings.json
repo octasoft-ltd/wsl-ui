@@ -22,7 +22,9 @@
     "note": "注意：包含空格的路徑必須用引號括起來。",
     "placeholders": "佔位符：",
     "wslPath": "$WSL_PATH — 展開為 \\\\wsl$",
+    "wslPathDesc": "展開為 \\\\wsl$",
     "distroName": "$DISTRO_NAME — 發行版名稱",
+    "distroNameDesc": "發行版名稱",
     "example": "範例（IntelliJ）：",
     "presets": {
       "vscode": "VS Code",
@@ -40,8 +42,16 @@
     "note": "注意：包含空格的路徑必須用引號括起來。",
     "placeholders": "佔位符：",
     "wsl": "$WSL — wsl.exe 的路徑",
+    "wslDesc": "wsl.exe 的路徑",
     "distroArgs": "$DISTRO_ARGS — 自動展開為 --distribution-id <guid> 或 --system",
+    "distroArgsDesc": "自動展開為 --distribution-id <guid> 或 --system",
     "examples": "範例：",
+    "exampleAlacrittyLabel": "Alacritty",
+    "exampleAlacrittyCmd": "alacritty -e $WSL $DISTRO_ARGS",
+    "exampleKittyLabel": "Kitty",
+    "exampleKittyCmd": "kitty $WSL $DISTRO_ARGS",
+    "exampleWeztermLabel": "WezTerm",
+    "exampleWeztermCmd": "wezterm start -- $WSL $DISTRO_ARGS",
     "exampleAlacritty": "Alacritty：alacritty -e $WSL $DISTRO_ARGS",
     "exampleKitty": "Kitty：kitty $WSL $DISTRO_ARGS",
     "exampleWezterm": "WezTerm：wezterm start -- $WSL $DISTRO_ARGS",
@@ -92,7 +102,34 @@
     "customTheme": "自訂主題",
     "editCustomTheme": "編輯自訂主題",
     "resetAll": "全部重設",
-    "highContrast": "高對比"
+    "highContrast": "高對比",
+    "colors": {
+      "background": "背景",
+      "text": "文字",
+      "border": "邊框",
+      "accent": "強調色",
+      "status": "狀態",
+      "buttons": "按鈕",
+      "scrollbar": "捲軸",
+      "primary": "主要",
+      "secondary": "次要",
+      "tertiary": "第三",
+      "hover": "懸停",
+      "selected": "已選取",
+      "muted": "柔和",
+      "running": "執行中",
+      "stopped": "已停止",
+      "warning": "警告",
+      "error": "錯誤",
+      "success": "成功",
+      "primaryHover": "主要懸停",
+      "secondaryHover": "次要懸停",
+      "danger": "危險",
+      "dangerHover": "危險懸停",
+      "track": "軌道",
+      "thumb": "滑塊",
+      "thumbHover": "滑塊懸停"
+    }
   },
   "polling": {
     "title": "自動重新整理",
@@ -113,7 +150,15 @@
     "resetDefaults": "將間隔重設為預設值",
     "tip": "提示：應用程式最小化時輪詢會自動暫停以節省資源。",
     "seconds": "{{count}}秒",
-    "disabled": "已停用"
+    "disabled": "已停用",
+    "intervals": {
+      "5seconds": "5 秒",
+      "10seconds": "10 秒",
+      "15seconds": "15 秒",
+      "30seconds": "30 秒",
+      "1minute": "1 分鐘",
+      "2minutes": "2 分鐘"
+    }
   },
   "timeouts": {
     "title": "WSL 逾時",
@@ -135,7 +180,21 @@
     "sudoShellDesc": "需要提升權限的命令（可能提示輸入密碼）",
     "resetDefaults": "將逾時重設為預設值",
     "seconds": "{{count}}秒",
-    "resetToDefaults": "恢復預設"
+    "resetToDefaults": "恢復預設",
+    "intervals": {
+      "5seconds": "5 秒",
+      "10seconds": "10 秒",
+      "15seconds": "15 秒",
+      "30seconds": "30 秒",
+      "1minute": "1 分鐘",
+      "2minutes": "2 分鐘",
+      "3minutes": "3 分鐘",
+      "5minutes": "5 分鐘",
+      "10minutes": "10 分鐘",
+      "15minutes": "15 分鐘",
+      "20minutes": "20 分鐘",
+      "30minutes": "30 分鐘"
+    }
   },
   "executables": {
     "title": "可執行檔路徑",
@@ -215,7 +274,13 @@
     "saveChanges": "儲存變更",
     "pendingChanges": "您有未儲存的變更",
     "requiresShutdown": "變更需要重新啟動 WSL 才能生效",
-    "configError": "載入 .wslconfig 時發生錯誤"
+    "configError": "載入 .wslconfig 時發生錯誤",
+    "loadError": "載入 WSL 設定失敗",
+    "saveError": "儲存 WSL 設定失敗",
+    "memoryPlaceholder": "例如 8GB",
+    "processorsPlaceholder": "例如 4",
+    "swapPlaceholder": "例如 4GB",
+    "errorLabel": "錯誤："
   },
   "wslDistro": {
     "title": "按發行版設定",
@@ -267,7 +332,12 @@
     "saveChanges": "儲存變更",
     "pendingChanges": "您有未儲存的變更",
     "noDistroSelected": "選擇一個發行版進行設定",
-    "configError": "載入 wsl.conf 時發生錯誤"
+    "configError": "載入 wsl.conf 時發生錯誤",
+    "defaultIndicator": "（預設）",
+    "errorLabel": "錯誤：",
+    "defaultUserPlaceholder": "例如 ubuntu",
+    "loadError": "載入 wsl.conf 失敗",
+    "saveError": "儲存 wsl.conf 失敗"
   },
   "distributionSources": {
     "title": "發行版來源",
@@ -290,7 +360,9 @@
     "noCacheData": "無快取資料",
     "clearCache": "清除快取",
     "resetDefaults": "全部重設為預設值",
-    "communityNote": "社群映像由 <1>Linux Containers</1> 提供，WSL 相容性可能有所不同。"
+    "communityNotePrefix": "社群映像由 ",
+    "communityNoteLinkText": "Linux Containers",
+    "communityNoteSuffix": " 提供，WSL 相容性可能有所不同。"
   },
   "containerRuntime": {
     "title": "容器執行階段",
@@ -319,6 +391,9 @@
     "collectItem2": "發行版數量（不包含名稱）",
     "collectItem3": "功能使用次數",
     "neverCollect": "我們不會收集任何個人資料、發行版名稱、檔案路徑或身分識別資訊。",
+    "providerPrefix": "資料由 ",
+    "providerLinkText": "Aptabase",
+    "providerSuffix": "（注重隱私的分析服務商）處理。",
     "provider": "資料由 <1>Aptabase</1> 處理，這是一個注重隱私的分析服務商。",
     "whatWeCollect": "我們收集的資訊：",
     "whatWeNever": "我們從不收集：",

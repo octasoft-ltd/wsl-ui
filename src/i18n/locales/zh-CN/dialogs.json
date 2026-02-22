@@ -1,7 +1,7 @@
 {
   "clone": {
     "title": "克隆发行版",
-    "subtitle": "创建 {{sourceName}} 的副本",
+    "subtitle": "创建副本",
     "nameLabel": "新发行版名称",
     "namePlaceholder": "输入克隆名称",
     "locationLabel": "安装位置",
@@ -96,7 +96,14 @@
     "configuration": "配置",
     "loadingConfig": "正在加载配置...",
     "noConfig": "无配置文件（使用默认值）",
-    "errorLoadConfig": "加载配置失败"
+    "errorLoadConfig": "加载配置失败",
+    "clonedFromId": "克隆自 ID：{{id}}",
+    "image": "镜像",
+    "sourceUrl": "来源 URL",
+    "clonedFrom": "克隆自",
+    "importPath": "导入路径",
+    "reference": "引用",
+    "copyToClipboard": "复制 {{field}} 到剪贴板"
   },
   "noRdp": {
     "title": "未检测到桌面环境",
@@ -241,7 +248,13 @@
     "mounting": "正在挂载...",
     "errorNoVhd": "请选择一个 VHD 文件",
     "errorNoDisk": "请选择一个物理磁盘",
-    "errorFailed": "挂载磁盘失败"
+    "errorFailed": "挂载磁盘失败",
+    "searchPlaceholder": "搜索发行版...",
+    "refreshCatalog": "刷新目录",
+    "fsAutoDetect": "自动检测",
+    "fsLinuxDefault": "ext4（Linux 默认）",
+    "fsWindows": "NTFS（Windows）",
+    "partition": "分区 {{index}}"
   },
   "installConfig": {
     "title": "配置安装",
@@ -263,6 +276,7 @@
     "unmountAll": "全部卸载",
     "noDisks": "没有挂载的磁盘",
     "noDisksHint": "使用\"挂载磁盘\"来附加 VHD 或物理磁盘",
-    "mountDisk": "挂载磁盘"
+    "mountDisk": "挂载磁盘",
+    "unmountDisk": "卸载此磁盘"
   }
 }

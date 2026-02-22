@@ -5,40 +5,43 @@
     "save": "Enregistrer",
     "delete": "Supprimer",
     "confirm": "Confirmer",
-    "retry": "R\u00e9essayer",
+    "retry": "Réessayer",
     "browse": "Parcourir",
     "back": "Retour",
     "dismiss": "Ignorer",
     "learnMore": "En savoir plus",
-    "resetToDefault": "R\u00e9initialiser par d\u00e9faut"
+    "resetToDefault": "Réinitialiser par défaut",
+    "clear": "Effacer la recherche",
+    "edit": "Modifier",
+    "run": "Exécuter"
   },
   "label": {
     "name": "Nom",
-    "status": "\u00c9tat",
+    "status": "État",
     "version": "Version",
     "size": "Taille",
     "location": "Emplacement",
-    "default": "Par d\u00e9faut",
+    "default": "Par défaut",
     "yes": "Oui",
     "no": "Non",
-    "on": "Activ\u00e9",
-    "off": "D\u00e9sactiv\u00e9",
+    "on": "Activé",
+    "off": "Désactivé",
     "loading": "Chargement...",
     "none": "Aucun",
     "ip": "IP",
-    "copied": "Copi\u00e9 !",
+    "copied": "Copié !",
     "disk": "Disque",
-    "memory": "M\u00e9moire",
+    "memory": "Mémoire",
     "cpu": "CPU",
-    "installed": "Install\u00e9",
-    "notInstalled": "Non install\u00e9"
+    "installed": "Installé",
+    "notInstalled": "Non installé"
   },
   "status": {
     "online": "En ligne",
     "offline": "Hors ligne",
     "primary": "Principal",
     "compacting": "Compactage",
-    "operational": "OP\u00c9RATIONNEL",
+    "operational": "OPÉRATIONNEL",
     "standby": "EN VEILLE"
   },
   "unit": {
@@ -47,14 +50,18 @@
   },
   "validation": {
     "invalidChars": "Le nom ne peut contenir que des lettres, des chiffres, des points, des tirets bas et des tirets",
-    "duplicateName": "Une distribution nomm\u00e9e \"{{name}}\" existe d\u00e9j\u00e0",
+    "duplicateName": "Une distribution nommée \"{{name}}\" existe déjà",
+    "nameExists": "Une distribution portant ce nom existe déjà",
     "required": "Ce champ est obligatoire"
   },
   "wslVersion": {
     "wsl1": "WSL 1",
     "wsl2": "WSL 2"
   },
+  "errors": {
+    "unknown": "Une erreur inconnue est survenue"
+  },
   "noOutput": "Aucune sortie",
   "output": "Sortie",
-  "ranOn": "Ex\u00e9cut\u00e9 sur : {{distro}}"
+  "ranOn": "Exécuté sur : {{distro}}"
 }

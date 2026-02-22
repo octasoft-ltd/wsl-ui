@@ -102,7 +102,34 @@
     "customTheme": "سمة مخصصة",
     "editCustomTheme": "تعديل السمة المخصصة",
     "resetAll": "إعادة تعيين الكل",
-    "highContrast": "تباين عالٍ"
+    "highContrast": "تباين عالٍ",
+    "colors": {
+      "background": "الخلفية",
+      "text": "النص",
+      "border": "الحدود",
+      "accent": "التمييز",
+      "status": "الحالة",
+      "buttons": "الأزرار",
+      "scrollbar": "شريط التمرير",
+      "primary": "أساسي",
+      "secondary": "ثانوي",
+      "tertiary": "ثالثي",
+      "hover": "التمرير",
+      "selected": "محدد",
+      "muted": "صامت",
+      "running": "يعمل",
+      "stopped": "متوقف",
+      "warning": "تحذير",
+      "error": "خطأ",
+      "success": "نجاح",
+      "primaryHover": "تمرير أساسي",
+      "secondaryHover": "تمرير ثانوي",
+      "danger": "خطر",
+      "dangerHover": "تمرير خطر",
+      "track": "المسار",
+      "thumb": "المقبض",
+      "thumbHover": "تمرير المقبض"
+    }
   },
   "polling": {
     "title": "التحديث التلقائي",
@@ -123,7 +150,15 @@
     "resetDefaults": "إعادة تعيين الفترات إلى الافتراضيات",
     "tip": "نصيحة: يتوقف الاستقصاء تلقائياً عند تصغير التطبيق لتوفير الموارد.",
     "seconds": "{{count}} ثانية",
-    "disabled": "معطّل"
+    "disabled": "معطّل",
+    "intervals": {
+      "5seconds": "5 ثوانٍ",
+      "10seconds": "10 ثوانٍ",
+      "15seconds": "15 ثانية",
+      "30seconds": "30 ثانية",
+      "1minute": "دقيقة واحدة",
+      "2minutes": "دقيقتان"
+    }
   },
   "timeouts": {
     "title": "مهلات WSL",
@@ -145,7 +180,21 @@
     "sudoShellDesc": "الأوامر التي تتطلب صلاحيات مرتفعة (قد تطلب كلمة المرور)",
     "resetDefaults": "إعادة تعيين المهلات إلى الافتراضيات",
     "seconds": "{{count}} ثانية",
-    "resetToDefaults": "إعادة تعيين إلى الافتراضيات"
+    "resetToDefaults": "إعادة تعيين إلى الافتراضيات",
+    "intervals": {
+      "5seconds": "5 ثوانٍ",
+      "10seconds": "10 ثوانٍ",
+      "15seconds": "15 ثانية",
+      "30seconds": "30 ثانية",
+      "1minute": "دقيقة واحدة",
+      "2minutes": "دقيقتان",
+      "3minutes": "3 دقائق",
+      "5minutes": "5 دقائق",
+      "10minutes": "10 دقائق",
+      "15minutes": "15 دقيقة",
+      "20minutes": "20 دقيقة",
+      "30minutes": "30 دقيقة"
+    }
   },
   "executables": {
     "title": "مسارات الملفات التنفيذية",
@@ -225,7 +274,13 @@
     "saveChanges": "حفظ التغييرات",
     "pendingChanges": "لديك تغييرات غير محفوظة",
     "requiresShutdown": "تتطلب التغييرات إعادة تشغيل WSL لتصبح سارية",
-    "configError": "خطأ في تحميل .wslconfig"
+    "configError": "خطأ في تحميل .wslconfig",
+    "loadError": "فشل تحميل إعدادات WSL",
+    "saveError": "فشل حفظ إعدادات WSL",
+    "memoryPlaceholder": "مثال، 8GB",
+    "processorsPlaceholder": "مثال، 4",
+    "swapPlaceholder": "مثال، 4GB",
+    "errorLabel": "خطأ:"
   },
   "wslDistro": {
     "title": "تكوين لكل توزيعة",
@@ -277,7 +332,12 @@
     "saveChanges": "حفظ التغييرات",
     "pendingChanges": "لديك تغييرات غير محفوظة",
     "noDistroSelected": "اختر توزيعة لتكوينها",
-    "configError": "خطأ في تحميل wsl.conf"
+    "configError": "خطأ في تحميل wsl.conf",
+    "defaultIndicator": "(افتراضي)",
+    "errorLabel": "خطأ:",
+    "defaultUserPlaceholder": "مثال، ubuntu",
+    "loadError": "فشل تحميل wsl.conf",
+    "saveError": "فشل حفظ wsl.conf"
   },
   "distributionSources": {
     "title": "مصادر التوزيعات",

@@ -10,7 +10,10 @@
     "back": "返回",
     "dismiss": "忽略",
     "learnMore": "了解更多",
-    "resetToDefault": "恢復預設"
+    "resetToDefault": "恢復預設",
+    "clear": "清除搜尋",
+    "edit": "編輯",
+    "run": "執行"
   },
   "label": {
     "name": "名稱",
@@ -48,11 +51,15 @@
   "validation": {
     "invalidChars": "名稱只能包含字母、數字、點、底線和連字號",
     "duplicateName": "名為 \"{{name}}\" 的發行版已存在",
+    "nameExists": "同名發行版已存在",
     "required": "此欄位為必填"
   },
   "wslVersion": {
     "wsl1": "WSL 1",
     "wsl2": "WSL 2"
+  },
+  "errors": {
+    "unknown": "發生未知錯誤"
   },
   "noOutput": "無輸出",
   "output": "輸出",

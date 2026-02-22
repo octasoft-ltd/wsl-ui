@@ -1,24 +1,24 @@
 {
-  "title": "Adicionar distribui\u00e7\u00e3o",
-  "subtitle": "Escolha como deseja instalar sua distribui\u00e7\u00e3o Linux",
+  "title": "Adicionar distribuição",
+  "subtitle": "Escolha como deseja instalar sua distribuição Linux",
   "mode": {
-    "quickInstall": "Instala\u00e7\u00e3o r\u00e1pida",
+    "quickInstall": "Instalação rápida",
     "quickInstallDesc": "Instalar da Microsoft Store",
     "download": "Download",
     "downloadDesc": "Download direto com nome personalizado",
     "community": "Comunidade",
-    "communityDesc": "Navegar no cat\u00e1logo de imagens LXC",
-    "container": "Cont\u00eainer",
-    "containerDesc": "Criar a partir de imagem de cont\u00eainer"
+    "communityDesc": "Navegar no catálogo de imagens LXC",
+    "container": "Contêiner",
+    "containerDesc": "Criar a partir de imagem de contêiner"
   },
   "info": {
-    "quickInstall": "Distribui\u00e7\u00f5es oficiais da Microsoft Store. Instala no local padr\u00e3o gerenciado pelo Windows.",
-    "download": "Este cat\u00e1logo pode ser personalizado em Configura\u00e7\u00f5es > Fontes de distribui\u00e7\u00f5es. URLs personalizadas s\u00e3o salvas para uso futuro.",
-    "community": "Imagens de {{url}}. Configurar em Configura\u00e7\u00f5es > Fontes de distribui\u00e7\u00f5es.",
-    "container": "Ambiente de execu\u00e7\u00e3o selecionado configurado nas configura\u00e7\u00f5es: {{runtime}}"
+    "quickInstall": "Distribuições oficiais da Microsoft Store. Instala no local padrão gerenciado pelo Windows.",
+    "download": "Este catálogo pode ser personalizado em Configurações > Fontes de distribuições. URLs personalizadas são salvas para uso futuro.",
+    "community": "Imagens de {{url}}. Configurar em Configurações > Fontes de distribuições.",
+    "container": "Ambiente de execução selecionado configurado nas configurações: {{runtime}}"
   },
   "containerRuntime": {
-    "builtin": "OCI integrado (apenas registros p\u00fablicos)",
+    "builtin": "OCI integrado (apenas registros públicos)",
     "docker": "Docker (suporta registros autenticados)",
     "podman": "Podman (suporta registros autenticados)",
     "custom": "Personalizado: {{path}}"
@@ -26,8 +26,8 @@
   "filter": {
     "all": "Todas"
   },
-  "loading": "Carregando distribui\u00e7\u00f5es dispon\u00edveis...",
-  "empty": "Nenhuma distribui\u00e7\u00e3o dispon\u00edvel",
+  "loading": "Carregando distribuições disponíveis...",
+  "empty": "Nenhuma distribuição disponível",
   "install": "Instalar",
   "useUrl": "Usar URL",
   "useImage": "Usar imagem",
@@ -41,28 +41,42 @@
   },
   "customImage": {
     "label": "Imagem personalizada",
-    "description": "Insira qualquer refer\u00eancia de imagem OCI"
+    "description": "Insira qualquer referência de imagem OCI"
   },
-  "alreadyInstalled": "\"{{name}}\" j\u00e1 est\u00e1 instalado",
+  "alreadyInstalled": "\"{{name}}\" já está instalado",
   "progress": {
     "installingStore": "Instalando da Microsoft Store...",
     "success": "Instalado com sucesso!",
     "downloading": "Baixando: {{percent}}% ({{downloaded}} / {{total}})",
     "importing": "Importando para o WSL...",
-    "pullingImage": "Baixando imagem de cont\u00eainer...",
+    "pullingImage": "Baixando imagem de contêiner...",
     "downloadFailed": "O download falhou"
   },
-  "trademarkDisclaimer": "Os logotipos das distribui\u00e7\u00f5es Linux s\u00e3o marcas registradas de seus respectivos propriet\u00e1rios e s\u00e3o usados aqui apenas para fins de identifica\u00e7\u00e3o.\nEste aplicativo n\u00e3o \u00e9 afiliado nem endossado por nenhum projeto de distribui\u00e7\u00e3o.",
+  "trademarkDisclaimer": "Os logotipos das distribuições Linux são marcas registradas de seus respectivos proprietários e são usados aqui apenas para fins de identificação.\nEste aplicativo não é afiliado nem endossado por nenhum projeto de distribuição.",
   "installingAs": "Instalando como \"{{name}}\"",
-  "noDownloadable": "Nenhuma distribui\u00e7\u00e3o para download configurada",
-  "noContainerImages": "Nenhuma imagem de cont\u00eainer configurada",
-  "communityDisabled": "O cat\u00e1logo da comunidade est\u00e1 desativado",
-  "communityDisabledHint": "Ative-o em Configura\u00e7\u00f5es > Fontes de distribui\u00e7\u00f5es",
+  "noDownloadable": "Nenhuma distribuição para download configurada",
+  "noContainerImages": "Nenhuma imagem de contêiner configurada",
+  "communityDisabled": "O catálogo da comunidade está desativado",
+  "communityDisabledHint": "Ative-o em Configurações > Fontes de distribuições",
   "useCustomUrl": "Usar uma URL personalizada",
   "useCustomImage": "Usar uma imagem personalizada",
+  "catalogDisabled": "O catálogo da comunidade está desativado. Ative-o nas Configurações.",
+  "catalogLoadError": "Falha ao carregar catálogo",
+  "catalogNoMatch": "Nenhuma distribuição corresponde a \"{{query}}\"",
+  "catalogVersionCount_one": "{{count}} versão disponível",
+  "catalogVersionCount_other": "{{count}} versões disponíveis",
+  "catalogCacheInfo": "Catálogo armazenado em cache em {{date}} às {{time}}",
+  "errorNoDistro": "Por favor, selecione uma distribuição",
+  "errorInstallFailed": "Falha ao instalar distribuição",
+  "errorCreateFailed": "Falha ao criar distribuição",
+  "downloadStarting": "Iniciando download...",
+  "downloading": "Baixando {{name}} {{release}}...",
+  "customDistribution": "Distribuição personalizada",
+  "customUrlName": "URL personalizada",
+  "customImageName": "Imagem personalizada",
   "distroSources": {
-    "title": "Fontes de distribui\u00e7\u00f5es",
-    "description": "Configure de onde baixar distribui\u00e7\u00f5es",
+    "title": "Fontes de distribuições",
+    "description": "Configure de onde baixar distribuições",
     "addUrl": "Adicionar URL",
     "removeUrl": "Remover",
     "urlPlaceholder": "https://example.com/distro-rootfs.tar.gz",
@@ -70,6 +84,73 @@
     "namePlaceholder": "ex., Alpine Linux",
     "url": "URL",
     "noSources": "Nenhuma fonte personalizada configurada",
-    "builtInSources": "As fontes integradas est\u00e3o sempre dispon\u00edveis"
+    "builtInSources": "As fontes integradas estão sempre disponíveis",
+    "tab": {
+      "quickInstall": "Instalação rápida",
+      "container": "Contêiner",
+      "download": "Download"
+    },
+    "badge": {
+      "builtIn": "integrado"
+    },
+    "form": {
+      "nameRequired": "Nome *",
+      "description": "Descrição",
+      "downloadUrl": "URL de download *",
+      "sizeOptional": "Tamanho (opcional)",
+      "containerImage": "Imagem de contêiner *",
+      "distroId": "ID da distribuição *",
+      "distroIdHint": "Deve corresponder ao ID de <code>wsl --list --online</code>",
+      "placeholder": {
+        "downloadName": "ex., Ubuntu 24.04 LTS",
+        "downloadDescription": "ex., Noble Numbat - Último LTS",
+        "downloadUrl": "https://example.com/distro.tar.gz",
+        "downloadSize": "ex., ~370 MB",
+        "containerName": "ex., Rocky Linux 9",
+        "containerDescription": "ex., Linux empresarial",
+        "containerImage": "ex., docker.io/library/rockylinux:9",
+        "msStoreDistroId": "ex., Ubuntu-24.04",
+        "msStoreDescription": "ex., Noble Numbat"
+      }
+    },
+    "button": {
+      "update": "Atualizar",
+      "add": "Adicionar",
+      "cancel": "Cancelar"
+    },
+    "dialog": {
+      "editDownloadSource": "Editar fonte de download",
+      "addDownloadSource": "Adicionar fonte de download",
+      "editContainerImage": "Editar imagem de contêiner",
+      "addContainerImage": "Adicionar imagem de contêiner",
+      "editQuickInstallMetadata": "Editar metadados de instalação rápida",
+      "addQuickInstallMetadata": "Adicionar metadados de instalação rápida",
+      "resetDownloadSources": "Redefinir fontes de download",
+      "resetDownloadSourcesMessage": "Isso redefinirá todas as fontes de download para os valores padrão. Suas fontes personalizadas serão removidas.",
+      "resetDownloads": "Redefinir downloads",
+      "resetContainerImages": "Redefinir imagens de contêiner",
+      "resetContainerImagesMessage": "Isso redefinirá todas as imagens de contêiner para os valores padrão. Suas imagens personalizadas serão removidas.",
+      "resetContainers": "Redefinir contêineres",
+      "resetQuickInstallMetadata": "Redefinir metadados de instalação rápida",
+      "resetQuickInstallMetadataMessage": "Isso redefinirá todos os metadados de instalação rápida para os valores padrão. Seus metadados personalizados serão removidos.",
+      "resetMetadata": "Redefinir metadados"
+    },
+    "empty": {
+      "downloads": "Nenhuma fonte de download configurada.",
+      "containers": "Nenhuma imagem de contêiner configurada.",
+      "quickInstall": "Nenhum metadado de instalação rápida configurado."
+    },
+    "info": {
+      "quickInstall": "Os metadados de instalação rápida fornecem informações de exibição (cor, descrição) para distribuições retornadas por <code>wsl --list --online</code>. A lista de distribuições é fornecida pela Microsoft."
+    },
+    "toggle": {
+      "disable": "Desativar",
+      "enable": "Ativar"
+    },
+    "action": {
+      "edit": "Editar",
+      "delete": "Excluir",
+      "dismissError": "Dispensar erro"
+    }
   }
 }

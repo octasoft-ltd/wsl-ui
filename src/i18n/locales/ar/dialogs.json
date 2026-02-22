@@ -74,7 +74,7 @@
     "privacyNoteSuffix": "، مزود تحليلات يركز على الخصوصية.",
     "decline": "لا شكراً",
     "accept": "نعم، شارك البيانات",
-    "changeAnytime": "يمكنك تغيير هذا في أي وقت في الإعدادات \u2192 الخصوصية"
+    "changeAnytime": "يمكنك تغيير هذا في أي وقت في الإعدادات → الخصوصية"
   },
   "distroInfo": {
     "subtitle": "معلومات التوزيعة",
@@ -96,7 +96,14 @@
     "configuration": "التكوين",
     "loadingConfig": "جارٍ تحميل التكوين...",
     "noConfig": "لا يوجد ملف تكوين (يستخدم الافتراضيات)",
-    "errorLoadConfig": "فشل تحميل التكوين"
+    "errorLoadConfig": "فشل تحميل التكوين",
+    "clonedFromId": "مُستنسخ من المعرّف: {{id}}",
+    "image": "الصورة",
+    "sourceUrl": "عنوان URL المصدر",
+    "clonedFrom": "مُستنسخ من",
+    "importPath": "مسار الاستيراد",
+    "reference": "المرجع",
+    "copyToClipboard": "نسخ {{field}} إلى الحافظة"
   },
   "noRdp": {
     "title": "لم يتم اكتشاف بيئة سطح المكتب",
@@ -241,7 +248,13 @@
     "mounting": "جارٍ التركيب...",
     "errorNoVhd": "يرجى اختيار ملف VHD",
     "errorNoDisk": "يرجى اختيار قرص فعلي",
-    "errorFailed": "فشل تركيب القرص"
+    "errorFailed": "فشل تركيب القرص",
+    "searchPlaceholder": "البحث في التوزيعات...",
+    "refreshCatalog": "تحديث الكتالوج",
+    "fsAutoDetect": "اكتشاف تلقائي",
+    "fsLinuxDefault": "ext4 (افتراضي Linux)",
+    "fsWindows": "NTFS (Windows)",
+    "partition": "القسم {{index}}"
   },
   "installConfig": {
     "title": "تكوين التثبيت",
@@ -263,6 +276,7 @@
     "unmountAll": "إلغاء تركيب الكل",
     "noDisks": "لا توجد أقراص مركّبة",
     "noDisksHint": "استخدم \"تركيب القرص\" لإرفاق أقراص VHD أو فعلية",
-    "mountDisk": "تركيب قرص"
+    "mountDisk": "تركيب قرص",
+    "unmountDisk": "إلغاء تركيب هذا القرص"
   }
 }

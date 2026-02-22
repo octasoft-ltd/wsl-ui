@@ -22,7 +22,9 @@
     "note": "注意：スペースを含むパスは引用符で囲む必要があります。",
     "placeholders": "プレースホルダー：",
     "wslPath": "$WSL_PATH — \\\\wsl$ に展開",
+    "wslPathDesc": "\\\\wsl$ に展開",
     "distroName": "$DISTRO_NAME — ディストリビューション名",
+    "distroNameDesc": "ディストリビューション名",
     "example": "例（IntelliJ）：",
     "presets": {
       "vscode": "VS Code",
@@ -40,8 +42,16 @@
     "note": "注意：スペースを含むパスは引用符で囲む必要があります。",
     "placeholders": "プレースホルダー：",
     "wsl": "$WSL — wsl.exe のパス",
+    "wslDesc": "wsl.exe のパス",
     "distroArgs": "$DISTRO_ARGS — --distribution-id <guid> または --system に自動展開",
+    "distroArgsDesc": "--distribution-id <guid> または --system に自動展開",
     "examples": "例：",
+    "exampleAlacrittyLabel": "Alacritty",
+    "exampleAlacrittyCmd": "alacritty -e $WSL $DISTRO_ARGS",
+    "exampleKittyLabel": "Kitty",
+    "exampleKittyCmd": "kitty $WSL $DISTRO_ARGS",
+    "exampleWeztermLabel": "WezTerm",
+    "exampleWeztermCmd": "wezterm start -- $WSL $DISTRO_ARGS",
     "exampleAlacritty": "Alacritty：alacritty -e $WSL $DISTRO_ARGS",
     "exampleKitty": "Kitty：kitty $WSL $DISTRO_ARGS",
     "exampleWezterm": "WezTerm：wezterm start -- $WSL $DISTRO_ARGS",
@@ -92,7 +102,34 @@
     "customTheme": "カスタムテーマ",
     "editCustomTheme": "カスタムテーマを編集",
     "resetAll": "すべてリセット",
-    "highContrast": "ハイコントラスト"
+    "highContrast": "ハイコントラスト",
+    "colors": {
+      "background": "背景",
+      "text": "テキスト",
+      "border": "ボーダー",
+      "accent": "アクセント",
+      "status": "ステータス",
+      "buttons": "ボタン",
+      "scrollbar": "スクロールバー",
+      "primary": "プライマリ",
+      "secondary": "セカンダリ",
+      "tertiary": "ターシャリ",
+      "hover": "ホバー",
+      "selected": "選択済み",
+      "muted": "ミュート",
+      "running": "実行中",
+      "stopped": "停止",
+      "warning": "警告",
+      "error": "エラー",
+      "success": "成功",
+      "primaryHover": "プライマリホバー",
+      "secondaryHover": "セカンダリホバー",
+      "danger": "危険",
+      "dangerHover": "危険ホバー",
+      "track": "トラック",
+      "thumb": "サム",
+      "thumbHover": "サムホバー"
+    }
   },
   "polling": {
     "title": "自動更新",
@@ -113,7 +150,15 @@
     "resetDefaults": "間隔をデフォルトにリセット",
     "tip": "ヒント：アプリが最小化されるとリソース節約のためポーリングは自動的に一時停止します。",
     "seconds": "{{count}}秒",
-    "disabled": "無効"
+    "disabled": "無効",
+    "intervals": {
+      "5seconds": "5秒",
+      "10seconds": "10秒",
+      "15seconds": "15秒",
+      "30seconds": "30秒",
+      "1minute": "1分",
+      "2minutes": "2分"
+    }
   },
   "timeouts": {
     "title": "WSL タイムアウト",
@@ -135,7 +180,21 @@
     "sudoShellDesc": "管理者権限が必要なコマンド（パスワード入力が求められる場合があります）",
     "resetDefaults": "タイムアウトをデフォルトにリセット",
     "seconds": "{{count}}秒",
-    "resetToDefaults": "デフォルトにリセット"
+    "resetToDefaults": "デフォルトにリセット",
+    "intervals": {
+      "5seconds": "5秒",
+      "10seconds": "10秒",
+      "15seconds": "15秒",
+      "30seconds": "30秒",
+      "1minute": "1分",
+      "2minutes": "2分",
+      "3minutes": "3分",
+      "5minutes": "5分",
+      "10minutes": "10分",
+      "15minutes": "15分",
+      "20minutes": "20分",
+      "30minutes": "30分"
+    }
   },
   "executables": {
     "title": "実行ファイルパス",
@@ -215,7 +274,13 @@
     "saveChanges": "変更を保存",
     "pendingChanges": "未保存の変更があります",
     "requiresShutdown": "変更を反映するには WSL の再起動が必要です",
-    "configError": ".wslconfig の読み込みエラー"
+    "configError": ".wslconfig の読み込みエラー",
+    "loadError": "WSL 設定の読み込みに失敗しました",
+    "saveError": "WSL 設定の保存に失敗しました",
+    "memoryPlaceholder": "例：8GB",
+    "processorsPlaceholder": "例：4",
+    "swapPlaceholder": "例：4GB",
+    "errorLabel": "エラー："
   },
   "wslDistro": {
     "title": "ディストリビューション別設定",
@@ -267,7 +332,12 @@
     "saveChanges": "変更を保存",
     "pendingChanges": "未保存の変更があります",
     "noDistroSelected": "設定するディストリビューションを選択してください",
-    "configError": "wsl.conf の読み込みエラー"
+    "configError": "wsl.conf の読み込みエラー",
+    "defaultIndicator": "（デフォルト）",
+    "errorLabel": "エラー：",
+    "defaultUserPlaceholder": "例：ubuntu",
+    "loadError": "wsl.conf の読み込みに失敗しました",
+    "saveError": "wsl.conf の保存に失敗しました"
   },
   "distributionSources": {
     "title": "ディストリビューションソース",
@@ -290,7 +360,9 @@
     "noCacheData": "キャッシュデータなし",
     "clearCache": "キャッシュをクリア",
     "resetDefaults": "すべてをデフォルトにリセット",
-    "communityNote": "コミュニティイメージは <1>Linux Containers</1> によって提供されており、WSL との互換性は異なる場合があります。"
+    "communityNotePrefix": "コミュニティイメージの提供元：",
+    "communityNoteLinkText": "Linux Containers",
+    "communityNoteSuffix": "（WSL との互換性は異なる場合があります）。"
   },
   "containerRuntime": {
     "title": "コンテナランタイム",
@@ -319,6 +391,9 @@
     "collectItem2": "ディストリビューション数（名前は含みません）",
     "collectItem3": "機能の使用回数",
     "neverCollect": "個人データ、ディストリビューション名、ファイルパス、または個人を特定する情報は一切収集しません。",
+    "providerPrefix": "データの処理：",
+    "providerLinkText": "Aptabase",
+    "providerSuffix": "（プライバシー重視の分析プロバイダー）。",
     "provider": "データは <1>Aptabase</1> によって処理されます。プライバシー重視の分析プロバイダーです。",
     "whatWeCollect": "収集する情報：",
     "whatWeNever": "収集しない情報：",

@@ -1,6 +1,6 @@
 {
-  "title": "Distribution hinzuf\u00fcgen",
-  "subtitle": "W\u00e4hlen Sie, wie Sie Ihre Linux-Distribution installieren m\u00f6chten",
+  "title": "Distribution hinzufügen",
+  "subtitle": "Wählen Sie, wie Sie Ihre Linux-Distribution installieren möchten",
   "mode": {
     "quickInstall": "Schnellinstallation",
     "quickInstallDesc": "Aus dem Microsoft Store installieren",
@@ -12,22 +12,22 @@
     "containerDesc": "Aus Container-Image erstellen"
   },
   "info": {
-    "quickInstall": "Offizielle Distributionen aus dem Microsoft Store. Installation am standardm\u00e4\u00dfigen, von Windows verwalteten Speicherort.",
-    "download": "Dieser Katalog kann unter Einstellungen > Distributionsquellen angepasst werden. Benutzerdefinierte URLs werden f\u00fcr die zuk\u00fcnftige Verwendung gespeichert.",
+    "quickInstall": "Offizielle Distributionen aus dem Microsoft Store. Installation am standardmäßigen, von Windows verwalteten Speicherort.",
+    "download": "Dieser Katalog kann unter Einstellungen > Distributionsquellen angepasst werden. Benutzerdefinierte URLs werden für die zukünftige Verwendung gespeichert.",
     "community": "Images von {{url}}. Konfigurieren unter Einstellungen > Distributionsquellen.",
-    "container": "Ausgew\u00e4hlte Laufzeitumgebung in den Einstellungen konfiguriert: {{runtime}}"
+    "container": "Ausgewählte Laufzeitumgebung in den Einstellungen konfiguriert: {{runtime}}"
   },
   "containerRuntime": {
-    "builtin": "Integriertes OCI (nur \u00f6ffentliche Registrys)",
-    "docker": "Docker (unterst\u00fctzt authentifizierte Registrys)",
-    "podman": "Podman (unterst\u00fctzt authentifizierte Registrys)",
+    "builtin": "Integriertes OCI (nur öffentliche Registrys)",
+    "docker": "Docker (unterstützt authentifizierte Registrys)",
+    "podman": "Podman (unterstützt authentifizierte Registrys)",
     "custom": "Benutzerdefiniert: {{path}}"
   },
   "filter": {
     "all": "Alle"
   },
-  "loading": "Verf\u00fcgbare Distributionen werden geladen...",
-  "empty": "Keine Distributionen verf\u00fcgbar",
+  "loading": "Verfügbare Distributionen werden geladen...",
+  "empty": "Keine Distributionen verfügbar",
   "install": "Installieren",
   "useUrl": "URL verwenden",
   "useImage": "Image verwenden",
@@ -52,7 +52,7 @@
     "pullingImage": "Container-Image wird heruntergeladen...",
     "downloadFailed": "Download fehlgeschlagen"
   },
-  "trademarkDisclaimer": "Linux-Distributionslogos sind Marken ihrer jeweiligen Eigent\u00fcmer und werden hier nur zu Identifikationszwecken verwendet.\nDiese Anwendung ist nicht mit einem Distributionsprojekt verbunden oder von diesem genehmigt.",
+  "trademarkDisclaimer": "Linux-Distributionslogos sind Marken ihrer jeweiligen Eigentümer und werden hier nur zu Identifikationszwecken verwendet.\nDiese Anwendung ist nicht mit einem Distributionsprojekt verbunden oder von diesem genehmigt.",
   "installingAs": "Installation als \"{{name}}\"",
   "noDownloadable": "Keine herunterladbaren Distributionen konfiguriert",
   "noContainerImages": "Keine Container-Images konfiguriert",
@@ -60,16 +60,97 @@
   "communityDisabledHint": "Aktivieren Sie ihn unter Einstellungen > Distributionsquellen",
   "useCustomUrl": "Stattdessen eine benutzerdefinierte URL verwenden",
   "useCustomImage": "Stattdessen ein benutzerdefiniertes Image verwenden",
+  "catalogDisabled": "Community-Katalog ist deaktiviert. Aktivieren Sie ihn in den Einstellungen.",
+  "catalogLoadError": "Katalog konnte nicht geladen werden",
+  "catalogNoMatch": "Keine Distributionen entsprechen „{{query}}“",
+  "catalogVersionCount_one": "{{count}} Version verfügbar",
+  "catalogVersionCount_other": "{{count}} Versionen verfügbar",
+  "catalogCacheInfo": "Katalog zwischengespeichert am {{date}} um {{time}}",
+  "errorNoDistro": "Bitte wählen Sie eine Distribution",
+  "errorInstallFailed": "Distribution konnte nicht installiert werden",
+  "errorCreateFailed": "Distribution konnte nicht erstellt werden",
+  "downloadStarting": "Download wird gestartet...",
+  "downloading": "{{name}} {{release}} wird heruntergeladen...",
+  "customDistribution": "Benutzerdefinierte Distribution",
+  "customUrlName": "Benutzerdefinierte URL",
+  "customImageName": "Benutzerdefiniertes Image",
   "distroSources": {
     "title": "Distributionsquellen",
     "description": "Konfigurieren, von wo Distributionen heruntergeladen werden",
-    "addUrl": "URL hinzuf\u00fcgen",
+    "addUrl": "URL hinzufügen",
     "removeUrl": "Entfernen",
     "urlPlaceholder": "https://example.com/distro-rootfs.tar.gz",
     "name": "Name",
     "namePlaceholder": "z.B. Alpine Linux",
     "url": "URL",
     "noSources": "Keine benutzerdefinierten Quellen konfiguriert",
-    "builtInSources": "Integrierte Quellen sind immer verf\u00fcgbar"
+    "builtInSources": "Integrierte Quellen sind immer verfügbar",
+    "tab": {
+      "quickInstall": "Schnellinstallation",
+      "container": "Container",
+      "download": "Download"
+    },
+    "badge": {
+      "builtIn": "integriert"
+    },
+    "form": {
+      "nameRequired": "Name *",
+      "description": "Beschreibung",
+      "downloadUrl": "Download-URL *",
+      "sizeOptional": "Größe (optional)",
+      "containerImage": "Container-Image *",
+      "distroId": "Distributions-ID *",
+      "distroIdHint": "Muss mit der ID aus <code>wsl --list --online</code> übereinstimmen",
+      "placeholder": {
+        "downloadName": "z.B. Ubuntu 24.04 LTS",
+        "downloadDescription": "z.B. Noble Numbat – Neueste LTS",
+        "downloadUrl": "https://example.com/distro.tar.gz",
+        "downloadSize": "z.B. ~370 MB",
+        "containerName": "z.B. Rocky Linux 9",
+        "containerDescription": "z.B. Unternehmenstaugliches Linux",
+        "containerImage": "z.B. docker.io/library/rockylinux:9",
+        "msStoreDistroId": "z.B. Ubuntu-24.04",
+        "msStoreDescription": "z.B. Noble Numbat"
+      }
+    },
+    "button": {
+      "update": "Aktualisieren",
+      "add": "Hinzufügen",
+      "cancel": "Abbrechen"
+    },
+    "dialog": {
+      "editDownloadSource": "Downloadquelle bearbeiten",
+      "addDownloadSource": "Downloadquelle hinzufügen",
+      "editContainerImage": "Container-Image bearbeiten",
+      "addContainerImage": "Container-Image hinzufügen",
+      "editQuickInstallMetadata": "Schnellinstallations-Metadaten bearbeiten",
+      "addQuickInstallMetadata": "Schnellinstallations-Metadaten hinzufügen",
+      "resetDownloadSources": "Downloadquellen zurücksetzen",
+      "resetDownloadSourcesMessage": "Dadurch werden alle Downloadquellen auf ihre Standardwerte zurückgesetzt. Ihre benutzerdefinierten Quellen werden entfernt.",
+      "resetDownloads": "Downloads zurücksetzen",
+      "resetContainerImages": "Container-Images zurücksetzen",
+      "resetContainerImagesMessage": "Dadurch werden alle Container-Images auf ihre Standardwerte zurückgesetzt. Ihre benutzerdefinierten Images werden entfernt.",
+      "resetContainers": "Container zurücksetzen",
+      "resetQuickInstallMetadata": "Schnellinstallations-Metadaten zurücksetzen",
+      "resetQuickInstallMetadataMessage": "Dadurch werden alle Schnellinstallations-Metadaten auf ihre Standardwerte zurückgesetzt. Ihre benutzerdefinierten Metadaten werden entfernt.",
+      "resetMetadata": "Metadaten zurücksetzen"
+    },
+    "empty": {
+      "downloads": "Keine Downloadquellen konfiguriert.",
+      "containers": "Keine Container-Images konfiguriert.",
+      "quickInstall": "Keine Schnellinstallations-Metadaten konfiguriert."
+    },
+    "info": {
+      "quickInstall": "Schnellinstallations-Metadaten liefern Anzeigeinformationen (Farbe, Beschreibung) für Distributionen, die von <code>wsl --list --online</code> zurückgegeben werden. Die Distributionsliste selbst wird von Microsoft bereitgestellt."
+    },
+    "toggle": {
+      "disable": "Deaktivieren",
+      "enable": "Aktivieren"
+    },
+    "action": {
+      "edit": "Bearbeiten",
+      "delete": "Löschen",
+      "dismissError": "Fehler verwerfen"
+    }
   }
 }

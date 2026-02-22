@@ -119,17 +119,17 @@ export function QuickActionsMenu({ distro, disabled, onOpenChange }: QuickAction
       setSparseEnabled(newState);
       addNotification({
         type: "success",
-        title: "Sparse Mode Changed",
-        message: `Sparse mode ${newState ? "enabled" : "disabled"} for ${distro.name}`,
+        title: t('sparseChanged'),
+        message: t('sparseChangedMessage', { name: distro.name, state: newState ? t('common:label.on') : t('common:label.off') }),
       });
       setIsOpen(false);
       setShowManageSubmenu(false);
     } catch (err) {
       // Tauri returns string errors, not Error instances
-      const errorMessage = typeof err === "string" ? err : err instanceof Error ? err.message : "Unknown error occurred";
+      const errorMessage = typeof err === "string" ? err : err instanceof Error ? err.message : t('common:errors.unknown');
       addNotification({
         type: "error",
-        title: "Failed to Toggle Sparse Mode",
+        title: t('sparseToggleFailed'),
         message: errorMessage,
       });
     } finally {
@@ -140,7 +140,7 @@ export function QuickActionsMenu({ distro, disabled, onOpenChange }: QuickAction
   // Handle sparse toggle with stop-before-action pattern
   // Requires full WSL shutdown as VHDX must not be in use
   const handleSparseWithStopCheck = () => {
-    executeWithStopCheck(distro, "Toggle Sparse Mode", () => {
+    executeWithStopCheck(distro, t('sparseToggle'), () => {
       handleToggleSparse();
     }, { requiresShutdown: true });
     setIsOpen(false);
@@ -195,8 +195,8 @@ export function QuickActionsMenu({ distro, disabled, onOpenChange }: QuickAction
       } catch (error) {
         addNotification({
           type: "error",
-          title: "Action Failed",
-          message: `Failed to run action: ${error instanceof Error ? error.message : "Unknown error"}`,
+          title: t('actionFailed'),
+          message: `${t('actionFailedMessage')}: ${error instanceof Error ? error.message : t('common:errors.unknown')}`,
         });
       }
       return;
@@ -238,8 +238,8 @@ export function QuickActionsMenu({ distro, disabled, onOpenChange }: QuickAction
           } catch (error) {
             addNotification({
               type: "error",
-              title: "Action Failed",
-              message: `Failed to run action: ${error instanceof Error ? error.message : "Unknown error"}`,
+              title: t('actionFailed'),
+              message: `${t('actionFailedMessage')}: ${error instanceof Error ? error.message : t('common:errors.unknown')}`,
             });
           }
           return;
@@ -560,7 +560,7 @@ export function QuickActionsMenu({ distro, disabled, onOpenChange }: QuickAction
                       setShowManageSubmenu(false);
                     }}
                     disabled={!distro.id}
-                    title={!distro.id ? "Distribution ID not available" : undefined}
+                    title={!distro.id ? t('distroIdUnavailable') : undefined}
                     data-testid="manage-action-rename"
                     className="w-full flex items-center gap-3 px-6 py-2 text-sm text-left text-theme-text-secondary hover:bg-theme-bg-tertiary hover:text-theme-text-primary transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-theme-text-secondary"
                   >
@@ -682,7 +682,7 @@ export function QuickActionsMenu({ distro, disabled, onOpenChange }: QuickAction
                         </span>
                       )}
                       {action.requiresSudo && (
-                        <span className="text-xs text-theme-text-muted opacity-60" title="Requires sudo password">
+                        <span className="text-xs text-theme-text-muted opacity-60" title={t('requiresSudo')}>
                           🔒
                         </span>
                       )}
@@ -748,9 +748,9 @@ export function QuickActionsMenu({ distro, disabled, onOpenChange }: QuickAction
       {/* Confirm Dialog for custom actions */}
       <ConfirmDialog
         isOpen={!!showConfirmDialog}
-        title={`Run "${showConfirmDialog?.actionName}"?`}
-        message={`Are you sure you want to run this action on ${distro.name}?`}
-        confirmLabel="Run"
+        title={t('confirmRunTitle', { action: showConfirmDialog?.actionName })}
+        message={t('confirmRunMessage', { action: showConfirmDialog?.actionName, name: distro.name })}
+        confirmLabel={t('common:button.run')}
         onConfirm={handleConfirmAction}
         onCancel={() => setShowConfirmDialog(null)}
       />
@@ -800,7 +800,7 @@ export function QuickActionsMenu({ distro, disabled, onOpenChange }: QuickAction
                 <h3 className="font-semibold text-theme-text-primary">{showOutputDialog.title} {t('outputDialog.titleSuffix')}</h3>
                 <IconButton
                   icon={<CloseIcon size="md" />}
-                  label="Close"
+                  label={t('common:button.close')}
                   variant="ghost"
                   onClick={() => setShowOutputDialog(null)}
                 />
