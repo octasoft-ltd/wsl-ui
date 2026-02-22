@@ -439,11 +439,10 @@
     "developedBy": "開発元",
     "license": {
       "title": "ライセンス",
-      "type": "Business Source License 1.1",
-      "freeText": "個人利用および年間収益 $1,000,000 USD 未満の組織は無料です。",
-      "conversion": "各リリースから 4 年後に Apache License 2.0 に変換されます。",
-      "view": "ライセンスを表示",
-      "commercial": "商用ライセンス"
+      "type": "GNU 一般公衆利用許諾契約書 v3.0",
+      "freeText": "フリーかつオープンソースのソフトウェアです。自由に使用、変更、配布できます。",
+      "conversion": "派生作品も GPL-3.0 でライセンスする必要があります。",
+      "view": "ライセンスを表示"
     },
     "wslInfo": {
       "title": "WSL 情報",

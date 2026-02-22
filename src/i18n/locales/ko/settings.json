@@ -439,11 +439,10 @@
     "developedBy": "개발자",
     "license": {
       "title": "라이선스",
-      "type": "Business Source License 1.1",
-      "freeText": "개인 사용 및 연간 매출 $1,000,000 USD 미만의 조직은 무료입니다.",
-      "conversion": "각 릴리스 출시 후 4년이 경과하면 Apache License 2.0으로 전환됩니다.",
-      "view": "라이선스 보기",
-      "commercial": "상업용 라이선스"
+      "type": "GNU 일반 공중 사용 허가서 v3.0",
+      "freeText": "자유롭고 오픈 소스인 소프트웨어입니다. 이 소프트웨어를 자유롭게 사용, 수정 및 배포할 수 있습니다.",
+      "conversion": "파생 저작물도 GPL-3.0으로 라이선스해야 합니다.",
+      "view": "라이선스 보기"
     },
     "wslInfo": {
       "title": "WSL 정보",

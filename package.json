@@ -1,7 +1,7 @@
 {
   "name": "wsl-ui",
   "private": true,
-  "license": "BUSL-1.1",
+  "license": "GPL-3.0-only",
   "version": "0.16.1",
   "type": "module",
   "scripts": {

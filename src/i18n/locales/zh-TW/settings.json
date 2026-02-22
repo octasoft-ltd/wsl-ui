@@ -439,11 +439,10 @@
     "developedBy": "開發者",
     "license": {
       "title": "授權",
-      "type": "Business Source License 1.1",
-      "freeText": "供個人使用及年收入低於 $1,000,000 美元的組織免費使用。",
-      "conversion": "每個版本發布四年後轉換為 Apache License 2.0。",
-      "view": "檢視授權",
-      "commercial": "商業授權"
+      "type": "GNU 通用公共授權條款 v3.0",
+      "freeText": "自由開源軟體。您可以自由使用、修改和散布本軟體。",
+      "conversion": "衍生作品也必須以 GPL-3.0 授權條款發布。",
+      "view": "檢視授權"
     },
     "wslInfo": {
       "title": "WSL 資訊",

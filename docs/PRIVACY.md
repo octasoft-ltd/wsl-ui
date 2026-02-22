@@ -113,6 +113,6 @@ For privacy concerns or questions:
 
 ## Source Available
 
-WSL UI is source-available software licensed under BUSL-1.1. You can review the complete source code at:
+WSL UI is free and open source software licensed under GPL-3.0. You can review the complete source code at:
 
 https://github.com/octasoft-ltd/wsl-ui

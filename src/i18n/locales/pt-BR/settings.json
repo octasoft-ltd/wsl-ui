@@ -439,11 +439,10 @@
     "developedBy": "Desenvolvido por",
     "license": {
       "title": "Licença",
-      "type": "Business Source License 1.1",
-      "freeText": "Gratuito para uso pessoal e organizações com receita anual inferior a US$ 1.000.000.",
-      "conversion": "Converte para Apache License 2.0 quatro anos após cada lançamento.",
-      "view": "Ver licença",
-      "commercial": "Licenciamento comercial"
+      "type": "Licença Pública Geral GNU v3.0",
+      "freeText": "Software livre e de código aberto. Você pode usar, modificar e distribuir este software livremente.",
+      "conversion": "Trabalhos derivados também devem ser licenciados sob GPL-3.0.",
+      "view": "Ver licença"
     },
     "wslInfo": {
       "title": "Informações do WSL",

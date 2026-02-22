@@ -143,7 +143,7 @@ npm run test:e2e:dev
 ## License
 
 By contributing, you agree that your contributions will be licensed under the
-same [BUSL-1.1](LICENSE) license as the project.
+same [GPL-3.0](LICENSE) license as the project.
 
 ## Questions?
 

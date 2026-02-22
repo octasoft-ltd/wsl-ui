@@ -542,12 +542,6 @@ export function SettingsPage({ onBack }: SettingsPageProps) {
                           <ExternalLinkIcon size="sm" />
                           <span>{t('about.license.view')}</span>
                         </a>
-                        <a
-                          href="mailto:wsl-ui@octasoft.co.uk"
-                          className="inline-flex items-center gap-2 px-3 py-1.5 text-sm text-stone-400 hover:text-stone-300 bg-stone-800/50 hover:bg-stone-700/50 border border-stone-700 rounded-lg transition-colors"
-                        >
-                          <span>{t('about.license.commercial')}</span>
-                        </a>
                       </div>
                     </div>
                   </div>

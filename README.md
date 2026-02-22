@@ -91,12 +91,12 @@ npm run test:e2e:dev    # E2E tests (mock mode)
 
 ## License
 
-This project is licensed under the Business Source License 1.1 (BUSL-1.1) -
+This project is licensed under the GNU General Public License v3.0 (GPL-3.0) -
 see the [LICENSE](LICENSE) file for details.
 
-- **Free for personal use** and organizations with less than $1M annual revenue
-- **Converts to Apache 2.0** four years after each version is published
-- **Commercial licensing** available: wsl-ui@octasoft.co.uk
+- **Free and open source** software
+- **Copyleft** — derivative works must also be open source under GPL-3.0
+- **Source code** must be provided with any distribution
 
 ### Trademark Notice
 

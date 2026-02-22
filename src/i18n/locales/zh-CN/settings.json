@@ -439,11 +439,10 @@
     "developedBy": "开发者",
     "license": {
       "title": "许可证",
-      "type": "Business Source License 1.1",
-      "freeText": "个人使用和年收入低于 1,000,000 美元的组织免费。",
-      "conversion": "每个版本发布四年后转换为 Apache License 2.0。",
-      "view": "查看许可证",
-      "commercial": "商业许可"
+      "type": "GNU 通用公共许可证 v3.0",
+      "freeText": "自由开源软件。您可以自由使用、修改和分发本软件。",
+      "conversion": "衍生作品也必须以 GPL-3.0 许可证发布。",
+      "view": "查看许可证"
     },
     "wslInfo": {
       "title": "WSL 信息",
