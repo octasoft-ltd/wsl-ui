@@ -19,7 +19,7 @@
   "import": {
     "title": "导入发行版",
     "nameLabel": "发行版名称",
-    "namePlaceholder": "例如 Ubuntu-Dev",
+    "namePlaceholder": "例如：Ubuntu-Dev",
     "tarLabel": "TAR 归档文件",
     "tarPlaceholder": "选择一个 .tar 文件...",
     "tarFilterName": "TAR 归档文件",
@@ -59,7 +59,7 @@
     "title": "需要 Sudo 密码",
     "descriptionPrefix": "操作",
     "descriptionSuffix": "需要提升权限才能在",
-    "instruction": "请输入您的 Linux 用户密码以获取 sudo 访问权限：",
+    "instruction": "请输入 Linux 用户密码以进行 sudo 验证：",
     "placeholder": "密码",
     "securityNote": "您的密码仅用于此操作，不会被存储。",
     "submit": "以 Sudo 运行"
@@ -107,7 +107,7 @@
   },
   "noRdp": {
     "title": "未检测到桌面环境",
-    "description": "我们无法在此发行版中检测到 xrdp 运行。",
+    "description": "未能在此发行版中检测到正在运行的 xrdp。",
     "instructions": "要使用远程桌面，您需要设置桌面环境和 xrdp 服务器。",
     "learnMore": "了解如何设置 Linux 桌面"
   },
@@ -125,7 +125,7 @@
     "currentSize": "当前大小",
     "newLocation": "新位置",
     "locationPlaceholder": "选择或输入目标路径",
-    "locationHelper": "发行版的虚拟磁盘将被移动到此文件夹。",
+    "locationHelper": "发行版的虚拟磁盘将移动到此文件夹。",
     "browseTitle": "选择目标文件夹",
     "progress": "正在移动发行版... 大型发行版可能需要较长时间。",
     "move": "移动",
@@ -141,8 +141,8 @@
     "fileSize": "文件大小（当前）",
     "important": "重要提示：",
     "warningUac": "此操作需要管理员权限（UAC 提示）",
-    "warningShutdown": "此操作期间 WSL 将被关闭",
-    "warningDoNotClose": "请勿关闭应用程序或关闭计算机",
+    "warningShutdown": "此操作期间将关闭 WSL",
+    "warningDoNotClose": "请勿关闭应用程序或关机",
     "optimizing": "正在优化磁盘...",
     "elapsed": "已用时 {{time}}",
     "progressSteps": "正在运行 fstrim，关闭 WSL，然后压缩 VHDX。",
@@ -171,10 +171,10 @@
   },
   "setUser": {
     "title": "设置默认用户",
-    "subtitle": "为 \"{{name}}\"",
+    "subtitle": "发行版：\"{{name}}\"",
     "usernameLabel": "用户名",
-    "usernamePlaceholder": "例如 ubuntu、john",
-    "usernameHint": "仅允许小写字母、数字、下划线和连字符。",
+    "usernamePlaceholder": "例如：ubuntu、john",
+    "usernameHint": "只能包含小写字母、数字、下划线和连字符。",
     "infoNote": "启动此发行版时将自动登录此用户。该用户必须已存在于发行版中。",
     "progress": "正在设置默认用户...",
     "setUser": "设置用户",
@@ -188,7 +188,7 @@
   },
   "setVersion": {
     "title": "设置 WSL 版本",
-    "subtitle": "为 \"{{name}}\"",
+    "subtitle": "发行版：\"{{name}}\"",
     "selectVersion": "选择版本",
     "wsl1Description": "轻量级，使用 Windows 文件系统层",
     "wsl2Description": "完整 Linux 内核，性能更好",
@@ -275,7 +275,7 @@
     "title": "WSL 磁盘挂载",
     "unmountAll": "全部卸载",
     "noDisks": "没有挂载的磁盘",
-    "noDisksHint": "使用\"挂载磁盘\"来附加 VHD 或物理磁盘",
+    "noDisksHint": "使用\"挂载磁盘\"挂载 VHD 或物理磁盘",
     "mountDisk": "挂载磁盘",
     "unmountDisk": "卸载此磁盘"
   }

@@ -41,7 +41,7 @@
     "offline": "오프라인",
     "primary": "기본",
     "compacting": "압축 중",
-    "operational": "운영 중",
+    "operational": "정상",
     "standby": "대기"
   },
   "unit": {
@@ -63,5 +63,5 @@
   },
   "noOutput": "출력 없음",
   "output": "출력",
-  "ranOn": "실행 위치: {{distro}}"
+  "ranOn": "실행 대상: {{distro}}"
 }

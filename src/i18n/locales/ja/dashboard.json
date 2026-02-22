@@ -2,7 +2,7 @@
   "loading": "システムを初期化中...",
   "emptyState": {
     "title": "インスタンスが見つかりません",
-    "description": "WSL ディストリビューションをデプロイして開始してください"
+    "description": "WSL ディストリビューションをインストールして始めましょう"
   },
   "filter": {
     "all": "すべて",

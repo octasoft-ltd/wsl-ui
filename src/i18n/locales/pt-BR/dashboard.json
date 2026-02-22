@@ -2,7 +2,7 @@
   "loading": "Inicializando sistemas...",
   "emptyState": {
     "title": "Nenhuma instância detectada",
-    "description": "Implante uma distribuição WSL para começar"
+    "description": "Instale uma distribuição WSL para começar"
   },
   "filter": {
     "all": "Todas",
@@ -26,7 +26,7 @@
     "suspend": "Suspender",
     "launch": "Iniciar",
     "openTerminal": "Abrir terminal",
-    "openRdp": "Área de Trabalho Remota",
+    "openRdp": "Abrir Área de Trabalho Remota",
     "quickActions": "Ações rápidas",
     "deleteDistro": "Excluir distribuição",
     "ipTooltip": "Clique para copiar o endereço IP"

@@ -7,7 +7,7 @@
   "dev": "Dev",
   "disk": "DISQUE",
   "updateWsl": {
-    "updating": "En attente de l'approbation de l'administrateur... Vérifiez la présence d'un dialogue UAC",
+    "updating": "En attente de l'approbation de l'administrateur... Vérifiez la présence d'une invite UAC",
     "preRelease": "Mettre à jour WSL (préliminaire) - Nécessite un administrateur",
     "default": "Mettre à jour WSL - Nécessite un administrateur",
     "uac": "UAC"

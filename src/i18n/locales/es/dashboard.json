@@ -2,7 +2,7 @@
   "loading": "Inicializando sistemas...",
   "emptyState": {
     "title": "No se detectaron instancias",
-    "description": "Implemente una distribución WSL para comenzar"
+    "description": "Instale una distribución WSL para comenzar"
   },
   "filter": {
     "all": "Todas",

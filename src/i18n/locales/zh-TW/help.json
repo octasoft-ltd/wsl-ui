@@ -4,7 +4,7 @@
   "gettingStarted": {
     "title": "入門",
     "whatIsWslUi": "什麼是 WSL UI？",
-    "whatIsWslUiText": "WSL UI 是一款用於管理 Windows 子系統 Linux (WSL) 發行版的桌面應用程式。它為常見的 WSL 操作（如啟動、停止、建立和設定 Linux 發行版）提供了圖形介面。",
+    "whatIsWslUiText": "WSL UI 是一款用於管理適用於 Linux 的 Windows 子系統 (WSL) 發行版的桌面應用程式。它為常見的 WSL 操作（如啟動、停止、建立和設定 Linux 發行版）提供了圖形介面。",
     "mainDashboard": "主儀表板",
     "mainDashboardText": "主檢視以卡片形式顯示所有已安裝的 WSL 發行版。每張卡片顯示發行版名稱、狀態（線上/離線）、磁碟使用量和快捷操作按鈕。",
     "quickActions": "快捷操作",
@@ -40,9 +40,9 @@
     "quickInstall": "快速安裝（Microsoft Store）",
     "quickInstallText": "一鍵安裝官方發行版，如 Ubuntu、Debian 和 openSUSE。",
     "containerImages": "容器映像",
-    "containerImagesText": "從 Docker 或 Podman 容器映像建立發行版。支援 Docker Hub 和其他登錄。",
+    "containerImagesText": "從 Docker 或 Podman 容器映像建立發行版。支援 Docker Hub 和其他映像庫。",
     "directDownload": "直接下載",
-    "directDownloadText": "從可設定的 URL 下載 rootfs 封存檔。包括 Alpine、NixOS、Void Linux 等。",
+    "directDownloadText": "從可自訂的 URL 下載 rootfs 封存檔。包括 Alpine、NixOS、Void Linux 等。",
     "communityCatalog": "社群目錄（LXC）",
     "communityCatalogText": "從 Linux Containers 映像伺服器瀏覽數百個發行版。"
   },
@@ -84,13 +84,13 @@
     "shiftTab": "Shift+Tab",
     "shiftTabAction": "上一個元素",
     "enter": "Enter",
-    "enterAction": "啟動 / 提交",
+    "enterAction": "確認 / 送出",
     "escape": "Escape",
     "escapeAction": "關閉對話方塊或選單",
     "space": "Space",
     "spaceAction": "切換核取方塊",
     "accessibility": "無障礙",
-    "accessibilityText": "WSL UI 支援螢幕助讀程式、鍵盤導覽，並尊重系統減少動態效果的偏好設定。"
+    "accessibilityText": "WSL UI 支援螢幕朗讀程式、鍵盤導覽，並遵循系統減少動態效果的偏好設定。"
   },
   "settingsOverview": {
     "title": "設定概觀",

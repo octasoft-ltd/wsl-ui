@@ -65,7 +65,7 @@
     "addAction": "アクションを追加",
     "editAction": "アクションを編集",
     "noActions": "カスタムアクションが設定されていません",
-    "noActionsHint": "最初のカスタムアクションを追加して開始しましょう",
+    "noActionsHint": "カスタムアクションを追加して始めましょう",
     "name": "名前",
     "namePlaceholder": "例：システム更新",
     "command": "コマンド",

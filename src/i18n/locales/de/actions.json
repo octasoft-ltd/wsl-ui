@@ -27,7 +27,7 @@
   },
   "sparseConfirm": {
     "title": "Sparse-Modus aktivieren?",
-    "message": "Warnung: Microsoft hat darauf hingewiesen, dass die Sparse-VHD-Unterstützung möglicherweise Datenverluste verursachen kann. Obwohl es helfen kann, Festplattenplatz automatisch zurückzugewinnen, besteht ein Risiko von Datenverlust. Stellen Sie sicher, dass Sie Sicherungen haben, bevor Sie diese Funktion aktivieren.",
+    "message": "Warnung: Microsoft hat darauf hingewiesen, dass die Sparse-VHD-Unterstützung möglicherweise Datenbeschädigung verursachen kann. Obwohl sie helfen kann, Festplattenplatz automatisch zurückzugewinnen, besteht ein Risiko von Datenverlust. Stellen Sie sicher, dass Sie Sicherungen haben, bevor Sie diese Funktion aktivieren.",
     "confirm": "Trotzdem aktivieren"
   },
   "outputDialog": {
@@ -75,7 +75,7 @@
     "runOnStartup": "Beim Start ausführen",
     "runOnStartupDesc": "Ausführen, wenn eine passende Distribution startet",
     "showOutput": "Ausgabe anzeigen",
-    "showOutputDesc": "Befehlsausgabe in einem Dialogfeld anzeigen",
+    "showOutputDesc": "Befehlsausgabe in einem Dialog anzeigen",
     "target": "Ziel-Distributionen",
     "targetAll": "Alle Distributionen",
     "targetSpecific": "Bestimmte Distributionen",

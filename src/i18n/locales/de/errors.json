@@ -7,10 +7,10 @@
   "system": {
     "title": "Systemfehler",
     "timeoutTip": "Tipp: Wenn Sie kürzlich eine neue Distribution installiert haben, schließen Sie alle Terminalfenster, die während der Installation automatisch geöffnet wurden.",
-    "forceShutdown": "WSL erzwungen herunterfahren",
-    "forceShutdownTitle": "WSL erzwungen herunterfahren",
-    "forceShutdownMessage": "Dies wird alle WSL-Prozesse mit 'wsl --shutdown --force' erzwungen beenden. Nicht gespeicherte Arbeit in Ihren Linux-Distributionen kann verloren gehen. Diese Aktion kann nicht rückgängig gemacht werden.",
-    "forceShutdownConfirm": "Erzwungen herunterfahren"
+    "forceShutdown": "WSL-Herunterfahren erzwingen",
+    "forceShutdownTitle": "WSL-Herunterfahren erzwingen",
+    "forceShutdownMessage": "Dies wird alle WSL-Prozesse mit 'wsl --shutdown --force' zwangsweise beenden. Nicht gespeicherte Arbeit in Ihren Linux-Distributionen kann verloren gehen. Diese Aktion kann nicht rückgängig gemacht werden.",
+    "forceShutdownConfirm": "Herunterfahren erzwingen"
   },
   "wslUpdate": {
     "title": "WSL-Update",

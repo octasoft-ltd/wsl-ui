@@ -262,7 +262,7 @@
     "networkingMode": "وضع الشبكة",
     "networkingModeDesc": "وضع الشبكة لـ WSL2",
     "natDefault": "NAT (افتراضي)",
-    "mirrored": "مرآة",
+    "mirrored": "معكوس",
     "kernelCommandLine": "سطر أوامر النواة",
     "kernelCommandLineDesc": "معاملات إضافية لسطر أوامر النواة",
     "updates": "التحديثات",

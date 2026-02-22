@@ -50,7 +50,7 @@
     "errorEmpty": "Por favor, ingrese un nombre para la distribución",
     "errorSameAsCurrent": "El nuevo nombre debe ser diferente al nombre actual",
     "successTitle": "Distribución renombrada",
-    "successMessage": "{{oldName}} renombrado a {{newName}}"
+    "successMessage": "{{oldName}} renombrada a {{newName}}"
   },
   "confirm": {
     "defaultCancel": "Cancelar"
@@ -132,7 +132,7 @@
     "errorNoDestination": "Por favor, seleccione una carpeta de destino",
     "errorFailed": "Error al mover la distribución",
     "successTitle": "Distribución movida",
-    "successMessage": "{{name}} movido a {{location}}"
+    "successMessage": "{{name}} movida a {{location}}"
   },
   "compact": {
     "title": "Compactar disco de \"{{name}}\"",
@@ -146,7 +146,7 @@
     "optimizing": "Optimizando disco...",
     "elapsed": "{{time}} transcurrido",
     "progressSteps": "Ejecutando fstrim, apagando WSL y compactando VHDX.",
-    "progressWait": "Por favor espere. Esta operación no se puede cancelar.",
+    "progressWait": "Por favor, espere. Esta operación no se puede cancelar.",
     "compactDisk": "Compactar disco",
     "successTitle": "Disco compactado",
     "errorFailed": "Error al compactar la distribución"
@@ -200,7 +200,7 @@
     "convert": "Convertir a WSL {{version}}",
     "errorFailed": "Error al convertir la distribución",
     "successTitle": "Versión de WSL cambiada",
-    "successMessage": "{{name}} convertido a WSL {{version}}"
+    "successMessage": "{{name}} convertida a WSL {{version}}"
   },
   "stopAction": {
     "titleStop": "¿Detener distribución?",
@@ -208,7 +208,7 @@
     "requires": "requiere",
     "allDistros": "todas las distribuciones WSL",
     "shutdownReason": "ser apagadas para liberar el disco virtual.",
-    "stopReason": "ser detenido.",
+    "stopReason": "ser detenida.",
     "shuttingDown": "Apagando WSL...",
     "stopping": "Deteniendo {{name}}...",
     "shuttingDownShort": "Apagando...",

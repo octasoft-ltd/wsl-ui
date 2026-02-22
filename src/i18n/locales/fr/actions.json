@@ -75,7 +75,7 @@
     "runOnStartup": "Exécuter au démarrage",
     "runOnStartupDesc": "Exécuter lorsqu'une distribution correspondante démarre",
     "showOutput": "Afficher la sortie",
-    "showOutputDesc": "Afficher la sortie de la commande dans un dialogue",
+    "showOutputDesc": "Afficher la sortie de la commande dans une boîte de dialogue",
     "target": "Distributions cibles",
     "targetAll": "Toutes les distributions",
     "targetSpecific": "Distributions spécifiques",

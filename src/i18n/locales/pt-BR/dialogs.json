@@ -50,7 +50,7 @@
     "errorEmpty": "Por favor, digite um nome para a distribuição",
     "errorSameAsCurrent": "O novo nome deve ser diferente do nome atual",
     "successTitle": "Distribuição renomeada",
-    "successMessage": "{{oldName}} renomeado para {{newName}}"
+    "successMessage": "{{oldName}} renomeada para {{newName}}"
   },
   "confirm": {
     "defaultCancel": "Cancelar"
@@ -132,7 +132,7 @@
     "errorNoDestination": "Por favor, selecione uma pasta de destino",
     "errorFailed": "Falha ao mover distribuição",
     "successTitle": "Distribuição movida",
-    "successMessage": "{{name}} movido para {{location}}"
+    "successMessage": "{{name}} movida para {{location}}"
   },
   "compact": {
     "title": "Compactar disco de \"{{name}}\"",
@@ -159,7 +159,7 @@
     "newVirtualSize": "Novo tamanho virtual",
     "newSize": "Novo tamanho",
     "invalid": "Inválido",
-    "note": "Você só pode aumentar o tamanho do disco virtual. O novo tamanho deve ser maior que o tamanho virtual atual. O tamanho do arquivo em disco (esparso) permanecerá pequeno até que você use o espaço.",
+    "note": "Nota:",
     "noteDescription": "Você só pode aumentar o tamanho do disco virtual. O novo tamanho deve ser maior que o tamanho virtual atual. O tamanho do arquivo em disco (esparso) permanecerá pequeno até que você use o espaço.",
     "progress": "Redimensionando disco...",
     "resize": "Redimensionar",
@@ -200,7 +200,7 @@
     "convert": "Converter para WSL {{version}}",
     "errorFailed": "Falha ao converter distribuição",
     "successTitle": "Versão do WSL alterada",
-    "successMessage": "{{name}} convertido para WSL {{version}}"
+    "successMessage": "{{name}} convertida para WSL {{version}}"
   },
   "stopAction": {
     "titleStop": "Parar distribuição?",

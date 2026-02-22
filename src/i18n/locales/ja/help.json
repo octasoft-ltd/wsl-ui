@@ -38,29 +38,29 @@
   "creatingDistros": {
     "title": "ディストリビューションの作成",
     "quickInstall": "クイックインストール（Microsoft Store）",
-    "quickInstallText": "Ubuntu、Debian、openSUSE などの公式ディストリビューションをワンクリックでインストール。",
+    "quickInstallText": "Ubuntu、Debian、openSUSE などの公式ディストリビューションをワンクリックでインストールできます。",
     "containerImages": "コンテナイメージ",
-    "containerImagesText": "Docker または Podman のコンテナイメージからディストリビューションを作成。Docker Hub やその他のレジストリをサポート。",
+    "containerImagesText": "Docker または Podman のコンテナイメージからディストリビューションを作成できます。Docker Hub やその他のレジストリに対応しています。",
     "directDownload": "直接ダウンロード",
-    "directDownloadText": "設定可能な URL から rootfs アーカイブをダウンロード。Alpine、NixOS、Void Linux などが含まれます。",
+    "directDownloadText": "設定した URL から rootfs アーカイブをダウンロードできます。Alpine、NixOS、Void Linux などが含まれます。",
     "communityCatalog": "コミュニティカタログ（LXC）",
-    "communityCatalogText": "Linux Containers イメージサーバーから数百のディストリビューションを参照。"
+    "communityCatalogText": "Linux Containers イメージサーバーから数百種類のディストリビューションを参照できます。"
   },
   "backupRestore": {
     "title": "バックアップと復元",
     "export": "エクスポート",
-    "exportText": "ディストリビューションを .tar アーカイブファイルに保存してバックアップまたは移行。後で、または別のマシンで復元できます。",
+    "exportText": "ディストリビューションを .tar アーカイブファイルに保存してバックアップや移行に使用できます。後から同じマシンや別のマシンで復元できます。",
     "import": "インポート",
-    "importText": ".tar アーカイブからディストリビューションを復元。インポートするディストリビューションの名前とインストール場所を選択します。",
+    "importText": ".tar アーカイブからディストリビューションを復元できます。インポートするディストリビューションの名前とインストール場所を選択します。",
     "clone": "クローン",
-    "cloneText": "既存のディストリビューションを新しい名前でコピー作成。テストやバリアント作成に便利です。"
+    "cloneText": "既存のディストリビューションを新しい名前でコピーできます。テストや派生環境の作成に便利です。"
   },
   "customActions": {
     "title": "カスタムアクション",
     "whatAre": "カスタムアクションとは？",
     "whatAreText": "カスタムアクションはクイックアクションメニューに表示されるユーザー定義のシェルコマンドです。システム更新、バックアップ、開発環境セットアップなどの一般的なタスク用のアクションを作成できます。",
     "variables": "変数",
-    "variablesText": "ランタイム時に置換されるコマンド内の変数を使用：",
+    "variablesText": "実行時に自動置換されるコマンド変数を使用できます：",
     "varDistroName": "ディストリビューション名",
     "varHome": "ホームディレクトリパス",
     "varUser": "デフォルトユーザー",
@@ -70,12 +70,12 @@
   },
   "theming": {
     "title": "テーマと外観",
-    "builtinThemes": "内蔵テーマ",
-    "builtinThemesText": "ダーク、ライト、中間色調のオプションを含む 17 のプロフェッショナルなテーマから選択。人気のテーマには Obsidian、Dracula、Nord、Solarized があります。",
+    "builtinThemes": "組み込みテーマ",
+    "builtinThemesText": "ダーク、ライト、中間トーンを含む 17 種類のテーマから選択できます。人気のテーマには Obsidian、Dracula、Nord、Solarized があります。",
     "accessibilityThemes": "アクセシビリティテーマ",
-    "accessibilityThemesText": "ロービジョンのユーザー向けに 2 つのハイコントラストテーマが利用可能：ハイコントラスト（ダーク）とハイコントラストライト。",
+    "accessibilityThemesText": "視覚に障がいのあるユーザー向けに 2 つのハイコントラストテーマを用意しています：ハイコントラスト（ダーク）とハイコントラスト（ライト）。",
     "customTheme": "カスタムテーマ",
-    "customThemeText": "背景、テキスト、ボーダー、アクセントカラーなど 29 のカラー変数を完全に制御して独自のテーマを作成。"
+    "customThemeText": "背景、テキスト、ボーダー、アクセントカラーなど 29 種類の色をカスタマイズして独自のテーマを作成できます。"
   },
   "keyboardShortcuts": {
     "title": "キーボードショートカット",
@@ -90,7 +90,7 @@
     "space": "Space",
     "spaceAction": "チェックボックスの切り替え",
     "accessibility": "アクセシビリティ",
-    "accessibilityText": "WSL UI はスクリーンリーダー、キーボードナビゲーションをサポートし、モーション軽減のシステム設定を尊重します。"
+    "accessibilityText": "WSL UI はスクリーンリーダーとキーボードナビゲーションをサポートし、視覚効果を抑えるシステム設定に対応しています。"
   },
   "settingsOverview": {
     "title": "設定の概要",
@@ -109,9 +109,9 @@
     "ide": "IDE 連携",
     "ideText": "VS Code やその他の IDE でディストリビューションを直接開きます。ディストリビューションのルートフォルダーがエディターで開きます。",
     "fileExplorer": "エクスプローラー",
-    "fileExplorerText": "\\\\wsl$ ネットワークパスを使用して Windows エクスプローラーでディストリビューションファイルを参照。",
+    "fileExplorerText": "\\\\wsl$ ネットワークパスを使用して、Windows エクスプローラーでディストリビューションのファイルを参照できます。",
     "systemTray": "システムトレイ",
-    "systemTrayText": "システムトレイに最小化して素早くアクセス。設定で閉じる動作を設定してください。"
+    "systemTrayText": "システムトレイに最小化してすばやくアクセスできます。閉じるときの動作は設定で変更できます。"
   },
   "troubleshooting": {
     "title": "トラブルシューティング",

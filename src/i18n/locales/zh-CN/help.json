@@ -4,8 +4,8 @@
   "gettingStarted": {
     "title": "入门",
     "whatIsWslUi": "什么是 WSL UI？",
-    "whatIsWslUiText": "WSL UI 是一款用于管理 Windows 子系统 Linux (WSL) 发行版的桌面应用程序。它为常见的 WSL 操作（如启动、停止、创建和配置 Linux 发行版）提供了图形界面。",
-    "mainDashboard": "主仪表板",
+    "whatIsWslUiText": "WSL UI 是一款用于管理适用于 Linux 的 Windows 子系统 (WSL) 发行版的桌面应用程序。它为常见的 WSL 操作（如启动、停止、创建和配置 Linux 发行版）提供了图形界面。",
+    "mainDashboard": "主面板",
     "mainDashboardText": "主视图以卡片形式显示所有已安装的 WSL 发行版。每张卡片显示发行版名称、状态（在线/离线）、磁盘使用情况和快捷操作按钮。",
     "quickActions": "快捷操作",
     "quickActionsText": "点击任意发行版卡片上的菜单按钮（三个点）即可访问快捷操作，如打开终端、文件资源管理器、IDE 或管理发行版。"
@@ -84,13 +84,13 @@
     "shiftTab": "Shift+Tab",
     "shiftTabAction": "上一个元素",
     "enter": "Enter",
-    "enterAction": "激活 / 提交",
+    "enterAction": "确认 / 提交",
     "escape": "Escape",
     "escapeAction": "关闭对话框或菜单",
     "space": "Space",
     "spaceAction": "切换复选框",
     "accessibility": "无障碍",
-    "accessibilityText": "WSL UI 支持屏幕阅读器、键盘导航，并尊重系统减少动效的偏好设置。"
+    "accessibilityText": "WSL UI 支持屏幕阅读器、键盘导航，并遵循系统减弱动态效果的偏好设置。"
   },
   "settingsOverview": {
     "title": "设置概览",

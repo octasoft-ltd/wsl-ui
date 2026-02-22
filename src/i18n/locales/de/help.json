@@ -90,10 +90,10 @@
     "space": "Leertaste",
     "spaceAction": "Kontrollkästchen umschalten",
     "accessibility": "Barrierefreiheit",
-    "accessibilityText": "WSL UI unterstützt Bildschirmleser, Tastaturnavigation und respektiert Systemeinstellungen für reduzierte Bewegung."
+    "accessibilityText": "WSL UI unterstützt Bildschirmleseprogramme, Tastaturnavigation und berücksichtigt Systemeinstellungen für reduzierte Animationen."
   },
   "settingsOverview": {
-    "title": "Einstellungenübersicht",
+    "title": "Einstellungsübersicht",
     "terminal": "Terminal: Windows Terminal, benutzerdefinierte Terminal-Anwendungen oder Eingabeaufforderung konfigurieren",
     "ide": "IDE: VS Code, Cursor oder benutzerdefinierte IDE-Integration einrichten",
     "wslGlobal": "WSL Global: Speicher, CPU, Swap, Netzwerkmodus und WSLg konfigurieren",

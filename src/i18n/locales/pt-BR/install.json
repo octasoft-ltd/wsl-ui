@@ -15,7 +15,7 @@
     "quickInstall": "Distribuições oficiais da Microsoft Store. Instala no local padrão gerenciado pelo Windows.",
     "download": "Este catálogo pode ser personalizado em Configurações > Fontes de distribuições. URLs personalizadas são salvas para uso futuro.",
     "community": "Imagens de {{url}}. Configurar em Configurações > Fontes de distribuições.",
-    "container": "Ambiente de execução selecionado configurado nas configurações: {{runtime}}"
+    "container": "Ambiente de execução selecionado configurado nas Configurações: {{runtime}}"
   },
   "containerRuntime": {
     "builtin": "OCI integrado (apenas registros públicos)",

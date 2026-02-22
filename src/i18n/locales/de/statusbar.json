@@ -5,7 +5,7 @@
   "mem": "Spch",
   "primary": "Primär",
   "dev": "Dev",
-  "disk": "DISK",
+  "disk": "FESTPLATTE",
   "updateWsl": {
     "updating": "Warte auf Administratorgenehmigung... Suchen Sie nach einem UAC-Dialog",
     "preRelease": "WSL aktualisieren (Vorabversion) - Erfordert Administrator",

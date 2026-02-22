@@ -84,13 +84,13 @@
     "shiftTab": "Shift+Tab",
     "shiftTabAction": "이전 요소",
     "enter": "Enter",
-    "enterAction": "실행 / 제출",
+    "enterAction": "실행 / 확인",
     "escape": "Escape",
-    "escapeAction": "대화 상자 또는 메뉴 닫기",
+    "escapeAction": "대화 상자/메뉴 닫기",
     "space": "Space",
-    "spaceAction": "체크박스 전환",
+    "spaceAction": "체크박스 선택/해제",
     "accessibility": "접근성",
-    "accessibilityText": "WSL UI는 스크린 리더, 키보드 내비게이션을 지원하며 모션 감소에 대한 시스템 환경 설정을 준수합니다."
+    "accessibilityText": "WSL UI는 화면 읽기 프로그램, 키보드 탐색을 지원하며 동작 줄이기에 대한 시스템 설정을 따릅니다."
   },
   "settingsOverview": {
     "title": "설정 개요",
@@ -116,11 +116,11 @@
   "troubleshooting": {
     "title": "문제 해결",
     "wslNotDetected": "WSL이 감지되지 않음",
-    "wslNotDetectedText": "WSL이 설치되고 활성화되어 있는지 확인하세요. PowerShell에서 wsl --status를 실행하여 확인하세요. WSL용 Windows 기능을 활성화해야 할 수 있습니다.",
+    "wslNotDetectedText": "WSL이 설치되어 있고 활성화되어 있는지 확인하세요. PowerShell에서 wsl --status를 실행하여 확인할 수 있습니다. WSL용 Windows 기능을 활성화해야 할 수 있습니다.",
     "operationsTimeout": "작업 시간 초과",
-    "operationsTimeoutText": "작업이 자주 시간 초과되면 설정 > 시간 초과에서 시간 초과 값을 늘리세요. 앱은 문제 발생 시 부하를 줄이기 위해 지수 백오프를 사용합니다.",
+    "operationsTimeoutText": "작업이 자주 시간 초과되면 설정 > 시간 초과에서 시간 초과 값을 늘려 보세요. 앱은 문제 발생 시 부하를 줄이기 위해 지수 백오프를 사용합니다.",
     "distroWontStart": "배포판이 시작되지 않음",
-    "distroWontStartText": "wsl --shutdown으로 WSL을 재시작한 다음 배포판을 다시 시작해 보세요.",
+    "distroWontStartText": "wsl --shutdown으로 WSL을 종료한 다음 배포판을 다시 시작해 보세요.",
     "fullGuide": "전체 문제 해결 가이드"
   },
   "resources": {

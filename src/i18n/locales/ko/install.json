@@ -1,6 +1,6 @@
 {
   "title": "배포판 추가",
-  "subtitle": "Linux 배포판 설치 방법을 선택하세요",
+  "subtitle": "Linux 배포판의 설치 방법을 선택하세요",
   "mode": {
     "quickInstall": "빠른 설치",
     "quickInstallDesc": "Microsoft Store에서 설치",
@@ -15,7 +15,7 @@
     "quickInstall": "Microsoft Store의 공식 배포판입니다. 기본 Windows 관리 위치에 설치됩니다.",
     "download": "이 카탈로그는 설정 > 배포판 소스에서 사용자 지정할 수 있습니다. 사용자 지정 URL은 향후 사용을 위해 저장됩니다.",
     "community": "{{url}}의 이미지입니다. 설정 > 배포판 소스에서 구성하세요.",
-    "container": "설정에서 구성된 런타임: {{runtime}}"
+    "container": "설정에서 선택된 런타임: {{runtime}}"
   },
   "containerRuntime": {
     "builtin": "내장 OCI(공개 레지스트리만)",
@@ -37,7 +37,7 @@
   },
   "customUrl": {
     "label": "사용자 지정 URL",
-    "description": "rootfs tarball의 직접 링크를 입력하세요"
+    "description": "rootfs tarball의 직접 다운로드 링크를 입력하세요"
   },
   "customImage": {
     "label": "사용자 지정 이미지",
@@ -65,7 +65,7 @@
   "catalogNoMatch": "\"{{query}}\"와(과) 일치하는 배포판이 없습니다",
   "catalogVersionCount_one": "{{count}}개 버전 사용 가능",
   "catalogVersionCount_other": "{{count}}개 버전 사용 가능",
-  "catalogCacheInfo": "카탈로그 캐시: {{date}} {{time}}",
+  "catalogCacheInfo": "카탈로그 캐시 날짜: {{date}} {{time}}",
   "errorNoDistro": "배포판을 선택하세요",
   "errorInstallFailed": "배포판 설치에 실패했습니다",
   "errorCreateFailed": "배포판 생성에 실패했습니다",
@@ -76,7 +76,7 @@
   "customImageName": "사용자 지정 이미지",
   "distroSources": {
     "title": "배포판 소스",
-    "description": "배포판 다운로드 위치 설정",
+    "description": "배포판을 다운로드할 소스 설정",
     "addUrl": "URL 추가",
     "removeUrl": "제거",
     "urlPlaceholder": "https://example.com/distro-rootfs.tar.gz",

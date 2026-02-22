@@ -15,10 +15,10 @@
     "quickInstall": "Microsoft Store の公式ディストリビューション。デフォルトの Windows 管理場所にインストールされます。",
     "download": "このカタログは 設定 > ディストリビューションソース でカスタマイズできます。カスタム URL は今後の使用のために保存されます。",
     "community": "{{url}} からのイメージ。設定 > ディストリビューションソース で設定してください。",
-    "container": "設定で構成されたランタイム：{{runtime}}"
+    "container": "設定で選択されたランタイム：{{runtime}}"
   },
   "containerRuntime": {
-    "builtin": "内蔵 OCI（パブリックレジストリのみ）",
+    "builtin": "組み込み OCI（パブリックレジストリのみ）",
     "docker": "Docker（認証付きレジストリをサポート）",
     "podman": "Podman（認証付きレジストリをサポート）",
     "custom": "カスタム：{{path}}"
@@ -52,7 +52,7 @@
     "pullingImage": "コンテナイメージを取得中...",
     "downloadFailed": "ダウンロードに失敗しました"
   },
-  "trademarkDisclaimer": "Linux ディストリビューションのロゴは各所有者の商標であり、識別目的でのみ使用しています。\nこのアプリケーションはいかなるディストリビューションプロジェクトとも提携しておらず、推薦を受けていません。",
+  "trademarkDisclaimer": "Linux ディストリビューションのロゴは各所有者の商標であり、識別目的でのみ使用しています。\nこのアプリケーションはいかなるディストリビューションプロジェクトとも提携・推薦関係にありません。",
   "installingAs": "\"{{name}}\" としてインストール中",
   "noDownloadable": "ダウンロード可能なディストリビューションが設定されていません",
   "noContainerImages": "コンテナイメージが設定されていません",
@@ -84,14 +84,14 @@
     "namePlaceholder": "例：Alpine Linux",
     "url": "URL",
     "noSources": "カスタムソースが設定されていません",
-    "builtInSources": "内蔵ソースは常に利用可能です",
+    "builtInSources": "組み込みソースは常に利用可能です",
     "tab": {
       "quickInstall": "クイックインストール",
       "container": "コンテナ",
       "download": "ダウンロード"
     },
     "badge": {
-      "builtIn": "内蔵"
+      "builtIn": "組み込み"
     },
     "form": {
       "nameRequired": "名前 *",

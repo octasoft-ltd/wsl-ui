@@ -15,7 +15,7 @@
     "quickInstall": "来自 Microsoft Store 的官方发行版。安装到默认的 Windows 托管位置。",
     "download": "此目录可在 设置 > 发行版来源 中自定义。自定义 URL 将保存供日后使用。",
     "community": "来自 {{url}} 的镜像。在 设置 > 发行版来源 中配置。",
-    "container": "在设置中配置的运行时：{{runtime}}"
+    "container": "设置中配置的运行时：{{runtime}}"
   },
   "containerRuntime": {
     "builtin": "内置 OCI（仅公共仓库）",
@@ -32,8 +32,8 @@
   "useUrl": "使用 URL",
   "useImage": "使用镜像",
   "placeholder": {
-    "url": "例如 https://example.com/distro-rootfs.tar.gz",
-    "image": "例如 alpine:latest、gitlab/gitlab-runner:latest"
+    "url": "例如：https://example.com/distro-rootfs.tar.gz",
+    "image": "例如：alpine:latest、gitlab/gitlab-runner:latest"
   },
   "customUrl": {
     "label": "自定义 URL",
@@ -81,7 +81,7 @@
     "removeUrl": "移除",
     "urlPlaceholder": "https://example.com/distro-rootfs.tar.gz",
     "name": "名称",
-    "namePlaceholder": "例如 Alpine Linux",
+    "namePlaceholder": "例如：Alpine Linux",
     "url": "URL",
     "noSources": "未配置自定义来源",
     "builtInSources": "内置来源始终可用",
@@ -102,15 +102,15 @@
       "distroId": "发行版 ID *",
       "distroIdHint": "必须与 <code>wsl --list --online</code> 中的 ID 匹配",
       "placeholder": {
-        "downloadName": "例如 Ubuntu 24.04 LTS",
-        "downloadDescription": "例如 Noble Numbat - 最新 LTS",
+        "downloadName": "例如：Ubuntu 24.04 LTS",
+        "downloadDescription": "例如：Noble Numbat - 最新 LTS",
         "downloadUrl": "https://example.com/distro.tar.gz",
-        "downloadSize": "例如 ~370 MB",
-        "containerName": "例如 Rocky Linux 9",
-        "containerDescription": "例如企业级 Linux",
-        "containerImage": "例如 docker.io/library/rockylinux:9",
-        "msStoreDistroId": "例如 Ubuntu-24.04",
-        "msStoreDescription": "例如 Noble Numbat"
+        "downloadSize": "例如：~370 MB",
+        "containerName": "例如：Rocky Linux 9",
+        "containerDescription": "例如：企业级 Linux",
+        "containerImage": "例如：docker.io/library/rockylinux:9",
+        "msStoreDistroId": "例如：Ubuntu-24.04",
+        "msStoreDescription": "例如：Noble Numbat"
       }
     },
     "button": {

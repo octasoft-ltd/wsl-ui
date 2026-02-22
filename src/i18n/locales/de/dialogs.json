@@ -152,14 +152,14 @@
     "errorFailed": "Distribution konnte nicht komprimiert werden"
   },
   "resize": {
-    "title": "Festplatte von \"{{name}}\" ändern",
+    "title": "Festplattengröße von \"{{name}}\" ändern",
     "subtitle": "Die maximale Größe der virtuellen Festplatte anpassen",
     "virtualSize": "Virtuelle Größe (max.)",
     "fileSize": "Dateigröße (tatsächlich)",
     "newVirtualSize": "Neue virtuelle Größe",
     "newSize": "Neue Größe",
     "invalid": "Ungültig",
-    "note": "Sie können die virtuelle Festplattengröße nur vergrößern. Die neue Größe muss größer als die aktuelle virtuelle Größe sein. Die Dateigröße auf der Festplatte (Sparse) bleibt klein, bis Sie den Speicherplatz nutzen.",
+    "note": "Hinweis:",
     "noteDescription": "Sie können die virtuelle Festplattengröße nur vergrößern. Die neue Größe muss größer als die aktuelle virtuelle Größe sein. Die Dateigröße auf der Festplatte (Sparse) bleibt klein, bis Sie den Speicherplatz nutzen.",
     "progress": "Festplattengröße wird geändert...",
     "resize": "Größe ändern",

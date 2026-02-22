@@ -15,12 +15,12 @@
     "quickInstall": "來自 Microsoft Store 的官方發行版。安裝到預設的 Windows 管理位置。",
     "download": "此目錄可在 設定 > 發行版來源 中自訂。自訂 URL 將儲存供日後使用。",
     "community": "來自 {{url}} 的映像。在 設定 > 發行版來源 中設定。",
-    "container": "在設定中設定的執行階段：{{runtime}}"
+    "container": "設定中選取的執行階段：{{runtime}}"
   },
   "containerRuntime": {
-    "builtin": "內建 OCI（僅公開登錄）",
-    "docker": "Docker（支援驗證登錄）",
-    "podman": "Podman（支援驗證登錄）",
+    "builtin": "內建 OCI（僅公開映像庫）",
+    "docker": "Docker（支援需驗證的映像庫）",
+    "podman": "Podman（支援需驗證的映像庫）",
     "custom": "自訂：{{path}}"
   },
   "filter": {
@@ -37,7 +37,7 @@
   },
   "customUrl": {
     "label": "自訂 URL",
-    "description": "輸入 rootfs 壓縮封存的直接連結"
+    "description": "輸入 rootfs 壓縮檔的直接連結"
   },
   "customImage": {
     "label": "自訂映像",

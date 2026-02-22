@@ -53,11 +53,11 @@
   "sparseChangedMessage": "Modo disperso {{state}} para {{name}}",
   "sparseToggleFailed": "Error al cambiar el modo disperso",
   "sparseToggle": "Cambiar modo disperso",
-  "actionFailed": "Acción fallida",
+  "actionFailed": "La acción falló",
   "actionFailedMessage": "Error al ejecutar la acción",
   "distroIdUnavailable": "ID de distribución no disponible",
   "requiresSudo": "Requiere contraseña de sudo",
-  "confirmRunTitle": "Ejecutar \"{{action}}\"?",
+  "confirmRunTitle": "¿Ejecutar \"{{action}}\"?",
   "confirmRunMessage": "¿Está seguro de que desea ejecutar esta acción en {{name}}?",
   "customActionsSettings": {
     "title": "Acciones personalizadas",

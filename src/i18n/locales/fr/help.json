@@ -84,13 +84,13 @@
     "shiftTab": "Shift+Tab",
     "shiftTabAction": "Élément précédent",
     "enter": "Entrée",
-    "enterAction": "Activer / Soumettre",
+    "enterAction": "Activer / Valider",
     "escape": "Échap",
-    "escapeAction": "Fermer le dialogue ou le menu",
+    "escapeAction": "Fermer la boîte de dialogue ou le menu",
     "space": "Espace",
-    "spaceAction": "Basculer la case à cocher",
+    "spaceAction": "Cocher/décocher la case",
     "accessibility": "Accessibilité",
-    "accessibilityText": "WSL UI est compatible avec les lecteurs d'écran, la navigation au clavier et respecte les préférences système pour le mouvement réduit."
+    "accessibilityText": "WSL UI est compatible avec les lecteurs d'écran, la navigation au clavier et respecte les préférences système pour les animations réduites."
   },
   "settingsOverview": {
     "title": "Aperçu des paramètres",
@@ -98,7 +98,7 @@
     "ide": "IDE : Configurer VS Code, Cursor ou l'intégration IDE personnalisée",
     "wslGlobal": "WSL Global : Configurer mémoire, CPU, swap, mode réseau et WSLg",
     "perDistro": "Par distribution : Options de montage automatique, paramètres réseau, systemd et commandes de démarrage",
-    "polling": "Requêtes : Ajuster les intervalles d'actualisation automatique pour l'état et les ressources",
+    "polling": "Actualisation auto : Ajuster les intervalles d'actualisation automatique pour l'état et les ressources",
     "timeouts": "Délais : Configurer les délais d'opération pour les systèmes lents",
     "executables": "Chemins des exécutables : Remplacer les chemins par défaut pour WSL, PowerShell et d'autres outils"
   },
@@ -118,7 +118,7 @@
     "wslNotDetected": "WSL non détecté",
     "wslNotDetectedText": "Assurez-vous que WSL est installé et activé. Exécutez wsl --status dans PowerShell pour vérifier. Vous devrez peut-être activer les fonctionnalités Windows pour WSL.",
     "operationsTimeout": "Expiration des opérations",
-    "operationsTimeoutText": "Si les opérations expirent fréquemment, augmentez les valeurs de délai dans Paramètres > Délais d'attente. L'application utilise un retrait exponentiel pour réduire la charge lors des problèmes.",
+    "operationsTimeoutText": "Si les opérations expirent fréquemment, augmentez les valeurs de délai dans Paramètres > Délais d'attente. L'application utilise une temporisation exponentielle pour réduire la charge en cas de problème.",
     "distroWontStart": "La distribution ne démarre pas",
     "distroWontStartText": "Essayez de redémarrer WSL avec wsl --shutdown, puis démarrez à nouveau la distribution.",
     "fullGuide": "Guide complet de dépannage"

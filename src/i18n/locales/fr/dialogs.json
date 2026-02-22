@@ -159,7 +159,7 @@
     "newVirtualSize": "Nouvelle taille virtuelle",
     "newSize": "Nouvelle taille",
     "invalid": "Non valide",
-    "note": "Vous ne pouvez qu'augmenter la taille du disque virtuel. La nouvelle taille doit être supérieure à la taille virtuelle actuelle. La taille du fichier sur le disque (sparse) restera petite jusqu'à ce que vous utilisiez l'espace.",
+    "note": "Note :",
     "noteDescription": "Vous ne pouvez qu'augmenter la taille du disque virtuel. La nouvelle taille doit être supérieure à la taille virtuelle actuelle. La taille du fichier sur le disque (sparse) restera petite jusqu'à ce que vous utilisiez l'espace.",
     "progress": "Redimensionnement du disque...",
     "resize": "Redimensionner",

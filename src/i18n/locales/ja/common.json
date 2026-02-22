@@ -63,5 +63,5 @@
   },
   "noOutput": "出力なし",
   "output": "出力",
-  "ranOn": "実行先：{{distro}}"
+  "ranOn": "実行環境：{{distro}}"
 }

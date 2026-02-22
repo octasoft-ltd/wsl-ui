@@ -116,7 +116,7 @@
       "tertiary": "3차",
       "hover": "호버",
       "selected": "선택됨",
-      "muted": "음소거",
+      "muted": "비활성",
       "running": "실행 중",
       "stopped": "중지됨",
       "warning": "경고",
@@ -127,8 +127,8 @@
       "danger": "위험",
       "dangerHover": "위험 호버",
       "track": "트랙",
-      "thumb": "썸",
-      "thumbHover": "썸 호버"
+      "thumb": "핸들",
+      "thumbHover": "핸들 호버"
     }
   },
   "polling": {
@@ -137,7 +137,7 @@
     "enabled": "자동 새로고침 활성화",
     "enabledDesc": "배포판 상태 및 리소스 사용량 자동 업데이트",
     "backoffWarning": "자동 새로고침이 느려졌습니다",
-    "backoffDesc": "일부 폴링이 시간 초과되었습니다. 부하를 줄이기 위해 새로고침 간격이 자동으로 늘어났습니다.",
+    "backoffDesc": "일부 폴링이 시간 초과되어 부하를 줄이기 위해 새로고침 간격이 자동으로 늘어났습니다.",
     "resetBackoff": "정상 간격으로 재설정",
     "distros": "배포판 상태",
     "distrosDesc": "배포판 실행/중지 상태 확인 주기",
@@ -163,7 +163,7 @@
   "timeouts": {
     "title": "WSL 시간 초과",
     "description": "WSL 명령 대기 시간 설정",
-    "infoBox": "WSL 명령이 자주 시간 초과되면 이 값을 늘려보세요. 시간 초과를 길게 설정하면 오류를 방지할 수 있지만 실제 장애 감지가 지연될 수 있습니다.",
+    "infoBox": "WSL 명령이 자주 시간 초과되면 이 값을 늘려 보세요. 시간 초과 값을 길게 설정하면 오류를 방지할 수 있지만 실제 장애 감지가 지연될 수 있습니다.",
     "quick": "빠른 작업",
     "quickLabel": "목록 및 상태",
     "quickDesc": "배포판 목록 조회, 버전 정보 확인, 상태 확인 등의 빠른 쿼리",
@@ -199,7 +199,7 @@
   "executables": {
     "title": "실행 파일 경로",
     "description": "시스템 명령 경로 설정",
-    "infoBox": "도구가 비표준 위치에 설치된 경우 기본 실행 파일 경로를 재정의합니다. 특별한 이유가 없으면 기본값을 유지하세요.",
+    "infoBox": "도구가 기본 위치가 아닌 곳에 설치된 경우 실행 파일 경로를 재정의합니다. 특별한 이유가 없으면 기본값을 유지하세요.",
     "coreCommands": "핵심 명령",
     "wsl": "WSL",
     "wslDesc": "모든 배포판 작업을 위한 WSL CLI 실행 파일",
@@ -420,8 +420,8 @@
     "license": {
       "title": "라이선스",
       "type": "Business Source License 1.1",
-      "freeText": "개인 사용 및 연간 수익 100만 달러 미만의 조직은 무료입니다.",
-      "conversion": "각 릴리스 후 4년이 지나면 Apache License 2.0으로 전환됩니다.",
+      "freeText": "개인 사용 및 연간 매출 $1,000,000 USD 미만의 조직은 무료입니다.",
+      "conversion": "각 릴리스 출시 후 4년이 경과하면 Apache License 2.0으로 전환됩니다.",
       "view": "라이선스 보기",
       "commercial": "상업용 라이선스"
     },
