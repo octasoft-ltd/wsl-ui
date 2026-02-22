@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, memo } from "react";
+import { useTranslation } from "react-i18next";
 import { lxcCatalogService } from "../services/lxcCatalogService";
 import { useSettingsStore } from "../store/settingsStore";
 import type { LxcDistribution, LxcDistributionGroup } from "../types/lxcCatalog";
@@ -14,6 +15,7 @@ interface LxcCatalogBrowserProps {
 }
 
 function LxcCatalogBrowserInner({ selectedDistro, onSelect, disabled }: LxcCatalogBrowserProps) {
+  const { t } = useTranslation("install");
   const { settings } = useSettingsStore();
   const [distributions, setDistributions] = useState<LxcDistribution[]>([]);
   const [groups, setGroups] = useState<LxcDistributionGroup[]>([]);
@@ -109,8 +111,8 @@ function LxcCatalogBrowserInner({ selectedDistro, onSelect, disabled }: LxcCatal
           <circle className="opacity-20" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" fill="none" />
           <path className="opacity-80" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
         </svg>
-        <span className="text-sm">Loading community distributions...</span>
-        <span className="text-xs text-theme-text-muted mt-1">This may take a moment on first load</span>
+        <span className="text-sm">{t('loading')}</span>
+        <span className="text-xs text-theme-text-muted mt-1"></span>
       </div>
     );
   }
@@ -126,7 +128,7 @@ function LxcCatalogBrowserInner({ selectedDistro, onSelect, disabled }: LxcCatal
           onClick={() => loadCatalog(true)}
           className="text-xs text-theme-accent-primary hover:underline"
         >
-          Try again
+          {t('common:button.retry')}
         </button>
       </div>
     );

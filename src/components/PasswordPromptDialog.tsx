@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { Portal } from "./ui/Portal";
 import { CloseIcon, LockIcon } from "./icons";
 
@@ -17,6 +18,7 @@ export function PasswordPromptDialog({
   onSubmit,
   onCancel,
 }: PasswordPromptDialogProps) {
+  const { t } = useTranslation("dialogs");
   const [password, setPassword] = useState("");
 
   const handleCancel = useCallback(() => {
@@ -60,7 +62,7 @@ export function PasswordPromptDialog({
               <div className="p-2 bg-theme-accent-primary/10 rounded-lg">
                 <LockIcon size="md" className="text-theme-accent-primary" />
               </div>
-              <h3 className="font-semibold text-theme-text-primary" data-testid="password-prompt-title">Sudo Password Required</h3>
+              <h3 className="font-semibold text-theme-text-primary" data-testid="password-prompt-title">{t('password.title')}</h3>
             </div>
             <button
               onClick={handleCancel}
@@ -73,25 +75,24 @@ export function PasswordPromptDialog({
 
           <form onSubmit={handleSubmit} className="p-5" data-testid="password-prompt-form">
             <p className="text-sm text-theme-text-secondary mb-4">
-              The action <span className="font-medium text-theme-text-primary" data-testid="password-prompt-action-name">"{actionName}"</span> requires
-              elevated privileges to run on <span className="font-medium text-theme-text-primary" data-testid="password-prompt-distro-name">{distroName}</span>.
+              {t('password.descriptionPrefix')} <span className="font-medium text-theme-text-primary" data-testid="password-prompt-action-name">"{actionName}"</span> {t('password.descriptionSuffix')} <span className="font-medium text-theme-text-primary" data-testid="password-prompt-distro-name">{distroName}</span>.
             </p>
             <p className="text-xs text-theme-text-muted mb-4">
-              Enter your Linux user password for sudo access:
+              {t('password.instruction')}
             </p>
 
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Password"
+              placeholder={t('password.placeholder')}
               autoFocus
               data-testid="password-prompt-input"
               className="w-full px-4 py-3 bg-theme-bg-primary border border-theme-border-secondary rounded-lg text-theme-text-primary placeholder-theme-text-muted focus:outline-none focus:border-theme-accent-primary transition-colors"
             />
 
             <p className="text-xs text-theme-text-muted mt-3" data-testid="password-prompt-security-note">
-              Your password is used only for this action and is not stored.
+              {t('password.securityNote')}
             </p>
 
             <div className="flex justify-end gap-3 mt-6">
@@ -101,7 +102,7 @@ export function PasswordPromptDialog({
                 data-testid="password-prompt-cancel"
                 className="px-4 py-2 text-sm text-theme-text-secondary hover:text-theme-text-primary transition-colors"
               >
-                Cancel
+                {t('common:button.cancel')}
               </button>
               <button
                 type="submit"
@@ -109,7 +110,7 @@ export function PasswordPromptDialog({
                 data-testid="password-prompt-submit"
                 className="px-4 py-2 text-sm font-medium bg-theme-accent-primary hover:bg-theme-accent-primary-hover text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Run with Sudo
+                {t('password.submit')}
               </button>
             </div>
           </form>

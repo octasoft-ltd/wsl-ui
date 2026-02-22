@@ -1,0 +1,75 @@
+{
+  "title": "Distribution hinzuf\u00fcgen",
+  "subtitle": "W\u00e4hlen Sie, wie Sie Ihre Linux-Distribution installieren m\u00f6chten",
+  "mode": {
+    "quickInstall": "Schnellinstallation",
+    "quickInstallDesc": "Aus dem Microsoft Store installieren",
+    "download": "Herunterladen",
+    "downloadDesc": "Direkter Download mit benutzerdefiniertem Namen",
+    "community": "Community",
+    "communityDesc": "LXC-Image-Katalog durchsuchen",
+    "container": "Container",
+    "containerDesc": "Aus Container-Image erstellen"
+  },
+  "info": {
+    "quickInstall": "Offizielle Distributionen aus dem Microsoft Store. Installation am standardm\u00e4\u00dfigen, von Windows verwalteten Speicherort.",
+    "download": "Dieser Katalog kann unter Einstellungen > Distributionsquellen angepasst werden. Benutzerdefinierte URLs werden f\u00fcr die zuk\u00fcnftige Verwendung gespeichert.",
+    "community": "Images von {{url}}. Konfigurieren unter Einstellungen > Distributionsquellen.",
+    "container": "Ausgew\u00e4hlte Laufzeitumgebung in den Einstellungen konfiguriert: {{runtime}}"
+  },
+  "containerRuntime": {
+    "builtin": "Integriertes OCI (nur \u00f6ffentliche Registrys)",
+    "docker": "Docker (unterst\u00fctzt authentifizierte Registrys)",
+    "podman": "Podman (unterst\u00fctzt authentifizierte Registrys)",
+    "custom": "Benutzerdefiniert: {{path}}"
+  },
+  "filter": {
+    "all": "Alle"
+  },
+  "loading": "Verf\u00fcgbare Distributionen werden geladen...",
+  "empty": "Keine Distributionen verf\u00fcgbar",
+  "install": "Installieren",
+  "useUrl": "URL verwenden",
+  "useImage": "Image verwenden",
+  "placeholder": {
+    "url": "z.B. https://example.com/distro-rootfs.tar.gz",
+    "image": "z.B. alpine:latest, gitlab/gitlab-runner:latest"
+  },
+  "customUrl": {
+    "label": "Benutzerdefinierte URL",
+    "description": "Geben Sie einen direkten Link zu einem rootfs-Tarball ein"
+  },
+  "customImage": {
+    "label": "Benutzerdefiniertes Image",
+    "description": "Geben Sie eine beliebige OCI-Image-Referenz ein"
+  },
+  "alreadyInstalled": "\"{{name}}\" ist bereits installiert",
+  "progress": {
+    "installingStore": "Installation aus dem Microsoft Store...",
+    "success": "Erfolgreich installiert!",
+    "downloading": "Herunterladen: {{percent}}% ({{downloaded}} / {{total}})",
+    "importing": "Import in WSL...",
+    "pullingImage": "Container-Image wird heruntergeladen...",
+    "downloadFailed": "Download fehlgeschlagen"
+  },
+  "trademarkDisclaimer": "Linux-Distributionslogos sind Marken ihrer jeweiligen Eigent\u00fcmer und werden hier nur zu Identifikationszwecken verwendet.\nDiese Anwendung ist nicht mit einem Distributionsprojekt verbunden oder von diesem genehmigt.",
+  "installingAs": "Installation als \"{{name}}\"",
+  "noDownloadable": "Keine herunterladbaren Distributionen konfiguriert",
+  "noContainerImages": "Keine Container-Images konfiguriert",
+  "communityDisabled": "Community-Katalog ist deaktiviert",
+  "communityDisabledHint": "Aktivieren Sie ihn unter Einstellungen > Distributionsquellen",
+  "useCustomUrl": "Stattdessen eine benutzerdefinierte URL verwenden",
+  "useCustomImage": "Stattdessen ein benutzerdefiniertes Image verwenden",
+  "distroSources": {
+    "title": "Distributionsquellen",
+    "description": "Konfigurieren, von wo Distributionen heruntergeladen werden",
+    "addUrl": "URL hinzuf\u00fcgen",
+    "removeUrl": "Entfernen",
+    "urlPlaceholder": "https://example.com/distro-rootfs.tar.gz",
+    "name": "Name",
+    "namePlaceholder": "z.B. Alpine Linux",
+    "url": "URL",
+    "noSources": "Keine benutzerdefinierten Quellen konfiguriert",
+    "builtInSources": "Integrierte Quellen sind immer verf\u00fcgbar"
+  }
+}

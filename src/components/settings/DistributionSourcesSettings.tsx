@@ -4,6 +4,7 @@
  * Allows users to configure LXC catalog settings and other distribution sources.
  */
 
+import { useTranslation } from "react-i18next";
 import { useSettingsStore } from "../../store/settingsStore";
 import { Toggle } from "./FormControls";
 import { DEFAULT_DISTRIBUTION_SOURCE_SETTINGS } from "../../types/lxcCatalog";
@@ -20,6 +21,7 @@ const CACHE_DURATION_OPTIONS = [
 ];
 
 export function DistributionSourcesSettings() {
+  const { t } = useTranslation("settings");
   const { settings, updateSetting } = useSettingsStore();
   const sources = settings.distributionSources;
 
@@ -62,16 +64,16 @@ export function DistributionSourcesSettings() {
               </svg>
             </div>
             <div>
-              <h2 className="text-lg font-medium text-theme-text-primary">Distribution Sources</h2>
-              <p className="text-sm text-theme-text-muted">Configure community distribution catalogs</p>
+              <h2 className="text-lg font-medium text-theme-text-primary">{t('distributionSources.title')}</h2>
+              <p className="text-sm text-theme-text-muted">{t('distributionSources.description')}</p>
             </div>
           </div>
 
           {/* Enable/Disable Toggle */}
           <div className="mb-6 pb-6 border-b border-theme-border-secondary/50">
             <Toggle
-              label="Enable Community Catalog (LXC Images)"
-              description="Browse and install distributions from the Linux Containers image server"
+              label={t('distributionSources.lxcEnabled')}
+              description={t('distributionSources.lxcEnabledDesc')}
               checked={sources.lxcEnabled}
               onChange={(v) => handleSourceChange("lxcEnabled", v)}
             />
@@ -82,10 +84,10 @@ export function DistributionSourcesSettings() {
             {/* Base URL */}
             <div className="py-3">
               <label className="block text-sm font-medium text-theme-text-primary mb-1">
-                LXC Server URL
+                {t('distributionSources.lxcBaseUrl')}
               </label>
               <p className="text-xs text-theme-text-muted mb-2">
-                Base URL for the Linux Containers image server
+                {t('distributionSources.lxcBaseUrlDesc')}
               </p>
               <div className="flex gap-2">
                 <input
@@ -100,7 +102,7 @@ export function DistributionSourcesSettings() {
                   disabled={!sources.lxcEnabled || sources.lxcBaseUrl === DEFAULT_DISTRIBUTION_SOURCE_SETTINGS.lxcBaseUrl}
                   className="px-3 py-2 bg-theme-bg-tertiary border border-theme-border-secondary rounded-lg text-theme-text-secondary hover:text-theme-text-primary transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm"
                 >
-                  Reset
+                  {t('distributionSources.reset')}
                 </button>
               </div>
             </div>
@@ -108,10 +110,10 @@ export function DistributionSourcesSettings() {
             {/* Cache Duration */}
             <div className="py-3">
               <label className="block text-sm font-medium text-theme-text-primary mb-1">
-                Cache Duration
+                {t('distributionSources.cacheDuration')}
               </label>
               <p className="text-xs text-theme-text-muted mb-2">
-                How long to cache the distribution catalog before refreshing
+                {t('distributionSources.cacheDurationDesc')}
               </p>
               <select
                 value={sources.cacheDurationHours}
@@ -130,8 +132,8 @@ export function DistributionSourcesSettings() {
             {/* Show Unstable Releases */}
             <div className="py-3">
               <Toggle
-                label="Show Unstable Releases"
-                description="Include development, edge, and rolling releases in the catalog"
+                label={t('distributionSources.showUnstable')}
+                description={t('distributionSources.showUnstableDesc')}
                 checked={sources.showUnstableReleases}
                 onChange={(v) => handleSourceChange("showUnstableReleases", v)}
               />
@@ -140,30 +142,30 @@ export function DistributionSourcesSettings() {
 
           {/* Cache Status */}
           <div className="mt-6 pt-6 border-t border-theme-border-secondary/50">
-            <p className="text-xs text-theme-text-muted mb-3">Cache status:</p>
+            <p className="text-xs text-theme-text-muted mb-3">{t('distributionSources.cacheStatus')}</p>
             <div className="p-3 bg-theme-bg-tertiary/50 rounded-md text-sm">
               {cacheInfo.lastUpdated ? (
                 <div className="space-y-1">
                   <div className="flex justify-between">
-                    <span className="text-theme-text-secondary">Last updated:</span>
+                    <span className="text-theme-text-secondary">{t('distributionSources.lastUpdated')}</span>
                     <span className="text-theme-text-primary font-mono">
                       {new Date(cacheInfo.lastUpdated).toLocaleDateString()}{" "}
                       {new Date(cacheInfo.lastUpdated).toLocaleTimeString()}
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-theme-text-secondary">Expires:</span>
+                    <span className="text-theme-text-secondary">{t('distributionSources.expires')}</span>
                     <span className="text-theme-text-primary font-mono">
                       {cacheInfo.expiresAt
                         ? new Date(cacheInfo.expiresAt) > new Date()
-                          ? `in ${Math.round((new Date(cacheInfo.expiresAt).getTime() - Date.now()) / 3600000)}h`
-                          : "Expired"
-                        : "N/A"}
+                          ? t('distributionSources.expiresIn', { hours: Math.round((new Date(cacheInfo.expiresAt).getTime() - Date.now()) / 3600000) })
+                          : t('distributionSources.expired')
+                        : t('distributionSources.na')}
                     </span>
                   </div>
                 </div>
               ) : (
-                <span className="text-theme-text-muted">No cache data</span>
+                <span className="text-theme-text-muted">{t('distributionSources.noCacheData')}</span>
               )}
             </div>
             <button
@@ -171,7 +173,7 @@ export function DistributionSourcesSettings() {
               disabled={!cacheInfo.lastUpdated}
               className="mt-3 text-xs text-purple-400 hover:text-purple-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Clear cache
+              {t('distributionSources.clearCache')}
             </button>
           </div>
 
@@ -181,12 +183,14 @@ export function DistributionSourcesSettings() {
               onClick={handleResetDefaults}
               className="text-xs text-theme-text-muted hover:text-theme-text-secondary transition-colors"
             >
-              Reset all to defaults
+              {t('distributionSources.resetDefaults')}
             </button>
           </div>
 
           <p className="mt-4 text-xs text-theme-text-muted">
-            Community images are provided by <a href="https://images.linuxcontainers.org" target="_blank" rel="noopener noreferrer" className="text-purple-400 hover:underline">Linux Containers</a> and may vary in WSL compatibility.
+            {t('distributionSources.communityNotePrefix')}
+            <a href="https://images.linuxcontainers.org" target="_blank" rel="noopener noreferrer" className="text-purple-400 hover:underline">{t('distributionSources.communityNoteLinkText')}</a>
+            {t('distributionSources.communityNoteSuffix')}
           </p>
         </div>
       </section>

@@ -1,0 +1,21 @@
+{
+  "boundary": {
+    "title": "Etwas ist schiefgelaufen",
+    "message": "Die Anwendung hat einen unerwarteten Fehler festgestellt. Bitte versuchen Sie es erneut.",
+    "tryAgain": "Erneut versuchen"
+  },
+  "system": {
+    "title": "Systemfehler",
+    "timeoutTip": "Tipp: Wenn Sie k\u00fcrzlich eine neue Distribution installiert haben, schlie\u00dfen Sie alle Terminalfenster, die w\u00e4hrend der Installation automatisch ge\u00f6ffnet wurden.",
+    "forceShutdown": "WSL erzwungen herunterfahren",
+    "forceShutdownTitle": "WSL erzwungen herunterfahren",
+    "forceShutdownMessage": "Dies wird alle WSL-Prozesse mit 'wsl --shutdown --force' erzwungen beenden. Nicht gespeicherte Arbeit in Ihren Linux-Distributionen kann verloren gehen. Diese Aktion kann nicht r\u00fcckg\u00e4ngig gemacht werden.",
+    "forceShutdownConfirm": "Erzwungen herunterfahren"
+  },
+  "wslUpdate": {
+    "title": "WSL-Update",
+    "success": "Update erfolgreich abgeschlossen",
+    "cancelled": "WSL-Update",
+    "failedTitle": "WSL-Update fehlgeschlagen"
+  }
+}

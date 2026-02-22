@@ -5,6 +5,7 @@
  */
 
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useTheme } from "../../themes";
 import type { ThemeColors, ThemeId } from "../../themes";
 import { PaletteIcon, CheckIcon, ResetIcon, ChevronDownIcon, ChevronUpIcon } from "../icons";
@@ -144,6 +145,7 @@ function ColorGroup({ name, colors, values, onChange }: ColorGroupProps) {
 }
 
 export function ThemeSettings() {
+  const { t } = useTranslation("settings");
   const { themeId, setTheme, availableThemes, customColors, updateCustomColors, resetCustomColors } =
     useTheme();
 
@@ -166,8 +168,8 @@ export function ThemeSettings() {
               <PaletteIcon size="md" className="text-white" />
             </div>
             <div>
-              <h2 className="text-lg font-medium text-(--text-primary)">Color Theme</h2>
-              <p className="text-sm text-(--text-muted)">Choose your preferred color scheme</p>
+              <h2 className="text-lg font-medium text-(--text-primary)">{t('theme.title')}</h2>
+              <p className="text-sm text-(--text-muted)">{t('theme.description')}</p>
             </div>
           </div>
 
@@ -222,8 +224,8 @@ export function ThemeSettings() {
                   <PaletteIcon size="md" className="text-white" />
                 </div>
                 <div>
-                  <h2 className="text-lg font-medium text-(--text-primary)">Custom Colors</h2>
-                  <p className="text-sm text-(--text-muted)">Fine-tune your color scheme</p>
+                  <h2 className="text-lg font-medium text-(--text-primary)">{t('theme.customColors')}</h2>
+                  <p className="text-sm text-(--text-muted)">{t('theme.customColorsDesc')}</p>
                 </div>
               </div>
               <button
@@ -231,7 +233,7 @@ export function ThemeSettings() {
                 className="flex items-center gap-2 px-3 py-2 text-sm text-(--text-muted) hover:text-(--text-primary) bg-(--bg-tertiary) hover:bg-(--bg-hover) border border-(--border-secondary) rounded-lg transition-colors"
               >
                 <ResetIcon size="sm" />
-                Reset to Default
+                {t('theme.resetToDefault')}
               </button>
             </div>
 
@@ -248,7 +250,7 @@ export function ThemeSettings() {
             </div>
 
             <p className="mt-4 text-xs text-(--text-muted)">
-              Tip: Changes are applied immediately and saved automatically.
+              {t('theme.tip')}
             </p>
           </div>
         </section>

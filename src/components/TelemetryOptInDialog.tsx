@@ -5,6 +5,7 @@
  * anonymous usage data to help improve WSL UI.
  */
 
+import { useTranslation } from "react-i18next";
 import { Portal } from "./ui/Portal";
 import { ChartBarIcon, ShieldCheckIcon } from "./icons";
 
@@ -19,6 +20,8 @@ export function TelemetryOptInDialog({
   onAccept,
   onDecline,
 }: TelemetryOptInDialogProps) {
+  const { t } = useTranslation("dialogs");
+
   if (!isOpen) return null;
 
   return (
@@ -40,10 +43,10 @@ export function TelemetryOptInDialog({
             </div>
             <div>
               <h3 className="text-lg font-semibold text-theme-text-primary">
-                Help Improve WSL UI
+                {t('telemetry.title')}
               </h3>
               <p className="text-sm text-theme-text-secondary mt-1">
-                Would you like to share anonymous usage data?
+                {t('telemetry.subtitle')}
               </p>
             </div>
           </div>
@@ -53,23 +56,22 @@ export function TelemetryOptInDialog({
             <div className="flex items-center gap-2 mb-3">
               <ShieldCheckIcon size="sm" className="text-theme-status-success" />
               <span className="text-sm font-medium text-theme-text-primary">
-                Privacy-Focused Analytics
+                {t('telemetry.privacyTitle')}
               </span>
             </div>
             <ul className="text-sm text-theme-text-secondary space-y-1.5 ml-6">
               <li className="flex items-start gap-2">
                 <span className="text-theme-accent-primary mt-0.5">•</span>
-                <span>App version and Windows version</span>
+                <span>{t('telemetry.dataPoint1')}</span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-theme-accent-primary mt-0.5">•</span>
-                <span>Number of distributions (not names)</span>
+                <span>{t('telemetry.dataPoint2')}</span>
               </li>
             </ul>
             <div className="mt-3 pt-3 border-t border-theme-border-primary">
               <p className="text-xs text-theme-text-muted">
-                No personal data, distro names, file paths, or identifying information is ever collected.
-                Data is processed by{" "}
+                {t('telemetry.privacyNote')}{" "}
                 <a
                   href="https://aptabase.com"
                   target="_blank"
@@ -78,7 +80,7 @@ export function TelemetryOptInDialog({
                 >
                   Aptabase
                 </a>
-                , a privacy-first analytics provider.
+                {t('telemetry.privacyNoteSuffix')}
               </p>
             </div>
           </div>
@@ -90,19 +92,19 @@ export function TelemetryOptInDialog({
               data-testid="telemetry-decline-button"
               className="px-4 py-2 text-sm font-medium text-theme-text-secondary bg-theme-bg-tertiary hover:bg-theme-bg-hover rounded-lg transition-colors"
             >
-              No Thanks
+              {t('telemetry.decline')}
             </button>
             <button
               onClick={onAccept}
               data-testid="telemetry-accept-button"
               className="px-4 py-2 text-sm font-medium text-theme-bg-primary bg-theme-accent-primary hover:opacity-90 rounded-lg transition-colors"
             >
-              Yes, Share Data
+              {t('telemetry.accept')}
             </button>
           </div>
 
           <p className="text-xs text-theme-text-muted text-center mt-4">
-            You can change this anytime in Settings → Privacy
+            {t('telemetry.changeAnytime')}
           </p>
         </div>
       </div>

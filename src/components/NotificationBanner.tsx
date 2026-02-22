@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { CloseIcon, CheckIcon, WarningIcon, InfoIcon } from "./icons";
 import type { NotificationType } from "../store/notificationStore";
 
@@ -59,6 +60,7 @@ export function NotificationBanner({
   children,
   testId = "notification-banner"
 }: NotificationBannerProps) {
+  const { t } = useTranslation("common");
   const [isVisible, setIsVisible] = useState(false); // Start hidden for enter animation
   const [isClosing, setIsClosing] = useState(false);
   const dismissTimerRef = useRef<number | null>(null);
@@ -149,9 +151,9 @@ export function NotificationBanner({
           <button
             onClick={handleDismiss}
             data-testid={dismissTestId}
-            aria-label="Dismiss notification"
+            aria-label={t('button.dismiss')}
             className={`p-2 text-theme-text-muted rounded-lg border border-transparent transition-all flex-shrink-0 ${style.button}`}
-            title="Dismiss"
+            title={t('button.dismiss')}
           >
             <CloseIcon size="sm" />
           </button>

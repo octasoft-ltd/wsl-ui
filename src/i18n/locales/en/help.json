@@ -1,0 +1,134 @@
+{
+  "title": "Help & Documentation",
+  "subtitle": "Learn how to use WSL UI",
+  "gettingStarted": {
+    "title": "Getting Started",
+    "whatIsWslUi": "What is WSL UI?",
+    "whatIsWslUiText": "WSL UI is a desktop application for managing Windows Subsystem for Linux (WSL) distributions. It provides a graphical interface for common WSL operations like starting, stopping, creating, and configuring Linux distributions.",
+    "mainDashboard": "Main Dashboard",
+    "mainDashboardText": "The main view shows all your installed WSL distributions as cards. Each card displays the distribution name, status (online/offline), disk usage, and quick action buttons.",
+    "quickActions": "Quick Actions",
+    "quickActionsText": "Click the menu button (three dots) on any distribution card to access quick actions like opening a terminal, file explorer, IDE, or managing the distribution."
+  },
+  "distroManagement": {
+    "title": "Distribution Management",
+    "startingStoppingTitle": "Starting & Stopping",
+    "start": "Start a distribution",
+    "stop": "Stop a running distribution",
+    "setAsDefault": "Set as Default",
+    "setAsDefaultText": "Set a distribution as default to use it when running WSL commands without specifying a distribution name.",
+    "resourceMonitoring": "Resource Monitoring",
+    "resourceMonitoringText": "Running distributions show real-time CPU and memory usage. Disk size is displayed for all distributions."
+  },
+  "advancedOps": {
+    "title": "Advanced Operations",
+    "rename": "Rename",
+    "renameText": "Change a distribution's name. You can also update the Windows Terminal profile and Start Menu shortcut. Requires the distribution to be stopped.",
+    "move": "Move",
+    "moveText": "Relocate a distribution to a different drive or folder. Useful for managing disk space. Requires WSL to be fully shut down.",
+    "resizeDisk": "Resize Disk",
+    "resizeDiskText": "Expand the virtual disk size for distributions that need more space. Only expansion is supported (not shrinking). Requires WSL shutdown.",
+    "setWslVersion": "Set WSL Version",
+    "setWslVersionText": "Convert between WSL 1 and WSL 2. WSL 2 offers better performance with a full Linux kernel. Conversion may take several minutes.",
+    "sparseMode": "Sparse Mode",
+    "sparseModeText": "Enable automatic disk space reclamation. The virtual disk will shrink as you delete files inside the distribution.",
+    "compactDisk": "Compact Disk",
+    "compactDiskText": "One-click optimization to reclaim unused space from a distribution's virtual disk. Automatically runs fstrim, shuts down WSL, and compacts the VHDX file. Requires administrator privileges and takes 1-2 minutes."
+  },
+  "creatingDistros": {
+    "title": "Creating Distributions",
+    "quickInstall": "Quick Install (Microsoft Store)",
+    "quickInstallText": "One-click installation of official distributions like Ubuntu, Debian, and openSUSE.",
+    "containerImages": "Container Images",
+    "containerImagesText": "Create distributions from Docker or Podman container images. Supports Docker Hub and other registries.",
+    "directDownload": "Direct Download",
+    "directDownloadText": "Download rootfs archives from configurable URLs. Includes Alpine, NixOS, Void Linux, and more.",
+    "communityCatalog": "Community Catalog (LXC)",
+    "communityCatalogText": "Browse hundreds of distributions from the Linux Containers image server."
+  },
+  "backupRestore": {
+    "title": "Backup & Restore",
+    "export": "Export",
+    "exportText": "Save a distribution to a .tar archive file for backup or migration. You can restore it later or on another machine.",
+    "import": "Import",
+    "importText": "Restore a distribution from a .tar archive. Choose a name and installation location for the imported distribution.",
+    "clone": "Clone",
+    "cloneText": "Create a copy of an existing distribution with a new name. Useful for testing or creating variants."
+  },
+  "customActions": {
+    "title": "Custom Actions",
+    "whatAre": "What are Custom Actions?",
+    "whatAreText": "Custom actions are user-defined shell commands that appear in the quick actions menu. Create actions for common tasks like system updates, backups, or development setup.",
+    "variables": "Variables",
+    "variablesText": "Use variables in your commands that get replaced at runtime:",
+    "varDistroName": "Distribution name",
+    "varHome": "Home directory path",
+    "varUser": "Default user",
+    "varWindowsHome": "Windows user directory",
+    "targeting": "Targeting Distributions",
+    "targetingText": "Actions can target all distributions, specific distributions by name, or distributions matching a regex pattern."
+  },
+  "theming": {
+    "title": "Themes & Appearance",
+    "builtinThemes": "Built-in Themes",
+    "builtinThemesText": "Choose from 17 professionally designed themes including dark, light, and middle-ground options. Popular themes include Obsidian, Dracula, Nord, and Solarized.",
+    "accessibilityThemes": "Accessibility Themes",
+    "accessibilityThemesText": "Two high contrast themes are available for users with low vision: High Contrast (dark) and High Contrast Light.",
+    "customTheme": "Custom Theme",
+    "customThemeText": "Create your own theme with full control over 29 color variables including backgrounds, text, borders, accents, and more."
+  },
+  "keyboardShortcuts": {
+    "title": "Keyboard Shortcuts",
+    "tab": "Tab",
+    "tabAction": "Next element",
+    "shiftTab": "Shift+Tab",
+    "shiftTabAction": "Previous element",
+    "enter": "Enter",
+    "enterAction": "Activate / Submit",
+    "escape": "Escape",
+    "escapeAction": "Close dialog or menu",
+    "space": "Space",
+    "spaceAction": "Toggle checkbox",
+    "accessibility": "Accessibility",
+    "accessibilityText": "WSL UI supports screen readers, keyboard navigation, and respects system preferences for reduced motion."
+  },
+  "settingsOverview": {
+    "title": "Settings Overview",
+    "terminal": "Terminal: Configure Windows Terminal, custom terminal apps, or command prompt",
+    "ide": "IDE: Set up VS Code, Cursor, or custom IDE integration",
+    "wslGlobal": "WSL Global: Configure memory, CPU, swap, networking mode, and WSLg",
+    "perDistro": "Per-Distribution: Automount options, network settings, systemd, and boot commands",
+    "polling": "Polling: Adjust auto-refresh intervals for status and resources",
+    "timeouts": "Timeouts: Configure operation timeouts for slow systems",
+    "executables": "Executable Paths: Override default paths for WSL, PowerShell, and other tools"
+  },
+  "integrations": {
+    "title": "Integrations",
+    "terminal": "Terminal Integration",
+    "terminalText": "Open distributions in Windows Terminal, Command Prompt, or any custom terminal application. Configure your preferred terminal in Settings.",
+    "ide": "IDE Integration",
+    "ideText": "Open distributions directly in VS Code or other IDEs. The distribution's root folder opens in your editor.",
+    "fileExplorer": "File Explorer",
+    "fileExplorerText": "Browse distribution files in Windows Explorer using the \\\\wsl$ network path.",
+    "systemTray": "System Tray",
+    "systemTrayText": "Minimize to system tray for quick access. Configure close behavior in Settings."
+  },
+  "troubleshooting": {
+    "title": "Troubleshooting",
+    "wslNotDetected": "WSL Not Detected",
+    "wslNotDetectedText": "Ensure WSL is installed and enabled. Run wsl --status in PowerShell to check. You may need to enable the Windows features for WSL.",
+    "operationsTimeout": "Operations Timing Out",
+    "operationsTimeoutText": "If operations frequently timeout, increase the timeout values in Settings > Timeouts. The app uses exponential backoff to reduce load during issues.",
+    "distroWontStart": "Distribution Won't Start",
+    "distroWontStartText": "Try restarting WSL with wsl --shutdown, then start the distribution again.",
+    "fullGuide": "Full Troubleshooting Guide"
+  },
+  "resources": {
+    "title": "Resources & Support",
+    "wslUiWebsite": "WSL UI Website",
+    "githubRepo": "GitHub Repository",
+    "reportIssue": "Report an Issue",
+    "octasoftWebsite": "Octasoft Ltd Website",
+    "microsoftDocs": "Microsoft WSL Documentation"
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "boundary": {
+    "title": "Algo sali\u00f3 mal",
+    "message": "La aplicaci\u00f3n encontr\u00f3 un error inesperado. Por favor, int\u00e9ntelo de nuevo.",
+    "tryAgain": "Intentar de nuevo"
+  },
+  "system": {
+    "title": "Error del sistema",
+    "timeoutTip": "Consejo: Si instal\u00f3 recientemente una nueva distribuci\u00f3n, cierre las ventanas de terminal que se abrieron autom\u00e1ticamente durante la instalaci\u00f3n.",
+    "forceShutdown": "Forzar apagado de WSL",
+    "forceShutdownTitle": "Forzar apagado de WSL",
+    "forceShutdownMessage": "Esto terminar\u00e1 forzosamente todos los procesos WSL usando 'wsl --shutdown --force'. Cualquier trabajo no guardado en sus distribuciones Linux puede perderse. Esta acci\u00f3n no se puede deshacer.",
+    "forceShutdownConfirm": "Forzar apagado"
+  },
+  "wslUpdate": {
+    "title": "Actualizaci\u00f3n de WSL",
+    "success": "Actualizaci\u00f3n completada correctamente",
+    "cancelled": "Actualizaci\u00f3n de WSL",
+    "failedTitle": "La actualizaci\u00f3n de WSL fall\u00f3"
+  }
+}

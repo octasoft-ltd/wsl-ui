@@ -1,4 +1,5 @@
 import { open } from "@tauri-apps/plugin-shell";
+import { useTranslation } from "react-i18next";
 import { usePreflightStore } from "../store/preflightStore";
 import { NotificationBanner } from "./NotificationBanner";
 import { Button } from "./ui/Button";
@@ -10,6 +11,7 @@ import { Button } from "./ui/Button";
  * Includes a retry button and help link based on the specific error.
  */
 export function PreflightBanner() {
+  const { t } = useTranslation("statusbar");
   const { status, hasChecked, isReady, isChecking, title, message, helpUrl, checkPreflight } =
     usePreflightStore();
 
@@ -57,11 +59,11 @@ export function PreflightBanner() {
           onClick={() => checkPreflight()}
           loading={isChecking}
         >
-          Retry Check
+          {t('preflight.retry')}
         </Button>
         {helpUrl && (
           <Button variant="link" size="sm" onClick={handleHelpClick}>
-            Learn More
+            {t('common:button.learnMore')}
           </Button>
         )}
       </div>

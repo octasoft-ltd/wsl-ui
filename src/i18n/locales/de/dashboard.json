@@ -1,0 +1,40 @@
+{
+  "loading": "Systeme werden initialisiert...",
+  "emptyState": {
+    "title": "Keine Instanzen erkannt",
+    "description": "Stellen Sie eine WSL-Distribution bereit, um zu beginnen"
+  },
+  "filter": {
+    "all": "Alle",
+    "allSources": "Alle Quellen",
+    "allSourcesMobile": "Alle",
+    "onlineTooltip": "Online ({{count}})",
+    "offlineTooltip": "Offline ({{count}})",
+    "showWsl1": "WSL 1 anzeigen ({{count}})",
+    "hideWsl1": "WSL 1 ausblenden ({{count}})",
+    "showWsl2": "WSL 2 anzeigen ({{count}})",
+    "hideWsl2": "WSL 2 ausblenden ({{count}})",
+    "v1": "v1",
+    "v2": "v2"
+  },
+  "emptyFilter": {
+    "noDistros": "Keine Distributionen gefunden",
+    "noMatch": "Keine Distributionen entsprechen den aktuellen Filtern",
+    "clearFilters": "Filter l\u00f6schen"
+  },
+  "card": {
+    "suspend": "Anhalten",
+    "launch": "Starten",
+    "openTerminal": "Terminal \u00f6ffnen",
+    "openRdp": "Remotedesktop \u00f6ffnen",
+    "quickActions": "Schnellaktionen",
+    "deleteDistro": "Distribution l\u00f6schen",
+    "ipTooltip": "Klicken, um IP-Adresse zu kopieren"
+  },
+  "deleteDialog": {
+    "title": "Distribution l\u00f6schen",
+    "message": "Sind Sie sicher, dass Sie \"{{name}}\" l\u00f6schen m\u00f6chten? Diese Aktion kann nicht r\u00fcckg\u00e4ngig gemacht werden und alle Daten in dieser Distribution gehen dauerhaft verloren.",
+    "messageDefault": "Sind Sie sicher, dass Sie \"{{name}}\" l\u00f6schen m\u00f6chten? Diese Aktion kann nicht r\u00fcckg\u00e4ngig gemacht werden und alle Daten in dieser Distribution gehen dauerhaft verloren.\n\nWarnung: Dies ist Ihre Standarddistribution. Nach dem L\u00f6schen werden WSL-Befehle fehlschlagen, es sei denn, Sie legen eine andere Distribution als Standard fest.",
+    "confirm": "L\u00f6schen"
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "wsl": "WSL",
+  "instances": "实例",
+  "active": "活跃",
+  "mem": "内存",
+  "primary": "主要",
+  "dev": "开发",
+  "disk": "磁盘",
+  "updateWsl": {
+    "updating": "正在等待管理员批准... 请查看 UAC 对话框",
+    "preRelease": "更新 WSL（预发布）- 需要管理员权限",
+    "default": "更新 WSL - 需要管理员权限",
+    "uac": "UAC"
+  },
+  "diskMounts": {
+    "empty": "磁盘挂载",
+    "count": "磁盘挂载（已挂载 {{count}} 个）"
+  },
+  "preflight": {
+    "retry": "重新检查"
+  }
+}

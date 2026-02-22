@@ -4,6 +4,7 @@
  * Allows users to configure WSL command timeout values.
  */
 
+import { useTranslation } from "react-i18next";
 import { useSettingsStore } from "../../store/settingsStore";
 import { ClockIcon } from "../icons";
 import { DEFAULT_WSL_TIMEOUTS } from "../../types/settings";
@@ -49,6 +50,7 @@ const SUDO_TIMEOUT_OPTIONS = [
 
 
 export function TimeoutSettings() {
+  const { t } = useTranslation("settings");
   const { settings, updateSetting } = useSettingsStore();
 
   const handleTimeoutChange = (key: keyof typeof settings.wslTimeouts, value: number) => {
@@ -73,25 +75,24 @@ export function TimeoutSettings() {
               <ClockIcon size="md" className="text-white" />
             </div>
             <div>
-              <h2 className="text-lg font-medium text-theme-text-primary">WSL Timeouts</h2>
-              <p className="text-sm text-theme-text-muted">Configure how long to wait for WSL commands</p>
+              <h2 className="text-lg font-medium text-theme-text-primary">{t('timeouts.title')}</h2>
+              <p className="text-sm text-theme-text-muted">{t('timeouts.description')}</p>
             </div>
           </div>
 
           {/* Info box */}
           <div className="mb-6 p-4 bg-theme-bg-tertiary/50 border border-theme-border-secondary/50 rounded-lg">
             <p className="text-xs text-theme-text-muted">
-              If WSL commands are timing out frequently, try increasing these values.
-              Longer timeouts prevent errors but may delay detection of actual failures.
+              {t('timeouts.infoBox')}
             </p>
           </div>
 
           {/* Quick Operations */}
           <div className="mb-6 pb-6 border-b border-theme-border-secondary/50">
-            <h3 className="text-sm font-medium text-theme-text-secondary mb-2">Quick Operations</h3>
+            <h3 className="text-sm font-medium text-theme-text-secondary mb-2">{t('timeouts.quick')}</h3>
             <SettingSelect
-              label="List & Status"
-              description="Quick queries like listing distributions, getting version info, and status checks"
+              label={t('timeouts.quickLabel')}
+              description={t('timeouts.quickDesc')}
               value={settings.wslTimeouts.quickSecs}
               options={QUICK_TIMEOUT_OPTIONS}
               onChange={(v) => handleTimeoutChange("quickSecs", v as number)}
@@ -100,10 +101,10 @@ export function TimeoutSettings() {
 
           {/* Standard Operations */}
           <div className="mb-6 pb-6 border-b border-theme-border-secondary/50">
-            <h3 className="text-sm font-medium text-theme-text-secondary mb-2">Standard Operations</h3>
+            <h3 className="text-sm font-medium text-theme-text-secondary mb-2">{t('timeouts.default')}</h3>
             <SettingSelect
-              label="Default Commands"
-              description="Most WSL commands: start, stop, terminate, set default, mount/unmount"
+              label={t('timeouts.defaultLabel')}
+              description={t('timeouts.defaultDesc')}
               value={settings.wslTimeouts.defaultSecs}
               options={DEFAULT_TIMEOUT_OPTIONS}
               onChange={(v) => handleTimeoutChange("defaultSecs", v as number)}
@@ -112,10 +113,10 @@ export function TimeoutSettings() {
 
           {/* Long Operations */}
           <div className="mb-6 pb-6 border-b border-theme-border-secondary/50">
-            <h3 className="text-sm font-medium text-theme-text-secondary mb-2">Long Operations</h3>
+            <h3 className="text-sm font-medium text-theme-text-secondary mb-2">{t('timeouts.long')}</h3>
             <SettingSelect
-              label="Install, Import, Export, Move"
-              description="Operations that involve large file transfers or downloads"
+              label={t('timeouts.longLabel')}
+              description={t('timeouts.longDesc')}
               value={settings.wslTimeouts.longSecs}
               options={LONG_TIMEOUT_OPTIONS}
               onChange={(v) => handleTimeoutChange("longSecs", v as number)}
@@ -124,18 +125,18 @@ export function TimeoutSettings() {
 
           {/* Shell Commands */}
           <div className="space-y-1">
-            <h3 className="text-sm font-medium text-theme-text-secondary mb-2">Custom Actions</h3>
+            <h3 className="text-sm font-medium text-theme-text-secondary mb-2">{t('timeouts.customActions')}</h3>
             <SettingSelect
-              label="Shell Commands"
-              description="Running commands inside distributions (custom actions)"
+              label={t('timeouts.shell')}
+              description={t('timeouts.shellDesc')}
               value={settings.wslTimeouts.shellSecs}
               options={SHELL_TIMEOUT_OPTIONS}
               onChange={(v) => handleTimeoutChange("shellSecs", v as number)}
             />
 
             <SettingSelect
-              label="Commands with Sudo"
-              description="Commands that require elevated privileges (may prompt for password)"
+              label={t('timeouts.sudoShell')}
+              description={t('timeouts.sudoShellDesc')}
               value={settings.wslTimeouts.sudoShellSecs}
               options={SUDO_TIMEOUT_OPTIONS}
               onChange={(v) => handleTimeoutChange("sudoShellSecs", v as number)}
@@ -148,7 +149,7 @@ export function TimeoutSettings() {
               onClick={handleResetDefaults}
               className="text-xs text-theme-text-muted hover:text-theme-text-secondary transition-colors"
             >
-              Reset timeouts to defaults
+              {t('timeouts.resetDefaults')}
             </button>
           </div>
         </div>

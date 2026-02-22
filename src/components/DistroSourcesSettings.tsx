@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { wslService } from "../services/wslService";
 import type { DistroCatalog, DownloadDistro, ContainerImage, MsStoreDistroInfo } from "../types/catalog";
 import { SourceDownloadIcon, ContainerIcon, StoreIcon, EditIcon, TrashIcon, CloseIcon } from "./icons";
@@ -68,6 +69,7 @@ function ConfirmDialog({
 }
 
 export function DistroSourcesSettings() {
+  const { t } = useTranslation("install");
   const [catalog, setCatalog] = useState<DistroCatalog | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -466,8 +468,7 @@ export function DistroSourcesSettings() {
 
       <div className="bg-blue-900/30 border border-blue-700/50 rounded-lg p-4">
         <p className="text-sm text-blue-200">
-          <span className="font-medium">Distribution Sources</span> define the distros available
-          when creating new WSL instances. You can add custom distros or modify the built-in ones.
+          <span className="font-medium">{t('distroSources.title')}</span> - {t('distroSources.description')}
         </p>
       </div>
 
@@ -579,7 +580,7 @@ export function DistroSourcesSettings() {
               </div>
               <div className="flex gap-2 pt-2">
                 <Button variant="ghost" onClick={resetForms}>
-                  Cancel
+                  {t('common:button.cancel')}
                 </Button>
                 <Button
                   variant="primary"
@@ -599,10 +600,10 @@ export function DistroSourcesSettings() {
                 className="text-xs hover:text-red-400"
                 onClick={handleResetDownloads}
               >
-                Reset to defaults
+                {t('common:button.resetToDefault')}
               </Button>
               <Button variant="primary" colorScheme="blue" size="sm" onClick={() => setIsAdding(true)}>
-                + Add Download Source
+                + {t('distroSources.addUrl')}
               </Button>
             </div>
           )}
@@ -727,7 +728,7 @@ export function DistroSourcesSettings() {
               </div>
               <div className="flex gap-2 pt-2">
                 <Button variant="ghost" onClick={resetForms}>
-                  Cancel
+                  {t('common:button.cancel')}
                 </Button>
                 <Button
                   variant="primary"
@@ -747,10 +748,10 @@ export function DistroSourcesSettings() {
                 className="text-xs hover:text-red-400"
                 onClick={handleResetContainers}
               >
-                Reset to defaults
+                {t('common:button.resetToDefault')}
               </Button>
               <Button variant="primary" colorScheme="orange" size="sm" onClick={() => setIsAdding(true)}>
-                + Add Container Image
+                + {t('distroSources.addUrl')}
               </Button>
             </div>
           )}
@@ -880,7 +881,7 @@ export function DistroSourcesSettings() {
               </div>
               <div className="flex gap-2 pt-2">
                 <Button variant="ghost" onClick={resetForms}>
-                  Cancel
+                  {t('common:button.cancel')}
                 </Button>
                 <Button
                   variant="primary"
@@ -900,10 +901,10 @@ export function DistroSourcesSettings() {
                 className="text-xs hover:text-red-400"
                 onClick={handleResetMsStore}
               >
-                Reset to defaults
+                {t('common:button.resetToDefault')}
               </Button>
               <Button variant="primary" colorScheme="emerald" size="sm" onClick={() => setIsAdding(true)}>
-                + Add Metadata
+                + {t('distroSources.addUrl')}
               </Button>
             </div>
           )}

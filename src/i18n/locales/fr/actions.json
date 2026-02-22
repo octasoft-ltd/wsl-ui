@@ -1,0 +1,68 @@
+{
+  "quickActions": {
+    "title": "Actions rapides",
+    "info": "Informations sur la distribution",
+    "explorer": "Ouvrir l'Explorateur de fichiers",
+    "ide": "Ouvrir dans l'IDE",
+    "restart": "Red\u00e9marrer",
+    "export": "Exporter vers un fichier...",
+    "clone": "Cloner...",
+    "setDefault": "D\u00e9finir par d\u00e9faut",
+    "alreadyDefault": "Distribution par d\u00e9faut"
+  },
+  "manage": {
+    "title": "G\u00e9rer",
+    "move": "D\u00e9placer la distribution...",
+    "resize": "Redimensionner le disque...",
+    "compact": "Compacter le disque...",
+    "user": "D\u00e9finir l'utilisateur par d\u00e9faut...",
+    "rename": "Renommer...",
+    "sparse": "Mode sparse",
+    "version": "D\u00e9finir la version WSL"
+  },
+  "customActions": {
+    "title": "Actions personnalis\u00e9es",
+    "requiresStop": "N\u00e9cessite l'arr\u00eat de la distribution",
+    "requiresShutdown": "N\u00e9cessite l'arr\u00eat de WSL"
+  },
+  "sparseConfirm": {
+    "title": "Activer le mode sparse ?",
+    "message": "Avertissement : Microsoft a signal\u00e9 que le support VHD sparse peut provoquer une corruption de donn\u00e9es. Bien qu'il puisse aider \u00e0 r\u00e9cup\u00e9rer automatiquement l'espace disque, il existe un risque de perte de donn\u00e9es. Assurez-vous d'avoir des sauvegardes avant d'activer cette fonctionnalit\u00e9.",
+    "confirm": "Activer quand m\u00eame"
+  },
+  "outputDialog": {
+    "titleSuffix": "- Sortie",
+    "noOutput": "Aucune sortie."
+  },
+  "customActionsSettings": {
+    "title": "Actions personnalis\u00e9es",
+    "description": "D\u00e9finir des commandes shell qui apparaissent dans le menu d'actions rapides de la distribution",
+    "addAction": "Ajouter une action",
+    "editAction": "Modifier l'action",
+    "noActions": "Aucune action personnalis\u00e9e configur\u00e9e",
+    "noActionsHint": "Ajoutez votre premi\u00e8re action personnalis\u00e9e pour commencer",
+    "name": "Nom",
+    "namePlaceholder": "ex., Mise \u00e0 jour syst\u00e8me",
+    "command": "Commande",
+    "commandPlaceholder": "ex., sudo apt update && sudo apt upgrade -y",
+    "sudo": "Ex\u00e9cuter avec sudo",
+    "sudoDesc": "Ex\u00e9cuter la commande avec des privil\u00e8ges \u00e9lev\u00e9s",
+    "runOnStartup": "Ex\u00e9cuter au d\u00e9marrage",
+    "runOnStartupDesc": "Ex\u00e9cuter lorsqu'une distribution correspondante d\u00e9marre",
+    "showOutput": "Afficher la sortie",
+    "showOutputDesc": "Afficher la sortie de la commande dans un dialogue",
+    "target": "Distributions cibles",
+    "targetAll": "Toutes les distributions",
+    "targetSpecific": "Distributions sp\u00e9cifiques",
+    "targetRegex": "Motif regex",
+    "targetPlaceholder": "ex., Ubuntu.*",
+    "save": "Enregistrer",
+    "delete": "Supprimer",
+    "deleteConfirm": "\u00cates-vous s\u00fbr de vouloir supprimer cette action ?",
+    "importExport": "Importer/Exporter",
+    "importActions": "Importer",
+    "exportActions": "Exporter",
+    "importSuccess": "Actions import\u00e9es avec succ\u00e8s",
+    "exportSuccess": "Actions export\u00e9es avec succ\u00e8s"
+  }
+}

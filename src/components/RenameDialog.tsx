@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { wslService } from "../services/wslService";
 import { useDistroStore } from "../store/distroStore";
 import { useNotificationStore } from "../store/notificationStore";
@@ -37,6 +38,7 @@ export function RenameDialog({
   currentName,
   onClose,
 }: RenameDialogProps) {
+  const { t } = useTranslation("dialogs");
   const [newName, setNewName] = useState(currentName);
   const [updateTerminalProfile, setUpdateTerminalProfile] = useState(true);
   const [updateShortcut, setUpdateShortcut] = useState(true);
@@ -64,7 +66,7 @@ export function RenameDialog({
     }
 
     if (!/^[a-zA-Z0-9._-]+$/.test(trimmedName)) {
-      return "Name can only contain letters, numbers, dots, underscores, and hyphens";
+      return t('common:validation.invalidChars') as string;
     }
 
     const isDuplicate = distributions.some(
@@ -73,7 +75,7 @@ export function RenameDialog({
         d.id !== distroId
     );
     if (isDuplicate) {
-      return `A distribution named "${trimmedName}" already exists`;
+      return t('common:validation.duplicateName', { name: trimmedName }) as string;
     }
 
     return null;
@@ -85,20 +87,18 @@ export function RenameDialog({
     const trimmedName = newName.trim();
 
     if (!trimmedName) {
-      setError("Please enter a name for the distribution");
+      setError(t('rename.errorEmpty'));
       return;
     }
 
     if (trimmedName === currentName) {
-      setError("New name must be different from the current name");
+      setError(t('rename.errorSameAsCurrent'));
       return;
     }
 
     // Basic validation (WSL name restrictions)
     if (!/^[a-zA-Z0-9._-]+$/.test(trimmedName)) {
-      setError(
-        "Name can only contain letters, numbers, dots, underscores, and hyphens"
-      );
+      setError(t('common:validation.invalidChars'));
       return;
     }
 
@@ -109,7 +109,7 @@ export function RenameDialog({
         d.id !== distroId
     );
     if (isDuplicate) {
-      setError(`A distribution named "${trimmedName}" already exists`);
+      setError(t('common:validation.duplicateName', { name: trimmedName }));
       return;
     }
 
@@ -126,8 +126,8 @@ export function RenameDialog({
       await fetchDistros();
       addNotification({
         type: "success",
-        title: "Distribution Renamed",
-        message: `${currentName} renamed to ${trimmedName}`,
+        title: t('rename.successTitle'),
+        message: t('rename.successMessage', { oldName: currentName, newName: trimmedName }),
       });
       handleClose();
     } catch (err) {
@@ -170,10 +170,10 @@ export function RenameDialog({
           className="relative bg-theme-bg-secondary border border-theme-border-secondary rounded-xl shadow-2xl shadow-black/50 max-w-md w-full mx-4 p-6"
         >
           <h2 className="text-xl font-semibold text-theme-text-primary mb-2">
-            Rename Distribution
+            {t('rename.title')}
           </h2>
           <p className="text-sm text-theme-text-secondary mb-4">
-            Rename{" "}
+            {t('rename.subtitle')}{" "}
             <span className="text-theme-status-warning font-medium">
               {currentName}
             </span>
@@ -190,11 +190,11 @@ export function RenameDialog({
 
           <div className="mb-4">
             <Input
-              label="New Distribution Name"
+              label={t('rename.nameLabel')}
               value={newName}
               onChange={(e) => setNewName(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="Enter new name"
+              placeholder={t('rename.namePlaceholder')}
               disabled={isRenaming}
               autoFocus
               data-testid="rename-name-input"
@@ -208,7 +208,7 @@ export function RenameDialog({
           {/* Options */}
           <div className="mb-6 space-y-3">
             <label className="block text-sm font-medium text-theme-text-secondary mb-2">
-              Options
+              {t('rename.optionsLabel')}
             </label>
 
             <div data-testid="rename-terminal-option">
@@ -217,8 +217,8 @@ export function RenameDialog({
                 onChange={(e) => setUpdateTerminalProfile(e.target.checked)}
                 disabled={isRenaming}
                 data-testid="rename-update-terminal"
-                label="Update Windows Terminal profile"
-                description="Updates the display name in Terminal's dropdown menu"
+                label={t('rename.updateTerminal')}
+                description={t('rename.updateTerminalDesc')}
               />
             </div>
 
@@ -228,8 +228,8 @@ export function RenameDialog({
                 onChange={(e) => setUpdateShortcut(e.target.checked)}
                 disabled={isRenaming}
                 data-testid="rename-update-shortcut"
-                label="Rename Start Menu shortcut"
-                description="Renames the shortcut file in the Start Menu"
+                label={t('rename.renameShortcut')}
+                description={t('rename.renameShortcutDesc')}
               />
             </div>
           </div>
@@ -241,7 +241,7 @@ export function RenameDialog({
               data-testid="rename-cancel-button"
               className="px-4 py-2 text-sm font-medium text-theme-text-secondary bg-theme-bg-tertiary hover:bg-theme-bg-hover rounded-lg transition-colors disabled:opacity-50"
             >
-              Cancel
+              {t('common:button.cancel')}
             </button>
             <button
               onClick={handleRename}
@@ -250,11 +250,11 @@ export function RenameDialog({
               className="px-4 py-2 text-sm font-medium bg-theme-accent-primary hover:opacity-90 text-theme-bg-primary rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
               {isRenaming ? (
-                "Renaming..."
+                t('rename.renaming')
               ) : (
                 <>
                   <EditIcon />
-                  Rename
+                  {t('rename.rename')}
                 </>
               )}
             </button>

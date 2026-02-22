@@ -1,0 +1,60 @@
+{
+  "button": {
+    "cancel": "キャンセル",
+    "close": "閉じる",
+    "save": "保存",
+    "delete": "削除",
+    "confirm": "確認",
+    "retry": "再試行",
+    "browse": "参照",
+    "back": "戻る",
+    "dismiss": "閉じる",
+    "learnMore": "詳細を見る",
+    "resetToDefault": "デフォルトに戻す"
+  },
+  "label": {
+    "name": "名前",
+    "status": "ステータス",
+    "version": "バージョン",
+    "size": "サイズ",
+    "location": "場所",
+    "default": "デフォルト",
+    "yes": "はい",
+    "no": "いいえ",
+    "on": "オン",
+    "off": "オフ",
+    "loading": "読み込み中...",
+    "none": "なし",
+    "ip": "IP",
+    "copied": "コピーしました！",
+    "disk": "ディスク",
+    "memory": "メモリ",
+    "cpu": "CPU",
+    "installed": "インストール済み",
+    "notInstalled": "未インストール"
+  },
+  "status": {
+    "online": "オンライン",
+    "offline": "オフライン",
+    "primary": "プライマリ",
+    "compacting": "圧縮中",
+    "operational": "稼働中",
+    "standby": "スタンバイ"
+  },
+  "unit": {
+    "gb": "GB",
+    "tb": "TB"
+  },
+  "validation": {
+    "invalidChars": "名前には英字、数字、ドット、アンダースコア、ハイフンのみ使用できます",
+    "duplicateName": "\"{{name}}\" という名前のディストリビューションは既に存在します",
+    "required": "この項目は必須です"
+  },
+  "wslVersion": {
+    "wsl1": "WSL 1",
+    "wsl2": "WSL 2"
+  },
+  "noOutput": "出力なし",
+  "output": "出力",
+  "ranOn": "実行先：{{distro}}"
+}

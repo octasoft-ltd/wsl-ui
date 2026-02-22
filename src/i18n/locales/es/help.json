@@ -1,0 +1,134 @@
+{
+  "title": "Ayuda y documentaci\u00f3n",
+  "subtitle": "Aprenda a usar WSL UI",
+  "gettingStarted": {
+    "title": "Primeros pasos",
+    "whatIsWslUi": "\u00bfQu\u00e9 es WSL UI?",
+    "whatIsWslUiText": "WSL UI es una aplicaci\u00f3n de escritorio para administrar distribuciones de Windows Subsystem for Linux (WSL). Proporciona una interfaz gr\u00e1fica para operaciones comunes de WSL como iniciar, detener, crear y configurar distribuciones Linux.",
+    "mainDashboard": "Panel principal",
+    "mainDashboardText": "La vista principal muestra todas sus distribuciones WSL instaladas como tarjetas. Cada tarjeta muestra el nombre de la distribuci\u00f3n, el estado (en l\u00ednea/sin conexi\u00f3n), el uso del disco y botones de acci\u00f3n r\u00e1pida.",
+    "quickActions": "Acciones r\u00e1pidas",
+    "quickActionsText": "Haga clic en el bot\u00f3n de men\u00fa (tres puntos) en cualquier tarjeta de distribuci\u00f3n para acceder a acciones r\u00e1pidas como abrir una terminal, explorador de archivos, IDE o administrar la distribuci\u00f3n."
+  },
+  "distroManagement": {
+    "title": "Administraci\u00f3n de distribuciones",
+    "startingStoppingTitle": "Iniciar y detener",
+    "start": "Iniciar una distribuci\u00f3n",
+    "stop": "Detener una distribuci\u00f3n en ejecuci\u00f3n",
+    "setAsDefault": "Establecer como predeterminada",
+    "setAsDefaultText": "Establezca una distribuci\u00f3n como predeterminada para usarla al ejecutar comandos WSL sin especificar un nombre de distribuci\u00f3n.",
+    "resourceMonitoring": "Monitoreo de recursos",
+    "resourceMonitoringText": "Las distribuciones en ejecuci\u00f3n muestran el uso de CPU y memoria en tiempo real. El tama\u00f1o del disco se muestra para todas las distribuciones."
+  },
+  "advancedOps": {
+    "title": "Operaciones avanzadas",
+    "rename": "Renombrar",
+    "renameText": "Cambie el nombre de una distribuci\u00f3n. Tambi\u00e9n puede actualizar el perfil de Windows Terminal y el acceso directo del men\u00fa Inicio. Requiere que la distribuci\u00f3n est\u00e9 detenida.",
+    "move": "Mover",
+    "moveText": "Reubique una distribuci\u00f3n a una unidad o carpeta diferente. \u00datil para administrar el espacio en disco. Requiere que WSL est\u00e9 completamente apagado.",
+    "resizeDisk": "Redimensionar disco",
+    "resizeDiskText": "Expanda el tama\u00f1o del disco virtual para distribuciones que necesitan m\u00e1s espacio. Solo se admite la expansi\u00f3n (no la reducci\u00f3n). Requiere apagar WSL.",
+    "setWslVersion": "Establecer versi\u00f3n de WSL",
+    "setWslVersionText": "Convierta entre WSL 1 y WSL 2. WSL 2 ofrece mejor rendimiento con un kernel Linux completo. La conversi\u00f3n puede tardar varios minutos.",
+    "sparseMode": "Modo disperso",
+    "sparseModeText": "Habilite la recuperaci\u00f3n autom\u00e1tica de espacio en disco. El disco virtual se reducir\u00e1 a medida que elimine archivos dentro de la distribuci\u00f3n.",
+    "compactDisk": "Compactar disco",
+    "compactDiskText": "Optimizaci\u00f3n con un clic para recuperar espacio no utilizado del disco virtual de una distribuci\u00f3n. Ejecuta autom\u00e1ticamente fstrim, apaga WSL y compacta el archivo VHDX. Requiere privilegios de administrador y toma 1-2 minutos."
+  },
+  "creatingDistros": {
+    "title": "Crear distribuciones",
+    "quickInstall": "Instalaci\u00f3n r\u00e1pida (Microsoft Store)",
+    "quickInstallText": "Instalaci\u00f3n con un clic de distribuciones oficiales como Ubuntu, Debian y openSUSE.",
+    "containerImages": "Im\u00e1genes de contenedores",
+    "containerImagesText": "Cree distribuciones a partir de im\u00e1genes de contenedores Docker o Podman. Admite Docker Hub y otros registros.",
+    "directDownload": "Descarga directa",
+    "directDownloadText": "Descargue archivos rootfs desde URLs configurables. Incluye Alpine, NixOS, Void Linux y m\u00e1s.",
+    "communityCatalog": "Cat\u00e1logo de la comunidad (LXC)",
+    "communityCatalogText": "Explore cientos de distribuciones del servidor de im\u00e1genes de Linux Containers."
+  },
+  "backupRestore": {
+    "title": "Copia de seguridad y restauraci\u00f3n",
+    "export": "Exportar",
+    "exportText": "Guarde una distribuci\u00f3n en un archivo .tar para copia de seguridad o migraci\u00f3n. Puede restaurarla m\u00e1s tarde o en otra m\u00e1quina.",
+    "import": "Importar",
+    "importText": "Restaure una distribuci\u00f3n desde un archivo .tar. Elija un nombre y ubicaci\u00f3n de instalaci\u00f3n para la distribuci\u00f3n importada.",
+    "clone": "Clonar",
+    "cloneText": "Cree una copia de una distribuci\u00f3n existente con un nuevo nombre. \u00datil para pruebas o crear variantes."
+  },
+  "customActions": {
+    "title": "Acciones personalizadas",
+    "whatAre": "\u00bfQu\u00e9 son las acciones personalizadas?",
+    "whatAreText": "Las acciones personalizadas son comandos de shell definidos por el usuario que aparecen en el men\u00fa de acciones r\u00e1pidas. Cree acciones para tareas comunes como actualizaciones del sistema, copias de seguridad o configuraci\u00f3n de desarrollo.",
+    "variables": "Variables",
+    "variablesText": "Use variables en sus comandos que se reemplazan en tiempo de ejecuci\u00f3n:",
+    "varDistroName": "Nombre de la distribuci\u00f3n",
+    "varHome": "Ruta del directorio de inicio",
+    "varUser": "Usuario predeterminado",
+    "varWindowsHome": "Directorio del usuario de Windows",
+    "targeting": "Distribuciones objetivo",
+    "targetingText": "Las acciones pueden dirigirse a todas las distribuciones, distribuciones espec\u00edficas por nombre o distribuciones que coincidan con un patr\u00f3n regex."
+  },
+  "theming": {
+    "title": "Temas y apariencia",
+    "builtinThemes": "Temas integrados",
+    "builtinThemesText": "Elija entre 17 temas dise\u00f1ados profesionalmente, incluyendo opciones oscuras, claras y de t\u00e9rmino medio. Los temas populares incluyen Obsidian, Dracula, Nord y Solarized.",
+    "accessibilityThemes": "Temas de accesibilidad",
+    "accessibilityThemesText": "Dos temas de alto contraste est\u00e1n disponibles para usuarios con baja visi\u00f3n: Alto contraste (oscuro) y Alto contraste claro.",
+    "customTheme": "Tema personalizado",
+    "customThemeText": "Cree su propio tema con control total sobre 29 variables de color, incluyendo fondos, texto, bordes, acentos y m\u00e1s."
+  },
+  "keyboardShortcuts": {
+    "title": "Atajos de teclado",
+    "tab": "Tab",
+    "tabAction": "Siguiente elemento",
+    "shiftTab": "Shift+Tab",
+    "shiftTabAction": "Elemento anterior",
+    "enter": "Enter",
+    "enterAction": "Activar / Enviar",
+    "escape": "Escape",
+    "escapeAction": "Cerrar di\u00e1logo o men\u00fa",
+    "space": "Espacio",
+    "spaceAction": "Alternar casilla de verificaci\u00f3n",
+    "accessibility": "Accesibilidad",
+    "accessibilityText": "WSL UI es compatible con lectores de pantalla, navegaci\u00f3n por teclado y respeta las preferencias del sistema para movimiento reducido."
+  },
+  "settingsOverview": {
+    "title": "Resumen de configuraci\u00f3n",
+    "terminal": "Terminal: Configurar Windows Terminal, aplicaciones de terminal personalizadas o s\u00edmbolo del sistema",
+    "ide": "IDE: Configurar VS Code, Cursor o integraci\u00f3n con IDE personalizado",
+    "wslGlobal": "WSL Global: Configurar memoria, CPU, swap, modo de red y WSLg",
+    "perDistro": "Por distribuci\u00f3n: Opciones de montaje autom\u00e1tico, configuraci\u00f3n de red, systemd y comandos de arranque",
+    "polling": "Consulta: Ajustar intervalos de actualizaci\u00f3n autom\u00e1tica para estado y recursos",
+    "timeouts": "Tiempos de espera: Configurar tiempos de espera de operaciones para sistemas lentos",
+    "executables": "Rutas de ejecutables: Anular rutas predeterminadas para WSL, PowerShell y otras herramientas"
+  },
+  "integrations": {
+    "title": "Integraciones",
+    "terminal": "Integraci\u00f3n con terminal",
+    "terminalText": "Abra distribuciones en Windows Terminal, S\u00edmbolo del sistema o cualquier aplicaci\u00f3n de terminal personalizada. Configure su terminal preferido en Configuraci\u00f3n.",
+    "ide": "Integraci\u00f3n con IDE",
+    "ideText": "Abra distribuciones directamente en VS Code u otros IDEs. La carpeta ra\u00edz de la distribuci\u00f3n se abre en su editor.",
+    "fileExplorer": "Explorador de archivos",
+    "fileExplorerText": "Explore los archivos de la distribuci\u00f3n en el Explorador de Windows usando la ruta de red \\\\wsl$.",
+    "systemTray": "Bandeja del sistema",
+    "systemTrayText": "Minimice a la bandeja del sistema para acceso r\u00e1pido. Configure el comportamiento de cierre en Configuraci\u00f3n."
+  },
+  "troubleshooting": {
+    "title": "Soluci\u00f3n de problemas",
+    "wslNotDetected": "WSL no detectado",
+    "wslNotDetectedText": "Aseg\u00farese de que WSL est\u00e9 instalado y habilitado. Ejecute wsl --status en PowerShell para verificar. Es posible que necesite habilitar las caracter\u00edsticas de Windows para WSL.",
+    "operationsTimeout": "Las operaciones agotan el tiempo de espera",
+    "operationsTimeoutText": "Si las operaciones agotan el tiempo de espera con frecuencia, aumente los valores de tiempo de espera en Configuraci\u00f3n > Tiempos de espera. La aplicaci\u00f3n usa retroceso exponencial para reducir la carga durante los problemas.",
+    "distroWontStart": "La distribuci\u00f3n no inicia",
+    "distroWontStartText": "Intente reiniciar WSL con wsl --shutdown y luego inicie la distribuci\u00f3n de nuevo.",
+    "fullGuide": "Gu\u00eda completa de soluci\u00f3n de problemas"
+  },
+  "resources": {
+    "title": "Recursos y soporte",
+    "wslUiWebsite": "Sitio web de WSL UI",
+    "githubRepo": "Repositorio de GitHub",
+    "reportIssue": "Reportar un problema",
+    "octasoftWebsite": "Sitio web de Octasoft Ltd",
+    "microsoftDocs": "Documentaci\u00f3n de WSL de Microsoft"
+  }
+}

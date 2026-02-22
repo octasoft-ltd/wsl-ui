@@ -1,8 +1,9 @@
 import { Component, ErrorInfo, ReactNode } from 'react';
+import { withTranslation, WithTranslation } from 'react-i18next';
 import { Button } from './ui/Button';
 import { logger } from '../utils/logger';
 
-interface ErrorBoundaryProps {
+interface ErrorBoundaryProps extends WithTranslation {
   children: ReactNode;
   fallback?: ReactNode | ((error: Error, resetError: () => void) => ReactNode);
 }
@@ -12,7 +13,7 @@ interface ErrorBoundaryState {
   error: Error | null;
 }
 
-export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+class ErrorBoundaryClass extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   constructor(props: ErrorBoundaryProps) {
     super(props);
     this.state = {
@@ -76,7 +77,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
             </div>
 
             <h1 className="text-2xl font-bold text-white mb-2">
-              Something went wrong
+              {this.props.t('boundary.title')}
             </h1>
 
             {error?.message && (
@@ -86,7 +87,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
             )}
 
             <p className="text-stone-400 mb-6">
-              The application encountered an unexpected error. Please try again.
+              {this.props.t('boundary.message')}
             </p>
 
             <Button
@@ -94,7 +95,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
               variant="primary"
               fullWidth
             >
-              Try Again
+              {this.props.t('boundary.tryAgain')}
             </Button>
           </div>
         </div>
@@ -104,3 +105,5 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
     return this.props.children;
   }
 }
+
+export const ErrorBoundary = withTranslation("errors")(ErrorBoundaryClass);

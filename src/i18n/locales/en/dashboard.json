@@ -1,0 +1,40 @@
+{
+  "loading": "Initializing systems...",
+  "emptyState": {
+    "title": "No Instances Detected",
+    "description": "Deploy a WSL distribution to begin"
+  },
+  "filter": {
+    "all": "All",
+    "allSources": "All Sources",
+    "allSourcesMobile": "All",
+    "onlineTooltip": "Online ({{count}})",
+    "offlineTooltip": "Offline ({{count}})",
+    "showWsl1": "Show WSL 1 ({{count}})",
+    "hideWsl1": "Hide WSL 1 ({{count}})",
+    "showWsl2": "Show WSL 2 ({{count}})",
+    "hideWsl2": "Hide WSL 2 ({{count}})",
+    "v1": "v1",
+    "v2": "v2"
+  },
+  "emptyFilter": {
+    "noDistros": "No distributions found",
+    "noMatch": "No distributions match the current filters",
+    "clearFilters": "Clear filters"
+  },
+  "card": {
+    "suspend": "Suspend",
+    "launch": "Launch",
+    "openTerminal": "Open Terminal",
+    "openRdp": "Open Remote Desktop",
+    "quickActions": "Quick Actions",
+    "deleteDistro": "Delete distribution",
+    "ipTooltip": "Click to copy IP address"
+  },
+  "deleteDialog": {
+    "title": "Delete Distribution",
+    "message": "Are you sure you want to delete \"{{name}}\"? This action cannot be undone and all data in this distribution will be permanently lost.",
+    "messageDefault": "Are you sure you want to delete \"{{name}}\"? This action cannot be undone and all data in this distribution will be permanently lost.\n\nWarning: This is your default distribution. After deletion, WSL commands will fail unless you set another distribution as the default.",
+    "confirm": "Delete"
+  }
+}

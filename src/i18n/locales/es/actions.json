@@ -1,0 +1,68 @@
+{
+  "quickActions": {
+    "title": "Acciones r\u00e1pidas",
+    "info": "Informaci\u00f3n de la distribuci\u00f3n",
+    "explorer": "Abrir Explorador de archivos",
+    "ide": "Abrir en IDE",
+    "restart": "Reiniciar",
+    "export": "Exportar a archivo...",
+    "clone": "Clonar...",
+    "setDefault": "Establecer como predeterminada",
+    "alreadyDefault": "Distribuci\u00f3n predeterminada"
+  },
+  "manage": {
+    "title": "Administrar",
+    "move": "Mover distribuci\u00f3n...",
+    "resize": "Redimensionar disco...",
+    "compact": "Compactar disco...",
+    "user": "Establecer usuario predeterminado...",
+    "rename": "Renombrar...",
+    "sparse": "Modo disperso",
+    "version": "Establecer versi\u00f3n de WSL"
+  },
+  "customActions": {
+    "title": "Acciones personalizadas",
+    "requiresStop": "Requiere detener la distribuci\u00f3n",
+    "requiresShutdown": "Requiere apagar WSL"
+  },
+  "sparseConfirm": {
+    "title": "\u00bfHabilitar modo disperso?",
+    "message": "Advertencia: Microsoft ha se\u00f1alado que el soporte de VHD disperso puede causar corrupci\u00f3n de datos. Aunque puede ayudar a recuperar espacio en disco autom\u00e1ticamente, existe riesgo de p\u00e9rdida de datos. Aseg\u00farese de tener copias de seguridad antes de habilitar esta funci\u00f3n.",
+    "confirm": "Habilitar de todos modos"
+  },
+  "outputDialog": {
+    "titleSuffix": "- Salida",
+    "noOutput": "Sin salida."
+  },
+  "customActionsSettings": {
+    "title": "Acciones personalizadas",
+    "description": "Defina comandos de shell que aparecen en el men\u00fa de acciones r\u00e1pidas de la distribuci\u00f3n",
+    "addAction": "Agregar acci\u00f3n",
+    "editAction": "Editar acci\u00f3n",
+    "noActions": "No hay acciones personalizadas configuradas",
+    "noActionsHint": "Agregue su primera acci\u00f3n personalizada para comenzar",
+    "name": "Nombre",
+    "namePlaceholder": "ej., Actualizar sistema",
+    "command": "Comando",
+    "commandPlaceholder": "ej., sudo apt update && sudo apt upgrade -y",
+    "sudo": "Ejecutar con sudo",
+    "sudoDesc": "Ejecutar el comando con privilegios elevados",
+    "runOnStartup": "Ejecutar al inicio",
+    "runOnStartupDesc": "Ejecutar cuando una distribuci\u00f3n coincidente se inicia",
+    "showOutput": "Mostrar salida",
+    "showOutputDesc": "Mostrar la salida del comando en un di\u00e1logo",
+    "target": "Distribuciones objetivo",
+    "targetAll": "Todas las distribuciones",
+    "targetSpecific": "Distribuciones espec\u00edficas",
+    "targetRegex": "Patr\u00f3n regex",
+    "targetPlaceholder": "ej., Ubuntu.*",
+    "save": "Guardar",
+    "delete": "Eliminar",
+    "deleteConfirm": "\u00bfEst\u00e1 seguro de que desea eliminar esta acci\u00f3n?",
+    "importExport": "Importar/Exportar",
+    "importActions": "Importar",
+    "exportActions": "Exportar",
+    "importSuccess": "Acciones importadas correctamente",
+    "exportSuccess": "Acciones exportadas correctamente"
+  }
+}

@@ -1,0 +1,134 @@
+{
+  "title": "도움말 및 문서",
+  "subtitle": "WSL UI 사용 방법 알아보기",
+  "gettingStarted": {
+    "title": "시작하기",
+    "whatIsWslUi": "WSL UI란?",
+    "whatIsWslUiText": "WSL UI는 Windows Subsystem for Linux(WSL) 배포판을 관리하기 위한 데스크톱 애플리케이션입니다. Linux 배포판의 시작, 중지, 생성, 구성 등 일반적인 WSL 작업에 대한 그래픽 인터페이스를 제공합니다.",
+    "mainDashboard": "메인 대시보드",
+    "mainDashboardText": "메인 뷰에는 설치된 모든 WSL 배포판이 카드로 표시됩니다. 각 카드에는 배포판 이름, 상태(온라인/오프라인), 디스크 사용량, 빠른 작업 버튼이 표시됩니다.",
+    "quickActions": "빠른 작업",
+    "quickActionsText": "배포판 카드의 메뉴 버튼(점 세 개)을 클릭하면 터미널 열기, 파일 탐색기, IDE, 배포판 관리 등의 빠른 작업에 접근할 수 있습니다."
+  },
+  "distroManagement": {
+    "title": "배포판 관리",
+    "startingStoppingTitle": "시작 및 중지",
+    "start": "배포판 시작",
+    "stop": "실행 중인 배포판 중지",
+    "setAsDefault": "기본값으로 설정",
+    "setAsDefaultText": "배포판 이름을 지정하지 않고 WSL 명령을 실행할 때 사용할 기본 배포판을 설정합니다.",
+    "resourceMonitoring": "리소스 모니터링",
+    "resourceMonitoringText": "실행 중인 배포판은 실시간 CPU 및 메모리 사용량을 표시합니다. 모든 배포판에 디스크 크기가 표시됩니다."
+  },
+  "advancedOps": {
+    "title": "고급 작업",
+    "rename": "이름 변경",
+    "renameText": "배포판 이름을 변경합니다. Windows 터미널 프로필과 시작 메뉴 바로 가기도 업데이트할 수 있습니다. 배포판 중지가 필요합니다.",
+    "move": "이동",
+    "moveText": "배포판을 다른 드라이브나 폴더로 이동합니다. 디스크 공간 관리에 유용합니다. WSL 완전 종료가 필요합니다.",
+    "resizeDisk": "디스크 크기 조정",
+    "resizeDiskText": "더 많은 공간이 필요한 배포판의 가상 디스크 크기를 확장합니다. 확장만 지원됩니다(축소 불가). WSL 종료가 필요합니다.",
+    "setWslVersion": "WSL 버전 설정",
+    "setWslVersionText": "WSL 1과 WSL 2 사이를 전환합니다. WSL 2는 전체 Linux 커널로 더 나은 성능을 제공합니다. 변환에 몇 분이 걸릴 수 있습니다.",
+    "sparseMode": "스파스 모드",
+    "sparseModeText": "자동 디스크 공간 회수를 활성화합니다. 배포판 내에서 파일을 삭제하면 가상 디스크가 자동으로 축소됩니다.",
+    "compactDisk": "디스크 압축",
+    "compactDiskText": "배포판의 가상 디스크에서 사용하지 않는 공간을 회수하는 원클릭 최적화입니다. fstrim 실행, WSL 종료, VHDX 파일 압축을 자동으로 수행합니다. 관리자 권한이 필요하며 1-2분 소요됩니다."
+  },
+  "creatingDistros": {
+    "title": "배포판 만들기",
+    "quickInstall": "빠른 설치(Microsoft Store)",
+    "quickInstallText": "Ubuntu, Debian, openSUSE 등 공식 배포판을 원클릭으로 설치합니다.",
+    "containerImages": "컨테이너 이미지",
+    "containerImagesText": "Docker 또는 Podman 컨테이너 이미지에서 배포판을 생성합니다. Docker Hub 및 기타 레지스트리를 지원합니다.",
+    "directDownload": "직접 다운로드",
+    "directDownloadText": "구성 가능한 URL에서 rootfs 아카이브를 다운로드합니다. Alpine, NixOS, Void Linux 등이 포함됩니다.",
+    "communityCatalog": "커뮤니티 카탈로그(LXC)",
+    "communityCatalogText": "Linux Containers 이미지 서버에서 수백 개의 배포판을 탐색합니다."
+  },
+  "backupRestore": {
+    "title": "백업 및 복원",
+    "export": "내보내기",
+    "exportText": "배포판을 .tar 아카이브 파일로 저장하여 백업하거나 마이그레이션합니다. 나중에 또는 다른 컴퓨터에서 복원할 수 있습니다.",
+    "import": "가져오기",
+    "importText": ".tar 아카이브에서 배포판을 복원합니다. 가져올 배포판의 이름과 설치 위치를 선택합니다.",
+    "clone": "복제",
+    "cloneText": "기존 배포판을 새 이름으로 복사합니다. 테스트나 변형 생성에 유용합니다."
+  },
+  "customActions": {
+    "title": "사용자 지정 작업",
+    "whatAre": "사용자 지정 작업이란?",
+    "whatAreText": "사용자 지정 작업은 빠른 작업 메뉴에 표시되는 사용자 정의 셸 명령입니다. 시스템 업데이트, 백업, 개발 환경 설정 등 일반적인 작업을 위한 작업을 만들 수 있습니다.",
+    "variables": "변수",
+    "variablesText": "런타임에 대체되는 명령 내 변수 사용:",
+    "varDistroName": "배포판 이름",
+    "varHome": "홈 디렉토리 경로",
+    "varUser": "기본 사용자",
+    "varWindowsHome": "Windows 사용자 디렉토리",
+    "targeting": "대상 배포판",
+    "targetingText": "작업은 모든 배포판, 이름으로 지정한 특정 배포판, 또는 정규 표현식 패턴과 일치하는 배포판을 대상으로 할 수 있습니다."
+  },
+  "theming": {
+    "title": "테마 및 외관",
+    "builtinThemes": "내장 테마",
+    "builtinThemesText": "다크, 라이트, 중간 톤 옵션을 포함한 17개의 전문적으로 디자인된 테마에서 선택하세요. 인기 테마로는 Obsidian, Dracula, Nord, Solarized가 있습니다.",
+    "accessibilityThemes": "접근성 테마",
+    "accessibilityThemesText": "저시력 사용자를 위한 두 가지 고대비 테마를 사용할 수 있습니다: 고대비(다크)와 고대비 라이트.",
+    "customTheme": "사용자 지정 테마",
+    "customThemeText": "배경, 텍스트, 테두리, 강조색 등 29가지 색상 변수를 완전히 제어하여 나만의 테마를 만드세요."
+  },
+  "keyboardShortcuts": {
+    "title": "키보드 단축키",
+    "tab": "Tab",
+    "tabAction": "다음 요소",
+    "shiftTab": "Shift+Tab",
+    "shiftTabAction": "이전 요소",
+    "enter": "Enter",
+    "enterAction": "실행 / 제출",
+    "escape": "Escape",
+    "escapeAction": "대화 상자 또는 메뉴 닫기",
+    "space": "Space",
+    "spaceAction": "체크박스 전환",
+    "accessibility": "접근성",
+    "accessibilityText": "WSL UI는 스크린 리더, 키보드 내비게이션을 지원하며 모션 감소에 대한 시스템 환경 설정을 준수합니다."
+  },
+  "settingsOverview": {
+    "title": "설정 개요",
+    "terminal": "터미널: Windows 터미널, 사용자 지정 터미널 앱 또는 명령 프롬프트 구성",
+    "ide": "IDE: VS Code, Cursor 또는 사용자 지정 IDE 연동 설정",
+    "wslGlobal": "WSL 전역: 메모리, CPU, 스왑, 네트워크 모드, WSLg 구성",
+    "perDistro": "배포판별: 자동 마운트 옵션, 네트워크 설정, systemd, 부팅 명령",
+    "polling": "폴링: 상태 및 리소스 자동 새로고침 간격 조정",
+    "timeouts": "시간 초과: 느린 시스템을 위한 작업 시간 초과 구성",
+    "executables": "실행 파일 경로: WSL, PowerShell 및 기타 도구의 기본 경로 재정의"
+  },
+  "integrations": {
+    "title": "연동",
+    "terminal": "터미널 연동",
+    "terminalText": "Windows 터미널, 명령 프롬프트 또는 사용자 지정 터미널 앱에서 배포판을 엽니다. 설정에서 선호하는 터미널을 구성하세요.",
+    "ide": "IDE 연동",
+    "ideText": "VS Code 또는 기타 IDE에서 배포판을 직접 엽니다. 배포판의 루트 폴더가 편집기에서 열립니다.",
+    "fileExplorer": "파일 탐색기",
+    "fileExplorerText": "\\\\wsl$ 네트워크 경로를 사용하여 Windows 탐색기에서 배포판 파일을 탐색합니다.",
+    "systemTray": "시스템 트레이",
+    "systemTrayText": "시스템 트레이로 최소화하여 빠르게 접근합니다. 설정에서 닫기 동작을 구성하세요."
+  },
+  "troubleshooting": {
+    "title": "문제 해결",
+    "wslNotDetected": "WSL이 감지되지 않음",
+    "wslNotDetectedText": "WSL이 설치되고 활성화되어 있는지 확인하세요. PowerShell에서 wsl --status를 실행하여 확인하세요. WSL용 Windows 기능을 활성화해야 할 수 있습니다.",
+    "operationsTimeout": "작업 시간 초과",
+    "operationsTimeoutText": "작업이 자주 시간 초과되면 설정 > 시간 초과에서 시간 초과 값을 늘리세요. 앱은 문제 발생 시 부하를 줄이기 위해 지수 백오프를 사용합니다.",
+    "distroWontStart": "배포판이 시작되지 않음",
+    "distroWontStartText": "wsl --shutdown으로 WSL을 재시작한 다음 배포판을 다시 시작해 보세요.",
+    "fullGuide": "전체 문제 해결 가이드"
+  },
+  "resources": {
+    "title": "리소스 및 지원",
+    "wslUiWebsite": "WSL UI 웹사이트",
+    "githubRepo": "GitHub 저장소",
+    "reportIssue": "문제 보고",
+    "octasoftWebsite": "Octasoft Ltd 웹사이트",
+    "microsoftDocs": "Microsoft WSL 문서"
+  }
+}

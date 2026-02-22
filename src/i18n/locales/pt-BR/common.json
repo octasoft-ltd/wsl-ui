@@ -1,0 +1,60 @@
+{
+  "button": {
+    "cancel": "Cancelar",
+    "close": "Fechar",
+    "save": "Salvar",
+    "delete": "Excluir",
+    "confirm": "Confirmar",
+    "retry": "Tentar novamente",
+    "browse": "Procurar",
+    "back": "Voltar",
+    "dismiss": "Dispensar",
+    "learnMore": "Saiba mais",
+    "resetToDefault": "Restaurar padr\u00e3o"
+  },
+  "label": {
+    "name": "Nome",
+    "status": "Status",
+    "version": "Vers\u00e3o",
+    "size": "Tamanho",
+    "location": "Localiza\u00e7\u00e3o",
+    "default": "Padr\u00e3o",
+    "yes": "Sim",
+    "no": "N\u00e3o",
+    "on": "Ativado",
+    "off": "Desativado",
+    "loading": "Carregando...",
+    "none": "Nenhum",
+    "ip": "IP",
+    "copied": "Copiado!",
+    "disk": "Disco",
+    "memory": "Mem\u00f3ria",
+    "cpu": "CPU",
+    "installed": "Instalado",
+    "notInstalled": "N\u00e3o instalado"
+  },
+  "status": {
+    "online": "Online",
+    "offline": "Offline",
+    "primary": "Principal",
+    "compacting": "Compactando",
+    "operational": "OPERACIONAL",
+    "standby": "EM ESPERA"
+  },
+  "unit": {
+    "gb": "GB",
+    "tb": "TB"
+  },
+  "validation": {
+    "invalidChars": "O nome s\u00f3 pode conter letras, n\u00fameros, pontos, sublinhados e h\u00edfens",
+    "duplicateName": "J\u00e1 existe uma distribui\u00e7\u00e3o chamada \"{{name}}\"",
+    "required": "Este campo \u00e9 obrigat\u00f3rio"
+  },
+  "wslVersion": {
+    "wsl1": "WSL 1",
+    "wsl2": "WSL 2"
+  },
+  "noOutput": "Sem sa\u00edda",
+  "output": "Sa\u00edda",
+  "ranOn": "Executado em: {{distro}}"
+}

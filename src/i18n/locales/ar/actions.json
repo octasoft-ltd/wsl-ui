@@ -1,0 +1,68 @@
+{
+  "quickActions": {
+    "title": "إجراءات سريعة",
+    "info": "معلومات التوزيعة",
+    "explorer": "فتح مستكشف الملفات",
+    "ide": "فتح في IDE",
+    "restart": "إعادة التشغيل",
+    "export": "تصدير إلى ملف...",
+    "clone": "استنساخ...",
+    "setDefault": "تعيين كافتراضي",
+    "alreadyDefault": "التوزيعة الافتراضية"
+  },
+  "manage": {
+    "title": "إدارة",
+    "move": "نقل التوزيعة...",
+    "resize": "تغيير حجم القرص...",
+    "compact": "ضغط القرص...",
+    "user": "تعيين المستخدم الافتراضي...",
+    "rename": "إعادة التسمية...",
+    "sparse": "الوضع المتناثر",
+    "version": "تعيين إصدار WSL"
+  },
+  "customActions": {
+    "title": "إجراءات مخصصة",
+    "requiresStop": "يتطلب إيقاف التوزيعة",
+    "requiresShutdown": "يتطلب إيقاف WSL"
+  },
+  "sparseConfirm": {
+    "title": "تفعيل الوضع المتناثر؟",
+    "message": "تحذير: حددت Microsoft دعم VHD المتناثر على أنه قد يسبب تلف البيانات. على الرغم من أنه يمكن أن يساعد في استعادة مساحة القرص تلقائياً، إلا أن هناك خطر فقدان البيانات. تأكد من وجود نسخ احتياطية قبل تفعيل هذه الميزة.",
+    "confirm": "تفعيل على أي حال"
+  },
+  "outputDialog": {
+    "titleSuffix": "- المخرجات",
+    "noOutput": "لا توجد مخرجات."
+  },
+  "customActionsSettings": {
+    "title": "إجراءات مخصصة",
+    "description": "حدد أوامر الصدفة التي تظهر في قائمة الإجراءات السريعة للتوزيعة",
+    "addAction": "إضافة إجراء",
+    "editAction": "تعديل الإجراء",
+    "noActions": "لم يتم تكوين إجراءات مخصصة",
+    "noActionsHint": "أضف أول إجراء مخصص للبدء",
+    "name": "الاسم",
+    "namePlaceholder": "مثال، تحديث النظام",
+    "command": "الأمر",
+    "commandPlaceholder": "مثال، sudo apt update && sudo apt upgrade -y",
+    "sudo": "تشغيل بصلاحيات sudo",
+    "sudoDesc": "تنفيذ الأمر بصلاحيات مرتفعة",
+    "runOnStartup": "تشغيل عند بدء التشغيل",
+    "runOnStartupDesc": "تنفيذ عند بدء توزيعة مطابقة",
+    "showOutput": "إظهار المخرجات",
+    "showOutputDesc": "عرض مخرجات الأمر في مربع حوار",
+    "target": "التوزيعات المستهدفة",
+    "targetAll": "جميع التوزيعات",
+    "targetSpecific": "توزيعات محددة",
+    "targetRegex": "نمط Regex",
+    "targetPlaceholder": "مثال، Ubuntu.*",
+    "save": "حفظ",
+    "delete": "حذف",
+    "deleteConfirm": "هل أنت متأكد من رغبتك في حذف هذا الإجراء؟",
+    "importExport": "استيراد/تصدير",
+    "importActions": "استيراد",
+    "exportActions": "تصدير",
+    "importSuccess": "تم استيراد الإجراءات بنجاح",
+    "exportSuccess": "تم تصدير الإجراءات بنجاح"
+  }
+}

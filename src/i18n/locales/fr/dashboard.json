@@ -1,0 +1,40 @@
+{
+  "loading": "Initialisation des syst\u00e8mes...",
+  "emptyState": {
+    "title": "Aucune instance d\u00e9tect\u00e9e",
+    "description": "D\u00e9ployez une distribution WSL pour commencer"
+  },
+  "filter": {
+    "all": "Toutes",
+    "allSources": "Toutes les sources",
+    "allSourcesMobile": "Toutes",
+    "onlineTooltip": "En ligne ({{count}})",
+    "offlineTooltip": "Hors ligne ({{count}})",
+    "showWsl1": "Afficher WSL 1 ({{count}})",
+    "hideWsl1": "Masquer WSL 1 ({{count}})",
+    "showWsl2": "Afficher WSL 2 ({{count}})",
+    "hideWsl2": "Masquer WSL 2 ({{count}})",
+    "v1": "v1",
+    "v2": "v2"
+  },
+  "emptyFilter": {
+    "noDistros": "Aucune distribution trouv\u00e9e",
+    "noMatch": "Aucune distribution ne correspond aux filtres actuels",
+    "clearFilters": "Effacer les filtres"
+  },
+  "card": {
+    "suspend": "Suspendre",
+    "launch": "Lancer",
+    "openTerminal": "Ouvrir le terminal",
+    "openRdp": "Ouvrir le Bureau \u00e0 distance",
+    "quickActions": "Actions rapides",
+    "deleteDistro": "Supprimer la distribution",
+    "ipTooltip": "Cliquer pour copier l'adresse IP"
+  },
+  "deleteDialog": {
+    "title": "Supprimer la distribution",
+    "message": "\u00cates-vous s\u00fbr de vouloir supprimer \"{{name}}\" ? Cette action est irr\u00e9versible et toutes les donn\u00e9es de cette distribution seront d\u00e9finitivement perdues.",
+    "messageDefault": "\u00cates-vous s\u00fbr de vouloir supprimer \"{{name}}\" ? Cette action est irr\u00e9versible et toutes les donn\u00e9es de cette distribution seront d\u00e9finitivement perdues.\n\nAvertissement : C'est votre distribution par d\u00e9faut. Apr\u00e8s la suppression, les commandes WSL \u00e9choueront \u00e0 moins que vous ne d\u00e9finissiez une autre distribution comme par d\u00e9faut.",
+    "confirm": "Supprimer"
+  }
+}

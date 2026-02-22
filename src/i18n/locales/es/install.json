@@ -1,0 +1,75 @@
+{
+  "title": "Agregar distribuci\u00f3n",
+  "subtitle": "Elija c\u00f3mo desea instalar su distribuci\u00f3n Linux",
+  "mode": {
+    "quickInstall": "Instalaci\u00f3n r\u00e1pida",
+    "quickInstallDesc": "Instalar desde Microsoft Store",
+    "download": "Descargar",
+    "downloadDesc": "Descarga directa con nombre personalizado",
+    "community": "Comunidad",
+    "communityDesc": "Explorar cat\u00e1logo de im\u00e1genes LXC",
+    "container": "Contenedor",
+    "containerDesc": "Crear desde imagen de contenedor"
+  },
+  "info": {
+    "quickInstall": "Distribuciones oficiales de Microsoft Store. Se instalan en la ubicaci\u00f3n predeterminada administrada por Windows.",
+    "download": "Este cat\u00e1logo se puede personalizar en Configuraci\u00f3n > Or\u00edgenes de distribuciones. Las URL personalizadas se guardan para uso futuro.",
+    "community": "Im\u00e1genes de {{url}}. Configurar en Configuraci\u00f3n > Or\u00edgenes de distribuciones.",
+    "container": "Entorno de ejecuci\u00f3n seleccionado configurado en ajustes: {{runtime}}"
+  },
+  "containerRuntime": {
+    "builtin": "OCI integrado (solo registros p\u00fablicos)",
+    "docker": "Docker (admite registros autenticados)",
+    "podman": "Podman (admite registros autenticados)",
+    "custom": "Personalizado: {{path}}"
+  },
+  "filter": {
+    "all": "Todas"
+  },
+  "loading": "Cargando distribuciones disponibles...",
+  "empty": "No hay distribuciones disponibles",
+  "install": "Instalar",
+  "useUrl": "Usar URL",
+  "useImage": "Usar imagen",
+  "placeholder": {
+    "url": "ej., https://example.com/distro-rootfs.tar.gz",
+    "image": "ej., alpine:latest, gitlab/gitlab-runner:latest"
+  },
+  "customUrl": {
+    "label": "URL personalizada",
+    "description": "Ingrese un enlace directo a un archivo rootfs tarball"
+  },
+  "customImage": {
+    "label": "Imagen personalizada",
+    "description": "Ingrese cualquier referencia de imagen OCI"
+  },
+  "alreadyInstalled": "\"{{name}}\" ya est\u00e1 instalado",
+  "progress": {
+    "installingStore": "Instalando desde Microsoft Store...",
+    "success": "\u00a1Instalado correctamente!",
+    "downloading": "Descargando: {{percent}}% ({{downloaded}} / {{total}})",
+    "importing": "Importando a WSL...",
+    "pullingImage": "Descargando imagen de contenedor...",
+    "downloadFailed": "La descarga fall\u00f3"
+  },
+  "trademarkDisclaimer": "Los logotipos de las distribuciones Linux son marcas registradas de sus respectivos propietarios y se utilizan aqu\u00ed solo con fines de identificaci\u00f3n.\nEsta aplicaci\u00f3n no est\u00e1 afiliada ni respaldada por ning\u00fan proyecto de distribuci\u00f3n.",
+  "installingAs": "Instalando como \"{{name}}\"",
+  "noDownloadable": "No hay distribuciones descargables configuradas",
+  "noContainerImages": "No hay im\u00e1genes de contenedores configuradas",
+  "communityDisabled": "El cat\u00e1logo de la comunidad est\u00e1 deshabilitado",
+  "communityDisabledHint": "Hab\u00edlitelo en Configuraci\u00f3n > Or\u00edgenes de distribuciones",
+  "useCustomUrl": "Usar una URL personalizada en su lugar",
+  "useCustomImage": "Usar una imagen personalizada en su lugar",
+  "distroSources": {
+    "title": "Or\u00edgenes de distribuciones",
+    "description": "Configure desde d\u00f3nde descargar distribuciones",
+    "addUrl": "Agregar URL",
+    "removeUrl": "Eliminar",
+    "urlPlaceholder": "https://example.com/distro-rootfs.tar.gz",
+    "name": "Nombre",
+    "namePlaceholder": "ej., Alpine Linux",
+    "url": "URL",
+    "noSources": "No hay or\u00edgenes personalizados configurados",
+    "builtInSources": "Los or\u00edgenes integrados siempre est\u00e1n disponibles"
+  }
+}

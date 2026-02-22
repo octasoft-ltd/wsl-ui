@@ -1,0 +1,68 @@
+{
+  "quickActions": {
+    "title": "快捷操作",
+    "info": "發行版資訊",
+    "explorer": "開啟檔案總管",
+    "ide": "在 IDE 中開啟",
+    "restart": "重新啟動",
+    "export": "匯出到檔案...",
+    "clone": "複製...",
+    "setDefault": "設為預設",
+    "alreadyDefault": "預設發行版"
+  },
+  "manage": {
+    "title": "管理",
+    "move": "移動發行版...",
+    "resize": "調整磁碟大小...",
+    "compact": "壓縮磁碟...",
+    "user": "設定預設使用者...",
+    "rename": "重新命名...",
+    "sparse": "稀疏模式",
+    "version": "設定 WSL 版本"
+  },
+  "customActions": {
+    "title": "自訂操作",
+    "requiresStop": "需要停止發行版",
+    "requiresShutdown": "需要關閉 WSL"
+  },
+  "sparseConfirm": {
+    "title": "啟用稀疏模式？",
+    "message": "警告：Microsoft 已標記稀疏 VHD 支援可能導致資料損毀。雖然它可以協助自動回收磁碟空間，但存在資料遺失的風險。啟用此功能前請確保已備份資料。",
+    "confirm": "仍然啟用"
+  },
+  "outputDialog": {
+    "titleSuffix": "- 輸出",
+    "noOutput": "無輸出。"
+  },
+  "customActionsSettings": {
+    "title": "自訂操作",
+    "description": "定義顯示在發行版快捷操作選單中的 Shell 命令",
+    "addAction": "新增操作",
+    "editAction": "編輯操作",
+    "noActions": "未設定自訂操作",
+    "noActionsHint": "新增您的第一個自訂操作以開始",
+    "name": "名稱",
+    "namePlaceholder": "例如 更新系統",
+    "command": "命令",
+    "commandPlaceholder": "例如 sudo apt update && sudo apt upgrade -y",
+    "sudo": "以 sudo 執行",
+    "sudoDesc": "使用提升的權限執行命令",
+    "runOnStartup": "啟動時執行",
+    "runOnStartupDesc": "在相符的發行版啟動時執行",
+    "showOutput": "顯示輸出",
+    "showOutputDesc": "在對話方塊中顯示命令輸出",
+    "target": "目標發行版",
+    "targetAll": "所有發行版",
+    "targetSpecific": "特定發行版",
+    "targetRegex": "正規表示式模式",
+    "targetPlaceholder": "例如 Ubuntu.*",
+    "save": "儲存",
+    "delete": "刪除",
+    "deleteConfirm": "確定要刪除此操作嗎？",
+    "importExport": "匯入/匯出",
+    "importActions": "匯入",
+    "exportActions": "匯出",
+    "importSuccess": "操作已成功匯入",
+    "exportSuccess": "操作已成功匯出"
+  }
+}

@@ -110,12 +110,19 @@ pub enum ReviewPromptState {
     Declined,
 }
 
+fn default_locale() -> String {
+    "auto".to_string()
+}
+
 /// Application settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct AppSettings {
     pub ide_command: String,
     pub terminal_command: String,
+    /// Display language: "auto" for system detection, or a language code like "en", "zh-CN", etc.
+    #[serde(default = "default_locale")]
+    pub locale: String,
     /// What to do when the user clicks the window close button
     #[serde(default)]
     pub close_action: CloseAction,

@@ -1,0 +1,22 @@
+{
+  "wsl": "WSL",
+  "instances": "인스턴스",
+  "active": "활성",
+  "mem": "메모리",
+  "primary": "기본",
+  "dev": "개발",
+  "disk": "디스크",
+  "updateWsl": {
+    "updating": "관리자 승인 대기 중... UAC 대화 상자를 확인하세요",
+    "preRelease": "WSL 업데이트(시험판) - 관리자 권한 필요",
+    "default": "WSL 업데이트 - 관리자 권한 필요",
+    "uac": "UAC"
+  },
+  "diskMounts": {
+    "empty": "디스크 마운트",
+    "count": "디스크 마운트({{count}}개 마운트됨)"
+  },
+  "preflight": {
+    "retry": "다시 확인"
+  }
+}

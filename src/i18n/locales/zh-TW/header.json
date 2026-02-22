@@ -1,0 +1,17 @@
+{
+  "subtitle": "控制中心",
+  "button": {
+    "new": "新增",
+    "import": "匯入",
+    "sync": "同步",
+    "shutdown": "關閉",
+    "systemTerminal": "開啟 WSL 系統終端",
+    "help": "說明",
+    "settings": "設定"
+  },
+  "shutdownAll": {
+    "title": "關閉所有發行版",
+    "message": "這將關閉所有正在執行的 WSL 發行版。所有未儲存的工作將會遺失。",
+    "confirm": "全部關閉"
+  }
+}

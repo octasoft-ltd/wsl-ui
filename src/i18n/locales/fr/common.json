@@ -1,0 +1,60 @@
+{
+  "button": {
+    "cancel": "Annuler",
+    "close": "Fermer",
+    "save": "Enregistrer",
+    "delete": "Supprimer",
+    "confirm": "Confirmer",
+    "retry": "R\u00e9essayer",
+    "browse": "Parcourir",
+    "back": "Retour",
+    "dismiss": "Ignorer",
+    "learnMore": "En savoir plus",
+    "resetToDefault": "R\u00e9initialiser par d\u00e9faut"
+  },
+  "label": {
+    "name": "Nom",
+    "status": "\u00c9tat",
+    "version": "Version",
+    "size": "Taille",
+    "location": "Emplacement",
+    "default": "Par d\u00e9faut",
+    "yes": "Oui",
+    "no": "Non",
+    "on": "Activ\u00e9",
+    "off": "D\u00e9sactiv\u00e9",
+    "loading": "Chargement...",
+    "none": "Aucun",
+    "ip": "IP",
+    "copied": "Copi\u00e9 !",
+    "disk": "Disque",
+    "memory": "M\u00e9moire",
+    "cpu": "CPU",
+    "installed": "Install\u00e9",
+    "notInstalled": "Non install\u00e9"
+  },
+  "status": {
+    "online": "En ligne",
+    "offline": "Hors ligne",
+    "primary": "Principal",
+    "compacting": "Compactage",
+    "operational": "OP\u00c9RATIONNEL",
+    "standby": "EN VEILLE"
+  },
+  "unit": {
+    "gb": "Go",
+    "tb": "To"
+  },
+  "validation": {
+    "invalidChars": "Le nom ne peut contenir que des lettres, des chiffres, des points, des tirets bas et des tirets",
+    "duplicateName": "Une distribution nomm\u00e9e \"{{name}}\" existe d\u00e9j\u00e0",
+    "required": "Ce champ est obligatoire"
+  },
+  "wslVersion": {
+    "wsl1": "WSL 1",
+    "wsl2": "WSL 2"
+  },
+  "noOutput": "Aucune sortie",
+  "output": "Sortie",
+  "ranOn": "Ex\u00e9cut\u00e9 sur : {{distro}}"
+}

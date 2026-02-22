@@ -1,0 +1,60 @@
+{
+  "button": {
+    "cancel": "取消",
+    "close": "關閉",
+    "save": "儲存",
+    "delete": "刪除",
+    "confirm": "確認",
+    "retry": "重試",
+    "browse": "瀏覽",
+    "back": "返回",
+    "dismiss": "忽略",
+    "learnMore": "了解更多",
+    "resetToDefault": "恢復預設"
+  },
+  "label": {
+    "name": "名稱",
+    "status": "狀態",
+    "version": "版本",
+    "size": "大小",
+    "location": "位置",
+    "default": "預設",
+    "yes": "是",
+    "no": "否",
+    "on": "開啟",
+    "off": "關閉",
+    "loading": "載入中...",
+    "none": "無",
+    "ip": "IP",
+    "copied": "已複製！",
+    "disk": "磁碟",
+    "memory": "記憶體",
+    "cpu": "CPU",
+    "installed": "已安裝",
+    "notInstalled": "未安裝"
+  },
+  "status": {
+    "online": "線上",
+    "offline": "離線",
+    "primary": "主要",
+    "compacting": "壓縮中",
+    "operational": "運作中",
+    "standby": "待機"
+  },
+  "unit": {
+    "gb": "GB",
+    "tb": "TB"
+  },
+  "validation": {
+    "invalidChars": "名稱只能包含字母、數字、點、底線和連字號",
+    "duplicateName": "名為 \"{{name}}\" 的發行版已存在",
+    "required": "此欄位為必填"
+  },
+  "wslVersion": {
+    "wsl1": "WSL 1",
+    "wsl2": "WSL 2"
+  },
+  "noOutput": "無輸出",
+  "output": "輸出",
+  "ranOn": "執行於：{{distro}}"
+}

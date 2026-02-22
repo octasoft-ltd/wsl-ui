@@ -1,0 +1,75 @@
+{
+  "title": "ディストリビューションの追加",
+  "subtitle": "Linux ディストリビューションのインストール方法を選択",
+  "mode": {
+    "quickInstall": "クイックインストール",
+    "quickInstallDesc": "Microsoft Store からインストール",
+    "download": "ダウンロード",
+    "downloadDesc": "カスタム名で直接ダウンロード",
+    "community": "コミュニティ",
+    "communityDesc": "LXC イメージカタログを参照",
+    "container": "コンテナ",
+    "containerDesc": "コンテナイメージから作成"
+  },
+  "info": {
+    "quickInstall": "Microsoft Store の公式ディストリビューション。デフォルトの Windows 管理場所にインストールされます。",
+    "download": "このカタログは 設定 > ディストリビューションソース でカスタマイズできます。カスタム URL は今後の使用のために保存されます。",
+    "community": "{{url}} からのイメージ。設定 > ディストリビューションソース で設定してください。",
+    "container": "設定で構成されたランタイム：{{runtime}}"
+  },
+  "containerRuntime": {
+    "builtin": "内蔵 OCI（パブリックレジストリのみ）",
+    "docker": "Docker（認証付きレジストリをサポート）",
+    "podman": "Podman（認証付きレジストリをサポート）",
+    "custom": "カスタム：{{path}}"
+  },
+  "filter": {
+    "all": "すべて"
+  },
+  "loading": "利用可能なディストリビューションを読み込み中...",
+  "empty": "利用可能なディストリビューションがありません",
+  "install": "インストール",
+  "useUrl": "URL を使用",
+  "useImage": "イメージを使用",
+  "placeholder": {
+    "url": "例：https://example.com/distro-rootfs.tar.gz",
+    "image": "例：alpine:latest、gitlab/gitlab-runner:latest"
+  },
+  "customUrl": {
+    "label": "カスタム URL",
+    "description": "rootfs tarball への直接リンクを入力"
+  },
+  "customImage": {
+    "label": "カスタムイメージ",
+    "description": "任意の OCI イメージ参照を入力"
+  },
+  "alreadyInstalled": "\"{{name}}\" は既にインストールされています",
+  "progress": {
+    "installingStore": "Microsoft Store からインストール中...",
+    "success": "インストールが完了しました！",
+    "downloading": "ダウンロード中：{{percent}}%（{{downloaded}} / {{total}}）",
+    "importing": "WSL にインポート中...",
+    "pullingImage": "コンテナイメージを取得中...",
+    "downloadFailed": "ダウンロードに失敗しました"
+  },
+  "trademarkDisclaimer": "Linux ディストリビューションのロゴは各所有者の商標であり、識別目的でのみ使用しています。\nこのアプリケーションはいかなるディストリビューションプロジェクトとも提携しておらず、推薦を受けていません。",
+  "installingAs": "\"{{name}}\" としてインストール中",
+  "noDownloadable": "ダウンロード可能なディストリビューションが設定されていません",
+  "noContainerImages": "コンテナイメージが設定されていません",
+  "communityDisabled": "コミュニティカタログは無効です",
+  "communityDisabledHint": "設定 > ディストリビューションソース で有効にしてください",
+  "useCustomUrl": "代わりにカスタム URL を使用",
+  "useCustomImage": "代わりにカスタムイメージを使用",
+  "distroSources": {
+    "title": "ディストリビューションソース",
+    "description": "ディストリビューションのダウンロード元を設定",
+    "addUrl": "URL を追加",
+    "removeUrl": "削除",
+    "urlPlaceholder": "https://example.com/distro-rootfs.tar.gz",
+    "name": "名前",
+    "namePlaceholder": "例：Alpine Linux",
+    "url": "URL",
+    "noSources": "カスタムソースが設定されていません",
+    "builtInSources": "内蔵ソースは常に利用可能です"
+  }
+}

@@ -1,0 +1,68 @@
+{
+  "quickActions": {
+    "title": "A\u00e7\u00f5es r\u00e1pidas",
+    "info": "Informa\u00e7\u00f5es da distribui\u00e7\u00e3o",
+    "explorer": "Abrir Explorador de Arquivos",
+    "ide": "Abrir no IDE",
+    "restart": "Reiniciar",
+    "export": "Exportar para arquivo...",
+    "clone": "Clonar...",
+    "setDefault": "Definir como padr\u00e3o",
+    "alreadyDefault": "Distribui\u00e7\u00e3o padr\u00e3o"
+  },
+  "manage": {
+    "title": "Gerenciar",
+    "move": "Mover distribui\u00e7\u00e3o...",
+    "resize": "Redimensionar disco...",
+    "compact": "Compactar disco...",
+    "user": "Definir usu\u00e1rio padr\u00e3o...",
+    "rename": "Renomear...",
+    "sparse": "Modo esparso",
+    "version": "Definir vers\u00e3o do WSL"
+  },
+  "customActions": {
+    "title": "A\u00e7\u00f5es personalizadas",
+    "requiresStop": "Requer a parada da distribui\u00e7\u00e3o",
+    "requiresShutdown": "Requer desligamento do WSL"
+  },
+  "sparseConfirm": {
+    "title": "Ativar modo esparso?",
+    "message": "Aviso: A Microsoft sinalizou que o suporte a VHD esparso pode causar corrup\u00e7\u00e3o de dados. Embora possa ajudar a recuperar espa\u00e7o em disco automaticamente, h\u00e1 risco de perda de dados. Certifique-se de ter backups antes de ativar este recurso.",
+    "confirm": "Ativar mesmo assim"
+  },
+  "outputDialog": {
+    "titleSuffix": "- Sa\u00edda",
+    "noOutput": "Sem sa\u00edda."
+  },
+  "customActionsSettings": {
+    "title": "A\u00e7\u00f5es personalizadas",
+    "description": "Defina comandos de shell que aparecem no menu de a\u00e7\u00f5es r\u00e1pidas da distribui\u00e7\u00e3o",
+    "addAction": "Adicionar a\u00e7\u00e3o",
+    "editAction": "Editar a\u00e7\u00e3o",
+    "noActions": "Nenhuma a\u00e7\u00e3o personalizada configurada",
+    "noActionsHint": "Adicione sua primeira a\u00e7\u00e3o personalizada para come\u00e7ar",
+    "name": "Nome",
+    "namePlaceholder": "ex., Atualizar sistema",
+    "command": "Comando",
+    "commandPlaceholder": "ex., sudo apt update && sudo apt upgrade -y",
+    "sudo": "Executar com sudo",
+    "sudoDesc": "Executar o comando com privil\u00e9gios elevados",
+    "runOnStartup": "Executar na inicializa\u00e7\u00e3o",
+    "runOnStartupDesc": "Executar quando uma distribui\u00e7\u00e3o correspondente iniciar",
+    "showOutput": "Mostrar sa\u00edda",
+    "showOutputDesc": "Exibir a sa\u00edda do comando em um di\u00e1logo",
+    "target": "Distribui\u00e7\u00f5es alvo",
+    "targetAll": "Todas as distribui\u00e7\u00f5es",
+    "targetSpecific": "Distribui\u00e7\u00f5es espec\u00edficas",
+    "targetRegex": "Padr\u00e3o regex",
+    "targetPlaceholder": "ex., Ubuntu.*",
+    "save": "Salvar",
+    "delete": "Excluir",
+    "deleteConfirm": "Tem certeza de que deseja excluir esta a\u00e7\u00e3o?",
+    "importExport": "Importar/Exportar",
+    "importActions": "Importar",
+    "exportActions": "Exportar",
+    "importSuccess": "A\u00e7\u00f5es importadas com sucesso",
+    "exportSuccess": "A\u00e7\u00f5es exportadas com sucesso"
+  }
+}

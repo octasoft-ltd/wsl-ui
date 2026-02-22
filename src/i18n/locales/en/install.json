@@ -1,0 +1,75 @@
+{
+  "title": "Add Distribution",
+  "subtitle": "Choose how you want to install your Linux distribution",
+  "mode": {
+    "quickInstall": "Quick Install",
+    "quickInstallDesc": "Install from Microsoft Store",
+    "download": "Download",
+    "downloadDesc": "Direct download with custom name",
+    "community": "Community",
+    "communityDesc": "Browse LXC image catalog",
+    "container": "Container",
+    "containerDesc": "Create from container image"
+  },
+  "info": {
+    "quickInstall": "Official distributions from the Microsoft Store. Installs to the default Windows-managed location.",
+    "download": "This catalog can be customized in Settings > Distribution Sources. Custom URLs are saved for future use.",
+    "community": "Images from {{url}}. Configure in Settings > Distribution Sources.",
+    "container": "Selected Runtime configured in settings: {{runtime}}"
+  },
+  "containerRuntime": {
+    "builtin": "Built-in OCI (public registries only)",
+    "docker": "Docker (supports authenticated registries)",
+    "podman": "Podman (supports authenticated registries)",
+    "custom": "Custom: {{path}}"
+  },
+  "filter": {
+    "all": "All"
+  },
+  "loading": "Loading available distributions...",
+  "empty": "No distributions available",
+  "install": "Install",
+  "useUrl": "Use URL",
+  "useImage": "Use Image",
+  "placeholder": {
+    "url": "e.g., https://example.com/distro-rootfs.tar.gz",
+    "image": "e.g., alpine:latest, gitlab/gitlab-runner:latest"
+  },
+  "customUrl": {
+    "label": "Custom URL",
+    "description": "Enter a direct link to a rootfs tarball"
+  },
+  "customImage": {
+    "label": "Custom Image",
+    "description": "Enter any OCI image reference"
+  },
+  "alreadyInstalled": "\"{{name}}\" is already installed",
+  "progress": {
+    "installingStore": "Installing from Microsoft Store...",
+    "success": "Installed successfully!",
+    "downloading": "Downloading: {{percent}}% ({{downloaded}} / {{total}})",
+    "importing": "Importing into WSL...",
+    "pullingImage": "Pulling container image...",
+    "downloadFailed": "Download failed"
+  },
+  "trademarkDisclaimer": "Linux distribution logos are trademarks of their respective owners and are used here for identification purposes only.\nThis application is not affiliated with or endorsed by any distribution project.",
+  "installingAs": "Installing as \"{{name}}\"",
+  "noDownloadable": "No downloadable distributions configured",
+  "noContainerImages": "No container images configured",
+  "communityDisabled": "Community catalog is disabled",
+  "communityDisabledHint": "Enable it in Settings > Distribution Sources",
+  "useCustomUrl": "Use a custom URL instead",
+  "useCustomImage": "Use a custom image instead",
+  "distroSources": {
+    "title": "Distribution Sources",
+    "description": "Configure where to download distributions from",
+    "addUrl": "Add URL",
+    "removeUrl": "Remove",
+    "urlPlaceholder": "https://example.com/distro-rootfs.tar.gz",
+    "name": "Name",
+    "namePlaceholder": "e.g., Alpine Linux",
+    "url": "URL",
+    "noSources": "No custom sources configured",
+    "builtInSources": "Built-in sources are always available"
+  }
+}

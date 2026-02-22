@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { save, open } from "@tauri-apps/plugin-dialog";
 import { useActionsStore } from "../store/actionsStore";
 import { useDistroStore } from "../store/distroStore";
@@ -17,6 +18,7 @@ interface ActionEditorProps {
 }
 
 function ActionEditor({ action, onSave, onCancel, distros }: ActionEditorProps) {
+  const { t } = useTranslation("actions");
   const [formData, setFormData] = useState<CustomAction>(
     action || { ...DEFAULT_CUSTOM_ACTION, id: generateId(), order: 999 }
   );
@@ -48,7 +50,7 @@ function ActionEditor({ action, onSave, onCancel, distros }: ActionEditorProps) 
     <form onSubmit={handleSubmit} className="space-y-4">
       {/* Name */}
       <div>
-        <label className="block text-sm font-medium text-stone-200 mb-1">Action Name</label>
+        <label className="block text-sm font-medium text-stone-200 mb-1">{t('customActionsSettings.name')}</label>
         <input
           type="text"
           value={formData.name}
@@ -83,13 +85,13 @@ function ActionEditor({ action, onSave, onCancel, distros }: ActionEditorProps) 
 
       {/* Command */}
       <div>
-        <label className="block text-sm font-medium text-stone-200 mb-1">Command</label>
+        <label className="block text-sm font-medium text-stone-200 mb-1">{t('customActionsSettings.command')}</label>
         <textarea
           value={formData.command}
           onChange={(e) => updateField("command", e.target.value)}
           required
           rows={3}
-          placeholder="e.g., sudo apt update && sudo apt upgrade -y"
+          placeholder={t('customActionsSettings.commandPlaceholder')}
           data-testid="action-command-input"
           className="w-full px-3 py-2 bg-stone-900 border border-stone-700 rounded-lg text-stone-100 placeholder-stone-600 focus:outline-hidden focus:border-orange-500 font-mono text-sm"
         />
@@ -113,7 +115,7 @@ function ActionEditor({ action, onSave, onCancel, distros }: ActionEditorProps) 
 
       {/* Target Distributions */}
       <div>
-        <label className="block text-sm font-medium text-stone-200 mb-2">Target Distributions</label>
+        <label className="block text-sm font-medium text-stone-200 mb-2">{t('customActionsSettings.target')}</label>
         <div className="space-y-2">
           <label className="flex items-center gap-2">
             <input
@@ -123,7 +125,7 @@ function ActionEditor({ action, onSave, onCancel, distros }: ActionEditorProps) 
               onChange={() => updateScope({ type: "all" })}
               className="text-orange-500"
             />
-            <span className="text-sm text-stone-300">All distributions</span>
+            <span className="text-sm text-stone-300">{t('customActionsSettings.targetAll')}</span>
           </label>
           <label className="flex items-center gap-2">
             <input
@@ -133,14 +135,14 @@ function ActionEditor({ action, onSave, onCancel, distros }: ActionEditorProps) 
               onChange={() => updateScope({ type: "pattern", pattern: getScopePattern() })}
               className="text-orange-500"
             />
-            <span className="text-sm text-stone-300">Match pattern (regex)</span>
+            <span className="text-sm text-stone-300">{t('customActionsSettings.targetRegex')}</span>
           </label>
           {formData.scope.type === "pattern" && (
             <input
               type="text"
               value={formData.scope.pattern}
               onChange={(e) => updateScope({ type: "pattern", pattern: e.target.value })}
-              placeholder="e.g., Ubuntu|Debian"
+              placeholder={t('customActionsSettings.targetPlaceholder')}
               className="w-full px-3 py-2 bg-stone-900 border border-stone-700 rounded-lg text-stone-100 placeholder-stone-600 focus:outline-hidden focus:border-orange-500 text-sm ml-6"
             />
           )}
@@ -152,7 +154,7 @@ function ActionEditor({ action, onSave, onCancel, distros }: ActionEditorProps) 
               onChange={() => updateScope({ type: "specific", distros: getScopeDistros() })}
               className="text-orange-500"
             />
-            <span className="text-sm text-stone-300">Specific distributions</span>
+            <span className="text-sm text-stone-300">{t('customActionsSettings.targetSpecific')}</span>
           </label>
           {formData.scope.type === "specific" && (
             <div className="flex flex-wrap gap-2 ml-6">
@@ -189,7 +191,7 @@ function ActionEditor({ action, onSave, onCancel, distros }: ActionEditorProps) 
             data-testid="action-confirm-checkbox"
             className="text-orange-500"
           />
-          <span className="text-sm text-stone-300">Confirm before running</span>
+          <span className="text-sm text-stone-300">{t('customActionsSettings.showOutput')}</span>
         </label>
         <label className="flex items-center gap-2">
           <input
@@ -199,7 +201,7 @@ function ActionEditor({ action, onSave, onCancel, distros }: ActionEditorProps) 
             data-testid="action-show-output-checkbox"
             className="text-orange-500"
           />
-          <span className="text-sm text-stone-300">Show command output</span>
+          <span className="text-sm text-stone-300">{t('customActionsSettings.showOutputDesc')}</span>
         </label>
         <label className="flex items-center gap-2">
           <input
@@ -209,12 +211,11 @@ function ActionEditor({ action, onSave, onCancel, distros }: ActionEditorProps) 
             data-testid="action-requires-sudo-checkbox"
             className="text-orange-500"
           />
-          <span className="text-sm text-stone-300">Requires sudo password</span>
+          <span className="text-sm text-stone-300">{t('customActionsSettings.sudo')}</span>
         </label>
         {formData.requiresSudo && (
           <p className="text-xs text-stone-500 ml-6">
-            You'll be prompted to enter your password when executing this action.
-            The command will run with sudo privileges.
+            {t('customActionsSettings.sudoDesc')}
           </p>
         )}
         <label className="flex items-center gap-2">
@@ -225,11 +226,11 @@ function ActionEditor({ action, onSave, onCancel, distros }: ActionEditorProps) 
             data-testid="action-requires-stopped-checkbox"
             className="text-orange-500"
           />
-          <span className="text-sm text-stone-300">Requires stopped distribution</span>
+          <span className="text-sm text-stone-300">{t('customActions.requiresStop')}</span>
         </label>
         {formData.requiresStopped && (
           <p className="text-xs text-stone-500 ml-6">
-            You'll be prompted to stop the distribution before this action runs.
+            {t('customActions.requiresStop')}
           </p>
         )}
         <label className="flex items-center gap-2">
@@ -240,12 +241,11 @@ function ActionEditor({ action, onSave, onCancel, distros }: ActionEditorProps) 
             data-testid="action-run-in-terminal-checkbox"
             className="text-orange-500"
           />
-          <span className="text-sm text-stone-300">Run in terminal</span>
+          <span className="text-sm text-stone-300">{t('customActionsSettings.showOutput')}</span>
         </label>
         {formData.runInTerminal && (
           <p className="text-xs text-stone-500 ml-6">
-            Opens your terminal to run the command with real-time output.
-            You'll type your password in the terminal if sudo is required.
+            {t('customActionsSettings.showOutputDesc')}
           </p>
         )}
         <label className="flex items-center gap-2">
@@ -256,11 +256,11 @@ function ActionEditor({ action, onSave, onCancel, distros }: ActionEditorProps) 
             data-testid="action-run-on-startup-checkbox"
             className="text-orange-500"
           />
-          <span className="text-sm text-stone-300">Run on startup</span>
+          <span className="text-sm text-stone-300">{t('customActionsSettings.runOnStartup')}</span>
         </label>
         {formData.runOnStartup && (
           <p className="text-xs text-stone-500 ml-6">
-            Automatically runs this action when a matching distribution starts.
+            {t('customActionsSettings.runOnStartupDesc')}
           </p>
         )}
       </div>
@@ -272,14 +272,14 @@ function ActionEditor({ action, onSave, onCancel, distros }: ActionEditorProps) 
           onClick={onCancel}
           className="px-4 py-2 text-sm text-stone-400 hover:text-stone-200 transition-colors"
         >
-          Cancel
+          {t('common:button.cancel')}
         </button>
         <button
           type="submit"
           data-testid="save-action-button"
           className="px-4 py-2 text-sm font-medium bg-orange-600 hover:bg-orange-500 text-white rounded-lg transition-colors"
         >
-          {action ? "Update Action" : "Create Action"}
+          {action ? t('customActionsSettings.editAction') : t('customActionsSettings.addAction')}
         </button>
       </div>
     </form>
@@ -287,6 +287,7 @@ function ActionEditor({ action, onSave, onCancel, distros }: ActionEditorProps) 
 }
 
 export function CustomActionsSettings() {
+  const { t } = useTranslation("actions");
   const { actions, isLoading, fetchActions, addAction, updateAction, deleteAction, exportActionsToFile, importActionsFromFile } =
     useActionsStore();
   const { distributions } = useDistroStore();
@@ -357,7 +358,7 @@ export function CustomActionsSettings() {
     return (
       <div className="bg-stone-900/50 border border-stone-800 rounded-xl p-6">
         <h3 className="text-lg font-medium text-stone-100 mb-4">
-          {editingAction ? "Edit Action" : "Create Action"}
+          {editingAction ? t('customActionsSettings.editAction') : t('customActionsSettings.addAction')}
         </h3>
         <ActionEditor
           action={editingAction}
@@ -377,7 +378,7 @@ export function CustomActionsSettings() {
       {/* Header with buttons */}
       <div className="flex items-center justify-between">
         <p className="text-sm text-stone-500">
-          Create custom actions to automate tasks in your WSL distributions.
+          {t('customActionsSettings.description')}
         </p>
         <div className="flex gap-2">
           <button
@@ -385,21 +386,21 @@ export function CustomActionsSettings() {
             data-testid="import-actions-button"
             className="px-3 py-1.5 text-xs text-stone-400 hover:text-stone-200 hover:bg-stone-800 rounded-lg transition-colors"
           >
-            Import
+            {t('customActionsSettings.importActions')}
           </button>
           <button
             onClick={handleExport}
             data-testid="export-actions-button"
             className="px-3 py-1.5 text-xs text-stone-400 hover:text-stone-200 hover:bg-stone-800 rounded-lg transition-colors"
           >
-            Export
+            {t('customActionsSettings.exportActions')}
           </button>
           <button
             onClick={() => setIsCreating(true)}
             data-testid="new-action-button"
             className="px-3 py-1.5 text-xs font-medium bg-orange-600 hover:bg-orange-500 text-white rounded-lg transition-colors"
           >
-            + New Action
+            + {t('customActionsSettings.addAction')}
           </button>
         </div>
       </div>
@@ -407,12 +408,12 @@ export function CustomActionsSettings() {
       {/* Actions list */}
       {actions.length === 0 ? (
         <div className="text-center py-12 bg-stone-900/50 border border-stone-800 rounded-xl">
-          <p className="text-stone-500">No custom actions yet.</p>
+          <p className="text-stone-500">{t('customActionsSettings.noActions')}</p>
           <button
             onClick={() => setIsCreating(true)}
             className="mt-2 text-sm text-orange-400 hover:text-orange-300"
           >
-            Create your first action
+            {t('customActionsSettings.noActionsHint')}
           </button>
         </div>
       ) : (

@@ -4,6 +4,7 @@
  * Allows users to configure automatic refresh intervals and enable/disable polling.
  */
 
+import { useTranslation } from "react-i18next";
 import { useSettingsStore } from "../../store/settingsStore";
 import { usePollingStore } from "../../store/pollingStore";
 import { RefreshIcon, WarningIcon } from "../icons";
@@ -22,6 +23,7 @@ const INTERVAL_OPTIONS = [
 
 
 export function PollingSettings() {
+  const { t } = useTranslation("settings");
   const { settings, updateSetting } = useSettingsStore();
   const { polls, hasBackoff, resetAllBackoff } = usePollingStore();
 
@@ -53,8 +55,8 @@ export function PollingSettings() {
               <RefreshIcon size="md" className="text-white" />
             </div>
             <div>
-              <h2 className="text-lg font-medium text-theme-text-primary">Auto-Refresh</h2>
-              <p className="text-sm text-theme-text-muted">Configure automatic status updates</p>
+              <h2 className="text-lg font-medium text-theme-text-primary">{t('polling.title')}</h2>
+              <p className="text-sm text-theme-text-muted">{t('polling.description')}</p>
             </div>
           </div>
 
@@ -64,15 +66,15 @@ export function PollingSettings() {
               <div className="flex items-start gap-3">
                 <WarningIcon size="md" className="text-theme-status-warning mt-0.5 flex-shrink-0" />
                 <div className="flex-1">
-                  <p className="text-sm font-medium text-theme-status-warning">Auto-refresh slowed down</p>
+                  <p className="text-sm font-medium text-theme-status-warning">{t('polling.backoffWarning')}</p>
                   <p className="text-xs text-theme-status-warning/80 mt-1">
-                    Some polls have timed out. Refresh intervals have been automatically increased to reduce load.
+                    {t('polling.backoffDesc')}
                   </p>
                   <button
                     onClick={resetAllBackoff}
                     className="mt-2 text-xs text-theme-status-warning hover:text-theme-status-warning/90 underline"
                   >
-                    Reset to normal intervals
+                    {t('polling.resetBackoff')}
                   </button>
                 </div>
               </div>
@@ -82,8 +84,8 @@ export function PollingSettings() {
           {/* Enable/Disable Toggle */}
           <div className="mb-6 pb-6 border-b border-theme-border-secondary/50">
             <Toggle
-              label="Enable Auto-Refresh"
-              description="Automatically update distribution status and resource usage"
+              label={t('polling.enabled')}
+              description={t('polling.enabledDesc')}
               checked={settings.pollingEnabled}
               onChange={handlePollingEnabledChange}
             />
@@ -92,8 +94,8 @@ export function PollingSettings() {
           {/* Interval Settings */}
           <div className="space-y-1">
             <SettingSelect
-              label="Distribution Status"
-              description="How often to check if distributions are running or stopped"
+              label={t('polling.distros')}
+              description={t('polling.distrosDesc')}
               value={settings.pollingIntervals.distros}
               options={INTERVAL_OPTIONS}
               onChange={(v) => handleIntervalChange("distros", v as number)}
@@ -102,8 +104,8 @@ export function PollingSettings() {
             />
 
             <SettingSelect
-              label="Resource Stats"
-              description="How often to update CPU and memory usage (only when distributions are running)"
+              label={t('polling.resources')}
+              description={t('polling.resourcesDesc')}
               value={settings.pollingIntervals.resources}
               options={INTERVAL_OPTIONS}
               onChange={(v) => handleIntervalChange("resources", v as number)}
@@ -112,8 +114,8 @@ export function PollingSettings() {
             />
 
             <SettingSelect
-              label="WSL Health"
-              description="How often to check WSL service health status"
+              label={t('polling.health')}
+              description={t('polling.healthDesc')}
               value={settings.pollingIntervals.health}
               options={INTERVAL_OPTIONS}
               onChange={(v) => handleIntervalChange("health", v as number)}
@@ -124,14 +126,14 @@ export function PollingSettings() {
 
           {/* Current Status */}
           <div className="mt-6 pt-6 border-t border-theme-border-secondary/50">
-            <p className="text-xs text-theme-text-muted mb-3">Current polling status:</p>
+            <p className="text-xs text-theme-text-muted mb-3">{t('polling.currentStatus')}</p>
             <div className="grid grid-cols-3 gap-3 text-xs">
               <div className="p-2 bg-theme-bg-tertiary/50 rounded-md">
-                <div className="text-theme-text-secondary">Distros</div>
+                <div className="text-theme-text-secondary">{t('polling.distros')}</div>
                 <div className="text-theme-text-primary font-mono">
                   {polls.distros.consecutiveTimeouts > 0 ? (
                     <span className="text-theme-status-warning">
-                      {Math.round(polls.distros.currentInterval / 1000)}s (backed off)
+                      {t('polling.backedOff', { interval: Math.round(polls.distros.currentInterval / 1000) })}
                     </span>
                   ) : (
                     `${Math.round(polls.distros.currentInterval / 1000)}s`
@@ -139,11 +141,11 @@ export function PollingSettings() {
                 </div>
               </div>
               <div className="p-2 bg-theme-bg-tertiary/50 rounded-md">
-                <div className="text-theme-text-secondary">Resources</div>
+                <div className="text-theme-text-secondary">{t('polling.resources')}</div>
                 <div className="text-theme-text-primary font-mono">
                   {polls.resources.consecutiveTimeouts > 0 ? (
                     <span className="text-theme-status-warning">
-                      {Math.round(polls.resources.currentInterval / 1000)}s (backed off)
+                      {t('polling.backedOff', { interval: Math.round(polls.resources.currentInterval / 1000) })}
                     </span>
                   ) : (
                     `${Math.round(polls.resources.currentInterval / 1000)}s`
@@ -151,11 +153,11 @@ export function PollingSettings() {
                 </div>
               </div>
               <div className="p-2 bg-theme-bg-tertiary/50 rounded-md">
-                <div className="text-theme-text-secondary">Health</div>
+                <div className="text-theme-text-secondary">{t('polling.health')}</div>
                 <div className="text-theme-text-primary font-mono">
                   {polls.health.consecutiveTimeouts > 0 ? (
                     <span className="text-theme-status-warning">
-                      {Math.round(polls.health.currentInterval / 1000)}s (backed off)
+                      {t('polling.backedOff', { interval: Math.round(polls.health.currentInterval / 1000) })}
                     </span>
                   ) : (
                     `${Math.round(polls.health.currentInterval / 1000)}s`
@@ -171,12 +173,12 @@ export function PollingSettings() {
               onClick={handleResetDefaults}
               className="text-xs text-theme-text-muted hover:text-theme-text-secondary transition-colors"
             >
-              Reset intervals to defaults
+              {t('polling.resetDefaults')}
             </button>
           </div>
 
           <p className="mt-4 text-xs text-theme-text-muted">
-            Tip: Polling automatically pauses when the app is minimized to save resources.
+            {t('polling.tip')}
           </p>
         </div>
       </section>

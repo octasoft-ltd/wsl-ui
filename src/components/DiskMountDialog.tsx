@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { open } from "@tauri-apps/plugin-dialog";
 import { useMountStore } from "../store/mountStore";
 import type { MountDiskOptions, PhysicalDisk } from "../services/wslService";
@@ -31,6 +32,7 @@ function formatBytes(bytes: number): string {
 }
 
 export function DiskMountDialog({ isOpen, onClose }: DiskMountDialogProps) {
+  const { t } = useTranslation("dialogs");
   const [activeTab, setActiveTab] = useState<MountTab>("vhd");
   const [vhdPath, setVhdPath] = useState("");
   const [selectedDisk, setSelectedDisk] = useState<PhysicalDisk | null>(null);
@@ -80,8 +82,8 @@ export function DiskMountDialog({ isOpen, onClose }: DiskMountDialogProps) {
 
   const handleBrowseVhd = async () => {
     const path = await open({
-      filters: [{ name: "Virtual Hard Disk", extensions: ["vhd", "vhdx"] }],
-      title: "Select Virtual Hard Disk",
+      filters: [{ name: t('diskMount.vhdFilterName'), extensions: ["vhd", "vhdx"] }],
+      title: t('diskMount.browseVhdTitle'),
       multiple: false,
     });
 
@@ -103,7 +105,7 @@ export function DiskMountDialog({ isOpen, onClose }: DiskMountDialogProps) {
 
     if (activeTab === "vhd") {
       if (!vhdPath) {
-        setError("Please select a VHD file");
+        setError(t('diskMount.errorNoVhd'));
         return;
       }
       options = {
@@ -117,7 +119,7 @@ export function DiskMountDialog({ isOpen, onClose }: DiskMountDialogProps) {
       };
     } else {
       if (!selectedDisk) {
-        setError("Please select a physical disk");
+        setError(t('diskMount.errorNoDisk'));
         return;
       }
       options = {
@@ -135,7 +137,7 @@ export function DiskMountDialog({ isOpen, onClose }: DiskMountDialogProps) {
       await mountDisk(options);
       handleClose();
     } catch (err) {
-      const errorMsg = typeof err === "string" ? err : (err instanceof Error ? err.message : "Failed to mount disk");
+      const errorMsg = typeof err === "string" ? err : (err instanceof Error ? err.message : t('diskMount.errorFailed'));
       setError(errorMsg);
     }
   };
@@ -148,7 +150,7 @@ export function DiskMountDialog({ isOpen, onClose }: DiskMountDialogProps) {
 
         {/* Dialog */}
         <div role="dialog" aria-modal="true" data-testid="disk-mount-dialog" className="relative bg-theme-bg-secondary border border-theme-border-secondary rounded-xl shadow-2xl shadow-black/50 max-w-lg w-full mx-4 p-6">
-        <h2 className="text-xl font-semibold text-theme-text-primary mb-4" data-testid="disk-mount-title">Mount Disk to WSL</h2>
+        <h2 className="text-xl font-semibold text-theme-text-primary mb-4" data-testid="disk-mount-title">{t('diskMount.title')}</h2>
 
         {/* Tabs */}
         <div className="flex gap-1 mb-4 p-1 bg-theme-bg-tertiary rounded-lg" data-testid="disk-mount-tabs">
@@ -161,7 +163,7 @@ export function DiskMountDialog({ isOpen, onClose }: DiskMountDialogProps) {
                 : "text-theme-text-secondary hover:text-theme-text-primary"
             }`}
           >
-            Mount VHD
+            {t('diskMount.tabVhd')}
           </button>
           <button
             onClick={() => setActiveTab("physical")}
@@ -172,7 +174,7 @@ export function DiskMountDialog({ isOpen, onClose }: DiskMountDialogProps) {
                 : "text-theme-text-secondary hover:text-theme-text-primary"
             }`}
           >
-            Mount Physical Disk
+            {t('diskMount.tabPhysical')}
           </button>
         </div>
 
@@ -190,14 +192,14 @@ export function DiskMountDialog({ isOpen, onClose }: DiskMountDialogProps) {
           {activeTab === "vhd" && (
             <div data-testid="disk-mount-vhd-section">
               <label className="block text-sm font-medium text-theme-text-secondary mb-1">
-                VHD File
+                {t('diskMount.vhdFileLabel')}
               </label>
               <div className="flex gap-2">
                 <input
                   type="text"
                   value={vhdPath}
                   readOnly
-                  placeholder="Select a .vhd or .vhdx file..."
+                  placeholder={t('diskMount.vhdPlaceholder')}
                   data-testid="disk-mount-vhd-path"
                   className="flex-1 px-3 py-2 bg-theme-bg-tertiary border border-theme-border-secondary rounded-lg text-theme-text-primary placeholder-theme-text-muted"
                 />
@@ -206,7 +208,7 @@ export function DiskMountDialog({ isOpen, onClose }: DiskMountDialogProps) {
                   data-testid="disk-mount-browse-vhd"
                   className="px-4 py-2 bg-theme-bg-hover hover:bg-theme-bg-tertiary text-theme-text-secondary rounded-lg transition-colors"
                 >
-                  Browse
+                  {t('common:button.browse')}
                 </button>
               </div>
             </div>
@@ -216,7 +218,7 @@ export function DiskMountDialog({ isOpen, onClose }: DiskMountDialogProps) {
           {activeTab === "physical" && (
             <div data-testid="disk-mount-physical-section">
               <label className="block text-sm font-medium text-theme-text-secondary mb-1">
-                Physical Disk
+                {t('diskMount.physicalDiskLabel')}
               </label>
               <select
                 value={selectedDisk?.deviceId || ""}
@@ -228,7 +230,7 @@ export function DiskMountDialog({ isOpen, onClose }: DiskMountDialogProps) {
                 data-testid="disk-mount-physical-selector"
                 className="w-full px-3 py-2 bg-theme-bg-tertiary border border-theme-border-secondary rounded-lg text-theme-text-primary"
               >
-                <option value="">Select a disk...</option>
+                <option value="">{t('diskMount.selectDisk')}</option>
                 {physicalDisks.map((disk) => (
                   <option key={disk.deviceId} value={disk.deviceId}>
                     {disk.friendlyName} ({formatBytes(disk.sizeBytes)})
@@ -236,14 +238,14 @@ export function DiskMountDialog({ isOpen, onClose }: DiskMountDialogProps) {
                 ))}
               </select>
               <p className="text-xs text-theme-text-muted mt-1" data-testid="disk-mount-admin-warning">
-                Mounting physical disks may require administrator privileges
+                {t('diskMount.adminWarning')}
               </p>
 
               {/* Partition selector */}
               {selectedDisk && selectedDisk.partitions.length > 0 && (
                 <div className="mt-3">
                   <label className="block text-sm font-medium text-theme-text-secondary mb-1">
-                    Partition (optional)
+                    {t('diskMount.partitionLabel')}
                   </label>
                   <select
                     value={selectedPartition ?? ""}
@@ -251,7 +253,7 @@ export function DiskMountDialog({ isOpen, onClose }: DiskMountDialogProps) {
                     data-testid="disk-mount-partition-selector"
                     className="w-full px-3 py-2 bg-theme-bg-tertiary border border-theme-border-secondary rounded-lg text-theme-text-primary"
                   >
-                    <option value="">Whole disk</option>
+                    <option value="">{t('diskMount.wholeDisk')}</option>
                     {selectedDisk.partitions.map((partition) => (
                       <option key={partition.index} value={partition.index}>
                         Partition {partition.index}: {formatBytes(partition.sizeBytes)}
@@ -268,7 +270,7 @@ export function DiskMountDialog({ isOpen, onClose }: DiskMountDialogProps) {
           {/* Mount Name */}
           <div>
             <label className="block text-sm font-medium text-theme-text-secondary mb-1">
-              Mount Name (optional)
+              {t('diskMount.mountNameLabel')}
             </label>
             <input
               type="text"
@@ -279,14 +281,14 @@ export function DiskMountDialog({ isOpen, onClose }: DiskMountDialogProps) {
               className="w-full px-3 py-2 bg-theme-bg-tertiary border border-theme-border-secondary rounded-lg text-theme-text-primary placeholder-theme-text-muted focus:outline-hidden focus:border-theme-accent-primary"
             />
             <p className="text-xs text-theme-text-muted mt-1" data-testid="disk-mount-point-hint">
-              Mount point will be /mnt/wsl/{mountName || "<diskname>"}
+              {t('diskMount.mountPointHint', { name: mountName || "<diskname>" })}
             </p>
           </div>
 
           {/* Filesystem Type */}
           <div>
             <label className="block text-sm font-medium text-theme-text-secondary mb-1">
-              Filesystem Type
+              {t('diskMount.filesystemLabel')}
             </label>
             <select
               value={filesystemType}
@@ -305,13 +307,13 @@ export function DiskMountDialog({ isOpen, onClose }: DiskMountDialogProps) {
           {/* Advanced Options */}
           <details className="text-theme-text-secondary" data-testid="disk-mount-advanced-options">
             <summary className="cursor-pointer text-sm font-medium hover:text-theme-text-primary">
-              Advanced Options
+              {t('diskMount.advancedOptions')}
             </summary>
             <div className="mt-3 space-y-3 pl-2">
               {/* Mount Options */}
               <div>
                 <label className="block text-sm text-theme-text-secondary mb-1">
-                  Mount Options
+                  {t('diskMount.mountOptionsLabel')}
                 </label>
                 <input
                   type="text"
@@ -333,7 +335,7 @@ export function DiskMountDialog({ isOpen, onClose }: DiskMountDialogProps) {
                   className="w-4 h-4 rounded border-theme-border-secondary bg-theme-bg-tertiary text-theme-accent-primary focus:ring-theme-accent-primary"
                 />
                 <span className="text-sm text-theme-text-secondary">
-                  Bare mount (attach without mounting)
+                  {t('diskMount.bareMount')}
                 </span>
               </label>
             </div>
@@ -347,7 +349,7 @@ export function DiskMountDialog({ isOpen, onClose }: DiskMountDialogProps) {
             data-testid="disk-mount-cancel-button"
             className="px-4 py-2 text-sm font-medium text-theme-text-secondary bg-theme-bg-tertiary hover:bg-theme-bg-hover rounded-lg transition-colors disabled:opacity-50"
           >
-            Cancel
+            {t('common:button.cancel')}
           </button>
           <button
             onClick={handleMount}
@@ -355,7 +357,7 @@ export function DiskMountDialog({ isOpen, onClose }: DiskMountDialogProps) {
             data-testid="disk-mount-submit-button"
             className="px-4 py-2 text-sm font-medium bg-theme-accent-primary hover:opacity-90 text-theme-bg-primary rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isMounting ? "Mounting..." : "Mount"}
+            {isMounting ? t('diskMount.mounting') : t('diskMount.mount')}
           </button>
         </div>
       </div>

@@ -1,0 +1,75 @@
+{
+  "title": "डिस्ट्रिब्यूशन जोड़ें",
+  "subtitle": "चुनें कि आप अपना Linux डिस्ट्रिब्यूशन कैसे इंस्टॉल करना चाहते हैं",
+  "mode": {
+    "quickInstall": "त्वरित इंस्टॉल",
+    "quickInstallDesc": "Microsoft Store से इंस्टॉल करें",
+    "download": "डाउनलोड",
+    "downloadDesc": "कस्टम नाम के साथ सीधा डाउनलोड",
+    "community": "समुदाय",
+    "communityDesc": "LXC इमेज कैटलॉग ब्राउज़ करें",
+    "container": "कंटेनर",
+    "containerDesc": "कंटेनर इमेज से बनाएं"
+  },
+  "info": {
+    "quickInstall": "Microsoft Store से आधिकारिक डिस्ट्रिब्यूशन। डिफ़ॉल्ट Windows-प्रबंधित स्थान पर इंस्टॉल होता है।",
+    "download": "इस कैटलॉग को सेटिंग्स > डिस्ट्रिब्यूशन स्रोत में कस्टमाइज़ किया जा सकता है। कस्टम URL भविष्य के उपयोग के लिए सहेजे जाते हैं।",
+    "community": "{{url}} से इमेज। सेटिंग्स > डिस्ट्रिब्यूशन स्रोत में कॉन्फ़िगर करें।",
+    "container": "सेटिंग्स में कॉन्फ़िगर किया गया चयनित रनटाइम: {{runtime}}"
+  },
+  "containerRuntime": {
+    "builtin": "बिल्ट-इन OCI (केवल सार्वजनिक रजिस्ट्रियां)",
+    "docker": "Docker (प्रमाणित रजिस्ट्रियों का समर्थन करता है)",
+    "podman": "Podman (प्रमाणित रजिस्ट्रियों का समर्थन करता है)",
+    "custom": "कस्टम: {{path}}"
+  },
+  "filter": {
+    "all": "सभी"
+  },
+  "loading": "उपलब्ध डिस्ट्रिब्यूशन लोड हो रहे हैं...",
+  "empty": "कोई डिस्ट्रिब्यूशन उपलब्ध नहीं",
+  "install": "इंस्टॉल करें",
+  "useUrl": "URL उपयोग करें",
+  "useImage": "इमेज उपयोग करें",
+  "placeholder": {
+    "url": "उदा., https://example.com/distro-rootfs.tar.gz",
+    "image": "उदा., alpine:latest, gitlab/gitlab-runner:latest"
+  },
+  "customUrl": {
+    "label": "कस्टम URL",
+    "description": "rootfs tarball का सीधा लिंक दर्ज करें"
+  },
+  "customImage": {
+    "label": "कस्टम इमेज",
+    "description": "कोई भी OCI इमेज संदर्भ दर्ज करें"
+  },
+  "alreadyInstalled": "\"{{name}}\" पहले से इंस्टॉल है",
+  "progress": {
+    "installingStore": "Microsoft Store से इंस्टॉल हो रहा है...",
+    "success": "सफलतापूर्वक इंस्टॉल हो गया!",
+    "downloading": "डाउनलोड हो रहा है: {{percent}}% ({{downloaded}} / {{total}})",
+    "importing": "WSL में आयात हो रहा है...",
+    "pullingImage": "कंटेनर इमेज पुल हो रही है...",
+    "downloadFailed": "डाउनलोड विफल"
+  },
+  "trademarkDisclaimer": "Linux डिस्ट्रिब्यूशन लोगो उनके संबंधित मालिकों के ट्रेडमार्क हैं और यहां केवल पहचान उद्देश्यों के लिए उपयोग किए गए हैं।\nयह एप्लिकेशन किसी भी डिस्ट्रिब्यूशन प्रोजेक्ट से संबद्ध या समर्थित नहीं है।",
+  "installingAs": "\"{{name}}\" के रूप में इंस्टॉल हो रहा है",
+  "noDownloadable": "कोई डाउनलोड करने योग्य डिस्ट्रिब्यूशन कॉन्फ़िगर नहीं किया गया",
+  "noContainerImages": "कोई कंटेनर इमेज कॉन्फ़िगर नहीं की गई",
+  "communityDisabled": "समुदाय कैटलॉग अक्षम है",
+  "communityDisabledHint": "सेटिंग्स > डिस्ट्रिब्यूशन स्रोत में इसे सक्षम करें",
+  "useCustomUrl": "इसके बजाय कस्टम URL उपयोग करें",
+  "useCustomImage": "इसके बजाय कस्टम इमेज उपयोग करें",
+  "distroSources": {
+    "title": "डिस्ट्रिब्यूशन स्रोत",
+    "description": "कॉन्फ़िगर करें कि डिस्ट्रिब्यूशन कहां से डाउनलोड करें",
+    "addUrl": "URL जोड़ें",
+    "removeUrl": "हटाएं",
+    "urlPlaceholder": "https://example.com/distro-rootfs.tar.gz",
+    "name": "नाम",
+    "namePlaceholder": "उदा., Alpine Linux",
+    "url": "URL",
+    "noSources": "कोई कस्टम स्रोत कॉन्फ़िगर नहीं किया गया",
+    "builtInSources": "बिल्ट-इन स्रोत हमेशा उपलब्ध हैं"
+  }
+}

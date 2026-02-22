@@ -1,0 +1,60 @@
+{
+  "button": {
+    "cancel": "취소",
+    "close": "닫기",
+    "save": "저장",
+    "delete": "삭제",
+    "confirm": "확인",
+    "retry": "재시도",
+    "browse": "찾아보기",
+    "back": "뒤로",
+    "dismiss": "무시",
+    "learnMore": "자세히 알아보기",
+    "resetToDefault": "기본값으로 재설정"
+  },
+  "label": {
+    "name": "이름",
+    "status": "상태",
+    "version": "버전",
+    "size": "크기",
+    "location": "위치",
+    "default": "기본값",
+    "yes": "예",
+    "no": "아니요",
+    "on": "켜기",
+    "off": "끄기",
+    "loading": "로드 중...",
+    "none": "없음",
+    "ip": "IP",
+    "copied": "복사됨!",
+    "disk": "디스크",
+    "memory": "메모리",
+    "cpu": "CPU",
+    "installed": "설치됨",
+    "notInstalled": "미설치"
+  },
+  "status": {
+    "online": "온라인",
+    "offline": "오프라인",
+    "primary": "기본",
+    "compacting": "압축 중",
+    "operational": "운영 중",
+    "standby": "대기"
+  },
+  "unit": {
+    "gb": "GB",
+    "tb": "TB"
+  },
+  "validation": {
+    "invalidChars": "이름에는 영문자, 숫자, 점, 밑줄, 하이픈만 사용할 수 있습니다",
+    "duplicateName": "\"{{name}}\" 이름의 배포판이 이미 존재합니다",
+    "required": "이 필드는 필수입니다"
+  },
+  "wslVersion": {
+    "wsl1": "WSL 1",
+    "wsl2": "WSL 2"
+  },
+  "noOutput": "출력 없음",
+  "output": "출력",
+  "ranOn": "실행 위치: {{distro}}"
+}

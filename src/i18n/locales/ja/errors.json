@@ -1,0 +1,21 @@
+{
+  "boundary": {
+    "title": "問題が発生しました",
+    "message": "アプリケーションで予期しないエラーが発生しました。もう一度お試しください。",
+    "tryAgain": "再試行"
+  },
+  "system": {
+    "title": "システムエラー",
+    "timeoutTip": "ヒント：新しいディストリビューションを最近インストールした場合は、インストール中に自動的に開かれたターミナルウィンドウを閉じてください。",
+    "forceShutdown": "WSL を強制シャットダウン",
+    "forceShutdownTitle": "WSL の強制シャットダウン",
+    "forceShutdownMessage": "'wsl --shutdown --force' を使用してすべての WSL プロセスを強制終了します。Linux ディストリビューション内の保存されていない作業は失われる可能性があります。この操作は元に戻せません。",
+    "forceShutdownConfirm": "強制シャットダウン"
+  },
+  "wslUpdate": {
+    "title": "WSL 更新",
+    "success": "更新が正常に完了しました",
+    "cancelled": "WSL 更新",
+    "failedTitle": "WSL の更新に失敗しました"
+  }
+}

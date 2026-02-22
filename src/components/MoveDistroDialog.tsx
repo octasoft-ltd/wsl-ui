@@ -5,6 +5,7 @@
  */
 
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { open } from "@tauri-apps/plugin-dialog";
 import { wslService } from "../services/wslService";
 import { useDistroStore } from "../store/distroStore";
@@ -21,6 +22,7 @@ interface MoveDistroDialogProps {
 }
 
 export function MoveDistroDialog({ isOpen, distro, onClose }: MoveDistroDialogProps) {
+  const { t } = useTranslation("dialogs");
   const [location, setLocation] = useState("");
   const [currentLocation, setCurrentLocation] = useState<string | null>(null);
   const [isMoving, setIsMoving] = useState(false);
@@ -51,7 +53,7 @@ export function MoveDistroDialog({ isOpen, distro, onClose }: MoveDistroDialogPr
     const selectedPath = await open({
       directory: true,
       multiple: false,
-      title: "Select Destination Folder",
+      title: t('move.browseTitle'),
       defaultPath: startPath,
     });
 
@@ -63,7 +65,7 @@ export function MoveDistroDialog({ isOpen, distro, onClose }: MoveDistroDialogPr
 
   const handleMove = async () => {
     if (!location.trim()) {
-      setError("Please select a destination folder");
+      setError(t('move.errorNoDestination'));
       return;
     }
 
@@ -75,13 +77,13 @@ export function MoveDistroDialog({ isOpen, distro, onClose }: MoveDistroDialogPr
       await fetchDistros();
       addNotification({
         type: "success",
-        title: "Distribution Moved",
-        message: `${distro.name} moved to ${location.trim()}`,
+        title: t('move.successTitle'),
+        message: t('move.successMessage', { name: distro.name, location: location.trim() }),
       });
       handleClose();
     } catch (err) {
       // Tauri returns string errors, not Error instances
-      const errorMessage = typeof err === "string" ? err : err instanceof Error ? err.message : "Failed to move distribution";
+      const errorMessage = typeof err === "string" ? err : err instanceof Error ? err.message : t('move.errorFailed');
       setError(errorMessage);
     } finally {
       setIsMoving(false);
@@ -110,8 +112,8 @@ export function MoveDistroDialog({ isOpen, distro, onClose }: MoveDistroDialogPr
   return (
     <Modal isOpen={isOpen} onClose={handleClose} closeOnBackdrop={!isMoving}>
       <ModalHeader
-        title={`Move "${distro.name}"`}
-        subtitle="Move distribution to a new location"
+        title={t('move.title', { name: distro.name })}
+        subtitle={t('move.subtitle')}
         onClose={handleClose}
         showCloseButton={!isMoving}
       />
@@ -126,31 +128,31 @@ export function MoveDistroDialog({ isOpen, distro, onClose }: MoveDistroDialogPr
         <div className="space-y-4">
           <div className="p-3 bg-theme-bg-tertiary/50 border border-theme-border-secondary rounded-lg space-y-2">
             <div>
-              <span className="text-theme-text-muted text-xs uppercase tracking-wider">Current Location</span>
+              <span className="text-theme-text-muted text-xs uppercase tracking-wider">{t('move.currentLocation')}</span>
               <p className="text-theme-text-primary text-sm font-mono break-all mt-0.5">
-                {currentLocation ? formatPath(currentLocation) : "Loading..."}
+                {currentLocation ? formatPath(currentLocation) : t('common:label.loading')}
               </p>
             </div>
             <div className="pt-2 border-t border-theme-border-secondary/50">
-              <span className="text-theme-text-muted text-xs uppercase tracking-wider">Current Size</span>
+              <span className="text-theme-text-muted text-xs uppercase tracking-wider">{t('move.currentSize')}</span>
               <p className="text-theme-text-primary text-sm mt-0.5">
-                {diskSize !== null ? formatSize(diskSize) : "Loading..."}
+                {diskSize !== null ? formatSize(diskSize) : t('common:label.loading')}
               </p>
             </div>
           </div>
 
           <div>
             <PathInput
-              label="New Location"
+              label={t('move.newLocation')}
               value={location}
               onChange={(e) => {
                 setLocation(e.target.value);
                 setError(null);
               }}
-              placeholder="Select or enter destination path"
+              placeholder={t('move.locationPlaceholder')}
               disabled={isMoving}
               onBrowse={handleBrowse}
-              helperText="The distribution's virtual disk will be moved to this folder."
+              helperText={t('move.locationHelper')}
             />
           </div>
         </div>
@@ -173,7 +175,7 @@ export function MoveDistroDialog({ isOpen, distro, onClose }: MoveDistroDialogPr
                   d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
                 />
               </svg>
-              <span>Moving distribution... This may take a while for large distros.</span>
+              <span>{t('move.progress')}</span>
             </div>
           </div>
         )}
@@ -181,7 +183,7 @@ export function MoveDistroDialog({ isOpen, distro, onClose }: MoveDistroDialogPr
 
       <ModalFooter>
         <Button variant="secondary" onClick={handleClose} disabled={isMoving}>
-          Cancel
+          {t('common:button.cancel')}
         </Button>
         <Button
           variant="primary"
@@ -189,7 +191,7 @@ export function MoveDistroDialog({ isOpen, distro, onClose }: MoveDistroDialogPr
           disabled={isMoving || !location.trim()}
           loading={isMoving}
         >
-          Move
+          {t('move.move')}
         </Button>
       </ModalFooter>
     </Modal>

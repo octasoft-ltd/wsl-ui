@@ -1,0 +1,60 @@
+{
+  "button": {
+    "cancel": "Abbrechen",
+    "close": "Schlie\u00dfen",
+    "save": "Speichern",
+    "delete": "L\u00f6schen",
+    "confirm": "Best\u00e4tigen",
+    "retry": "Erneut versuchen",
+    "browse": "Durchsuchen",
+    "back": "Zur\u00fcck",
+    "dismiss": "Verwerfen",
+    "learnMore": "Mehr erfahren",
+    "resetToDefault": "Auf Standard zur\u00fccksetzen"
+  },
+  "label": {
+    "name": "Name",
+    "status": "Status",
+    "version": "Version",
+    "size": "Gr\u00f6\u00dfe",
+    "location": "Speicherort",
+    "default": "Standard",
+    "yes": "Ja",
+    "no": "Nein",
+    "on": "Ein",
+    "off": "Aus",
+    "loading": "Laden...",
+    "none": "Keine",
+    "ip": "IP",
+    "copied": "Kopiert!",
+    "disk": "Festplatte",
+    "memory": "Speicher",
+    "cpu": "CPU",
+    "installed": "Installiert",
+    "notInstalled": "Nicht installiert"
+  },
+  "status": {
+    "online": "Online",
+    "offline": "Offline",
+    "primary": "Prim\u00e4r",
+    "compacting": "Komprimierung",
+    "operational": "BETRIEBSBEREIT",
+    "standby": "BEREITSCHAFT"
+  },
+  "unit": {
+    "gb": "GB",
+    "tb": "TB"
+  },
+  "validation": {
+    "invalidChars": "Der Name darf nur Buchstaben, Zahlen, Punkte, Unterstriche und Bindestriche enthalten",
+    "duplicateName": "Eine Distribution mit dem Namen \"{{name}}\" existiert bereits",
+    "required": "Dieses Feld ist erforderlich"
+  },
+  "wslVersion": {
+    "wsl1": "WSL 1",
+    "wsl2": "WSL 2"
+  },
+  "noOutput": "Keine Ausgabe",
+  "output": "Ausgabe",
+  "ranOn": "Ausgef\u00fchrt auf: {{distro}}"
+}

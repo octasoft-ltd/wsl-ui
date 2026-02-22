@@ -1,0 +1,75 @@
+{
+  "title": "新增發行版",
+  "subtitle": "選擇安裝 Linux 發行版的方式",
+  "mode": {
+    "quickInstall": "快速安裝",
+    "quickInstallDesc": "從 Microsoft Store 安裝",
+    "download": "下載",
+    "downloadDesc": "使用自訂名稱直接下載",
+    "community": "社群",
+    "communityDesc": "瀏覽 LXC 映像目錄",
+    "container": "容器",
+    "containerDesc": "從容器映像建立"
+  },
+  "info": {
+    "quickInstall": "來自 Microsoft Store 的官方發行版。安裝到預設的 Windows 管理位置。",
+    "download": "此目錄可在 設定 > 發行版來源 中自訂。自訂 URL 將儲存供日後使用。",
+    "community": "來自 {{url}} 的映像。在 設定 > 發行版來源 中設定。",
+    "container": "在設定中設定的執行階段：{{runtime}}"
+  },
+  "containerRuntime": {
+    "builtin": "內建 OCI（僅公開登錄）",
+    "docker": "Docker（支援驗證登錄）",
+    "podman": "Podman（支援驗證登錄）",
+    "custom": "自訂：{{path}}"
+  },
+  "filter": {
+    "all": "全部"
+  },
+  "loading": "正在載入可用發行版...",
+  "empty": "沒有可用的發行版",
+  "install": "安裝",
+  "useUrl": "使用 URL",
+  "useImage": "使用映像",
+  "placeholder": {
+    "url": "例如 https://example.com/distro-rootfs.tar.gz",
+    "image": "例如 alpine:latest、gitlab/gitlab-runner:latest"
+  },
+  "customUrl": {
+    "label": "自訂 URL",
+    "description": "輸入 rootfs 壓縮封存的直接連結"
+  },
+  "customImage": {
+    "label": "自訂映像",
+    "description": "輸入任何 OCI 映像參考"
+  },
+  "alreadyInstalled": "\"{{name}}\" 已安裝",
+  "progress": {
+    "installingStore": "正在從 Microsoft Store 安裝...",
+    "success": "安裝成功！",
+    "downloading": "正在下載：{{percent}}%（{{downloaded}} / {{total}}）",
+    "importing": "正在匯入到 WSL...",
+    "pullingImage": "正在拉取容器映像...",
+    "downloadFailed": "下載失敗"
+  },
+  "trademarkDisclaimer": "Linux 發行版標誌是其各自擁有者的商標，僅用於識別目的。\n本應用程式不隸屬於任何發行版專案，也未獲得其背書。",
+  "installingAs": "正在安裝為 \"{{name}}\"",
+  "noDownloadable": "未設定可下載的發行版",
+  "noContainerImages": "未設定容器映像",
+  "communityDisabled": "社群目錄已停用",
+  "communityDisabledHint": "在 設定 > 發行版來源 中啟用",
+  "useCustomUrl": "使用自訂 URL 代替",
+  "useCustomImage": "使用自訂映像代替",
+  "distroSources": {
+    "title": "發行版來源",
+    "description": "設定下載發行版的來源",
+    "addUrl": "新增 URL",
+    "removeUrl": "移除",
+    "urlPlaceholder": "https://example.com/distro-rootfs.tar.gz",
+    "name": "名稱",
+    "namePlaceholder": "例如 Alpine Linux",
+    "url": "URL",
+    "noSources": "未設定自訂來源",
+    "builtInSources": "內建來源始終可用"
+  }
+}

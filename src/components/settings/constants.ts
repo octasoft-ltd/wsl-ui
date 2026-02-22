@@ -68,22 +68,23 @@ export type SettingsIconName = "settings" | "palette" | "refresh" | "clock" | "t
 export interface SettingsTabConfig {
   id: SettingsTab;
   label: string;
+  labelKey: string;
   icon: SettingsIconName;
 }
 
 export const SETTINGS_TABS: SettingsTabConfig[] = [
-  { id: "app", label: "Application", icon: "settings" },
-  { id: "appearance", label: "Appearance", icon: "palette" },
-  { id: "polling", label: "Auto-Refresh", icon: "refresh" },
-  { id: "timeouts", label: "Timeouts", icon: "clock" },
-  { id: "executables", label: "Executable Paths", icon: "terminal" },
-  { id: "wsl-global", label: "WSL Global", icon: "server" },
-  { id: "wsl-distro", label: "Per-Distribution", icon: "folder" },
-  { id: "actions", label: "Custom Actions", icon: "sparkles" },
-  { id: "distros", label: "Distro Catalog", icon: "grid" },
-  { id: "sources", label: "Remote Sources", icon: "download" },
-  { id: "privacy", label: "Privacy", icon: "shield" },
-  { id: "about", label: "About", icon: "info" },
+  { id: "app", label: "Application", labelKey: "settings:tabs.app", icon: "settings" },
+  { id: "appearance", label: "Appearance", labelKey: "settings:tabs.appearance", icon: "palette" },
+  { id: "polling", label: "Auto-Refresh", labelKey: "settings:tabs.polling", icon: "refresh" },
+  { id: "timeouts", label: "Timeouts", labelKey: "settings:tabs.timeouts", icon: "clock" },
+  { id: "executables", label: "Executable Paths", labelKey: "settings:tabs.executables", icon: "terminal" },
+  { id: "wsl-global", label: "WSL Global", labelKey: "settings:tabs.wslGlobal", icon: "server" },
+  { id: "wsl-distro", label: "Per-Distribution", labelKey: "settings:tabs.wslDistro", icon: "folder" },
+  { id: "actions", label: "Custom Actions", labelKey: "settings:tabs.actions", icon: "sparkles" },
+  { id: "distros", label: "Distro Catalog", labelKey: "settings:tabs.distros", icon: "grid" },
+  { id: "sources", label: "Remote Sources", labelKey: "settings:tabs.sources", icon: "download" },
+  { id: "privacy", label: "Privacy", labelKey: "settings:tabs.privacy", icon: "shield" },
+  { id: "about", label: "About", labelKey: "settings:tabs.about", icon: "info" },
 ];
 
 

@@ -1,0 +1,40 @@
+{
+  "loading": "正在初始化系统...",
+  "emptyState": {
+    "title": "未检测到实例",
+    "description": "部署一个 WSL 发行版以开始使用"
+  },
+  "filter": {
+    "all": "全部",
+    "allSources": "所有来源",
+    "allSourcesMobile": "全部",
+    "onlineTooltip": "在线 ({{count}})",
+    "offlineTooltip": "离线 ({{count}})",
+    "showWsl1": "显示 WSL 1 ({{count}})",
+    "hideWsl1": "隐藏 WSL 1 ({{count}})",
+    "showWsl2": "显示 WSL 2 ({{count}})",
+    "hideWsl2": "隐藏 WSL 2 ({{count}})",
+    "v1": "v1",
+    "v2": "v2"
+  },
+  "emptyFilter": {
+    "noDistros": "未找到发行版",
+    "noMatch": "没有发行版匹配当前筛选条件",
+    "clearFilters": "清除筛选"
+  },
+  "card": {
+    "suspend": "挂起",
+    "launch": "启动",
+    "openTerminal": "打开终端",
+    "openRdp": "打开远程桌面",
+    "quickActions": "快捷操作",
+    "deleteDistro": "删除发行版",
+    "ipTooltip": "点击复制 IP 地址"
+  },
+  "deleteDialog": {
+    "title": "删除发行版",
+    "message": "确定要删除 \"{{name}}\" 吗？此操作无法撤销，该发行版中的所有数据将永久丢失。",
+    "messageDefault": "确定要删除 \"{{name}}\" 吗？此操作无法撤销，该发行版中的所有数据将永久丢失。\n\n警告：这是您的默认发行版。删除后，WSL 命令将失败，除非您将其他发行版设为默认。",
+    "confirm": "删除"
+  }
+}

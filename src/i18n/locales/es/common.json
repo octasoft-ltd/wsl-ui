@@ -1,0 +1,61 @@
+{
+  "button": {
+    "cancel": "Cancelar",
+    "close": "Cerrar",
+    "save": "Guardar",
+    "delete": "Eliminar",
+    "confirm": "Confirmar",
+    "retry": "Reintentar",
+    "browse": "Examinar",
+    "back": "Atr\u00e1s",
+    "dismiss": "Descartar",
+    "learnMore": "M\u00e1s informaci\u00f3n",
+    "resetToDefault": "Restablecer valores predeterminados"
+  },
+  "label": {
+    "name": "Nombre",
+    "status": "Estado",
+    "version": "Versi\u00f3n",
+    "size": "Tama\u00f1o",
+    "location": "Ubicaci\u00f3n",
+    "default": "Predeterminado",
+    "yes": "S\u00ed",
+    "no": "No",
+    "on": "Activado",
+    "off": "Desactivado",
+    "loading": "Cargando...",
+    "none": "Ninguno",
+    "ip": "IP",
+    "copied": "\u00a1Copiado!",
+    "disk": "Disco",
+    "memory": "Memoria",
+    "cpu": "CPU",
+    "installed": "Instalado",
+    "notInstalled": "No instalado"
+  },
+  "status": {
+    "online": "En l\u00ednea",
+    "offline": "Sin conexi\u00f3n",
+    "primary": "Principal",
+    "compacting": "Compactando",
+    "operational": "OPERATIVO",
+    "standby": "EN ESPERA"
+  },
+  "unit": {
+    "gb": "GB",
+    "tb": "TB"
+  },
+  "validation": {
+    "invalidChars": "El nombre solo puede contener letras, n\u00fameros, puntos, guiones bajos y guiones",
+    "duplicateName": "Ya existe una distribuci\u00f3n llamada \"{{name}}\"",
+    "nameExists": "Ya existe una distribuci\u00f3n con este nombre",
+    "required": "Este campo es obligatorio"
+  },
+  "wslVersion": {
+    "wsl1": "WSL 1",
+    "wsl2": "WSL 2"
+  },
+  "noOutput": "Sin salida",
+  "output": "Salida",
+  "ranOn": "Ejecutado en: {{distro}}"
+}

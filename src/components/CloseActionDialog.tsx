@@ -7,6 +7,7 @@
  */
 
 import { useState, useEffect, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { Portal } from "./ui/Portal";
 import { CloseIcon, MinimizeIcon } from "./icons";
 
@@ -25,6 +26,7 @@ export function CloseActionDialog({
   onCancel,
   onRememberChoice,
 }: CloseActionDialogProps) {
+  const { t } = useTranslation("dialogs");
   const [rememberChoice, setRememberChoice] = useState(false);
 
   // Reset state when dialog closes
@@ -86,10 +88,10 @@ export function CloseActionDialog({
             </div>
             <div>
               <h3 className="text-lg font-semibold text-theme-text-primary">
-                Close Application?
+                {t('closeAction.title')}
               </h3>
               <p className="text-sm text-theme-text-secondary mt-1">
-                Would you like to minimize to the system tray or quit completely?
+                {t('closeAction.description')}
               </p>
             </div>
           </div>
@@ -104,12 +106,12 @@ export function CloseActionDialog({
                 className="w-4 h-4 rounded border-theme-border-secondary bg-theme-bg-tertiary text-theme-accent-primary focus:ring-theme-accent-primary focus:ring-offset-0"
               />
               <span className="text-sm text-theme-text-secondary">
-                Remember my choice
+                {t('closeAction.rememberChoice')}
               </span>
             </label>
             {rememberChoice && (
               <p className="text-xs text-theme-text-muted mt-2 ml-7">
-                You can change this later in Settings
+                {t('closeAction.changeInSettings')}
               </p>
             )}
           </div>
@@ -121,7 +123,7 @@ export function CloseActionDialog({
               className="px-4 py-2 text-sm font-medium text-theme-text-secondary bg-theme-bg-tertiary hover:bg-theme-bg-hover rounded-lg transition-colors flex items-center gap-2"
             >
               <MinimizeIcon size="sm" />
-              Minimize to Tray
+              {t('closeAction.minimizeToTray')}
             </button>
             <button
               onClick={handleQuit}
@@ -129,7 +131,7 @@ export function CloseActionDialog({
               className="px-4 py-2 text-sm font-medium text-white bg-theme-status-error hover:opacity-90 rounded-lg transition-colors flex items-center gap-2"
             >
               <CloseIcon size="sm" />
-              Quit
+              {t('closeAction.quit')}
             </button>
           </div>
         </div>

@@ -1,0 +1,68 @@
+{
+  "quickActions": {
+    "title": "Schnellaktionen",
+    "info": "Distributionsinformationen",
+    "explorer": "Datei-Explorer \u00f6ffnen",
+    "ide": "In IDE \u00f6ffnen",
+    "restart": "Neu starten",
+    "export": "In Datei exportieren...",
+    "clone": "Klonen...",
+    "setDefault": "Als Standard festlegen",
+    "alreadyDefault": "Standarddistribution"
+  },
+  "manage": {
+    "title": "Verwalten",
+    "move": "Distribution verschieben...",
+    "resize": "Festplattengr\u00f6\u00dfe \u00e4ndern...",
+    "compact": "Festplatte komprimieren...",
+    "user": "Standardbenutzer festlegen...",
+    "rename": "Umbenennen...",
+    "sparse": "Sparse-Modus",
+    "version": "WSL-Version festlegen"
+  },
+  "customActions": {
+    "title": "Benutzerdefinierte Aktionen",
+    "requiresStop": "Erfordert das Anhalten der Distribution",
+    "requiresShutdown": "Erfordert WSL-Herunterfahren"
+  },
+  "sparseConfirm": {
+    "title": "Sparse-Modus aktivieren?",
+    "message": "Warnung: Microsoft hat darauf hingewiesen, dass die Sparse-VHD-Unterst\u00fctzung m\u00f6glicherweise Datenverluste verursachen kann. Obwohl es helfen kann, Festplattenplatz automatisch zur\u00fcckzugewinnen, besteht ein Risiko von Datenverlust. Stellen Sie sicher, dass Sie Sicherungen haben, bevor Sie diese Funktion aktivieren.",
+    "confirm": "Trotzdem aktivieren"
+  },
+  "outputDialog": {
+    "titleSuffix": "- Ausgabe",
+    "noOutput": "Keine Ausgabe."
+  },
+  "customActionsSettings": {
+    "title": "Benutzerdefinierte Aktionen",
+    "description": "Shell-Befehle definieren, die im Schnellaktionen-Men\u00fc der Distribution erscheinen",
+    "addAction": "Aktion hinzuf\u00fcgen",
+    "editAction": "Aktion bearbeiten",
+    "noActions": "Keine benutzerdefinierten Aktionen konfiguriert",
+    "noActionsHint": "F\u00fcgen Sie Ihre erste benutzerdefinierte Aktion hinzu, um zu beginnen",
+    "name": "Name",
+    "namePlaceholder": "z.B. System aktualisieren",
+    "command": "Befehl",
+    "commandPlaceholder": "z.B. sudo apt update && sudo apt upgrade -y",
+    "sudo": "Mit sudo ausf\u00fchren",
+    "sudoDesc": "Den Befehl mit erh\u00f6hten Berechtigungen ausf\u00fchren",
+    "runOnStartup": "Beim Start ausf\u00fchren",
+    "runOnStartupDesc": "Ausf\u00fchren, wenn eine passende Distribution startet",
+    "showOutput": "Ausgabe anzeigen",
+    "showOutputDesc": "Befehlsausgabe in einem Dialogfeld anzeigen",
+    "target": "Ziel-Distributionen",
+    "targetAll": "Alle Distributionen",
+    "targetSpecific": "Bestimmte Distributionen",
+    "targetRegex": "Regex-Muster",
+    "targetPlaceholder": "z.B. Ubuntu.*",
+    "save": "Speichern",
+    "delete": "L\u00f6schen",
+    "deleteConfirm": "Sind Sie sicher, dass Sie diese Aktion l\u00f6schen m\u00f6chten?",
+    "importExport": "Importieren/Exportieren",
+    "importActions": "Importieren",
+    "exportActions": "Exportieren",
+    "importSuccess": "Aktionen erfolgreich importiert",
+    "exportSuccess": "Aktionen erfolgreich exportiert"
+  }
+}

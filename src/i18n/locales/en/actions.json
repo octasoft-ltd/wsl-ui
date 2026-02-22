@@ -1,0 +1,68 @@
+{
+  "quickActions": {
+    "title": "Quick Actions",
+    "info": "Distribution Info",
+    "explorer": "Open File Explorer",
+    "ide": "Open in IDE",
+    "restart": "Restart",
+    "export": "Export to File...",
+    "clone": "Clone...",
+    "setDefault": "Set as Default",
+    "alreadyDefault": "Default Distribution"
+  },
+  "manage": {
+    "title": "Manage",
+    "move": "Move Distribution...",
+    "resize": "Resize Disk...",
+    "compact": "Compact Disk...",
+    "user": "Set Default User...",
+    "rename": "Rename...",
+    "sparse": "Sparse Mode",
+    "version": "Set WSL Version"
+  },
+  "customActions": {
+    "title": "Custom Actions",
+    "requiresStop": "Requires stopping distribution",
+    "requiresShutdown": "Requires WSL shutdown"
+  },
+  "sparseConfirm": {
+    "title": "Enable Sparse Mode?",
+    "message": "Warning: Microsoft has flagged sparse VHD support as potentially causing data corruption. While it can help reclaim disk space automatically, there is a risk of data loss. Make sure you have backups before enabling this feature.",
+    "confirm": "Enable Anyway"
+  },
+  "outputDialog": {
+    "titleSuffix": "- Output",
+    "noOutput": "No output."
+  },
+  "customActionsSettings": {
+    "title": "Custom Actions",
+    "description": "Define shell commands that appear in the distribution quick actions menu",
+    "addAction": "Add Action",
+    "editAction": "Edit Action",
+    "noActions": "No custom actions configured",
+    "noActionsHint": "Add your first custom action to get started",
+    "name": "Name",
+    "namePlaceholder": "e.g., Update System",
+    "command": "Command",
+    "commandPlaceholder": "e.g., sudo apt update && sudo apt upgrade -y",
+    "sudo": "Run with sudo",
+    "sudoDesc": "Execute the command with elevated privileges",
+    "runOnStartup": "Run on Startup",
+    "runOnStartupDesc": "Execute when a matching distribution starts",
+    "showOutput": "Show Output",
+    "showOutputDesc": "Display command output in a dialog",
+    "target": "Target Distributions",
+    "targetAll": "All distributions",
+    "targetSpecific": "Specific distributions",
+    "targetRegex": "Regex pattern",
+    "targetPlaceholder": "e.g., Ubuntu.*",
+    "save": "Save",
+    "delete": "Delete",
+    "deleteConfirm": "Are you sure you want to delete this action?",
+    "importExport": "Import/Export",
+    "importActions": "Import",
+    "exportActions": "Export",
+    "importSuccess": "Actions imported successfully",
+    "exportSuccess": "Actions exported successfully"
+  }
+}

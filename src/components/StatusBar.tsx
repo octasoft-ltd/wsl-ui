@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { useDistroStore } from "../store/distroStore";
 import { useResourceStore } from "../store/resourceStore";
 import { useSettingsStore } from "../store/settingsStore";
@@ -43,6 +44,7 @@ const healthGlowColors = {
 const MIN_STATUS_DISPLAY_TIME = 800;
 
 export function StatusBar() {
+  const { t } = useTranslation("statusbar");
   const { distributions, actionInProgress, isLoading, setActionInProgress } = useDistroStore();
   const { stats: resourceStats } = useResourceStore();
   const { settings } = useSettingsStore();
@@ -177,7 +179,7 @@ export function StatusBar() {
 
           {/* WSL Version */}
           <div className="flex items-center gap-2">
-            <span className="data-label">WSL</span>
+            <span className="data-label">{t('wsl')}</span>
             <span
               className="data-value text-xs text-theme-accent-primary cursor-help"
               title={versionTooltip}
@@ -191,16 +193,16 @@ export function StatusBar() {
               className="p-1 rounded hover:bg-theme-bg-tertiary transition-colors disabled:opacity-50 disabled:cursor-not-allowed group min-w-[44px] flex justify-center"
               title={
                 isUpdating
-                  ? "Waiting for administrator approval... Check for a UAC dialog"
+                  ? t('updateWsl.updating')
                   : settings.usePreReleaseUpdates
-                    ? "Update WSL (pre-release) - Requires administrator"
-                    : "Update WSL - Requires administrator"
+                    ? t('updateWsl.preRelease')
+                    : t('updateWsl.default')
               }
             >
               {isUpdating ? (
                 <div className="flex items-center gap-1" data-testid="wsl-update-spinner">
                   <div className="w-3 h-3 border border-theme-status-warning border-t-transparent rounded-full animate-spin" />
-                  <span className="text-[9px] text-theme-status-warning font-medium animate-pulse">UAC</span>
+                  <span className="text-[9px] text-theme-status-warning font-medium animate-pulse">{t('updateWsl.uac')}</span>
                 </div>
               ) : (
                 <svg className="w-3 h-3 text-theme-text-muted group-hover:text-theme-accent-primary transition-colors" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -218,13 +220,13 @@ export function StatusBar() {
               onClick={() => setShowMountPanel(!showMountPanel)}
               data-testid="disk-mounts-button"
               className="flex items-center gap-2 px-2 py-1 rounded hover:bg-theme-bg-tertiary transition-colors group"
-              title={`Disk Mounts${mountedDisks.length > 0 ? ` (${mountedDisks.length} mounted)` : ""}`}
+              title={mountedDisks.length > 0 ? t('diskMounts.count', { count: mountedDisks.length }) : t('diskMounts.empty')}
             >
               <svg className="w-3.5 h-3.5 text-theme-text-muted group-hover:text-theme-accent-primary transition-colors" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <circle cx="12" cy="12" r="10" />
                 <circle cx="12" cy="12" r="3" />
               </svg>
-              <span className="data-label group-hover:text-theme-text-secondary">DISK</span>
+              <span className="data-label group-hover:text-theme-text-secondary">{t('disk')}</span>
               {mountedDisks.length > 0 && (
                 <span className="data-value text-[10px] text-theme-accent-primary">
                   {mountedDisks.length}
@@ -246,17 +248,17 @@ export function StatusBar() {
           <div className="flex items-center gap-4">
             {mockMode && (
               <span className="px-2 py-0.5 bg-[rgba(var(--status-warning-rgb),0.1)] text-theme-status-warning rounded text-[10px] font-mono font-semibold border border-[rgba(var(--status-warning-rgb),0.3)] uppercase tracking-wider">
-                Dev
+                {t('dev')}
               </span>
             )}
 
             <div className="flex items-center gap-2">
-              <span className="data-label">Instances</span>
+              <span className="data-label">{t('instances')}</span>
               <span className="data-value text-xs text-theme-text-secondary">{distributions.length}</span>
             </div>
 
             <div className="flex items-center gap-2">
-              <span className="data-label">Active</span>
+              <span className="data-label">{t('active')}</span>
               <span className={`data-value text-xs ${runningCount > 0 ? 'text-theme-status-running' : 'text-theme-text-muted'}`}>
                 {runningCount}
               </span>
@@ -264,7 +266,7 @@ export function StatusBar() {
 
             {memoryStats && memoryStats.totalMemory > 0 && (
               <div className="flex items-center gap-2 whitespace-nowrap">
-                <span className="data-label">Mem</span>
+                <span className="data-label">{t('mem')}</span>
                 <span className="data-value text-xs text-theme-text-secondary">
                   {formatBytes(memoryStats.totalMemory)}
                 </span>
@@ -273,7 +275,7 @@ export function StatusBar() {
 
             {defaultDistro && (
               <div className="hidden lg:flex items-center gap-2">
-                <span className="data-label">Primary</span>
+                <span className="data-label">{t('primary')}</span>
                 <span className="data-value text-xs text-theme-accent-primary">{defaultDistro.name}</span>
               </div>
             )}
@@ -300,12 +302,12 @@ export function StatusBar() {
           ) : runningCount > 0 ? (
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 shrink-0 rounded-full bg-theme-status-running shadow-[0_0_8px_rgba(var(--status-running-rgb),1)] animate-pulse" />
-              <span className="data-value text-xs text-theme-status-running">OPERATIONAL</span>
+              <span className="data-value text-xs text-theme-status-running">{t('common:status.operational')}</span>
             </div>
           ) : (
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 shrink-0 rounded-full bg-theme-status-stopped" />
-              <span className="data-value text-xs text-theme-text-muted">STANDBY</span>
+              <span className="data-value text-xs text-theme-text-muted">{t('common:status.standby')}</span>
             </div>
           )}
         </div>

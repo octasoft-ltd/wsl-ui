@@ -1,0 +1,134 @@
+{
+  "title": "帮助与文档",
+  "subtitle": "了解如何使用 WSL UI",
+  "gettingStarted": {
+    "title": "入门",
+    "whatIsWslUi": "什么是 WSL UI？",
+    "whatIsWslUiText": "WSL UI 是一款用于管理 Windows 子系统 Linux (WSL) 发行版的桌面应用程序。它为常见的 WSL 操作（如启动、停止、创建和配置 Linux 发行版）提供了图形界面。",
+    "mainDashboard": "主仪表板",
+    "mainDashboardText": "主视图以卡片形式显示所有已安装的 WSL 发行版。每张卡片显示发行版名称、状态（在线/离线）、磁盘使用情况和快捷操作按钮。",
+    "quickActions": "快捷操作",
+    "quickActionsText": "点击任意发行版卡片上的菜单按钮（三个点）即可访问快捷操作，如打开终端、文件资源管理器、IDE 或管理发行版。"
+  },
+  "distroManagement": {
+    "title": "发行版管理",
+    "startingStoppingTitle": "启动与停止",
+    "start": "启动发行版",
+    "stop": "停止正在运行的发行版",
+    "setAsDefault": "设为默认",
+    "setAsDefaultText": "将某个发行版设为默认，以便在不指定发行版名称的情况下运行 WSL 命令时使用。",
+    "resourceMonitoring": "资源监控",
+    "resourceMonitoringText": "运行中的发行版显示实时 CPU 和内存使用情况。所有发行版都会显示磁盘大小。"
+  },
+  "advancedOps": {
+    "title": "高级操作",
+    "rename": "重命名",
+    "renameText": "更改发行版名称。您还可以更新 Windows 终端配置文件和开始菜单快捷方式。需要先停止发行版。",
+    "move": "移动",
+    "moveText": "将发行版重新定位到其他驱动器或文件夹。适用于管理磁盘空间。需要完全关闭 WSL。",
+    "resizeDisk": "调整磁盘大小",
+    "resizeDiskText": "为需要更多空间的发行版扩展虚拟磁盘大小。仅支持扩展（不支持缩小）。需要关闭 WSL。",
+    "setWslVersion": "设置 WSL 版本",
+    "setWslVersionText": "在 WSL 1 和 WSL 2 之间转换。WSL 2 提供完整 Linux 内核，性能更好。转换可能需要几分钟。",
+    "sparseMode": "稀疏模式",
+    "sparseModeText": "启用自动磁盘空间回收。当您在发行版内删除文件时，虚拟磁盘会自动缩小。",
+    "compactDisk": "压缩磁盘",
+    "compactDiskText": "一键优化以回收发行版虚拟磁盘中未使用的空间。自动运行 fstrim、关闭 WSL 并压缩 VHDX 文件。需要管理员权限，约需 1-2 分钟。"
+  },
+  "creatingDistros": {
+    "title": "创建发行版",
+    "quickInstall": "快速安装（Microsoft Store）",
+    "quickInstallText": "一键安装官方发行版，如 Ubuntu、Debian 和 openSUSE。",
+    "containerImages": "容器镜像",
+    "containerImagesText": "从 Docker 或 Podman 容器镜像创建发行版。支持 Docker Hub 和其他仓库。",
+    "directDownload": "直接下载",
+    "directDownloadText": "从可配置的 URL 下载 rootfs 归档文件。包括 Alpine、NixOS、Void Linux 等。",
+    "communityCatalog": "社区目录（LXC）",
+    "communityCatalogText": "从 Linux Containers 镜像服务器浏览数百个发行版。"
+  },
+  "backupRestore": {
+    "title": "备份与恢复",
+    "export": "导出",
+    "exportText": "将发行版保存为 .tar 归档文件以进行备份或迁移。您可以稍后或在另一台机器上恢复。",
+    "import": "导入",
+    "importText": "从 .tar 归档文件恢复发行版。为导入的发行版选择名称和安装位置。",
+    "clone": "克隆",
+    "cloneText": "使用新名称创建现有发行版的副本。适用于测试或创建变体。"
+  },
+  "customActions": {
+    "title": "自定义操作",
+    "whatAre": "什么是自定义操作？",
+    "whatAreText": "自定义操作是用户定义的 Shell 命令，显示在快捷操作菜单中。为常见任务（如系统更新、备份或开发环境设置）创建操作。",
+    "variables": "变量",
+    "variablesText": "在命令中使用运行时替换的变量：",
+    "varDistroName": "发行版名称",
+    "varHome": "主目录路径",
+    "varUser": "默认用户",
+    "varWindowsHome": "Windows 用户目录",
+    "targeting": "目标发行版",
+    "targetingText": "操作可以针对所有发行版、按名称指定的特定发行版或匹配正则表达式模式的发行版。"
+  },
+  "theming": {
+    "title": "主题与外观",
+    "builtinThemes": "内置主题",
+    "builtinThemesText": "从 17 个专业设计的主题中选择，包括深色、浅色和中间色调选项。热门主题包括 Obsidian、Dracula、Nord 和 Solarized。",
+    "accessibilityThemes": "无障碍主题",
+    "accessibilityThemesText": "为视力较弱的用户提供两个高对比度主题：高对比度（深色）和高对比度浅色。",
+    "customTheme": "自定义主题",
+    "customThemeText": "创建您自己的主题，完全控制 29 个颜色变量，包括背景、文本、边框、强调色等。"
+  },
+  "keyboardShortcuts": {
+    "title": "键盘快捷键",
+    "tab": "Tab",
+    "tabAction": "下一个元素",
+    "shiftTab": "Shift+Tab",
+    "shiftTabAction": "上一个元素",
+    "enter": "Enter",
+    "enterAction": "激活 / 提交",
+    "escape": "Escape",
+    "escapeAction": "关闭对话框或菜单",
+    "space": "Space",
+    "spaceAction": "切换复选框",
+    "accessibility": "无障碍",
+    "accessibilityText": "WSL UI 支持屏幕阅读器、键盘导航，并尊重系统减少动效的偏好设置。"
+  },
+  "settingsOverview": {
+    "title": "设置概览",
+    "terminal": "终端：配置 Windows 终端、自定义终端应用或命令提示符",
+    "ide": "IDE：设置 VS Code、Cursor 或自定义 IDE 集成",
+    "wslGlobal": "WSL 全局：配置内存、CPU、交换空间、网络模式和 WSLg",
+    "perDistro": "按发行版：自动挂载选项、网络设置、systemd 和启动命令",
+    "polling": "轮询：调整状态和资源的自动刷新间隔",
+    "timeouts": "超时：为慢速系统配置操作超时",
+    "executables": "可执行文件路径：覆盖 WSL、PowerShell 和其他工具的默认路径"
+  },
+  "integrations": {
+    "title": "集成",
+    "terminal": "终端集成",
+    "terminalText": "在 Windows 终端、命令提示符或任何自定义终端应用中打开发行版。在设置中配置您首选的终端。",
+    "ide": "IDE 集成",
+    "ideText": "直接在 VS Code 或其他 IDE 中打开发行版。发行版的根文件夹将在您的编辑器中打开。",
+    "fileExplorer": "文件资源管理器",
+    "fileExplorerText": "使用 \\\\wsl$ 网络路径在 Windows 资源管理器中浏览发行版文件。",
+    "systemTray": "系统托盘",
+    "systemTrayText": "最小化到系统托盘以快速访问。在设置中配置关闭行为。"
+  },
+  "troubleshooting": {
+    "title": "故障排除",
+    "wslNotDetected": "未检测到 WSL",
+    "wslNotDetectedText": "确保 WSL 已安装并启用。在 PowerShell 中运行 wsl --status 进行检查。您可能需要启用 WSL 的 Windows 功能。",
+    "operationsTimeout": "操作超时",
+    "operationsTimeoutText": "如果操作经常超时，请在 设置 > 超时 中增大超时值。应用在出现问题时使用指数退避来减少负载。",
+    "distroWontStart": "发行版无法启动",
+    "distroWontStartText": "尝试使用 wsl --shutdown 重启 WSL，然后重新启动发行版。",
+    "fullGuide": "完整故障排除指南"
+  },
+  "resources": {
+    "title": "资源与支持",
+    "wslUiWebsite": "WSL UI 网站",
+    "githubRepo": "GitHub 仓库",
+    "reportIssue": "报告问题",
+    "octasoftWebsite": "Octasoft Ltd 网站",
+    "microsoftDocs": "Microsoft WSL 文档"
+  }
+}

@@ -9,6 +9,7 @@
  */
 
 import { useState, useEffect, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { Portal } from "./ui/Portal";
 import { PauseIcon, WarningIcon, PowerIcon } from "./icons";
 
@@ -30,6 +31,7 @@ export function StopAndActionDialog({
   onStopAndContinue,
   onCancel,
 }: StopAndActionDialogProps) {
+  const { t } = useTranslation("dialogs");
   const [isStopping, setIsStopping] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -53,7 +55,7 @@ export function StopAndActionDialog({
           ? err
           : err instanceof Error
           ? err.message
-          : "Failed to stop distribution";
+          : t('stopAction.errorFailed');
       setError(errorMessage);
       setIsStopping(false);
     }
@@ -107,20 +109,20 @@ export function StopAndActionDialog({
             </div>
             <div>
               <h3 className="text-lg font-semibold text-theme-text-primary">
-                {requiresShutdown ? "Shutdown WSL?" : "Stop Distribution?"}
+                {requiresShutdown ? t('stopAction.titleShutdown') : t('stopAction.titleStop')}
               </h3>
               <p className="text-sm text-theme-text-secondary mt-1">
                 <span className="font-medium text-theme-text-primary">{actionName}</span>{" "}
-                requires{" "}
+                {t('stopAction.requires')}{" "}
                 {requiresShutdown ? (
                   <>
-                    <span className="font-medium text-theme-status-error">all WSL distributions</span>{" "}
-                    to be shut down to release the virtual disk.
+                    <span className="font-medium text-theme-status-error">{t('stopAction.allDistros')}</span>{" "}
+                    {t('stopAction.shutdownReason')}
                   </>
                 ) : (
                   <>
                     <span className="font-medium text-theme-status-warning">{distroName}</span>{" "}
-                    to be stopped.
+                    {t('stopAction.stopReason')}
                   </>
                 )}
               </p>
@@ -155,7 +157,7 @@ export function StopAndActionDialog({
                     d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
                   />
                 </svg>
-                <span>{requiresShutdown ? "Shutting down WSL..." : `Stopping ${distroName}...`}</span>
+                <span>{requiresShutdown ? t('stopAction.shuttingDown') : t('stopAction.stopping', { name: distroName })}</span>
               </div>
             </div>
           )}
@@ -167,7 +169,7 @@ export function StopAndActionDialog({
               data-testid="stop-dialog-cancel-button"
               className="px-4 py-2 text-sm font-medium text-theme-text-secondary bg-theme-bg-tertiary hover:bg-theme-bg-hover rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Cancel
+              {t('common:button.cancel')}
             </button>
             <button
               onClick={handleStopAndContinue}
@@ -194,12 +196,12 @@ export function StopAndActionDialog({
                       d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
                     />
                   </svg>
-                  {requiresShutdown ? "Shutting down..." : "Stopping..."}
+                  {requiresShutdown ? t('stopAction.shuttingDownShort') : t('stopAction.stoppingShort')}
                 </>
               ) : (
                 <>
                   {requiresShutdown ? <PowerIcon size="sm" /> : <PauseIcon size="sm" />}
-                  {requiresShutdown ? "Shutdown & Continue" : "Stop & Continue"}
+                  {requiresShutdown ? t('stopAction.shutdownAndContinue') : t('stopAction.stopAndContinue')}
                 </>
               )}
             </button>

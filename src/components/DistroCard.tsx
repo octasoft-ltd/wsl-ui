@@ -1,4 +1,5 @@
 import { useState, memo } from "react";
+import { useTranslation } from "react-i18next";
 import type { Distribution } from "../types/distribution";
 import { formatBytes, INSTALL_SOURCE_COLORS } from "../types/distribution";
 import { useDistroStore } from "../store/distroStore";
@@ -16,6 +17,7 @@ interface DistroCardProps {
 }
 
 function DistroCardComponent({ distro, index = 0 }: DistroCardProps) {
+  const { t } = useTranslation("dashboard");
   const { startDistro, stopDistro, deleteDistro, openTerminal, openRemoteDesktop, actionInProgress, compactingDistro } = useDistroStore();
   const { getDistroResources } = useResourceStore();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -93,7 +95,7 @@ function DistroCardComponent({ distro, index = 0 }: DistroCardProps) {
           <div className="flex items-center gap-2">
             {distro.isDefault && (
               <span className="text-[10px] px-2 py-1 bg-[rgba(var(--accent-primary-rgb),0.1)] text-theme-accent-primary rounded border border-[rgba(var(--accent-primary-rgb),0.3)] font-mono font-semibold uppercase tracking-wider">
-                Primary
+                {t('common:status.primary')}
               </span>
             )}
             {isCompacting ? (
@@ -105,7 +107,7 @@ function DistroCardComponent({ distro, index = 0 }: DistroCardProps) {
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                 </svg>
-                Compacting
+                {t('common:status.compacting')}
               </span>
             ) : (
               <span
@@ -116,7 +118,7 @@ function DistroCardComponent({ distro, index = 0 }: DistroCardProps) {
                     : "bg-theme-bg-tertiary text-theme-text-muted border border-theme-border-secondary"
                 }`}
               >
-                {isRunning ? 'Online' : 'Offline'}
+                {isRunning ? t('common:status.online') : t('common:status.offline')}
               </span>
             )}
           </div>
@@ -152,7 +154,7 @@ function DistroCardComponent({ distro, index = 0 }: DistroCardProps) {
         <div className="grid grid-cols-3 gap-4 mb-4 p-2.5 bg-theme-bg-primary/50 rounded-lg border border-theme-border-primary">
           {/* Disk */}
           <div className="text-center">
-            <span className="data-label block mb-1">Disk</span>
+            <span className="data-label block mb-1">{t('common:label.disk')}</span>
             <span className="data-value text-sm text-theme-text-secondary">
               {distro.diskSize && distro.diskSize > 0 ? formatBytes(distro.diskSize) : '—'}
             </span>
@@ -160,7 +162,7 @@ function DistroCardComponent({ distro, index = 0 }: DistroCardProps) {
 
           {/* Memory */}
           <div className="text-center border-x border-theme-border-primary">
-            <span className="data-label block mb-1">Memory</span>
+            <span className="data-label block mb-1">{t('common:label.memory')}</span>
             <span data-testid="memory-usage" className="data-value text-sm text-theme-accent-primary">
               {resources ? formatBytes(resources.memoryUsedBytes) : '—'}
             </span>
@@ -168,7 +170,7 @@ function DistroCardComponent({ distro, index = 0 }: DistroCardProps) {
 
           {/* CPU */}
           <div className="text-center">
-            <span className="data-label block mb-1">CPU</span>
+            <span className="data-label block mb-1">{t('common:label.cpu')}</span>
             <span data-testid="cpu-usage" className="data-value text-sm text-theme-status-warning">
               {resources?.cpuPercent != null ? `${resources.cpuPercent.toFixed(1)}%` : '—'}
             </span>
@@ -190,19 +192,19 @@ function DistroCardComponent({ distro, index = 0 }: DistroCardProps) {
             {isRunning ? (
               <span className="flex items-center justify-center gap-2">
                 <StopIcon size="sm" />
-                Suspend
+                {t('card.suspend')}
               </span>
             ) : (
               <span className="flex items-center justify-center gap-2">
                 <PlayIcon size="sm" />
-                Launch
+                {t('card.launch')}
               </span>
             )}
           </button>
 
           <IconButton
             icon={<TerminalWindowIcon size="sm" className="text-amber-500" />}
-            label="Open Terminal"
+            label={t('card.openTerminal')}
             variant="secondary"
             colorScheme="amber"
             className="btn-cyber"
@@ -213,7 +215,7 @@ function DistroCardComponent({ distro, index = 0 }: DistroCardProps) {
 
           <IconButton
             icon={<MonitorIcon size="sm" className="text-blue-500" />}
-            label="Open Remote Desktop"
+            label={t('card.openRdp')}
             variant="secondary"
             colorScheme="blue"
             className="btn-cyber"
@@ -226,7 +228,7 @@ function DistroCardComponent({ distro, index = 0 }: DistroCardProps) {
 
           <IconButton
             icon={<TrashIcon size="sm" />}
-            label="Delete distribution"
+            label={t('card.deleteDistro')}
             variant="danger"
             className="btn-cyber"
             onClick={handleDelete}
@@ -239,13 +241,13 @@ function DistroCardComponent({ distro, index = 0 }: DistroCardProps) {
 
       <ConfirmDialog
         isOpen={showDeleteConfirm}
-        title="Delete Distribution"
+        title={t('deleteDialog.title')}
         message={
           distro.isDefault
-            ? `Are you sure you want to delete "${distro.name}"? This action cannot be undone and all data in this distribution will be permanently lost.\n\nWarning: This is your default distribution. After deletion, WSL commands will fail unless you set another distribution as the default.`
-            : `Are you sure you want to delete "${distro.name}"? This action cannot be undone and all data in this distribution will be permanently lost.`
+            ? t('deleteDialog.messageDefault', { name: distro.name })
+            : t('deleteDialog.message', { name: distro.name })
         }
-        confirmLabel="Delete"
+        confirmLabel={t('deleteDialog.confirm')}
         onConfirm={confirmDelete}
         onCancel={() => setShowDeleteConfirm(false)}
         danger

@@ -1,0 +1,21 @@
+{
+  "boundary": {
+    "title": "문제가 발생했습니다",
+    "message": "애플리케이션에서 예기치 않은 오류가 발생했습니다. 다시 시도해 주세요.",
+    "tryAgain": "다시 시도"
+  },
+  "system": {
+    "title": "시스템 오류",
+    "timeoutTip": "팁: 최근에 새 배포판을 설치했다면 설치 중에 자동으로 열린 터미널 창을 닫아주세요.",
+    "forceShutdown": "WSL 강제 종료",
+    "forceShutdownTitle": "WSL 강제 종료",
+    "forceShutdownMessage": "'wsl --shutdown --force'를 사용하여 모든 WSL 프로세스를 강제 종료합니다. Linux 배포판에서 저장하지 않은 작업이 손실될 수 있습니다. 이 작업은 취소할 수 없습니다.",
+    "forceShutdownConfirm": "강제 종료"
+  },
+  "wslUpdate": {
+    "title": "WSL 업데이트",
+    "success": "업데이트가 성공적으로 완료되었습니다",
+    "cancelled": "WSL 업데이트",
+    "failedTitle": "WSL 업데이트 실패"
+  }
+}

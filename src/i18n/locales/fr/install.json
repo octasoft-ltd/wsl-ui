@@ -1,0 +1,75 @@
+{
+  "title": "Ajouter une distribution",
+  "subtitle": "Choisissez comment installer votre distribution Linux",
+  "mode": {
+    "quickInstall": "Installation rapide",
+    "quickInstallDesc": "Installer depuis le Microsoft Store",
+    "download": "T\u00e9l\u00e9charger",
+    "downloadDesc": "T\u00e9l\u00e9chargement direct avec nom personnalis\u00e9",
+    "community": "Communaut\u00e9",
+    "communityDesc": "Parcourir le catalogue d'images LXC",
+    "container": "Conteneur",
+    "containerDesc": "Cr\u00e9er \u00e0 partir d'une image de conteneur"
+  },
+  "info": {
+    "quickInstall": "Distributions officielles du Microsoft Store. Installation dans l'emplacement par d\u00e9faut g\u00e9r\u00e9 par Windows.",
+    "download": "Ce catalogue peut \u00eatre personnalis\u00e9 dans Param\u00e8tres > Sources de distributions. Les URL personnalis\u00e9es sont enregistr\u00e9es pour une utilisation future.",
+    "community": "Images depuis {{url}}. Configurer dans Param\u00e8tres > Sources de distributions.",
+    "container": "Environnement d'ex\u00e9cution s\u00e9lectionn\u00e9 configur\u00e9 dans les param\u00e8tres : {{runtime}}"
+  },
+  "containerRuntime": {
+    "builtin": "OCI int\u00e9gr\u00e9 (registres publics uniquement)",
+    "docker": "Docker (prend en charge les registres authentifi\u00e9s)",
+    "podman": "Podman (prend en charge les registres authentifi\u00e9s)",
+    "custom": "Personnalis\u00e9 : {{path}}"
+  },
+  "filter": {
+    "all": "Toutes"
+  },
+  "loading": "Chargement des distributions disponibles...",
+  "empty": "Aucune distribution disponible",
+  "install": "Installer",
+  "useUrl": "Utiliser une URL",
+  "useImage": "Utiliser une image",
+  "placeholder": {
+    "url": "ex., https://example.com/distro-rootfs.tar.gz",
+    "image": "ex., alpine:latest, gitlab/gitlab-runner:latest"
+  },
+  "customUrl": {
+    "label": "URL personnalis\u00e9e",
+    "description": "Entrez un lien direct vers une archive rootfs"
+  },
+  "customImage": {
+    "label": "Image personnalis\u00e9e",
+    "description": "Entrez une r\u00e9f\u00e9rence d'image OCI"
+  },
+  "alreadyInstalled": "\"{{name}}\" est d\u00e9j\u00e0 install\u00e9",
+  "progress": {
+    "installingStore": "Installation depuis le Microsoft Store...",
+    "success": "Installation r\u00e9ussie !",
+    "downloading": "T\u00e9l\u00e9chargement : {{percent}}% ({{downloaded}} / {{total}})",
+    "importing": "Importation dans WSL...",
+    "pullingImage": "T\u00e9l\u00e9chargement de l'image de conteneur...",
+    "downloadFailed": "Le t\u00e9l\u00e9chargement a \u00e9chou\u00e9"
+  },
+  "trademarkDisclaimer": "Les logos des distributions Linux sont des marques d\u00e9pos\u00e9es de leurs propri\u00e9taires respectifs et sont utilis\u00e9s ici uniquement \u00e0 des fins d'identification.\nCette application n'est ni affili\u00e9e ni approuv\u00e9e par aucun projet de distribution.",
+  "installingAs": "Installation en tant que \"{{name}}\"",
+  "noDownloadable": "Aucune distribution t\u00e9l\u00e9chargeable configur\u00e9e",
+  "noContainerImages": "Aucune image de conteneur configur\u00e9e",
+  "communityDisabled": "Le catalogue communautaire est d\u00e9sactiv\u00e9",
+  "communityDisabledHint": "Activez-le dans Param\u00e8tres > Sources de distributions",
+  "useCustomUrl": "Utiliser une URL personnalis\u00e9e \u00e0 la place",
+  "useCustomImage": "Utiliser une image personnalis\u00e9e \u00e0 la place",
+  "distroSources": {
+    "title": "Sources de distributions",
+    "description": "Configurer les sources de t\u00e9l\u00e9chargement des distributions",
+    "addUrl": "Ajouter une URL",
+    "removeUrl": "Supprimer",
+    "urlPlaceholder": "https://example.com/distro-rootfs.tar.gz",
+    "name": "Nom",
+    "namePlaceholder": "ex., Alpine Linux",
+    "url": "URL",
+    "noSources": "Aucune source personnalis\u00e9e configur\u00e9e",
+    "builtInSources": "Les sources int\u00e9gr\u00e9es sont toujours disponibles"
+  }
+}

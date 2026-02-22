@@ -1,0 +1,75 @@
+{
+  "title": "إضافة توزيعة",
+  "subtitle": "اختر كيف تريد تثبيت توزيعة Linux الخاصة بك",
+  "mode": {
+    "quickInstall": "تثبيت سريع",
+    "quickInstallDesc": "التثبيت من Microsoft Store",
+    "download": "تنزيل",
+    "downloadDesc": "تنزيل مباشر باسم مخصص",
+    "community": "المجتمع",
+    "communityDesc": "تصفح كتالوج صور LXC",
+    "container": "حاوية",
+    "containerDesc": "إنشاء من صورة حاوية"
+  },
+  "info": {
+    "quickInstall": "توزيعات رسمية من Microsoft Store. يتم التثبيت في الموقع المُدار بواسطة Windows الافتراضي.",
+    "download": "يمكن تخصيص هذا الكتالوج في الإعدادات > مصادر التوزيعات. يتم حفظ عناوين URL المخصصة للاستخدام المستقبلي.",
+    "community": "صور من {{url}}. التكوين في الإعدادات > مصادر التوزيعات.",
+    "container": "وقت التشغيل المحدد المكوّن في الإعدادات: {{runtime}}"
+  },
+  "containerRuntime": {
+    "builtin": "OCI مدمج (السجلات العامة فقط)",
+    "docker": "Docker (يدعم السجلات المصادق عليها)",
+    "podman": "Podman (يدعم السجلات المصادق عليها)",
+    "custom": "مخصص: {{path}}"
+  },
+  "filter": {
+    "all": "الكل"
+  },
+  "loading": "جارٍ تحميل التوزيعات المتاحة...",
+  "empty": "لا توجد توزيعات متاحة",
+  "install": "تثبيت",
+  "useUrl": "استخدام URL",
+  "useImage": "استخدام صورة",
+  "placeholder": {
+    "url": "مثال، https://example.com/distro-rootfs.tar.gz",
+    "image": "مثال، alpine:latest, gitlab/gitlab-runner:latest"
+  },
+  "customUrl": {
+    "label": "URL مخصص",
+    "description": "أدخل رابطاً مباشراً لأرشيف rootfs"
+  },
+  "customImage": {
+    "label": "صورة مخصصة",
+    "description": "أدخل أي مرجع صورة OCI"
+  },
+  "alreadyInstalled": "\"{{name}}\" مثبّت بالفعل",
+  "progress": {
+    "installingStore": "جارٍ التثبيت من Microsoft Store...",
+    "success": "تم التثبيت بنجاح!",
+    "downloading": "جارٍ التنزيل: {{percent}}% ({{downloaded}} / {{total}})",
+    "importing": "جارٍ الاستيراد إلى WSL...",
+    "pullingImage": "جارٍ سحب صورة الحاوية...",
+    "downloadFailed": "فشل التنزيل"
+  },
+  "trademarkDisclaimer": "شعارات توزيعات Linux هي علامات تجارية لأصحابها المعنيين وتُستخدم هنا لأغراض التعريف فقط.\nهذا التطبيق غير تابع لأي مشروع توزيعة أو معتمد منه.",
+  "installingAs": "جارٍ التثبيت باسم \"{{name}}\"",
+  "noDownloadable": "لم يتم تكوين توزيعات قابلة للتنزيل",
+  "noContainerImages": "لم يتم تكوين صور حاويات",
+  "communityDisabled": "كتالوج المجتمع معطّل",
+  "communityDisabledHint": "قم بتفعيله في الإعدادات > مصادر التوزيعات",
+  "useCustomUrl": "استخدم URL مخصصاً بدلاً من ذلك",
+  "useCustomImage": "استخدم صورة مخصصة بدلاً من ذلك",
+  "distroSources": {
+    "title": "مصادر التوزيعات",
+    "description": "تكوين مكان تنزيل التوزيعات",
+    "addUrl": "إضافة URL",
+    "removeUrl": "إزالة",
+    "urlPlaceholder": "https://example.com/distro-rootfs.tar.gz",
+    "name": "الاسم",
+    "namePlaceholder": "مثال، Alpine Linux",
+    "url": "URL",
+    "noSources": "لم يتم تكوين مصادر مخصصة",
+    "builtInSources": "المصادر المدمجة متاحة دائماً"
+  }
+}
