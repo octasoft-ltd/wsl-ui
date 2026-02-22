@@ -205,7 +205,7 @@ export function ThemeSettings() {
                   </div>
 
                   <div className="font-medium text-(--text-primary) text-sm">{theme.name}</div>
-                  <div className="text-xs text-(--text-muted) mt-0.5">{theme.description}</div>
+                  <div className="text-xs text-(--text-muted) mt-0.5">{t(`theme.builtIn.${theme.id}`, theme.description)}</div>
                 </button>
               );
             })}
