@@ -84,7 +84,7 @@ describe("Custom Actions CRUD", () => {
       const newActionButton = await $(customActionsSelectors.newActionButton);
       await expect(newActionButton).toBeDisplayed();
       const buttonText = await newActionButton.getText();
-      expect(buttonText).toContain("New Action");
+      expect(buttonText).toContain("Add Action");
     });
 
     it("should display Import button", async () => {
@@ -179,8 +179,8 @@ describe("Custom Actions CRUD", () => {
       // Check text is in the form
       const pageText = await $("form").getText();
       expect(pageText).toContain("Confirm before running");
-      expect(pageText).toContain("Show command output");
-      expect(pageText).toContain("Requires sudo");
+      expect(pageText).toContain("Display command output");
+      expect(pageText).toContain("Run with sudo");
     });
 
     it("should create action with name and command", async () => {
@@ -356,7 +356,7 @@ describe("Custom Actions CRUD", () => {
 
       const saveButton = await $(customActionsSelectors.saveActionButton);
       const buttonText = await saveButton.getText();
-      expect(buttonText).toBe("Update Action");
+      expect(buttonText).toBe("Edit Action");
     });
   });
 

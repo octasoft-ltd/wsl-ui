@@ -191,7 +191,7 @@ function ActionEditor({ action, onSave, onCancel, distros }: ActionEditorProps) 
             data-testid="action-confirm-checkbox"
             className="text-orange-500"
           />
-          <span className="text-sm text-stone-300">{t('customActionsSettings.showOutput')}</span>
+          <span className="text-sm text-stone-300">{t('customActionsSettings.confirmBeforeRun')}</span>
         </label>
         <label className="flex items-center gap-2">
           <input
@@ -241,11 +241,11 @@ function ActionEditor({ action, onSave, onCancel, distros }: ActionEditorProps) 
             data-testid="action-run-in-terminal-checkbox"
             className="text-orange-500"
           />
-          <span className="text-sm text-stone-300">{t('customActionsSettings.showOutput')}</span>
+          <span className="text-sm text-stone-300">{t('customActionsSettings.runInTerminal')}</span>
         </label>
         {formData.runInTerminal && (
           <p className="text-xs text-stone-500 ml-6">
-            {t('customActionsSettings.showOutputDesc')}
+            {t('customActionsSettings.runInTerminalDesc')}
           </p>
         )}
         <label className="flex items-center gap-2">

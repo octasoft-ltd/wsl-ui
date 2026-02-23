@@ -151,7 +151,9 @@ describe("Clone Distribution", () => {
       await actions.openCloneDialog("Ubuntu");
 
       const input = await $(selectors.cloneNameInput);
-      await input.clearValue();
+      await input.click();
+      await browser.keys(["Control", "a"]);
+      await browser.keys("Backspace");
       await input.setValue("Ubuntu");
 
       // Wait for validation error to appear
