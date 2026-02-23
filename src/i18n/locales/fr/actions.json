@@ -1,0 +1,96 @@
+{
+  "quickActions": {
+    "title": "Actions rapides",
+    "info": "Informations sur la distribution",
+    "explorer": "Ouvrir l'Explorateur de fichiers",
+    "ide": "Ouvrir dans l'IDE",
+    "restart": "Redémarrer",
+    "export": "Exporter vers un fichier...",
+    "clone": "Cloner...",
+    "setDefault": "Définir par défaut",
+    "alreadyDefault": "Distribution par défaut"
+  },
+  "manage": {
+    "title": "Gérer",
+    "move": "Déplacer la distribution...",
+    "resize": "Redimensionner le disque...",
+    "compact": "Compacter le disque...",
+    "user": "Définir l'utilisateur par défaut...",
+    "rename": "Renommer...",
+    "sparse": "Mode sparse",
+    "version": "Définir la version WSL"
+  },
+  "customActions": {
+    "title": "Actions personnalisées",
+    "requiresStop": "Nécessite l'arrêt de la distribution",
+    "requiresShutdown": "Nécessite l'arrêt de WSL"
+  },
+  "sparseConfirm": {
+    "title": "Activer le mode sparse ?",
+    "message": "Avertissement : Microsoft a signalé que le support VHD sparse peut provoquer une corruption de données. Bien qu'il puisse aider à récupérer automatiquement l'espace disque, il existe un risque de perte de données. Assurez-vous d'avoir des sauvegardes avant d'activer cette fonctionnalité.",
+    "confirm": "Activer quand même"
+  },
+  "outputDialog": {
+    "titleSuffix": "- Sortie",
+    "noOutput": "Aucune sortie."
+  },
+  "editor": {
+    "iconLabel": "Icône",
+    "availableVars": "Variables disponibles :"
+  },
+  "exportTitle": "Exporter les actions personnalisées",
+  "importTitle": "Importer les actions personnalisées",
+  "badge": {
+    "startup": "Démarrage"
+  },
+  "scope": {
+    "all": "Toutes les distributions",
+    "pattern": "Motif : {{pattern}}",
+    "count_one": "{{count}} distribution",
+    "count_other": "{{count}} distributions"
+  },
+  "sparseChanged": "Mode sparse modifié",
+  "sparseChangedMessage": "Mode sparse {{state}} pour {{name}}",
+  "sparseToggleFailed": "Échec du basculement du mode sparse",
+  "sparseToggle": "Basculer le mode sparse",
+  "actionFailed": "Échec de l'action",
+  "actionFailedMessage": "Échec de l'exécution de l'action",
+  "distroIdUnavailable": "ID de distribution non disponible",
+  "requiresSudo": "Nécessite le mot de passe sudo",
+  "confirmRunTitle": "Exécuter « {{action}} » ?",
+  "confirmRunMessage": "Êtes-vous sûr de vouloir exécuter cette action sur {{name}} ?",
+  "customActionsSettings": {
+    "title": "Actions personnalisées",
+    "description": "Définir des commandes shell qui apparaissent dans le menu d'actions rapides de la distribution",
+    "addAction": "Ajouter une action",
+    "editAction": "Modifier l'action",
+    "noActions": "Aucune action personnalisée configurée",
+    "noActionsHint": "Ajoutez votre première action personnalisée pour commencer",
+    "name": "Nom",
+    "namePlaceholder": "ex., Mise à jour système",
+    "command": "Commande",
+    "commandPlaceholder": "ex., sudo apt update && sudo apt upgrade -y",
+    "sudo": "Exécuter avec sudo",
+    "sudoDesc": "Exécuter la commande avec des privilèges élevés",
+    "runOnStartup": "Exécuter au démarrage",
+    "runOnStartupDesc": "Exécuter lorsqu'une distribution correspondante démarre",
+    "confirmBeforeRun": "Confirmer avant l'exécution",
+    "runInTerminal": "Exécuter dans le terminal",
+    "runInTerminalDesc": "Exécuter la commande dans une fenêtre de terminal visible",
+    "showOutput": "Afficher la sortie",
+    "showOutputDesc": "Afficher la sortie de la commande dans une boîte de dialogue",
+    "target": "Distributions cibles",
+    "targetAll": "Toutes les distributions",
+    "targetSpecific": "Distributions spécifiques",
+    "targetRegex": "Motif regex",
+    "targetPlaceholder": "ex., Ubuntu.*",
+    "save": "Enregistrer",
+    "delete": "Supprimer",
+    "deleteConfirm": "Êtes-vous sûr de vouloir supprimer cette action ?",
+    "importExport": "Importer/Exporter",
+    "importActions": "Importer",
+    "exportActions": "Exporter",
+    "importSuccess": "Actions importées avec succès",
+    "exportSuccess": "Actions exportées avec succès"
+  }
+}

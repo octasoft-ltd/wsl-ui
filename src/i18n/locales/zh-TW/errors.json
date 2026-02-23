@@ -1,0 +1,21 @@
+{
+  "boundary": {
+    "title": "發生了問題",
+    "message": "應用程式遇到了意外錯誤。請重試。",
+    "tryAgain": "重試"
+  },
+  "system": {
+    "title": "系統錯誤",
+    "timeoutTip": "提示：如果您最近安裝了新發行版，請關閉安裝過程中自動開啟的終端視窗。",
+    "forceShutdown": "強制關閉 WSL",
+    "forceShutdownTitle": "強制關閉 WSL",
+    "forceShutdownMessage": "這將使用 'wsl --shutdown --force' 強制終止所有 WSL 處理程序。您在 Linux 發行版中未儲存的工作可能會遺失。此操作無法復原。",
+    "forceShutdownConfirm": "強制關閉"
+  },
+  "wslUpdate": {
+    "title": "WSL 更新",
+    "success": "更新已成功完成",
+    "cancelled": "WSL 更新",
+    "failedTitle": "WSL 更新失敗"
+  }
+}

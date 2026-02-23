@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { invoke } from "@tauri-apps/api/core";
 import { open } from "@tauri-apps/plugin-dialog";
 import { useDistroStore } from "../store/distroStore";
@@ -12,6 +13,7 @@ interface ImportDialogProps {
 }
 
 export function ImportDialog({ isOpen, onClose }: ImportDialogProps) {
+  const { t } = useTranslation("dialogs");
   const [name, setName] = useState("");
   const [tarPath, setTarPath] = useState("");
   const [installLocation, setInstallLocation] = useState("");
@@ -28,8 +30,8 @@ export function ImportDialog({ isOpen, onClose }: ImportDialogProps) {
 
   const handleBrowseTar = async () => {
     const path = await open({
-      filters: [{ name: "TAR Archive", extensions: ["tar"] }],
-      title: "Select WSL Distribution Archive",
+      filters: [{ name: t('import.tarFilterName'), extensions: ["tar"] }],
+      title: t('import.browseTarTitle'),
       multiple: false,
     });
 
@@ -47,7 +49,7 @@ export function ImportDialog({ isOpen, onClose }: ImportDialogProps) {
   const handleBrowseLocation = async () => {
     const path = await open({
       directory: true,
-      title: "Select Installation Location",
+      title: t('import.browseLocationTitle'),
     });
 
     if (path && !Array.isArray(path)) {
@@ -57,19 +59,19 @@ export function ImportDialog({ isOpen, onClose }: ImportDialogProps) {
 
   const handleImport = async () => {
     if (!name.trim()) {
-      setError("Please enter a name for the distribution");
+      setError(t('import.errorNoName'));
       return;
     }
     if (nameExists) {
-      setError(`A distribution named "${name.trim()}" already exists. Please choose a different name.`);
+      setError(t('common:validation.duplicateName', { name: name.trim() }));
       return;
     }
     if (!tarPath) {
-      setError("Please select a TAR archive");
+      setError(t('import.errorNoTar'));
       return;
     }
     if (!installLocation) {
-      setError("Please select an installation location");
+      setError(t('import.errorNoLocation'));
       return;
     }
 
@@ -86,7 +88,7 @@ export function ImportDialog({ isOpen, onClose }: ImportDialogProps) {
       handleClose();
     } catch (err) {
       // Tauri returns string errors, not Error instances
-      const errorMessage = typeof err === "string" ? err : err instanceof Error ? err.message : "Failed to import distribution";
+      const errorMessage = typeof err === "string" ? err : err instanceof Error ? err.message : t('import.errorFailed');
       setError(errorMessage);
     } finally {
       setIsImporting(false);
@@ -109,7 +111,7 @@ export function ImportDialog({ isOpen, onClose }: ImportDialogProps) {
 
         {/* Dialog */}
         <div role="dialog" aria-modal="true" className="relative bg-theme-bg-secondary border border-theme-border-secondary rounded-xl shadow-2xl shadow-black/50 max-w-lg w-full mx-4 p-6">
-        <h2 className="text-xl font-semibold text-theme-text-primary mb-4">Import Distribution</h2>
+        <h2 className="text-xl font-semibold text-theme-text-primary mb-4">{t('import.title')}</h2>
 
         {/* Error message - always reserve space to prevent layout shift */}
         <div className="mb-4 min-h-11">
@@ -124,11 +126,11 @@ export function ImportDialog({ isOpen, onClose }: ImportDialogProps) {
           {/* Name */}
           <div>
             <Input
-              label="Distribution Name"
+              label={t('import.nameLabel')}
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="e.g., Ubuntu-Dev"
-              error={nameExists ? "A distribution with this name already exists" : undefined}
+              placeholder={t('import.namePlaceholder')}
+              error={nameExists ? t('common:validation.nameExists') : undefined}
               showErrorIcon
               reserveErrorSpace
             />
@@ -137,10 +139,10 @@ export function ImportDialog({ isOpen, onClose }: ImportDialogProps) {
           {/* TAR Path */}
           <div>
             <PathInput
-              label="TAR Archive"
+              label={t('import.tarLabel')}
               value={tarPath}
               readOnly
-              placeholder="Select a .tar file..."
+              placeholder={t('import.tarPlaceholder')}
               onBrowse={handleBrowseTar}
             />
           </div>
@@ -148,12 +150,12 @@ export function ImportDialog({ isOpen, onClose }: ImportDialogProps) {
           {/* Install Location */}
           <div>
             <PathInput
-              label="Installation Location"
+              label={t('import.locationLabel')}
               value={installLocation}
               readOnly
-              placeholder="Select installation folder..."
+              placeholder={t('import.locationPlaceholder')}
               onBrowse={handleBrowseLocation}
-              helperText="WSL will store the distribution's virtual disk here"
+              helperText={t('import.locationHelper')}
             />
           </div>
         </div>
@@ -164,7 +166,7 @@ export function ImportDialog({ isOpen, onClose }: ImportDialogProps) {
             disabled={isImporting}
             className="px-4 py-2 text-sm font-medium text-theme-text-secondary bg-theme-bg-tertiary hover:bg-theme-bg-hover rounded-lg transition-colors disabled:opacity-50"
           >
-            Cancel
+            {t('common:button.cancel')}
           </button>
           <button
             onClick={handleImport}
@@ -172,11 +174,11 @@ export function ImportDialog({ isOpen, onClose }: ImportDialogProps) {
             className="px-4 py-2 text-sm font-medium bg-theme-accent-primary hover:opacity-90 text-theme-bg-primary rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
           >
             {isImporting ? (
-              "Importing..."
+              t('import.importing')
             ) : (
               <>
                 <DownloadIcon size="sm" />
-                Import
+                {t('import.import')}
               </>
             )}
           </button>

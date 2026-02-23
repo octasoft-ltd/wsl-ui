@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { open } from "@tauri-apps/plugin-dialog";
 import { wslService } from "../services/wslService";
 import { useDistroStore } from "../store/distroStore";
@@ -31,6 +32,7 @@ export function InstallConfigDialog({
   mode,
   selectedItem,
 }: InstallConfigDialogProps) {
+  const { t } = useTranslation("dialogs");
   const [distroName, setDistroName] = useState(selectedItem.suggestedName);
   const [isCustomPath, setIsCustomPath] = useState(false);
   const [customPath, setCustomPath] = useState("");
@@ -88,7 +90,7 @@ export function InstallConfigDialog({
         const pathToValidate = isCustomPath ? customPath : "";
         const validation = await wslService.validateInstallPath(pathToValidate, trimmedName);
         if (!validation.isValid) {
-          setPathError(validation.error || "Invalid install location");
+          setPathError(validation.error || t('installConfig.invalidLocation'));
         } else {
           setPathError(null);
         }
@@ -111,14 +113,14 @@ export function InstallConfigDialog({
     }
 
     if (!/^[a-zA-Z0-9._-]+$/.test(trimmedName)) {
-      return "Name can only contain letters, numbers, dots, underscores, and hyphens";
+      return t('common:validation.invalidChars') as string;
     }
 
     const isDuplicate = distributions.some(
       (d) => d.name.toLowerCase() === trimmedName.toLowerCase()
     );
     if (isDuplicate) {
-      return `A distribution named "${trimmedName}" already exists`;
+      return t('common:validation.duplicateName', { name: trimmedName }) as string;
     }
 
     return null;
@@ -128,7 +130,7 @@ export function InstallConfigDialog({
     const selectedPath = await open({
       directory: true,
       multiple: false,
-      title: "Select Installation Folder",
+      title: t('installConfig.browseTitle'),
     });
 
     if (selectedPath && !Array.isArray(selectedPath)) {
@@ -225,9 +227,9 @@ export function InstallConfigDialog({
           className="relative bg-theme-bg-secondary border border-theme-border-secondary rounded-xl shadow-2xl shadow-black/50 max-w-md w-full mx-4 p-6"
         >
           {/* Header */}
-          <h2 className="text-xl font-semibold text-theme-text-primary mb-2">Configure Installation</h2>
+          <h2 className="text-xl font-semibold text-theme-text-primary mb-2">{t('installConfig.title')}</h2>
           <p className="text-sm text-theme-text-secondary mb-1">
-            Installing <span className={`font-medium ${colors.text}`}>{selectedItem.name}</span>
+            {t('installConfig.installing')} <span className={`font-medium ${colors.text}`}>{selectedItem.name}</span>
           </p>
           {selectedItem.description && (
             <p className="text-xs text-theme-text-muted mb-4 font-mono truncate">{selectedItem.description}</p>
@@ -236,11 +238,11 @@ export function InstallConfigDialog({
           {/* Distribution Name */}
           <div className="mb-4">
             <Input
-              label="Distribution Name"
+              label={t('installConfig.nameLabel')}
               value={distroName}
               onChange={(e) => setDistroName(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="Enter a unique name"
+              placeholder={t('installConfig.namePlaceholder')}
               autoFocus
               data-testid="install-config-name-input"
               error={nameValidationError || undefined}
@@ -256,7 +258,7 @@ export function InstallConfigDialog({
           <div className="mb-4">
             <div className="flex items-center justify-between mb-1">
               <label className="text-sm font-medium text-theme-text-primary">
-                Installation Location
+                {t('installConfig.locationLabel')}
               </label>
               {isCustomPath && (
                 <button
@@ -264,16 +266,16 @@ export function InstallConfigDialog({
                   onClick={handleResetToDefault}
                   className={`text-xs ${colors.text} hover:underline`}
                 >
-                  Reset to default
+                  {t('common:button.resetToDefault')}
                 </button>
               )}
             </div>
             <PathInput
               value={effectivePath}
               onChange={(e) => handlePathChange(e.target.value)}
-              placeholder="Select installation folder..."
+              placeholder={t('installConfig.locationPlaceholder')}
               onBrowse={handleBrowseLocation}
-              helperText={isCustomPath ? "Using custom location" : "Using default location"}
+              helperText={isCustomPath ? t('installConfig.locationCustom') : t('installConfig.locationDefault')}
               error={pathError || undefined}
               showErrorIcon
               errorTestId="install-config-path-error"
@@ -285,7 +287,7 @@ export function InstallConfigDialog({
           {/* WSL Version */}
           <div className="mb-6">
             <label className="block text-sm font-medium text-theme-text-primary mb-2">
-              WSL Version
+              {t('installConfig.wslVersion')}
             </label>
             <div className="flex gap-4">
               <RadioButton
@@ -295,7 +297,7 @@ export function InstallConfigDialog({
                 inline
                 labelClassName="text-theme-text-secondary"
                 className={colors.radio}
-                label={<>WSL 2 <span className="text-theme-text-muted">(recommended)</span></>}
+                label={<>WSL 2 <span className="text-theme-text-muted">({t('installConfig.recommended')})</span></>}
               />
               <RadioButton
                 name="installWslVersion"
@@ -316,7 +318,7 @@ export function InstallConfigDialog({
               data-testid="install-config-cancel-button"
               className="px-4 py-2 text-sm font-medium text-theme-text-secondary bg-theme-bg-tertiary hover:bg-theme-bg-hover rounded-lg transition-colors"
             >
-              Cancel
+              {t('common:button.cancel')}
             </button>
             <button
               onClick={handleInstall}
@@ -331,7 +333,7 @@ export function InstallConfigDialog({
               }`}
             >
               <DownloadIcon size="sm" />
-              Install
+              {t('installConfig.install')}
             </button>
           </div>
         </div>

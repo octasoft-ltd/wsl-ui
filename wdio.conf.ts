@@ -42,6 +42,147 @@ function killProcessTree(pid: number): void {
 }
 
 /**
+ * Get the installed Microsoft Edge browser version from the Windows registry.
+ * Returns the full version string (e.g., "145.0.3800.70") or null if not found.
+ */
+function getEdgeBrowserVersion(): string | null {
+  if (process.platform !== "win32") return null;
+
+  const result = spawnSync(
+    "reg",
+    [
+      "query",
+      "HKLM\\SOFTWARE\\WOW6432Node\\Microsoft\\EdgeUpdate\\Clients\\{56EB18F8-B008-4CBD-B6D2-8C97FE7E9062}",
+      "/v",
+      "pv",
+    ],
+    { encoding: "utf-8", stdio: ["ignore", "pipe", "pipe"] }
+  );
+
+  if (result.status !== 0) return null;
+
+  const match = result.stdout.match(/pv\s+REG_SZ\s+(\S+)/);
+  return match ? match[1] : null;
+}
+
+/**
+ * Get the version of the local msedgedriver.exe.
+ * Returns the full version string or null if not found/runnable.
+ */
+function getEdgeDriverVersion(driverPath: string): string | null {
+  if (!fs.existsSync(driverPath)) return null;
+
+  const result = spawnSync(driverPath, ["--version"], {
+    encoding: "utf-8",
+    stdio: ["ignore", "pipe", "pipe"],
+  });
+
+  if (result.status !== 0) return null;
+
+  // Output is like "Microsoft Edge WebDriver 143.0.3774.0 (...)"
+  const match = result.stdout.match(/(\d+\.\d+\.\d+\.\d+)/);
+  return match ? match[1] : null;
+}
+
+/**
+ * Ensure msedgedriver.exe matches the installed Edge browser version.
+ * Downloads the correct version automatically if there's a mismatch.
+ */
+async function ensureEdgeDriver(): Promise<void> {
+  if (process.platform !== "win32") return;
+
+  const driverPath = path.join(__dirname, "msedgedriver.exe");
+  const edgeVersion = getEdgeBrowserVersion();
+
+  if (!edgeVersion) {
+    console.warn(
+      "Could not detect Edge browser version. Skipping driver version check."
+    );
+    return;
+  }
+
+  const driverVersion = getEdgeDriverVersion(driverPath);
+  const edgeMajor = edgeVersion.split(".")[0];
+  const driverMajor = driverVersion?.split(".")[0];
+
+  if (driverVersion && edgeMajor === driverMajor) {
+    if (isVerbose) {
+      console.log(
+        `Edge driver version ${driverVersion} matches browser ${edgeVersion}`
+      );
+    }
+    return;
+  }
+
+  console.log(
+    driverVersion
+      ? `Edge driver ${driverVersion} does not match browser ${edgeVersion} — updating...`
+      : `Edge driver not found — downloading for Edge ${edgeVersion}...`
+  );
+
+  const zipPath = path.join(__dirname, "msedgedriver.zip");
+  const extractDir = path.join(__dirname, "msedgedriver-temp");
+  const url = `https://msedgewebdriverstorage.blob.core.windows.net/edgewebdriver/${edgeVersion}/edgedriver_win64.zip`;
+
+  // Download
+  const downloadResult = spawnSync(
+    "powershell",
+    [
+      "-Command",
+      `Invoke-WebRequest -Uri '${url}' -OutFile '${zipPath}'`,
+    ],
+    { encoding: "utf-8", stdio: ["ignore", "pipe", "pipe"], timeout: 120000 }
+  );
+
+  if (downloadResult.status !== 0) {
+    throw new Error(
+      `Failed to download Edge WebDriver ${edgeVersion}.\n` +
+        `URL: ${url}\n` +
+        `Error: ${downloadResult.stderr}\n` +
+        `Download it manually and place msedgedriver.exe in the project root.`
+    );
+  }
+
+  // Extract
+  const extractResult = spawnSync(
+    "powershell",
+    [
+      "-Command",
+      `Expand-Archive -Path '${zipPath}' -DestinationPath '${extractDir}' -Force`,
+    ],
+    { encoding: "utf-8", stdio: ["ignore", "pipe", "pipe"] }
+  );
+
+  if (extractResult.status !== 0) {
+    throw new Error(
+      `Failed to extract Edge WebDriver zip: ${extractResult.stderr}`
+    );
+  }
+
+  // Replace old driver (kill lingering process first)
+  spawnSync("taskkill", ["/F", "/IM", "msedgedriver.exe"], {
+    stdio: "ignore",
+  });
+
+  const extractedExe = path.join(extractDir, "msedgedriver.exe");
+  if (!fs.existsSync(extractedExe)) {
+    throw new Error(
+      `Expected msedgedriver.exe not found in extracted archive at ${extractDir}`
+    );
+  }
+
+  fs.copyFileSync(extractedExe, driverPath);
+
+  // Clean up
+  fs.rmSync(extractDir, { recursive: true, force: true });
+  fs.unlinkSync(zipPath);
+
+  // Verify
+  const newVersion = getEdgeDriverVersion(driverPath);
+  console.log(`Edge WebDriver updated to ${newVersion}`);
+}
+
+/**
  * Find the Tauri application binary based on the current platform
  */
 function findTauriBinary(): string {
@@ -201,6 +342,9 @@ export const config: Options.Testrunner = {
         stdio: "ignore",
       });
     }
+
+    // Ensure msedgedriver.exe matches the installed Edge browser version
+    await ensureEdgeDriver();
 
     if (isVerbose) {
       console.log("Starting tauri-driver...");

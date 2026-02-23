@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { Portal } from "./ui/Portal";
 import {
   HelpIcon,
@@ -81,6 +82,7 @@ function FeatureList({ items }: { items: string[] }) {
 }
 
 export function HelpDialog({ onClose }: HelpDialogProps) {
+  const { t } = useTranslation("help");
   const [appVersion, setAppVersion] = useState<string>("");
 
   // Handle Escape key to close
@@ -123,10 +125,10 @@ export function HelpDialog({ onClose }: HelpDialogProps) {
             </div>
             <div>
               <h2 id="help-dialog-title" className="text-xl font-semibold text-theme-text-primary">
-                Help & Documentation
+                {t('title')}
               </h2>
               <p className="text-sm text-theme-text-secondary">
-                Learn how to use WSL UI
+                {t('subtitle')}
               </p>
             </div>
           </div>
@@ -135,109 +137,99 @@ export function HelpDialog({ onClose }: HelpDialogProps) {
           <div className="flex-1 overflow-y-auto p-6 space-y-3">
             {/* Getting Started */}
             <HelpSection
-              title="Getting Started"
+              title={t('gettingStarted.title')}
               icon={<PlayIcon size="md" />}
               defaultOpen={true}
             >
-              <HelpItem title="What is WSL UI?">
-                WSL UI is a desktop application for managing Windows Subsystem for Linux (WSL) distributions.
-                It provides a graphical interface for common WSL operations like starting, stopping,
-                creating, and configuring Linux distributions.
+              <HelpItem title={t('gettingStarted.whatIsWslUi')}>
+                {t('gettingStarted.whatIsWslUiText')}
               </HelpItem>
-              <HelpItem title="Main Dashboard">
-                The main view shows all your installed WSL distributions as cards. Each card displays
-                the distribution name, status (online/offline), disk usage, and quick action buttons.
+              <HelpItem title={t('gettingStarted.mainDashboard')}>
+                {t('gettingStarted.mainDashboardText')}
               </HelpItem>
-              <HelpItem title="Quick Actions">
-                Click the menu button (three dots) on any distribution card to access quick actions
-                like opening a terminal, file explorer, IDE, or managing the distribution.
+              <HelpItem title={t('gettingStarted.quickActions')}>
+                {t('gettingStarted.quickActionsText')}
               </HelpItem>
             </HelpSection>
 
             {/* Distribution Management */}
             <HelpSection
-              title="Distribution Management"
+              title={t('distroManagement.title')}
               icon={<TerminalIcon size="md" />}
             >
-              <HelpItem title="Starting & Stopping">
+              <HelpItem title={t('distroManagement.startingStoppingTitle')}>
                 <span className="flex items-center gap-2 mb-1">
-                  <PlayIcon size="sm" className="text-theme-status-success" /> Start a distribution
+                  <PlayIcon size="sm" className="text-theme-status-success" /> {t('distroManagement.start')}
                 </span>
                 <span className="flex items-center gap-2">
-                  <StopIcon size="sm" className="text-theme-status-error" /> Stop a running distribution
+                  <StopIcon size="sm" className="text-theme-status-error" /> {t('distroManagement.stop')}
                 </span>
               </HelpItem>
-              <HelpItem title="Set as Default">
-                Set a distribution as default to use it when running WSL commands without specifying a distribution name.
+              <HelpItem title={t('distroManagement.setAsDefault')}>
+                {t('distroManagement.setAsDefaultText')}
               </HelpItem>
-              <HelpItem title="Resource Monitoring">
-                Running distributions show real-time CPU and memory usage. Disk size is displayed for all distributions.
+              <HelpItem title={t('distroManagement.resourceMonitoring')}>
+                {t('distroManagement.resourceMonitoringText')}
               </HelpItem>
             </HelpSection>
 
             {/* Advanced Operations */}
             <HelpSection
-              title="Advanced Operations"
+              title={t('advancedOps.title')}
               icon={<SettingsIcon size="md" />}
             >
-              <HelpItem title="Rename">
-                Change a distribution's name. You can also update the Windows Terminal profile and Start Menu shortcut.
-                Requires the distribution to be stopped.
+              <HelpItem title={t('advancedOps.rename')}>
+                {t('advancedOps.renameText')}
               </HelpItem>
-              <HelpItem title="Move">
-                Relocate a distribution to a different drive or folder. Useful for managing disk space.
-                Requires WSL to be fully shut down.
+              <HelpItem title={t('advancedOps.move')}>
+                {t('advancedOps.moveText')}
               </HelpItem>
-              <HelpItem title="Resize Disk">
-                Expand the virtual disk size for distributions that need more space.
-                Only expansion is supported (not shrinking). Requires WSL shutdown.
+              <HelpItem title={t('advancedOps.resizeDisk')}>
+                {t('advancedOps.resizeDiskText')}
               </HelpItem>
-              <HelpItem title="Set WSL Version">
-                Convert between WSL 1 and WSL 2. WSL 2 offers better performance with a full Linux kernel.
-                Conversion may take several minutes.
+              <HelpItem title={t('advancedOps.setWslVersion')}>
+                {t('advancedOps.setWslVersionText')}
               </HelpItem>
-              <HelpItem title="Sparse Mode">
-                Enable automatic disk space reclamation. The virtual disk will shrink as you delete files inside the distribution.
+              <HelpItem title={t('advancedOps.sparseMode')}>
+                {t('advancedOps.sparseModeText')}
               </HelpItem>
-              <HelpItem title="Compact Disk">
-                One-click optimization to reclaim unused space from a distribution's virtual disk.
-                Automatically runs fstrim, shuts down WSL, and compacts the VHDX file.
-                Requires administrator privileges and takes 1-2 minutes.
+              <HelpItem title={t('advancedOps.compactDisk')}>
+                {t('advancedOps.compactDiskText')}
               </HelpItem>
             </HelpSection>
 
             {/* Creating Distributions */}
             <HelpSection
-              title="Creating Distributions"
+              title={t('creatingDistros.title')}
               icon={<DownloadIcon size="md" />}
             >
               <div className="space-y-3">
                 <div className="flex items-start gap-3">
                   <StoreIcon size="md" className="text-amber-400 mt-0.5 shrink-0" />
                   <div>
-                    <h4 className="font-medium text-theme-text-primary">Quick Install (Microsoft Store)</h4>
-                    <p>One-click installation of official distributions like Ubuntu, Debian, and openSUSE.</p>
+                    <h4 className="font-medium text-theme-text-primary">{t('creatingDistros.quickInstall')}</h4>
+                    <p>{t('creatingDistros.quickInstallText')}</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-3">
                   <ContainerIcon size="md" className="text-blue-400 mt-0.5 shrink-0" />
                   <div>
-                    <h4 className="font-medium text-theme-text-primary">Container Images</h4>
-                    <p>Create distributions from Docker or Podman container images. Supports Docker Hub and other registries.</p>
+                    <h4 className="font-medium text-theme-text-primary">{t('creatingDistros.containerImages')}</h4>
+                    <p>{t('creatingDistros.containerImagesText')}</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-3">
                   <DownloadIcon size="md" className="text-green-400 mt-0.5 shrink-0" />
                   <div>
-                    <h4 className="font-medium text-theme-text-primary">Direct Download</h4>
-                    <p>Download rootfs archives from configurable URLs. Includes Alpine, NixOS, Void Linux, and more.</p>
+                    <h4 className="font-medium text-theme-text-primary">{t('creatingDistros.directDownload')}</h4>
+                    <p>{t('creatingDistros.directDownloadText')}</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-3">
                   <LxcIcon size="md" className="text-purple-400 mt-0.5 shrink-0" />
                   <div>
-                    <h4 className="font-medium text-theme-text-primary">Community Catalog (LXC)</h4>
-                    <p>Browse hundreds of distributions from the Linux Containers image server.</p>
+                    <h4 className="font-medium text-theme-text-primary">{t('creatingDistros.communityCatalog')}</h4>
+                    <p>{t('creatingDistros.communityCatalogText')}</p>
                   </div>
                 </div>
               </div>
@@ -245,172 +237,182 @@ export function HelpDialog({ onClose }: HelpDialogProps) {
 
             {/* Backup & Restore */}
             <HelpSection
-              title="Backup & Restore"
+              title={t('backupRestore.title')}
               icon={<CopyIcon size="md" />}
             >
-              <HelpItem title="Export">
-                Save a distribution to a .tar archive file for backup or migration. You can restore it later or on another machine.
+              <HelpItem title={t('backupRestore.export')}>
+                {t('backupRestore.exportText')}
               </HelpItem>
-              <HelpItem title="Import">
-                Restore a distribution from a .tar archive. Choose a name and installation location for the imported distribution.
+              <HelpItem title={t('backupRestore.import')}>
+                {t('backupRestore.importText')}
               </HelpItem>
-              <HelpItem title="Clone">
-                Create a copy of an existing distribution with a new name. Useful for testing or creating variants.
+              <HelpItem title={t('backupRestore.clone')}>
+                {t('backupRestore.cloneText')}
               </HelpItem>
             </HelpSection>
 
             {/* Custom Actions */}
             <HelpSection
-              title="Custom Actions"
+              title={t('customActions.title')}
               icon={<SparklesIcon size="md" />}
             >
-              <HelpItem title="What are Custom Actions?">
-                Custom actions are user-defined shell commands that appear in the quick actions menu.
-                Create actions for common tasks like system updates, backups, or development setup.
+              <HelpItem title={t('customActions.whatAre')}>
+                {t('customActions.whatAreText')}
               </HelpItem>
-              <HelpItem title="Variables">
-                Use variables in your commands that get replaced at runtime:
+              <HelpItem title={t('customActions.variables')}>
+                {t('customActions.variablesText')}
               </HelpItem>
               <ul className="list-none space-y-1 font-mono text-xs bg-theme-bg-tertiary/50 p-3 rounded-lg mt-2">
-                <li><code className="text-cyan-400">{"${DISTRO_NAME}"}</code> - Distribution name</li>
-                <li><code className="text-cyan-400">{"${HOME}"}</code> - Home directory path</li>
-                <li><code className="text-cyan-400">{"${USER}"}</code> - Default user</li>
-                <li><code className="text-cyan-400">{"${WINDOWS_HOME}"}</code> - Windows user directory</li>
+                <li><code className="text-cyan-400">{"${DISTRO_NAME}"}</code> - {t('customActions.varDistroName')}</li>
+                <li><code className="text-cyan-400">{"${HOME}"}</code> - {t('customActions.varHome')}</li>
+                <li><code className="text-cyan-400">{"${USER}"}</code> - {t('customActions.varUser')}</li>
+                <li><code className="text-cyan-400">{"${WINDOWS_HOME}"}</code> - {t('customActions.varWindowsHome')}</li>
               </ul>
-              <HelpItem title="Targeting Distributions">
-                Actions can target all distributions, specific distributions by name, or distributions matching a regex pattern.
+              <HelpItem title={t('customActions.targeting')}>
+                {t('customActions.targetingText')}
               </HelpItem>
             </HelpSection>
 
             {/* Theming */}
             <HelpSection
-              title="Themes & Appearance"
+              title={t('theming.title')}
               icon={<PaletteIcon size="md" />}
             >
-              <HelpItem title="Built-in Themes">
-                Choose from 17 professionally designed themes including dark, light, and middle-ground options.
-                Popular themes include Obsidian, Dracula, Nord, and Solarized.
+              <HelpItem title={t('theming.builtinThemes')}>
+                {t('theming.builtinThemesText')}
               </HelpItem>
-              <HelpItem title="Accessibility Themes">
-                Two high contrast themes are available for users with low vision: High Contrast (dark) and High Contrast Light.
+              <HelpItem title={t('theming.accessibilityThemes')}>
+                {t('theming.accessibilityThemesText')}
               </HelpItem>
-              <HelpItem title="Custom Theme">
-                Create your own theme with full control over 29 color variables including backgrounds, text, borders, accents, and more.
+              <HelpItem title={t('theming.customTheme')}>
+                {t('theming.customThemeText')}
               </HelpItem>
             </HelpSection>
 
             {/* Keyboard Shortcuts */}
             <HelpSection
-              title="Keyboard Shortcuts"
+              title={t('keyboardShortcuts.title')}
               icon={<SettingsIcon size="md" />}
             >
               <div className="space-y-2">
                 <div className="grid grid-cols-2 gap-2 text-sm">
-                  <div><kbd className="px-2 py-0.5 bg-theme-bg-tertiary rounded text-xs">Tab</kbd></div>
-                  <div>Next element</div>
-                  <div><kbd className="px-2 py-0.5 bg-theme-bg-tertiary rounded text-xs">Shift+Tab</kbd></div>
-                  <div>Previous element</div>
-                  <div><kbd className="px-2 py-0.5 bg-theme-bg-tertiary rounded text-xs">Enter</kbd></div>
-                  <div>Activate / Submit</div>
-                  <div><kbd className="px-2 py-0.5 bg-theme-bg-tertiary rounded text-xs">Escape</kbd></div>
-                  <div>Close dialog or menu</div>
-                  <div><kbd className="px-2 py-0.5 bg-theme-bg-tertiary rounded text-xs">Space</kbd></div>
-                  <div>Toggle checkbox</div>
+                  <div><kbd className="px-2 py-0.5 bg-theme-bg-tertiary rounded text-xs">{t('keyboardShortcuts.tab')}</kbd></div>
+                  <div>{t('keyboardShortcuts.tabAction')}</div>
+                  <div><kbd className="px-2 py-0.5 bg-theme-bg-tertiary rounded text-xs">{t('keyboardShortcuts.shiftTab')}</kbd></div>
+                  <div>{t('keyboardShortcuts.shiftTabAction')}</div>
+                  <div><kbd className="px-2 py-0.5 bg-theme-bg-tertiary rounded text-xs">{t('keyboardShortcuts.enter')}</kbd></div>
+                  <div>{t('keyboardShortcuts.enterAction')}</div>
+                  <div><kbd className="px-2 py-0.5 bg-theme-bg-tertiary rounded text-xs">{t('keyboardShortcuts.escape')}</kbd></div>
+                  <div>{t('keyboardShortcuts.escapeAction')}</div>
+                  <div><kbd className="px-2 py-0.5 bg-theme-bg-tertiary rounded text-xs">{t('keyboardShortcuts.space')}</kbd></div>
+                  <div>{t('keyboardShortcuts.spaceAction')}</div>
                 </div>
               </div>
-              <HelpItem title="Accessibility">
-                WSL UI supports screen readers, keyboard navigation, and respects system preferences for reduced motion.
+              <HelpItem title={t('keyboardShortcuts.accessibility')}>
+                {t('keyboardShortcuts.accessibilityText')}
               </HelpItem>
             </HelpSection>
 
             {/* Settings Overview */}
             <HelpSection
-              title="Settings Overview"
+              title={t('settingsOverview.title')}
               icon={<SettingsIcon size="md" />}
             >
               <FeatureList items={[
-                "Terminal: Configure Windows Terminal, custom terminal apps, or command prompt",
-                "IDE: Set up VS Code, Cursor, or custom IDE integration",
-                "WSL Global: Configure memory, CPU, swap, networking mode, and WSLg",
-                "Per-Distribution: Automount options, network settings, systemd, and boot commands",
-                "Polling: Adjust auto-refresh intervals for status and resources",
-                "Timeouts: Configure operation timeouts for slow systems",
-                "Executable Paths: Override default paths for WSL, PowerShell, and other tools",
+                t('settingsOverview.terminal'),
+                t('settingsOverview.ide'),
+                t('settingsOverview.wslGlobal'),
+                t('settingsOverview.perDistro'),
+                t('settingsOverview.polling'),
+                t('settingsOverview.timeouts'),
+                t('settingsOverview.executables'),
               ]} />
             </HelpSection>
 
             {/* Integrations */}
             <HelpSection
-              title="Integrations"
+              title={t('integrations.title')}
               icon={<FolderIcon size="md" />}
             >
-              <HelpItem title="Terminal Integration">
-                Open distributions in Windows Terminal, Command Prompt, or any custom terminal application.
-                Configure your preferred terminal in Settings.
+              <HelpItem title={t('integrations.terminal')}>
+                {t('integrations.terminalText')}
               </HelpItem>
-              <HelpItem title="IDE Integration">
-                Open distributions directly in VS Code or other IDEs. The distribution's root folder opens in your editor.
+              <HelpItem title={t('integrations.ide')}>
+                {t('integrations.ideText')}
               </HelpItem>
-              <HelpItem title="File Explorer">
-                Browse distribution files in Windows Explorer using the \\wsl$ network path.
+              <HelpItem title={t('integrations.fileExplorer')}>
+                {t('integrations.fileExplorerText')}
               </HelpItem>
-              <HelpItem title="System Tray">
-                Minimize to system tray for quick access. Configure close behavior in Settings.
+              <HelpItem title={t('integrations.systemTray')}>
+                {t('integrations.systemTrayText')}
               </HelpItem>
             </HelpSection>
 
             {/* Troubleshooting */}
             <HelpSection
-              title="Troubleshooting"
+              title={t('troubleshooting.title')}
               icon={<RefreshIcon size="md" />}
             >
-              <HelpItem title="WSL Not Detected">
-                Ensure WSL is installed and enabled. Run <code className="bg-theme-bg-tertiary px-1 rounded">wsl --status</code> in
-                PowerShell to check. You may need to enable the Windows features for WSL.
+              <HelpItem title={t('troubleshooting.wslNotDetected')}>
+                {t('troubleshooting.wslNotDetectedText')}
               </HelpItem>
-              <HelpItem title="Operations Timing Out">
-                If operations frequently timeout, increase the timeout values in Settings &gt; Timeouts.
-                The app uses exponential backoff to reduce load during issues.
+              <HelpItem title={t('troubleshooting.operationsTimeout')}>
+                {t('troubleshooting.operationsTimeoutText')}
               </HelpItem>
-              <HelpItem title="Distribution Won't Start">
-                Try restarting WSL with <code className="bg-theme-bg-tertiary px-1 rounded">wsl --shutdown</code>,
-                then start the distribution again.
+              <HelpItem title={t('troubleshooting.distroWontStart')}>
+                {t('troubleshooting.distroWontStartText')}
               </HelpItem>
+              <div className="mt-3 pt-3 border-t border-theme-border-secondary/30">
+                <button
+                  onClick={() => open("https://wsl-ui.octasoft.co.uk/docs/troubleshooting")}
+                  className="flex items-center gap-2 text-theme-accent-primary hover:underline"
+                >
+                  <ExternalLinkIcon size="sm" />
+                  {t('troubleshooting.fullGuide')}
+                </button>
+              </div>
             </HelpSection>
 
             {/* Resources */}
             <HelpSection
-              title="Resources & Support"
+              title={t('resources.title')}
               icon={<ExternalLinkIcon size="md" />}
             >
               <div className="space-y-3">
+                <button
+                  onClick={() => open("https://wsl-ui.octasoft.co.uk")}
+                  className="flex items-center gap-2 text-theme-accent-primary hover:underline"
+                >
+                  <ExternalLinkIcon size="sm" />
+                  {t('resources.wslUiWebsite')}
+                </button>
                 <button
                   onClick={() => open("https://github.com/octasoft-ltd/wsl-ui")}
                   className="flex items-center gap-2 text-theme-accent-primary hover:underline"
                 >
                   <ExternalLinkIcon size="sm" />
-                  GitHub Repository
+                  {t('resources.githubRepo')}
                 </button>
                 <button
                   onClick={() => open("https://github.com/octasoft-ltd/wsl-ui/issues")}
                   className="flex items-center gap-2 text-theme-accent-primary hover:underline"
                 >
                   <ExternalLinkIcon size="sm" />
-                  Report an Issue
+                  {t('resources.reportIssue')}
                 </button>
                 <button
                   onClick={() => open("https://www.octasoft.co.uk")}
                   className="flex items-center gap-2 text-theme-accent-primary hover:underline"
                 >
                   <ExternalLinkIcon size="sm" />
-                  Octasoft Ltd Website
+                  {t('resources.octasoftWebsite')}
                 </button>
                 <button
                   onClick={() => open("https://docs.microsoft.com/en-us/windows/wsl/")}
                   className="flex items-center gap-2 text-theme-accent-primary hover:underline"
                 >
                   <ExternalLinkIcon size="sm" />
-                  Microsoft WSL Documentation
+                  {t('resources.microsoftDocs')}
                 </button>
               </div>
             </HelpSection>
@@ -426,7 +428,7 @@ export function HelpDialog({ onClose }: HelpDialogProps) {
               data-testid="help-close-button"
               className="px-4 py-2 text-sm font-medium text-theme-text-secondary bg-theme-bg-tertiary hover:bg-theme-bg-hover rounded-lg transition-colors"
             >
-              Close
+              {t('common:button.close')}
             </button>
           </div>
         </div>

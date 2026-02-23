@@ -1,5 +1,7 @@
 import { useEffect, useState, useRef, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { listen } from "@tauri-apps/api/event";
+import { loadLanguage, supportedLanguages, resolveLanguage } from "./i18n";
 import { useDistroStore } from "./store/distroStore";
 import { useMountStore } from "./store/mountStore";
 import { useSettingsStore } from "./store/settingsStore";
@@ -28,6 +30,7 @@ import { info, debug } from "./utils/logger";
 type AppPage = "main" | "settings";
 
 function App() {
+  const { t, i18n } = useTranslation("errors");
   const { distributions, fetchDistros, error, isTimeoutError, clearError, forceKillWsl, actionInProgress, isLoading: distrosLoading } = useDistroStore();
   const { showMountDialog, closeMountDialog, loadMountedDisks } = useMountStore();
   const { settings, loadSettings, updateSetting } = useSettingsStore();
@@ -106,6 +109,21 @@ function App() {
       return () => clearTimeout(timer);
     }
   }, [settings]);
+
+  // Sync locale from settings to i18next
+  useEffect(() => {
+    if (!settings) return;
+    const locale = settings.locale || "auto";
+    const targetLang = locale === "auto"
+      ? resolveLanguage(navigator.language)
+      : locale;
+    if (i18n.language !== targetLang) {
+      loadLanguage(targetLang).then(() => i18n.changeLanguage(targetLang));
+    }
+    // Set RTL direction for Arabic
+    const langConfig = supportedLanguages.find((l) => l.code === targetLang);
+    document.documentElement.dir = langConfig && "dir" in langConfig && langConfig.dir === "rtl" ? "rtl" : "ltr";
+  }, [settings?.locale, i18n]);
 
   // Track app_started event (once per session, if telemetry enabled and distros loaded)
   useEffect(() => {
@@ -212,7 +230,7 @@ function App() {
             <div className="absolute inset-0 bg-black/50" onClick={clearStartupActionOutput} />
             <div className="relative bg-theme-bg-secondary border border-theme-border rounded-lg p-4 max-w-lg w-full mx-4 max-h-[80vh] overflow-auto">
               <div className="flex justify-between items-center mb-4">
-                <h3 className="font-semibold text-theme-text-primary">{startupActionOutput.actionName} - Output</h3>
+                <h3 className="font-semibold text-theme-text-primary">{startupActionOutput.actionName} {t('common:output')}</h3>
                 <button
                   onClick={clearStartupActionOutput}
                   className="text-theme-text-muted hover:text-theme-text-primary"
@@ -228,11 +246,11 @@ function App() {
                   <pre className="mt-2 text-sm text-theme-status-error font-mono whitespace-pre-wrap">{startupActionOutput.error}</pre>
                 )}
                 {!startupActionOutput.output && !startupActionOutput.error && (
-                  <p className="text-theme-text-muted italic">No output</p>
+                  <p className="text-theme-text-muted italic">{t('common:noOutput')}</p>
                 )}
               </div>
               <p className="mt-2 text-xs text-theme-text-muted">
-                Ran on: {startupActionOutput.distro}
+                {t('common:ranOn', { distro: startupActionOutput.distro })}
               </p>
             </div>
           </div>
@@ -252,7 +270,7 @@ function App() {
           {error && wslReady && (
             <NotificationBanner
               type="error"
-              title="System Error"
+              title={t('system.title')}
               message={error}
               onDismiss={clearError}
               testId="error-banner"
@@ -260,7 +278,7 @@ function App() {
               {isTimeoutError && (
                 <div className="space-y-3">
                   <p className="text-xs text-theme-text-muted">
-                    Tip: If you recently installed a new distribution, close any terminal windows that were automatically opened during installation.
+                    {t('system.timeoutTip')}
                   </p>
                   <Button
                     variant="danger"
@@ -268,7 +286,7 @@ function App() {
                     onClick={() => setShowForceRestartConfirm(true)}
                     loading={actionInProgress?.includes("Force")}
                   >
-                    Force Shutdown WSL
+                    {t('system.forceShutdown')}
                   </Button>
                 </div>
               )}
@@ -294,9 +312,9 @@ function App() {
 
         <ConfirmDialog
           isOpen={showForceRestartConfirm}
-          title="Force Shutdown WSL"
-          message="This will forcibly terminate all WSL processes using 'wsl --shutdown --force'. Any unsaved work in your Linux distributions may be lost. This action cannot be undone."
-          confirmLabel="Force Shutdown"
+          title={t('system.forceShutdownTitle')}
+          message={t('system.forceShutdownMessage')}
+          confirmLabel={t('system.forceShutdownConfirm')}
           onConfirm={() => {
             setShowForceRestartConfirm(false);
             forceKillWsl();
@@ -334,7 +352,7 @@ function App() {
             <div className="absolute inset-0 bg-black/50" onClick={clearStartupActionOutput} />
             <div className="relative bg-theme-bg-secondary border border-theme-border rounded-lg p-4 max-w-lg w-full mx-4 max-h-[80vh] overflow-auto">
               <div className="flex justify-between items-center mb-4">
-                <h3 className="font-semibold text-theme-text-primary">{startupActionOutput.actionName} - Output</h3>
+                <h3 className="font-semibold text-theme-text-primary">{startupActionOutput.actionName} {t('common:output')}</h3>
                 <button
                   onClick={clearStartupActionOutput}
                   className="text-theme-text-muted hover:text-theme-text-primary"
@@ -350,11 +368,11 @@ function App() {
                   <pre className="mt-2 text-sm text-theme-status-error font-mono whitespace-pre-wrap">{startupActionOutput.error}</pre>
                 )}
                 {!startupActionOutput.output && !startupActionOutput.error && (
-                  <p className="text-theme-text-muted italic">No output</p>
+                  <p className="text-theme-text-muted italic">{t('common:noOutput')}</p>
                 )}
               </div>
               <p className="mt-2 text-xs text-theme-text-muted">
-                Ran on: {startupActionOutput.distro}
+                {t('common:ranOn', { distro: startupActionOutput.distro })}
               </p>
             </div>
           </div>

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import type { Distribution } from "../types/distribution";
 import {
   formatBytes,
@@ -51,7 +52,7 @@ function stripExtendedPathPrefix(path: string): string {
 }
 
 /** Get the source reference display based on install source type */
-function getSourceReference(distro: Distribution): string | null {
+function getSourceReference(distro: Distribution, t: (key: string, options?: Record<string, string>) => string): string | null {
   const metadata = distro.metadata;
   if (!metadata) return null;
 
@@ -62,7 +63,7 @@ function getSourceReference(distro: Distribution): string | null {
     case "lxc":
       return metadata.downloadUrl || null;
     case "clone":
-      return metadata.clonedFrom ? `Cloned from ID: ${metadata.clonedFrom}` : null;
+      return metadata.clonedFrom ? t('distroInfo.clonedFromId', { id: metadata.clonedFrom }) : null;
     case "import":
       return metadata.importPath || null;
     default:
@@ -71,19 +72,19 @@ function getSourceReference(distro: Distribution): string | null {
 }
 
 /** Get a label for the source reference based on install source type */
-function getSourceReferenceLabel(source: string): string {
+function getSourceReferenceLabel(source: string, t: (key: string) => string): string {
   switch (source) {
     case "container":
-      return "Image";
+      return t('distroInfo.image');
     case "download":
     case "lxc":
-      return "Source URL";
+      return t('distroInfo.sourceUrl');
     case "clone":
-      return "Cloned From";
+      return t('distroInfo.clonedFrom');
     case "import":
-      return "Import Path";
+      return t('distroInfo.importPath');
     default:
-      return "Reference";
+      return t('distroInfo.reference');
   }
 }
 
@@ -113,6 +114,7 @@ interface CopyButtonProps {
 }
 
 function CopyButton({ text, label }: CopyButtonProps) {
+  const { t } = useTranslation("dialogs");
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async () => {
@@ -129,7 +131,7 @@ function CopyButton({ text, label }: CopyButtonProps) {
     <button
       onClick={handleCopy}
       className="ml-2 p-1.5 text-theme-text-tertiary hover:text-theme-accent-primary hover:bg-theme-accent-primary/10 transition-all rounded-md border border-transparent hover:border-theme-accent-primary/30"
-      title={copied ? "Copied!" : `Copy ${label || "to clipboard"}`}
+      title={copied ? t('common:label.copied') : t('distroInfo.copyToClipboard', { field: label || "" })}
       data-testid="copy-button"
     >
       {copied ? (
@@ -146,11 +148,12 @@ export function DistroInfoDialog({
   distro,
   onClose,
 }: DistroInfoDialogProps) {
+  const { t } = useTranslation("dialogs");
   const { getDistroResources } = useResourceStore();
   const isRunning = distro.state === "Running";
   const resources = isRunning ? getDistroResources(distro.name) : undefined;
   const metadata = distro.metadata;
-  const sourceReference = getSourceReference(distro);
+  const sourceReference = getSourceReference(distro, t);
 
   // WSL configuration state (raw file content)
   const [wslConfRaw, setWslConfRaw] = useState<string | null>(null);
@@ -186,7 +189,7 @@ export function DistroInfoDialog({
         const content = await wslService.getWslConfRaw(distro.name, distro.id);
         setWslConfRaw(content);
       } catch (err) {
-        setWslConfError(err instanceof Error ? err.message : "Failed to load configuration");
+        setWslConfError(err instanceof Error ? err.message : t('distroInfo.errorLoadConfig'));
       } finally {
         setWslConfLoading(false);
       }
@@ -229,7 +232,7 @@ export function DistroInfoDialog({
                 {distro.name}
               </h2>
               <p className="text-sm text-theme-text-secondary">
-                Distribution Information
+                {t('distroInfo.subtitle')}
               </p>
             </div>
           </div>
@@ -237,12 +240,12 @@ export function DistroInfoDialog({
           {/* Identity Section */}
           <div className="mb-5">
             <h3 className="text-sm font-medium text-theme-text-tertiary uppercase tracking-wider mb-2">
-              Identity
+              {t('distroInfo.identity')}
             </h3>
             <div className="bg-theme-bg-tertiary/50 rounded-lg px-4 py-1">
-              <InfoRow label="Name" value={distro.name} testId="info-name" />
+              <InfoRow label={t('distroInfo.name')} value={distro.name} testId="info-name" />
               <InfoRow
-                label="Distribution ID"
+                label={t('distroInfo.distributionId')}
                 value={
                   distro.id ? (
                     <span className="flex items-center">
@@ -258,17 +261,17 @@ export function DistroInfoDialog({
                 testId="info-id"
               />
               <InfoRow
-                label="WSL Version"
+                label={t('distroInfo.wslVersion')}
                 value={`WSL ${distro.version}`}
                 testId="info-version"
               />
               <InfoRow
-                label="Default"
+                label={t('distroInfo.default')}
                 value={
                   distro.isDefault ? (
-                    <span className="text-theme-status-success">Yes</span>
+                    <span className="text-theme-status-success">{t('common:label.yes')}</span>
                   ) : (
-                    "No"
+                    t('common:label.no')
                   )
                 }
                 testId="info-default"
@@ -279,11 +282,11 @@ export function DistroInfoDialog({
           {/* Location Section */}
           <div className="mb-5">
             <h3 className="text-sm font-medium text-theme-text-tertiary uppercase tracking-wider mb-2">
-              Storage
+              {t('distroInfo.storage')}
             </h3>
             <div className="bg-theme-bg-tertiary/50 rounded-lg px-4 py-1">
               <InfoRow
-                label="Install Location"
+                label={t('distroInfo.installLocation')}
                 value={
                   distro.location ? (
                     <span className="flex items-center gap-1">
@@ -303,7 +306,7 @@ export function DistroInfoDialog({
                 testId="info-location"
               />
               <InfoRow
-                label="Disk Size"
+                label={t('distroInfo.diskSize')}
                 value={
                   distro.diskSize ? (
                     formatBytes(distro.diskSize)
@@ -319,11 +322,11 @@ export function DistroInfoDialog({
           {/* Source Section */}
           <div className="mb-5">
             <h3 className="text-sm font-medium text-theme-text-tertiary uppercase tracking-wider mb-2">
-              Source
+              {t('distroInfo.source')}
             </h3>
             <div className="bg-theme-bg-tertiary/50 rounded-lg px-4 py-1">
               <InfoRow
-                label="Install Source"
+                label={t('distroInfo.installSource')}
                 value={
                   <span className="flex items-center gap-2">
                     <SourceIcon source={installSource} size="sm" style={{ color: sourceColor }} />
@@ -336,7 +339,7 @@ export function DistroInfoDialog({
               />
               {sourceReference && (
                 <InfoRow
-                  label={getSourceReferenceLabel(installSource)}
+                  label={getSourceReferenceLabel(installSource, t)}
                   value={
                     <span className="flex items-center gap-1">
                       {(installSource === "download" || installSource === "lxc") ? (
@@ -369,7 +372,7 @@ export function DistroInfoDialog({
                 />
               )}
               <InfoRow
-                label="Installed"
+                label={t('distroInfo.installed')}
                 value={
                   metadata?.installedAt ? (
                     <span className="flex items-center gap-1">
@@ -389,11 +392,11 @@ export function DistroInfoDialog({
           {isRunning && (
             <div className="mb-5">
               <h3 className="text-sm font-medium text-theme-text-tertiary uppercase tracking-wider mb-2">
-                Runtime
+                {t('distroInfo.runtime')}
               </h3>
               <div className="bg-theme-bg-tertiary/50 rounded-lg px-4 py-1">
                 <InfoRow
-                  label="Operating System"
+                  label={t('distroInfo.operatingSystem')}
                   value={
                     distro.osInfo ? (
                       <span className="flex items-center gap-1">
@@ -409,13 +412,13 @@ export function DistroInfoDialog({
                 {resources && (
                   <>
                     <InfoRow
-                      label="Memory Usage"
+                      label={t('distroInfo.memoryUsage')}
                       value={formatBytes(resources.memoryUsedBytes)}
                       testId="info-memory"
                     />
                     {resources.cpuPercent !== null && resources.cpuPercent !== undefined && (
                       <InfoRow
-                        label="CPU Usage"
+                        label={t('distroInfo.cpuUsage')}
                         value={
                           <span className="flex items-center gap-1">
                             <CPUIcon size="sm" className="text-theme-text-tertiary" />
@@ -437,7 +440,7 @@ export function DistroInfoDialog({
               <div className="flex items-center justify-between mb-2">
                 <h3 className="text-sm font-medium text-theme-text-tertiary uppercase tracking-wider flex items-center gap-2">
                   <SettingsIcon size="sm" className="text-theme-text-tertiary" />
-                  Configuration
+                  {t('distroInfo.configuration')}
                 </h3>
                 <span className="text-xs text-theme-text-tertiary font-mono">/etc/wsl.conf</span>
               </div>
@@ -445,7 +448,7 @@ export function DistroInfoDialog({
                 {wslConfLoading ? (
                   <div className="text-theme-text-tertiary text-sm flex items-center gap-2">
                     <div className="w-4 h-4 border-2 border-theme-text-tertiary/30 border-t-theme-text-tertiary rounded-full animate-spin" />
-                    Loading configuration...
+                    {t('distroInfo.loadingConfig')}
                   </div>
                 ) : wslConfError ? (
                   <div className="text-theme-status-error text-sm">{wslConfError}</div>
@@ -463,7 +466,7 @@ export function DistroInfoDialog({
                   </div>
                 ) : (
                   <div className="text-theme-text-tertiary text-sm italic">
-                    No configuration file (using defaults)
+                    {t('distroInfo.noConfig')}
                   </div>
                 )}
               </div>
@@ -477,7 +480,7 @@ export function DistroInfoDialog({
               data-testid="info-close-button"
               className="px-4 py-2 text-sm font-medium text-theme-text-secondary bg-theme-bg-tertiary hover:bg-theme-bg-hover rounded-lg transition-colors"
             >
-              Close
+              {t('common:button.close')}
             </button>
           </div>
         </div>

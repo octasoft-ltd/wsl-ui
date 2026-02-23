@@ -5,6 +5,7 @@
  */
 
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { getVersion } from "@tauri-apps/api/app";
 import { useSettingsStore } from "../store/settingsStore";
 import { wslService, type WslVersionInfo } from "../services/wslService";
@@ -40,6 +41,7 @@ import {
   DistributionSourcesSettings,
   ContainerRuntimeSettings,
   PrivacySettings,
+  LanguageSettings,
   IDE_PRESETS,
   TERMINAL_PRESETS,
   SETTINGS_TABS,
@@ -69,7 +71,17 @@ const ICON_MAP: Record<SettingsIconName, React.FC<{ size?: "sm" | "md" | "lg"; c
 
 const SETTINGS_TAB_STORAGE_KEY = "wslui-settings-active-tab";
 
+/** Map tab IDs with hyphens to camelCase translation keys */
+function tabTranslationKey(tabId: string): string {
+  switch (tabId) {
+    case "wsl-global": return "wslGlobal";
+    case "wsl-distro": return "wslDistro";
+    default: return tabId;
+  }
+}
+
 export function SettingsPage({ onBack }: SettingsPageProps) {
+  const { t } = useTranslation("settings");
   const { settings, loadSettings, updateSetting, saveSettings, isLoading } = useSettingsStore();
   const [activeTab, setActiveTab] = useState<SettingsTab>(() => {
     // Restore saved tab from localStorage
@@ -127,12 +139,12 @@ export function SettingsPage({ onBack }: SettingsPageProps) {
             onClick={onBack}
             data-testid="back-button"
             className="p-2 text-(--text-muted) hover:text-(--text-primary) hover:bg-(--bg-hover) rounded-lg transition-colors"
-            title="Back"
+            title={t('common:button.back')}
           >
             <ChevronLeftIcon size="md" />
           </button>
           {sidebarExpanded && (
-            <h1 className="text-lg font-semibold text-(--text-primary)">Settings</h1>
+            <h1 className="text-lg font-semibold text-(--text-primary)">{t('title')}</h1>
           )}
         </div>
 
@@ -147,7 +159,7 @@ export function SettingsPage({ onBack }: SettingsPageProps) {
                 key={tab.id}
                 onClick={() => handleTabChange(tab.id)}
                 data-testid={`settings-tab-${tab.id}`}
-                title={!sidebarExpanded ? tab.label : undefined}
+                title={!sidebarExpanded ? t(`tabs.${tabTranslationKey(tab.id)}`) : undefined}
                 className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-colors ${
                   isActive
                     ? "bg-(--accent-primary)/10 text-(--accent-primary) border-r-2 border-(--accent-primary)"
@@ -159,7 +171,7 @@ export function SettingsPage({ onBack }: SettingsPageProps) {
                   className={isActive ? "text-(--accent-primary)" : "text-(--text-muted)"}
                 />
                 {sidebarExpanded && (
-                  <span className={`font-medium ${isActive ? "" : ""}`}>{tab.label}</span>
+                  <span className="font-medium">{t(`tabs.${tabTranslationKey(tab.id)}`)}</span>
                 )}
               </button>
             );
@@ -171,12 +183,12 @@ export function SettingsPage({ onBack }: SettingsPageProps) {
           <button
             onClick={() => setSidebarExpanded(!sidebarExpanded)}
             className="w-full flex items-center justify-center gap-2 px-3 py-2 text-(--text-muted) hover:text-(--text-primary) hover:bg-(--bg-hover) rounded-lg transition-colors"
-            title={sidebarExpanded ? "Collapse sidebar" : "Expand sidebar"}
+            title={sidebarExpanded ? t('sidebarCollapse') : t('sidebarExpand')}
           >
             {sidebarExpanded ? (
               <>
                 <ChevronLeftIcon size="sm" />
-                <span className="text-xs">Collapse</span>
+                <span className="text-xs">{t('collapse')}</span>
               </>
             ) : (
               <ChevronRightIcon size="sm" />
@@ -192,8 +204,8 @@ export function SettingsPage({ onBack }: SettingsPageProps) {
             {activeTab === "app" && (
               <div className="space-y-8">
                 <SettingSection
-                  title="IDE Integration"
-                  description="Choose your preferred code editor"
+                  title={t('ide.title')}
+                  description={t('ide.description')}
                   icon={<CodeIcon size="md" className="text-white" />}
                   iconGradient="from-violet-500 to-purple-600"
                   presets={IDE_PRESETS}
@@ -205,19 +217,19 @@ export function SettingsPage({ onBack }: SettingsPageProps) {
                     ideCommand: value,
                     savedCustomIdeCommand: value,
                   })}
-                  customPlaceholder={`"C:\\path\\to\\ide.exe" $WSL_PATH\\$DISTRO_NAME\\home`}
+                  customPlaceholder={t('ide.placeholder')}
                   customHelpText={
                     <div className="space-y-2">
-                      <p><strong>Note:</strong> Paths with spaces must be wrapped in quotes.</p>
+                      <p><strong>{t('ide.note')}</strong></p>
                       <div>
-                        <strong>Placeholders:</strong>
+                        <strong>{t('ide.placeholders')}</strong>
                         <ul className="list-disc list-inside ml-2 mt-1">
-                          <li><code className="text-theme-accent-primary">$WSL_PATH</code> — expands to <code className="text-theme-text-secondary">\\wsl$</code></li>
-                          <li><code className="text-theme-accent-primary">$DISTRO_NAME</code> — distribution name</li>
+                          <li><code className="text-theme-accent-primary">$WSL_PATH</code> — {t('ide.wslPathDesc')}</li>
+                          <li><code className="text-theme-accent-primary">$DISTRO_NAME</code> — {t('ide.distroNameDesc')}</li>
                         </ul>
                       </div>
                       <div>
-                        <strong>Example (IntelliJ):</strong>
+                        <strong>{t('ide.example')}</strong>
                         <code className="block mt-1 p-2 bg-theme-bg-tertiary rounded text-theme-text-secondary break-all">
                           "C:\Program Files\JetBrains\IntelliJ IDEA\bin\idea64.exe" $WSL_PATH\$DISTRO_NAME\home
                         </code>
@@ -229,8 +241,8 @@ export function SettingsPage({ onBack }: SettingsPageProps) {
                 />
 
                 <SettingSection
-                  title="Terminal"
-                  description="Choose your preferred terminal application"
+                  title={t('terminal.title')}
+                  description={t('terminal.description')}
                   icon={<TerminalIcon size="md" className="text-white" />}
                   iconGradient="from-emerald-500 to-teal-600"
                   presets={terminalPresets}
@@ -242,23 +254,23 @@ export function SettingsPage({ onBack }: SettingsPageProps) {
                     terminalCommand: value,
                     savedCustomTerminalCommand: value,
                   })}
-                  customPlaceholder="alacritty -e $WSL $DISTRO_ARGS"
+                  customPlaceholder={t('terminal.placeholder')}
                   customHelpText={
                     <div className="space-y-2">
-                      <p><strong>Note:</strong> Paths with spaces must be wrapped in quotes.</p>
+                      <p><strong>{t('terminal.note')}</strong></p>
                       <div>
-                        <strong>Placeholders:</strong>
+                        <strong>{t('terminal.placeholders')}</strong>
                         <ul className="list-disc list-inside ml-2 mt-1">
-                          <li><code className="text-theme-accent-primary">$WSL</code> — path to wsl.exe</li>
-                          <li><code className="text-theme-accent-primary">$DISTRO_ARGS</code> — auto-expands to <code className="text-theme-text-secondary">--distribution-id &lt;guid&gt;</code> or <code className="text-theme-text-secondary">--system</code></li>
+                          <li><code className="text-theme-accent-primary">$WSL</code> — {t('terminal.wslDesc')}</li>
+                          <li><code className="text-theme-accent-primary">$DISTRO_ARGS</code> — {t('terminal.distroArgsDesc')}</li>
                         </ul>
                       </div>
                       <div>
-                        <strong>Examples:</strong>
+                        <strong>{t('terminal.examples')}</strong>
                         <ul className="list-disc list-inside ml-2 mt-1">
-                          <li>Alacritty: <code className="text-theme-text-secondary">alacritty -e $WSL $DISTRO_ARGS</code></li>
-                          <li>Kitty: <code className="text-theme-text-secondary">kitty $WSL $DISTRO_ARGS</code></li>
-                          <li>WezTerm: <code className="text-theme-text-secondary">wezterm start -- $WSL $DISTRO_ARGS</code></li>
+                          <li>{t('terminal.exampleAlacrittyLabel')}: <code className="text-theme-text-secondary">{t('terminal.exampleAlacrittyCmd')}</code></li>
+                          <li>{t('terminal.exampleKittyLabel')}: <code className="text-theme-text-secondary">{t('terminal.exampleKittyCmd')}</code></li>
+                          <li>{t('terminal.exampleWeztermLabel')}: <code className="text-theme-text-secondary">{t('terminal.exampleWeztermCmd')}</code></li>
                         </ul>
                       </div>
                     </div>
@@ -276,8 +288,8 @@ export function SettingsPage({ onBack }: SettingsPageProps) {
                         <WindowIcon size="md" className="text-white" />
                       </div>
                       <div>
-                        <h2 className="text-lg font-medium text-stone-100">Window Behavior</h2>
-                        <p className="text-sm text-stone-500">Configure what happens when you close the window</p>
+                        <h2 className="text-lg font-medium text-stone-100">{t('window.title')}</h2>
+                        <p className="text-sm text-stone-500">{t('window.description')}</p>
                       </div>
                     </div>
 
@@ -292,9 +304,9 @@ export function SettingsPage({ onBack }: SettingsPageProps) {
                           className="w-4 h-4 text-blue-500 bg-stone-700 border-stone-600 focus:ring-blue-500 focus:ring-offset-0"
                         />
                         <div>
-                          <p className="text-sm font-medium text-stone-200">Ask every time</p>
+                          <p className="text-sm font-medium text-stone-200">{t('window.ask')}</p>
                           <p className="text-xs text-stone-500 mt-0.5">
-                            Show a dialog to choose between minimizing to tray or quitting
+                            {t('window.askDesc')}
                           </p>
                         </div>
                       </label>
@@ -309,9 +321,9 @@ export function SettingsPage({ onBack }: SettingsPageProps) {
                           className="w-4 h-4 text-blue-500 bg-stone-700 border-stone-600 focus:ring-blue-500 focus:ring-offset-0"
                         />
                         <div>
-                          <p className="text-sm font-medium text-stone-200">Always minimize to tray</p>
+                          <p className="text-sm font-medium text-stone-200">{t('window.minimize')}</p>
                           <p className="text-xs text-stone-500 mt-0.5">
-                            Hide the window to the system tray instead of closing
+                            {t('window.minimizeDesc')}
                           </p>
                         </div>
                       </label>
@@ -326,15 +338,18 @@ export function SettingsPage({ onBack }: SettingsPageProps) {
                           className="w-4 h-4 text-blue-500 bg-stone-700 border-stone-600 focus:ring-blue-500 focus:ring-offset-0"
                         />
                         <div>
-                          <p className="text-sm font-medium text-stone-200">Always quit</p>
+                          <p className="text-sm font-medium text-stone-200">{t('window.quit')}</p>
                           <p className="text-xs text-stone-500 mt-0.5">
-                            Close the application completely when clicking the X button
+                            {t('window.quitDesc')}
                           </p>
                         </div>
                       </label>
                     </div>
                   </div>
                 </div>
+
+                {/* Language Settings */}
+                <LanguageSettings />
 
                 {/* Debug Logging Section */}
                 <div className="relative overflow-hidden bg-linear-to-br from-orange-900/20 via-stone-900/50 to-stone-900/50 border border-orange-800/30 rounded-xl p-6">
@@ -345,17 +360,17 @@ export function SettingsPage({ onBack }: SettingsPageProps) {
                         <InfoIcon size="md" className="text-white" />
                       </div>
                       <div>
-                        <h2 className="text-lg font-medium text-stone-100">Troubleshooting</h2>
-                        <p className="text-sm text-stone-500">Debug logging and diagnostics</p>
+                        <h2 className="text-lg font-medium text-stone-100">{t('troubleshooting.title')}</h2>
+                        <p className="text-sm text-stone-500">{t('troubleshooting.description')}</p>
                       </div>
                     </div>
 
                     <div className="space-y-4">
                       <div className="flex items-center justify-between p-4 bg-stone-800/50 rounded-lg border border-stone-700/50">
                         <div>
-                          <p className="text-sm font-medium text-stone-200">Debug Logging</p>
+                          <p className="text-sm font-medium text-stone-200">{t('troubleshooting.debugLogging')}</p>
                           <p className="text-xs text-stone-500 mt-0.5">
-                            Enable verbose logs for troubleshooting. Logs more detail to help diagnose issues.
+                            {t('troubleshooting.debugLoggingDesc')}
                           </p>
                         </div>
                         <label className="relative inline-flex items-center cursor-pointer">
@@ -373,16 +388,27 @@ export function SettingsPage({ onBack }: SettingsPageProps) {
                         </label>
                       </div>
 
-                      <button
-                        onClick={async () => {
-                          const logPath = await wslService.getLogPath();
-                          wslService.openFolder(logPath);
-                        }}
-                        className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-stone-300 bg-stone-800/50 hover:bg-stone-700/50 border border-stone-700 rounded-lg transition-colors"
-                      >
-                        <FolderIcon size="sm" />
-                        <span>Open Log Folder</span>
-                      </button>
+                      <div className="flex gap-3">
+                        <button
+                          onClick={async () => {
+                            const logPath = await wslService.getLogPath();
+                            wslService.openFolder(logPath);
+                          }}
+                          className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-stone-300 bg-stone-800/50 hover:bg-stone-700/50 border border-stone-700 rounded-lg transition-colors"
+                        >
+                          <FolderIcon size="sm" />
+                          <span>{t('troubleshooting.openLogFolder')}</span>
+                        </button>
+                        <a
+                          href="https://wsl-ui.octasoft.co.uk/docs/troubleshooting"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-stone-300 bg-stone-800/50 hover:bg-stone-700/50 border border-stone-700 rounded-lg transition-colors"
+                        >
+                          <ExternalLinkIcon size="sm" />
+                          <span>{t('troubleshooting.troubleshootingGuide')}</span>
+                        </a>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -442,27 +468,38 @@ export function SettingsPage({ onBack }: SettingsPageProps) {
                           </span>
                         )}
                       </div>
-                      <p className="text-stone-400 mt-1">A lightweight desktop application to manage WSL distributions.</p>
-                      <p className="text-stone-600 text-sm mt-1">Built with Tauri, React, and Rust.</p>
+                      <p className="text-stone-400 mt-1">{t('about.description')}</p>
+                      <p className="text-stone-600 text-sm mt-1">{t('about.builtWith')}</p>
                     </div>
                   </div>
                   <div className="relative mt-6 pt-4 border-t border-stone-700/50 flex items-center justify-between">
-                    <a
-                      href="https://github.com/octasoft-ltd/wsl-ui"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-stone-300 bg-stone-800/50 hover:bg-stone-700/50 border border-stone-700 rounded-lg transition-colors"
-                    >
-                      <ExternalLinkIcon size="sm" />
-                      <span>View on GitHub</span>
-                    </a>
+                    <div className="flex items-center gap-3">
+                      <a
+                        href="https://wsl-ui.octasoft.co.uk"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-stone-300 bg-stone-800/50 hover:bg-stone-700/50 border border-stone-700 rounded-lg transition-colors"
+                      >
+                        <ExternalLinkIcon size="sm" />
+                        <span>{t('about.website')}</span>
+                      </a>
+                      <a
+                        href="https://github.com/octasoft-ltd/wsl-ui"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-stone-300 bg-stone-800/50 hover:bg-stone-700/50 border border-stone-700 rounded-lg transition-colors"
+                      >
+                        <ExternalLinkIcon size="sm" />
+                        <span>{t('about.github')}</span>
+                      </a>
+                    </div>
                     <a
                       href="http://www.octasoft.co.uk"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-2 text-stone-400 hover:text-stone-200 transition-colors"
                     >
-                      <span className="text-stone-500 text-sm">Developed by</span>
+                      <span className="text-stone-500 text-sm">{t('about.developedBy')}</span>
                       <img
                         src="/octasoft-logo.png"
                         alt="Octasoft Ltd"
@@ -482,18 +519,17 @@ export function SettingsPage({ onBack }: SettingsPageProps) {
                         <InfoIcon size="md" className="text-white" />
                       </div>
                       <div>
-                        <h2 className="text-lg font-medium text-stone-100">License</h2>
-                        <p className="text-sm text-stone-500">Business Source License 1.1</p>
+                        <h2 className="text-lg font-medium text-stone-100">{t('about.license.title')}</h2>
+                        <p className="text-sm text-stone-500">{t('about.license.type')}</p>
                       </div>
                     </div>
                     <div className="space-y-3">
                       <div className="bg-stone-900/30 rounded-lg p-4 border border-stone-800/50">
                         <p className="text-sm text-stone-300">
-                          Free for personal use and organizations with annual revenue under{" "}
-                          <span className="text-emerald-400 font-medium">$1,000,000 USD</span>.
+                          {t('about.license.freeText')}
                         </p>
                         <p className="text-xs text-stone-500 mt-2">
-                          Converts to Apache License 2.0 four years after each release.
+                          {t('about.license.conversion')}
                         </p>
                       </div>
                       <div className="flex items-center gap-3">
@@ -504,13 +540,7 @@ export function SettingsPage({ onBack }: SettingsPageProps) {
                           className="inline-flex items-center gap-2 px-3 py-1.5 text-sm text-emerald-400 hover:text-emerald-300 bg-emerald-900/20 hover:bg-emerald-900/30 border border-emerald-800/50 rounded-lg transition-colors"
                         >
                           <ExternalLinkIcon size="sm" />
-                          <span>View License</span>
-                        </a>
-                        <a
-                          href="mailto:wsl-ui@octasoft.co.uk"
-                          className="inline-flex items-center gap-2 px-3 py-1.5 text-sm text-stone-400 hover:text-stone-300 bg-stone-800/50 hover:bg-stone-700/50 border border-stone-700 rounded-lg transition-colors"
-                        >
-                          <span>Commercial Licensing</span>
+                          <span>{t('about.license.view')}</span>
                         </a>
                       </div>
                     </div>
@@ -526,26 +556,26 @@ export function SettingsPage({ onBack }: SettingsPageProps) {
                         <TerminalIcon size="md" className="text-white" />
                       </div>
                       <div>
-                        <h2 className="text-lg font-medium text-stone-100">WSL Information</h2>
-                        <p className="text-sm text-stone-500">Windows Subsystem for Linux</p>
+                        <h2 className="text-lg font-medium text-stone-100">{t('about.wslInfo.title')}</h2>
+                        <p className="text-sm text-stone-500">{t('about.wslInfo.description')}</p>
                       </div>
                     </div>
                     {wslVersion ? (
                       <div className="text-sm space-y-2">
                         <div className="grid grid-cols-2 gap-x-6 gap-y-3 bg-stone-900/30 rounded-lg p-4 border border-stone-800/50">
-                          <span className="text-stone-500">WSL Version</span>
+                          <span className="text-stone-500">{t('about.wslInfo.wslVersion')}</span>
                           <span className="text-cyan-300 font-mono">{wslVersion.wslVersion}</span>
-                          <span className="text-stone-500">Kernel Version</span>
+                          <span className="text-stone-500">{t('about.wslInfo.kernelVersion')}</span>
                           <span className="text-stone-200 font-mono">{wslVersion.kernelVersion}</span>
-                          <span className="text-stone-500">WSLg Version</span>
+                          <span className="text-stone-500">{t('about.wslInfo.wslgVersion')}</span>
                           <span className="text-stone-200 font-mono">{wslVersion.wslgVersion}</span>
-                          <span className="text-stone-500">MSRDC Version</span>
+                          <span className="text-stone-500">{t('about.wslInfo.msrdcVersion')}</span>
                           <span className="text-stone-200 font-mono">{wslVersion.msrdcVersion}</span>
-                          <span className="text-stone-500">Direct3D Version</span>
+                          <span className="text-stone-500">{t('about.wslInfo.direct3dVersion')}</span>
                           <span className="text-stone-300 font-mono text-xs">{wslVersion.direct3dVersion}</span>
-                          <span className="text-stone-500">DXCore Version</span>
+                          <span className="text-stone-500">{t('about.wslInfo.dxcoreVersion')}</span>
                           <span className="text-stone-300 font-mono text-xs">{wslVersion.dxcoreVersion}</span>
-                          <span className="text-stone-500">Windows Version</span>
+                          <span className="text-stone-500">{t('about.wslInfo.windowsVersion')}</span>
                           <span className="text-stone-200 font-mono">{wslVersion.windowsVersion}</span>
                         </div>
                         <div className="pt-3 mt-1">
@@ -556,14 +586,14 @@ export function SettingsPage({ onBack }: SettingsPageProps) {
                             className="inline-flex items-center gap-2 px-3 py-1.5 text-sm text-cyan-400 hover:text-cyan-300 bg-cyan-900/20 hover:bg-cyan-900/30 border border-cyan-800/50 rounded-lg transition-colors"
                           >
                             <ExternalLinkIcon size="sm" />
-                            <span>WSL on GitHub</span>
+                            <span>{t('about.wslInfo.wslGithub')}</span>
                           </a>
                         </div>
                       </div>
                     ) : (
                       <div className="flex items-center gap-2 text-stone-500 p-4">
                         <div className="w-4 h-4 border-2 border-cyan-600 border-t-cyan-400 rounded-full animate-spin" />
-                        <span>Loading WSL information...</span>
+                        <span>{t('about.wslInfo.loading')}</span>
                       </div>
                     )}
                   </div>

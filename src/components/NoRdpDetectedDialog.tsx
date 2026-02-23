@@ -1,4 +1,5 @@
 import { useEffect, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { MonitorIcon, ExternalLinkIcon } from "./icons";
 import { Portal } from "./ui/Portal";
 
@@ -13,6 +14,7 @@ export function NoRdpDetectedDialog({
   isOpen,
   onClose,
 }: NoRdpDetectedDialogProps) {
+  const { t } = useTranslation("dialogs");
   const handleClose = useCallback(() => {
     onClose();
   }, [onClose]);
@@ -54,12 +56,12 @@ export function NoRdpDetectedDialog({
             </div>
             <div>
               <h3 className="text-lg font-semibold text-theme-text-primary">
-                No Desktop Environment Detected
+                {t('noRdp.title')}
               </h3>
               <p className="text-sm text-theme-text-secondary mt-2">
-                We couldn't detect xrdp running in this distro.
+                {t('noRdp.description')}
                 <br /><br />
-                To use Remote Desktop, you'll need to set up a desktop environment and xrdp server.
+                {t('noRdp.instructions')}
               </p>
             </div>
           </div>
@@ -71,7 +73,7 @@ export function NoRdpDetectedDialog({
               rel="noopener noreferrer"
               className="flex items-center gap-2 text-sm text-theme-accent-primary hover:underline"
             >
-              Learn how to set up a Linux desktop
+              {t('noRdp.learnMore')}
               <ExternalLinkIcon size="sm" />
             </a>
             <button
@@ -79,7 +81,7 @@ export function NoRdpDetectedDialog({
               data-testid="dialog-close-button"
               className="px-4 py-2 text-sm font-medium text-theme-text-secondary bg-theme-bg-tertiary hover:bg-theme-bg-hover rounded-lg transition-colors"
             >
-              Close
+              {t('common:button.close')}
             </button>
           </div>
         </div>

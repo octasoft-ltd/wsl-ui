@@ -5,6 +5,7 @@
  * to leave a review on Microsoft Store.
  */
 
+import { useTranslation } from "react-i18next";
 import { Portal } from "./ui/Portal";
 
 /** App logo SVG component */
@@ -37,6 +38,8 @@ export function ReviewPromptDialog({
   onMaybeLater,
   onNoThanks,
 }: ReviewPromptDialogProps) {
+  const { t } = useTranslation("dialogs");
+
   if (!isOpen) return null;
 
   return (
@@ -58,10 +61,10 @@ export function ReviewPromptDialog({
             </div>
             <div>
               <h3 className="text-lg font-semibold text-theme-text-primary">
-                Finding WSL UI useful?
+                {t('review.title')}
               </h3>
               <p className="text-sm text-theme-text-secondary mt-1">
-                A quick review helps others discover this tool and keeps the project going. It only takes 30 seconds.
+                {t('review.description')}
               </p>
             </div>
           </div>
@@ -73,21 +76,21 @@ export function ReviewPromptDialog({
               data-testid="review-no-thanks-button"
               className="px-3 py-2 text-sm text-theme-text-muted hover:text-theme-text-secondary transition-colors"
             >
-              No Thanks
+              {t('review.noThanks')}
             </button>
             <button
               onClick={onMaybeLater}
               data-testid="review-maybe-later-button"
               className="px-4 py-2 text-sm font-medium text-theme-text-secondary bg-theme-bg-tertiary hover:bg-theme-bg-hover rounded-lg transition-colors"
             >
-              Maybe Later
+              {t('review.maybeLater')}
             </button>
             <button
               onClick={onReview}
               data-testid="review-leave-review-button"
               className="px-4 py-2 text-sm font-medium text-theme-bg-primary bg-theme-accent-primary hover:opacity-90 rounded-lg transition-colors"
             >
-              Leave a Review
+              {t('review.leaveReview')}
             </button>
           </div>
         </div>

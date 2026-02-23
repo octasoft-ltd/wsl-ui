@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { useDistroStore } from "../store/distroStore";
 import { DistroCard } from "./DistroCard";
 import { wslService } from "../services/wslService";
@@ -9,6 +10,7 @@ import { INSTALL_SOURCE_COLORS, INSTALL_SOURCE_NAMES } from "../types/distributi
 type StatusFilter = "all" | "online" | "offline";
 
 export function DistroList() {
+  const { t } = useTranslation("dashboard");
   const { distributions, isLoading } = useDistroStore();
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [sourceFilter, setSourceFilter] = useState<InstallSource | "all">("all");
@@ -45,7 +47,7 @@ export function DistroList() {
               <div className="w-2 h-2 bg-theme-accent-primary rounded-full animate-pulse shadow-[0_0_10px_rgba(var(--accent-primary-rgb),1)]" />
             </div>
           </div>
-          <p className="text-theme-text-muted font-mono text-sm uppercase tracking-wider">Initializing systems...</p>
+          <p className="text-theme-text-muted font-mono text-sm uppercase tracking-wider">{t('loading')}</p>
         </div>
       </div>
     );
@@ -79,9 +81,9 @@ export function DistroList() {
             <div className="absolute bottom-0 right-0 w-px h-3 bg-gradient-to-t from-theme-accent-primary/50 to-transparent" />
           </div>
 
-          <h3 className="text-lg font-semibold text-theme-text-secondary mb-2">No Instances Detected</h3>
+          <h3 className="text-lg font-semibold text-theme-text-secondary mb-2">{t('emptyState.title')}</h3>
           <p className="text-theme-text-muted text-sm font-mono">
-            Deploy a WSL distribution to begin
+            {t('emptyState.description')}
           </p>
 
           {/* Decorative line */}
@@ -154,12 +156,12 @@ export function DistroList() {
             onClick={copyIpToClipboard}
             data-testid="wsl-ip-display"
             className="absolute right-0 top-0 flex items-center gap-2 px-3 py-2 bg-theme-bg-secondary border border-theme-border-primary rounded-lg whitespace-nowrap hover:bg-theme-bg-hover transition-colors group z-10"
-            title="Click to copy IP address"
+            title={t('card.ipTooltip')}
           >
-            <span className="text-xs font-mono text-theme-text-muted">IP</span>
+            <span className="text-xs font-mono text-theme-text-muted">{t('common:label.ip')}</span>
             <span className="text-sm font-mono text-theme-accent-primary" data-testid="wsl-ip-value">{wslIp}</span>
             <CopyIcon size="sm" className={`text-theme-text-muted group-hover:text-theme-accent-primary transition-colors ${ipCopied ? 'text-theme-status-running' : ''}`} />
-            {ipCopied && <span className="text-[10px] text-theme-status-running" data-testid="ip-copied-indicator">Copied!</span>}
+            {ipCopied && <span className="text-[10px] text-theme-status-running" data-testid="ip-copied-indicator">{t('common:label.copied')}</span>}
           </button>
         )}
 
@@ -176,7 +178,7 @@ export function DistroList() {
                   : "border-transparent text-theme-text-muted hover:text-theme-text-secondary hover:bg-theme-bg-hover"
               }`}
             >
-              All
+              {t('filter.all')}
             </button>
             <button
               onClick={() => setStatusFilter("online")}
@@ -186,7 +188,7 @@ export function DistroList() {
                   ? "bg-theme-status-running/20 text-theme-status-running border-theme-status-running/30"
                   : "border-transparent text-theme-text-muted hover:text-theme-text-secondary hover:bg-theme-bg-hover"
               }`}
-              title={`Online (${onlineCount})`}
+              title={t('filter.onlineTooltip', { count: onlineCount })}
             >
               <span className="w-2 h-2 rounded-full bg-theme-status-running" />
               <span className="text-[10px]" data-testid="online-count">{onlineCount}</span>
@@ -199,7 +201,7 @@ export function DistroList() {
                   ? "bg-theme-text-muted/20 text-theme-text-secondary border-theme-text-muted/30"
                   : "border-transparent text-theme-text-muted hover:text-theme-text-secondary hover:bg-theme-bg-hover"
               }`}
-              title={`Offline (${offlineCount})`}
+              title={t('filter.offlineTooltip', { count: offlineCount })}
             >
               <span className="w-2 h-2 rounded-full bg-theme-status-stopped" />
               <span className="text-[10px]" data-testid="offline-count">{offlineCount}</span>
@@ -219,10 +221,10 @@ export function DistroList() {
                   ? "bg-theme-accent-primary/20 text-theme-accent-primary border-theme-accent-primary/30"
                   : "border-transparent text-theme-text-muted hover:text-theme-text-secondary hover:bg-theme-bg-hover"
               }`}
-              title="All Sources"
+              title={t('filter.allSources')}
             >
-              <span className="hidden sm:inline">All Sources</span>
-              <span className="sm:hidden">All</span>
+              <span className="hidden sm:inline">{t('filter.allSources')}</span>
+              <span className="sm:hidden">{t('filter.allSourcesMobile')}</span>
             </button>
             {availableSources.map((source) => {
               const count = distributions.filter(d => (d.metadata?.installSource || "unknown") === source).length;
@@ -264,9 +266,9 @@ export function DistroList() {
                     ? "bg-blue-500/20 text-blue-400 border-blue-500/30"
                     : "border-transparent text-theme-text-muted/50 hover:text-theme-text-muted hover:bg-theme-bg-hover line-through"
                 }`}
-                title={wsl1Enabled ? `Hide WSL 1 (${wsl1Count})` : `Show WSL 1 (${wsl1Count})`}
+                title={wsl1Enabled ? t('filter.hideWsl1', { count: wsl1Count }) : t('filter.showWsl1', { count: wsl1Count })}
               >
-                v1
+                {t('filter.v1')}
                 <span className="text-[10px] opacity-70" data-testid="wsl1-count">{wsl1Count}</span>
               </button>
             )}
@@ -279,9 +281,9 @@ export function DistroList() {
                     ? "bg-blue-500/20 text-blue-400 border-blue-500/30"
                     : "border-transparent text-theme-text-muted/50 hover:text-theme-text-muted hover:bg-theme-bg-hover line-through"
                 }`}
-                title={wsl2Enabled ? `Hide WSL 2 (${wsl2Count})` : `Show WSL 2 (${wsl2Count})`}
+                title={wsl2Enabled ? t('filter.hideWsl2', { count: wsl2Count }) : t('filter.showWsl2', { count: wsl2Count })}
               >
-                v2
+                {t('filter.v2')}
                 <span className="text-[10px] opacity-70" data-testid="wsl2-count">{wsl2Count}</span>
               </button>
             )}
@@ -296,8 +298,8 @@ export function DistroList() {
           <div className="text-center">
             <p className="text-theme-text-muted text-sm" data-testid="empty-filter-message">
               {distributions.length === 0
-                ? "No distributions found"
-                : "No distributions match the current filters"}
+                ? t('emptyFilter.noDistros')
+                : t('emptyFilter.noMatch')}
             </p>
             {hasActiveFilters && (
               <button
@@ -305,7 +307,7 @@ export function DistroList() {
                 data-testid="clear-filters-button"
                 className="mt-2 text-xs text-theme-accent-primary hover:underline"
               >
-                Clear filters
+                {t('emptyFilter.clearFilters')}
               </button>
             )}
           </div>

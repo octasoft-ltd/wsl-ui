@@ -1,0 +1,21 @@
+{
+  "boundary": {
+    "title": "Something went wrong",
+    "message": "The application encountered an unexpected error. Please try again.",
+    "tryAgain": "Try Again"
+  },
+  "system": {
+    "title": "System Error",
+    "timeoutTip": "Tip: If you recently installed a new distribution, close any terminal windows that were automatically opened during installation.",
+    "forceShutdown": "Force Shutdown WSL",
+    "forceShutdownTitle": "Force Shutdown WSL",
+    "forceShutdownMessage": "This will forcibly terminate all WSL processes using 'wsl --shutdown --force'. Any unsaved work in your Linux distributions may be lost. This action cannot be undone.",
+    "forceShutdownConfirm": "Force Shutdown"
+  },
+  "wslUpdate": {
+    "title": "WSL Update",
+    "success": "Update completed successfully",
+    "cancelled": "WSL Update",
+    "failedTitle": "WSL Update Failed"
+  }
+}

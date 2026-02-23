@@ -5,6 +5,7 @@
  */
 
 import { open } from "@tauri-apps/plugin-dialog";
+import { useTranslation } from "react-i18next";
 import { useSettingsStore } from "../../store/settingsStore";
 import { TerminalIcon } from "../icons";
 import { DEFAULT_EXECUTABLE_PATHS } from "../../types/settings";
@@ -12,6 +13,7 @@ import { SettingInput, SettingPathInput } from "./FormControls";
 
 
 export function ExecutablePathsSettings() {
+  const { t } = useTranslation("settings");
   const { settings, updateSetting } = useSettingsStore();
 
   const handlePathChange = (key: keyof typeof settings.executablePaths, value: string) => {
@@ -30,7 +32,7 @@ export function ExecutablePathsSettings() {
     const selectedPath = await open({
       directory: true,
       multiple: false,
-      title: "Select Default Installation Folder",
+      title: t('executables.selectInstallFolder'),
     });
 
     if (selectedPath && !Array.isArray(selectedPath)) {
@@ -48,34 +50,33 @@ export function ExecutablePathsSettings() {
               <TerminalIcon size="md" className="text-white" />
             </div>
             <div>
-              <h2 className="text-lg font-medium text-theme-text-primary">Executable Paths</h2>
-              <p className="text-sm text-theme-text-muted">Configure paths to system commands</p>
+              <h2 className="text-lg font-medium text-theme-text-primary">{t('executables.title')}</h2>
+              <p className="text-sm text-theme-text-muted">{t('executables.description')}</p>
             </div>
           </div>
 
           {/* Info box */}
           <div className="mb-6 p-4 bg-theme-bg-tertiary/50 border border-theme-border-secondary/50 rounded-lg">
             <p className="text-xs text-theme-text-muted">
-              Override default executable paths if tools are installed in non-standard locations.
-              Leave as default unless you have a specific reason to change them.
+              {t('executables.infoBox')}
             </p>
           </div>
 
           {/* Core Commands */}
           <div className="mb-6 pb-6 border-b border-theme-border-secondary/50">
-            <h3 className="text-sm font-medium text-theme-text-secondary mb-2">Core Commands</h3>
+            <h3 className="text-sm font-medium text-theme-text-secondary mb-2">{t('executables.coreCommands')}</h3>
             <SettingInput
               className="font-mono text-sm"
-              label="WSL"
-              description="WSL CLI executable for all distribution operations"
+              label={t('executables.wsl')}
+              description={t('executables.wslDesc')}
               value={settings.executablePaths.wsl}
               placeholder="wsl"
               onChange={(v) => handlePathChange("wsl", v)}
             />
             <SettingInput
               className="font-mono text-sm"
-              label="PowerShell"
-              description="Used for system health monitoring, disk operations, and Windows Terminal Preview"
+              label={t('executables.powershell')}
+              description={t('executables.powershellDesc')}
               value={settings.executablePaths.powershell}
               placeholder="powershell"
               onChange={(v) => handlePathChange("powershell", v)}
@@ -84,19 +85,19 @@ export function ExecutablePathsSettings() {
 
           {/* Terminal Commands */}
           <div className="mb-6 pb-6 border-b border-theme-border-secondary/50">
-            <h3 className="text-sm font-medium text-theme-text-secondary mb-2">Terminal</h3>
+            <h3 className="text-sm font-medium text-theme-text-secondary mb-2">{t('executables.terminal')}</h3>
             <SettingInput
               className="font-mono text-sm"
-              label="Windows Terminal"
-              description="Windows Terminal executable for opening distributions"
+              label={t('executables.windowsTerminal')}
+              description={t('executables.windowsTerminalDesc')}
               value={settings.executablePaths.windowsTerminal}
               placeholder="wt"
               onChange={(v) => handlePathChange("windowsTerminal", v)}
             />
             <SettingInput
               className="font-mono text-sm"
-              label="Command Prompt"
-              description="Fallback terminal when Windows Terminal is not available"
+              label={t('executables.cmd')}
+              description={t('executables.cmdDesc')}
               value={settings.executablePaths.cmd}
               placeholder="cmd"
               onChange={(v) => handlePathChange("cmd", v)}
@@ -105,19 +106,19 @@ export function ExecutablePathsSettings() {
 
           {/* File System */}
           <div className="mb-6 pb-6 border-b border-theme-border-secondary/50">
-            <h3 className="text-sm font-medium text-theme-text-secondary mb-2">File System</h3>
+            <h3 className="text-sm font-medium text-theme-text-secondary mb-2">{t('executables.fileSystem')}</h3>
             <SettingInput
               className="font-mono text-sm"
-              label="File Explorer"
-              description="Windows Explorer for browsing distribution files"
+              label={t('executables.explorer')}
+              description={t('executables.explorerDesc')}
               value={settings.executablePaths.explorer}
               placeholder="explorer"
               onChange={(v) => handlePathChange("explorer", v)}
             />
             <SettingInput
               className="font-mono text-sm"
-              label="WSL UNC Prefix"
-              description="UNC path prefix for accessing WSL distribution filesystems"
+              label={t('executables.wslUncPrefix')}
+              description={t('executables.wslUncPrefixDesc')}
               value={settings.executablePaths.wslUncPrefix}
               placeholder="\\wsl$"
               onChange={(v) => handlePathChange("wslUncPrefix", v)}
@@ -126,11 +127,11 @@ export function ExecutablePathsSettings() {
 
           {/* Installation */}
           <div className="space-y-1">
-            <h3 className="text-sm font-medium text-theme-text-secondary mb-2">Installation</h3>
+            <h3 className="text-sm font-medium text-theme-text-secondary mb-2">{t('executables.installation')}</h3>
             <SettingPathInput
               className="font-mono text-sm"
-              label="Default Install Location"
-              description="Base folder for new WSL distributions (import, clone, container images). Does not apply to Microsoft Store installs which use Windows-managed locations. Supports environment variables like %LOCALAPPDATA%."
+              label={t('executables.defaultInstallLocation')}
+              description={t('executables.defaultInstallLocationDesc')}
               value={settings.defaultInstallBasePath}
               placeholder="%LOCALAPPDATA%\wsl"
               onChange={(v) => updateSetting("defaultInstallBasePath", v)}
@@ -144,7 +145,7 @@ export function ExecutablePathsSettings() {
               onClick={handleResetDefaults}
               className="text-xs text-theme-text-muted hover:text-theme-text-secondary transition-colors"
             >
-              Reset paths to defaults
+              {t('executables.resetDefaults')}
             </button>
           </div>
         </div>

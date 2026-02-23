@@ -1,4 +1,5 @@
 import { useEffect, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { WarningIcon } from "./icons";
 import { Portal } from "./ui/Portal";
 
@@ -21,6 +22,7 @@ export function ConfirmDialog({
   onCancel,
   danger = false,
 }: ConfirmDialogProps) {
+  const { t } = useTranslation("dialogs");
   const handleCancel = useCallback(() => {
     onCancel();
   }, [onCancel]);
@@ -73,7 +75,7 @@ export function ConfirmDialog({
               data-testid="dialog-cancel-button"
               className="px-4 py-2 text-sm font-medium text-theme-text-secondary bg-theme-bg-tertiary hover:bg-theme-bg-hover rounded-lg transition-colors"
             >
-              Cancel
+              {t('common:button.cancel')}
             </button>
             <button
               onClick={onConfirm}

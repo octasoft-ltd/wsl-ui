@@ -1,0 +1,96 @@
+{
+  "quickActions": {
+    "title": "빠른 작업",
+    "info": "배포판 정보",
+    "explorer": "파일 탐색기 열기",
+    "ide": "IDE에서 열기",
+    "restart": "재시작",
+    "export": "파일로 내보내기...",
+    "clone": "복제...",
+    "setDefault": "기본값으로 설정",
+    "alreadyDefault": "기본 배포판"
+  },
+  "manage": {
+    "title": "관리",
+    "move": "배포판 이동...",
+    "resize": "디스크 크기 조정...",
+    "compact": "디스크 압축...",
+    "user": "기본 사용자 설정...",
+    "rename": "이름 변경...",
+    "sparse": "스파스 모드",
+    "version": "WSL 버전 설정"
+  },
+  "customActions": {
+    "title": "사용자 지정 작업",
+    "requiresStop": "배포판 중지 필요",
+    "requiresShutdown": "WSL 종료 필요"
+  },
+  "sparseConfirm": {
+    "title": "스파스 모드를 활성화하시겠습니까?",
+    "message": "경고: Microsoft는 스파스 VHD 지원이 데이터 손상을 일으킬 수 있다고 경고했습니다. 디스크 공간을 자동으로 회수하는 데 도움이 될 수 있지만 데이터 손실 위험이 있습니다. 이 기능을 활성화하기 전에 백업을 확인하세요.",
+    "confirm": "그래도 활성화"
+  },
+  "outputDialog": {
+    "titleSuffix": "- 출력",
+    "noOutput": "출력 없음."
+  },
+  "editor": {
+    "iconLabel": "아이콘",
+    "availableVars": "사용 가능한 변수:"
+  },
+  "exportTitle": "사용자 지정 작업 내보내기",
+  "importTitle": "사용자 지정 작업 가져오기",
+  "badge": {
+    "startup": "시작 시"
+  },
+  "scope": {
+    "all": "모든 배포판",
+    "pattern": "패턴: {{pattern}}",
+    "count_one": "배포판 {{count}}개",
+    "count_other": "배포판 {{count}}개"
+  },
+  "sparseChanged": "스파스 모드가 변경되었습니다",
+  "sparseChangedMessage": "{{name}}의 스파스 모드가 {{state}} 상태로 변경되었습니다",
+  "sparseToggleFailed": "스파스 모드를 전환하지 못했습니다",
+  "sparseToggle": "스파스 모드 전환",
+  "actionFailed": "작업 실패",
+  "actionFailedMessage": "작업을 실행하지 못했습니다",
+  "distroIdUnavailable": "배포판 ID를 사용할 수 없습니다",
+  "requiresSudo": "sudo 비밀번호가 필요합니다",
+  "confirmRunTitle": "\"{{action}}\"을(를) 실행하시겠습니까?",
+  "confirmRunMessage": "{{name}}에서 이 작업을 실행하시겠습니까?",
+  "customActionsSettings": {
+    "title": "사용자 지정 작업",
+    "description": "배포판 빠른 작업 메뉴에 표시되는 셸 명령 정의",
+    "addAction": "작업 추가",
+    "editAction": "작업 편집",
+    "noActions": "구성된 사용자 지정 작업이 없습니다",
+    "noActionsHint": "첫 번째 사용자 지정 작업을 추가하여 시작하세요",
+    "name": "이름",
+    "namePlaceholder": "예: 시스템 업데이트",
+    "command": "명령",
+    "commandPlaceholder": "예: sudo apt update && sudo apt upgrade -y",
+    "sudo": "sudo로 실행",
+    "sudoDesc": "관리자 권한으로 명령 실행",
+    "runOnStartup": "시작 시 실행",
+    "runOnStartupDesc": "일치하는 배포판 시작 시 실행",
+    "confirmBeforeRun": "실행 전 확인",
+    "runInTerminal": "터미널에서 실행",
+    "runInTerminalDesc": "표시되는 터미널 창에서 명령 실행",
+    "showOutput": "출력 표시",
+    "showOutputDesc": "대화 상자에 명령 출력 표시",
+    "target": "대상 배포판",
+    "targetAll": "모든 배포판",
+    "targetSpecific": "특정 배포판",
+    "targetRegex": "정규 표현식 패턴",
+    "targetPlaceholder": "예: Ubuntu.*",
+    "save": "저장",
+    "delete": "삭제",
+    "deleteConfirm": "이 작업을 삭제하시겠습니까?",
+    "importExport": "가져오기/내보내기",
+    "importActions": "가져오기",
+    "exportActions": "내보내기",
+    "importSuccess": "작업을 성공적으로 가져왔습니다",
+    "exportSuccess": "작업을 성공적으로 내보냈습니다"
+  }
+}

@@ -3,7 +3,7 @@ name = "wsl-core"
 version = "0.16.2"
 edition = "2021"
 description = "Core WSL management logic - parsing and types"
-license = "BUSL-1.1"
+license = "GPL-3.0-only"
 
 [dependencies]
 serde = { version = "1", features = ["derive"] }

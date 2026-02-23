@@ -5,6 +5,7 @@
  */
 
 import { useState, useEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { wslService, type VhdSizeInfo, type CompactResult } from "../services/wslService";
 import { useDistroStore } from "../store/distroStore";
 import { useNotificationStore } from "../store/notificationStore";
@@ -20,6 +21,7 @@ interface CompactDistroDialogProps {
 }
 
 export function CompactDistroDialog({ isOpen, distro, onClose }: CompactDistroDialogProps) {
+  const { t } = useTranslation("dialogs");
   const [isCompacting, setIsCompacting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [vhdSize, setVhdSize] = useState<VhdSizeInfo | null>(null);
@@ -108,7 +110,7 @@ export function CompactDistroDialog({ isOpen, distro, onClose }: CompactDistroDi
       // Show notification BEFORE refreshing distros (fetchDistros can be slow/fail)
       addNotification({
         type: "success",
-        title: "Disk Compacted",
+        title: t('compact.successTitle'),
         message,
       });
 
@@ -122,7 +124,7 @@ export function CompactDistroDialog({ isOpen, distro, onClose }: CompactDistroDi
         // Silently ignore - user already got success notification
       });
     } catch (err) {
-      const errorMessage = typeof err === "string" ? err : err instanceof Error ? err.message : "Failed to compact distribution";
+      const errorMessage = typeof err === "string" ? err : err instanceof Error ? err.message : t('compact.errorFailed');
       setError(errorMessage);
     } finally {
       // Always reset compacting state (runs for both success and error)
@@ -142,8 +144,8 @@ export function CompactDistroDialog({ isOpen, distro, onClose }: CompactDistroDi
   return (
     <Modal isOpen={isOpen} onClose={handleClose} closeOnBackdrop={!isCompacting} data-testid="compact-dialog">
       <ModalHeader
-        title={`Compact "${distro.name}" Disk`}
-        subtitle="Reclaim unused disk space from the virtual disk"
+        title={t('compact.title', { name: distro.name })}
+        subtitle={t('compact.subtitle')}
         onClose={handleClose}
         showCloseButton={!isCompacting}
       />
@@ -159,15 +161,15 @@ export function CompactDistroDialog({ isOpen, distro, onClose }: CompactDistroDi
           <div className="p-3 bg-theme-bg-tertiary/50 border border-theme-border-secondary rounded-lg">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <span className="text-theme-text-muted text-xs uppercase tracking-wider">Virtual Size (Max)</span>
+                <span className="text-theme-text-muted text-xs uppercase tracking-wider">{t('compact.virtualSize')}</span>
                 <p data-testid="compact-virtual-size" className="text-theme-text-primary font-medium">
-                  {vhdSize !== null ? formatSize(vhdSize.virtualSize) : "Loading..."}
+                  {vhdSize !== null ? formatSize(vhdSize.virtualSize) : t('common:label.loading')}
                 </p>
               </div>
               <div>
-                <span className="text-theme-text-muted text-xs uppercase tracking-wider">File Size (Current)</span>
+                <span className="text-theme-text-muted text-xs uppercase tracking-wider">{t('compact.fileSize')}</span>
                 <p data-testid="compact-file-size" className="text-theme-text-secondary font-medium">
-                  {vhdSize !== null ? formatSize(vhdSize.fileSize) : "Loading..."}
+                  {vhdSize !== null ? formatSize(vhdSize.fileSize) : t('common:label.loading')}
                 </p>
               </div>
             </div>
@@ -176,11 +178,11 @@ export function CompactDistroDialog({ isOpen, distro, onClose }: CompactDistroDi
           <div className="p-3 bg-[rgba(var(--status-warning-rgb),0.15)] border border-[rgba(var(--status-warning-rgb),0.3)] rounded-lg flex items-start gap-3">
             <WarningIcon size="sm" className="text-theme-status-warning mt-0.5 shrink-0" />
             <div className="text-theme-status-warning/80 text-sm">
-              <strong className="text-theme-status-warning">Important:</strong>
+              <strong className="text-theme-status-warning">{t('compact.important')}</strong>
               <ul className="mt-1 ml-4 list-disc space-y-1">
-                <li>This operation requires administrator privileges (UAC prompt)</li>
-                <li>WSL will be shut down during this operation</li>
-                <li>Do not close the app or shut down your computer</li>
+                <li>{t('compact.warningUac')}</li>
+                <li>{t('compact.warningShutdown')}</li>
+                <li>{t('compact.warningDoNotClose')}</li>
               </ul>
             </div>
           </div>
@@ -205,15 +207,15 @@ export function CompactDistroDialog({ isOpen, distro, onClose }: CompactDistroDi
                 />
               </svg>
               <div className="flex-1">
-                <span className="font-medium">Optimizing disk...</span>
+                <span className="font-medium">{t('compact.optimizing')}</span>
                 <span data-testid="compact-elapsed-time" className="text-theme-text-muted ml-2">
-                  {formatElapsedTime(elapsedSeconds)} elapsed
+                  {t('compact.elapsed', { time: formatElapsedTime(elapsedSeconds) })}
                 </span>
               </div>
             </div>
             <div className="mt-3 text-theme-text-muted text-sm space-y-1">
-              <p>Running fstrim, shutting down WSL, then compacting VHDX.</p>
-              <p>Please wait. This operation cannot be cancelled.</p>
+              <p>{t('compact.progressSteps')}</p>
+              <p>{t('compact.progressWait')}</p>
             </div>
           </div>
         )}
@@ -221,7 +223,7 @@ export function CompactDistroDialog({ isOpen, distro, onClose }: CompactDistroDi
 
       <ModalFooter>
         <Button data-testid="compact-cancel-button" variant="secondary" onClick={handleClose} disabled={isCompacting}>
-          Cancel
+          {t('common:button.cancel')}
         </Button>
         <Button
           data-testid="compact-confirm-button"
@@ -230,7 +232,7 @@ export function CompactDistroDialog({ isOpen, distro, onClose }: CompactDistroDi
           disabled={isCompacting || vhdSize === null}
           loading={isCompacting}
         >
-          Compact Disk
+          {t('compact.compactDisk')}
         </Button>
       </ModalFooter>
     </Modal>

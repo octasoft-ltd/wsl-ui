@@ -6,6 +6,7 @@
  */
 
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { wslService } from "../services/wslService";
 import { useDistroStore } from "../store/distroStore";
 import { useNotificationStore } from "../store/notificationStore";
@@ -21,6 +22,7 @@ interface SetVersionDialogProps {
 }
 
 export function SetVersionDialog({ isOpen, distro, onClose }: SetVersionDialogProps) {
+  const { t } = useTranslation("dialogs");
   const [selectedVersion, setSelectedVersion] = useState<1 | 2>(
     distro.version === 1 ? 2 : 1
   );
@@ -45,12 +47,12 @@ export function SetVersionDialog({ isOpen, distro, onClose }: SetVersionDialogPr
       await fetchDistros();
       addNotification({
         type: "success",
-        title: "WSL Version Changed",
-        message: `${distro.name} converted to WSL ${targetVersion}`,
+        title: t('setVersion.successTitle'),
+        message: t('setVersion.successMessage', { name: distro.name, version: targetVersion }),
       });
       handleClose();
     } catch (err) {
-      const errorMessage = typeof err === "string" ? err : err instanceof Error ? err.message : "Failed to convert distribution";
+      const errorMessage = typeof err === "string" ? err : err instanceof Error ? err.message : t('setVersion.errorFailed');
       setError(errorMessage);
     } finally {
       setIsConverting(false);
@@ -68,8 +70,8 @@ export function SetVersionDialog({ isOpen, distro, onClose }: SetVersionDialogPr
   return (
     <Modal isOpen={isOpen} onClose={handleClose} closeOnBackdrop={!isConverting} size="sm">
       <ModalHeader
-        title="Set WSL Version"
-        subtitle={`For "${distro.name}"`}
+        title={t('setVersion.title')}
+        subtitle={t('setVersion.subtitle', { name: distro.name })}
         onClose={handleClose}
         showCloseButton={!isConverting}
       />
@@ -85,7 +87,7 @@ export function SetVersionDialog({ isOpen, distro, onClose }: SetVersionDialogPr
           {/* Version Options */}
           <div className="space-y-2">
             <label className="block text-sm font-medium text-theme-text-secondary mb-2">
-              Select Version
+              {t('setVersion.selectVersion')}
             </label>
 
             {/* WSL 1 Option */}
@@ -104,12 +106,12 @@ export function SetVersionDialog({ isOpen, distro, onClose }: SetVersionDialogPr
                 <div>
                   <div className="font-medium text-theme-text-primary">WSL 1</div>
                   <div className="text-sm text-theme-text-muted">
-                    Lightweight, uses Windows filesystem layer
+                    {t('setVersion.wsl1Description')}
                   </div>
                 </div>
                 {currentVersion === 1 && (
                   <span className="text-xs px-2 py-1 rounded bg-theme-accent-primary text-theme-bg-primary font-medium">
-                    Current
+                    {t('setVersion.current')}
                   </span>
                 )}
               </div>
@@ -131,12 +133,12 @@ export function SetVersionDialog({ isOpen, distro, onClose }: SetVersionDialogPr
                 <div>
                   <div className="font-medium text-theme-text-primary">WSL 2</div>
                   <div className="text-sm text-theme-text-muted">
-                    Full Linux kernel, better performance
+                    {t('setVersion.wsl2Description')}
                   </div>
                 </div>
                 {currentVersion === 2 && (
                   <span className="text-xs px-2 py-1 rounded bg-theme-accent-primary text-theme-bg-primary font-medium">
-                    Current
+                    {t('setVersion.current')}
                   </span>
                 )}
               </div>
@@ -147,11 +149,11 @@ export function SetVersionDialog({ isOpen, distro, onClose }: SetVersionDialogPr
           <div className="p-3 bg-[rgba(var(--status-warning-rgb),0.15)] border border-[rgba(var(--status-warning-rgb),0.3)] rounded-lg flex items-start gap-3">
             <WarningIcon size="sm" className="text-theme-status-warning mt-0.5 shrink-0" />
             <div className="text-theme-status-warning/80 text-sm space-y-1">
-              <p className="font-medium">This operation may take several minutes.</p>
+              <p className="font-medium">{t('setVersion.warningTime')}</p>
               <p>
                 {currentVersion === 1 && targetVersion === 2
-                  ? "Converting to WSL 2 will create a virtual disk (VHDX) from the filesystem."
-                  : "Converting to WSL 1 will extract the filesystem from the virtual disk."}
+                  ? t('setVersion.convertToWsl2')
+                  : t('setVersion.convertToWsl1')}
               </p>
             </div>
           </div>
@@ -175,7 +177,7 @@ export function SetVersionDialog({ isOpen, distro, onClose }: SetVersionDialogPr
                   d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
                 />
               </svg>
-              <span>Converting to WSL {targetVersion}... This may take a few minutes.</span>
+              <span>{t('setVersion.progress', { version: targetVersion })}</span>
             </div>
           </div>
         )}
@@ -183,7 +185,7 @@ export function SetVersionDialog({ isOpen, distro, onClose }: SetVersionDialogPr
 
       <ModalFooter>
         <Button variant="secondary" onClick={handleClose} disabled={isConverting}>
-          Cancel
+          {t('common:button.cancel')}
         </Button>
         <Button
           variant="primary"
@@ -191,7 +193,7 @@ export function SetVersionDialog({ isOpen, distro, onClose }: SetVersionDialogPr
           disabled={isConverting || targetVersion === currentVersion}
           loading={isConverting}
         >
-          Convert to WSL {targetVersion}
+          {t('setVersion.convert', { version: targetVersion })}
         </Button>
       </ModalFooter>
     </Modal>

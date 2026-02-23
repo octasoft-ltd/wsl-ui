@@ -1,0 +1,67 @@
+{
+  "button": {
+    "cancel": "Cancel",
+    "close": "Close",
+    "save": "Save",
+    "delete": "Delete",
+    "confirm": "Confirm",
+    "retry": "Retry",
+    "browse": "Browse",
+    "back": "Back",
+    "dismiss": "Dismiss",
+    "learnMore": "Learn More",
+    "resetToDefault": "Reset to default",
+    "clear": "Clear search",
+    "edit": "Edit",
+    "run": "Run"
+  },
+  "label": {
+    "name": "Name",
+    "status": "Status",
+    "version": "Version",
+    "size": "Size",
+    "location": "Location",
+    "default": "Default",
+    "yes": "Yes",
+    "no": "No",
+    "on": "On",
+    "off": "Off",
+    "loading": "Loading...",
+    "none": "None",
+    "ip": "IP",
+    "copied": "Copied!",
+    "disk": "Disk",
+    "memory": "Memory",
+    "cpu": "CPU",
+    "installed": "Installed",
+    "notInstalled": "Not installed"
+  },
+  "status": {
+    "online": "Online",
+    "offline": "Offline",
+    "primary": "Primary",
+    "compacting": "Compacting",
+    "operational": "OPERATIONAL",
+    "standby": "STANDBY"
+  },
+  "unit": {
+    "gb": "GB",
+    "tb": "TB"
+  },
+  "validation": {
+    "invalidChars": "Name can only contain letters, numbers, dots, underscores, and hyphens",
+    "duplicateName": "A distribution named \"{{name}}\" already exists",
+    "nameExists": "A distribution with this name already exists",
+    "required": "This field is required"
+  },
+  "wslVersion": {
+    "wsl1": "WSL 1",
+    "wsl2": "WSL 2"
+  },
+  "errors": {
+    "unknown": "Unknown error occurred"
+  },
+  "noOutput": "No output",
+  "output": "Output",
+  "ranOn": "Ran on: {{distro}}"
+}

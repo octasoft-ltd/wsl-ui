@@ -5,6 +5,7 @@
  */
 
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { wslService } from "../../services/wslService";
 import { useDistroStore } from "../../store/distroStore";
 import type { WslConf } from "../../types/settings";
@@ -14,6 +15,7 @@ import { FolderIcon, NetworkIcon, TerminalIcon, SparklesIcon, UserIcon } from ".
 import { logger } from "../../utils/logger";
 
 export function WslDistroSettings() {
+  const { t } = useTranslation("settings");
   const { distributions } = useDistroStore();
   const [selectedDistro, setSelectedDistro] = useState<string>("");
   const [config, setConfig] = useState<WslConf>(DEFAULT_WSL_CONF);
@@ -44,7 +46,7 @@ export function WslDistroSettings() {
       const loaded = await wslService.getWslConf(distroName, distro?.id);
       setConfig(loaded);
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Failed to load wsl.conf";
+      const message = err instanceof Error ? err.message : t('wslDistro.loadError');
       logger.error("Failed to load wsl.conf:", "WslDistroSettings", err);
       setError(message);
       setConfig(DEFAULT_WSL_CONF);
@@ -67,7 +69,7 @@ export function WslDistroSettings() {
       await wslService.saveWslConf(selectedDistro, config);
       setHasChanges(false);
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Failed to save wsl.conf";
+      const message = err instanceof Error ? err.message : t('wslDistro.saveError');
       logger.error("Failed to save wsl.conf:", "WslDistroSettings", err);
       setError(message);
     } finally {
@@ -78,8 +80,8 @@ export function WslDistroSettings() {
   if (distributions.length === 0) {
     return (
       <div className="text-center py-12 text-theme-text-muted">
-        <p>No distributions installed.</p>
-        <p className="text-sm">Install a distribution to configure its settings.</p>
+        <p>{t('wslDistro.noDistros')}</p>
+        <p className="text-sm">{t('wslDistro.noDistrosHint')}</p>
       </div>
     );
   }
@@ -90,13 +92,10 @@ export function WslDistroSettings() {
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-amber-500/10 via-transparent to-transparent" />
         <div className="relative text-sm text-theme-status-warning space-y-1">
           <p>
-            <span className="font-medium">Note:</span> These settings are stored in{" "}
-            <code className="px-1 py-0.5 bg-theme-bg-tertiary rounded text-xs">/etc/wsl.conf</code> inside each
-            distribution. The distribution must be <span className="font-medium">running</span> to save changes
-            (settings are written as root).
+            {t('wslDistro.noteWslConf')}
           </p>
           <p>
-            Changes require a <span className="font-medium">restart</span> of the distribution to take effect.
+            {t('wslDistro.noteRestart')}
           </p>
         </div>
       </div>
@@ -105,7 +104,7 @@ export function WslDistroSettings() {
       <div className="relative overflow-hidden bg-linear-to-br from-orange-900/20 via-theme-bg-secondary/50 to-theme-bg-secondary/50 border border-orange-800/30 rounded-xl p-4">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-orange-500/10 via-transparent to-transparent" />
         <div className="relative">
-          <label className="block text-sm font-medium text-theme-text-primary mb-2">Select Distribution</label>
+          <label className="block text-sm font-medium text-theme-text-primary mb-2">{t('wslDistro.selectDistro')}</label>
           <select
             value={selectedDistro}
             onChange={(e) => setSelectedDistro(e.target.value)}
@@ -114,7 +113,7 @@ export function WslDistroSettings() {
           >
             {distributions.map((d) => (
               <option key={d.name} value={d.name}>
-                {d.name} {d.isDefault ? "(default)" : ""}
+                {d.name} {d.isDefault ? t('wslDistro.defaultIndicator') : ""}
               </option>
             ))}
           </select>
@@ -135,36 +134,36 @@ export function WslDistroSettings() {
                   <FolderIcon className="text-white" size="md" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-medium text-theme-text-primary">Automount</h3>
-                  <p className="text-sm text-theme-text-muted">Windows drive mounting</p>
+                  <h3 className="text-lg font-medium text-theme-text-primary">{t('wslDistro.automount')}</h3>
+                  <p className="text-sm text-theme-text-muted">{t('wslDistro.automountDesc')}</p>
                 </div>
               </div>
               <div className="space-y-1 divide-y divide-theme-border-primary/50">
                 <Toggle
-                  label="Enable Automount"
-                  description="Automatically mount Windows drives in WSL"
+                  label={t('wslDistro.automountEnabled')}
+                  description={t('wslDistro.automountEnabledDesc')}
                   checked={config.automountEnabled ?? true}
                   onChange={(v) => updateConfig("automountEnabled", v)}
                   testId="distro-automount-enabled"
                 />
                 <Toggle
-                  label="Mount fstab"
-                  description="Process /etc/fstab for additional mounts"
+                  label={t('wslDistro.automountFstab')}
+                  description={t('wslDistro.automountFstabDesc')}
                   checked={config.automountMountFsTab ?? true}
                   onChange={(v) => updateConfig("automountMountFsTab", v)}
                   testId="distro-mount-fstab"
                 />
                 <SettingInput
-                  label="Mount Root"
-                  description="Directory where Windows drives are mounted"
+                  label={t('wslDistro.automountRoot')}
+                  description={t('wslDistro.automountRootDesc')}
                   value={config.automountRoot || ""}
                   onChange={(v) => updateConfig("automountRoot", v || undefined)}
                   placeholder="/mnt/"
                   testId="distro-mount-root"
                 />
                 <SettingInput
-                  label="Mount Options"
-                  description="Additional mount options (e.g., metadata,uid=1000)"
+                  label={t('wslDistro.automountOptions')}
+                  description={t('wslDistro.automountOptionsDesc')}
                   value={config.automountOptions || ""}
                   onChange={(v) => updateConfig("automountOptions", v || undefined)}
                   placeholder="metadata,uid=1000,gid=1000"
@@ -182,31 +181,31 @@ export function WslDistroSettings() {
                   <NetworkIcon className="text-white" size="md" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-medium text-theme-text-primary">Network</h3>
-                  <p className="text-sm text-theme-text-muted">DNS and hostname settings</p>
+                  <h3 className="text-lg font-medium text-theme-text-primary">{t('wslDistro.network')}</h3>
+                  <p className="text-sm text-theme-text-muted">{t('wslDistro.networkDesc')}</p>
                 </div>
               </div>
               <div className="space-y-1 divide-y divide-theme-border-primary/50">
                 <Toggle
-                  label="Generate /etc/hosts"
-                  description="Auto-generate hosts file from Windows"
+                  label={t('wslDistro.generateHosts')}
+                  description={t('wslDistro.generateHostsDesc')}
                   checked={config.networkGenerateHosts ?? true}
                   onChange={(v) => updateConfig("networkGenerateHosts", v)}
                   testId="distro-generate-hosts"
                 />
                 <Toggle
-                  label="Generate /etc/resolv.conf"
-                  description="Auto-generate DNS resolver configuration"
+                  label={t('wslDistro.generateResolvConf')}
+                  description={t('wslDistro.generateResolvConfDesc')}
                   checked={config.networkGenerateResolvConf ?? true}
                   onChange={(v) => updateConfig("networkGenerateResolvConf", v)}
                   testId="distro-generate-resolv"
                 />
                 <SettingInput
-                  label="Hostname"
-                  description="Custom hostname for this distribution"
+                  label={t('wslDistro.hostname')}
+                  description={t('wslDistro.hostnameDesc')}
                   value={config.networkHostname || ""}
                   onChange={(v) => updateConfig("networkHostname", v || undefined)}
-                  placeholder="Leave empty for default"
+                  placeholder={t('wslDistro.hostnamePlaceholder')}
                   testId="distro-hostname"
                 />
               </div>
@@ -221,21 +220,21 @@ export function WslDistroSettings() {
                   <TerminalIcon className="text-white" size="md" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-medium text-theme-text-primary">Interop</h3>
-                  <p className="text-sm text-theme-text-muted">Windows integration</p>
+                  <h3 className="text-lg font-medium text-theme-text-primary">{t('wslDistro.interop')}</h3>
+                  <p className="text-sm text-theme-text-muted">{t('wslDistro.interopDesc')}</p>
                 </div>
               </div>
               <div className="space-y-1 divide-y divide-theme-border-primary/50">
                 <Toggle
-                  label="Enable Windows Interop"
-                  description="Allow running Windows executables from Linux"
+                  label={t('wslDistro.interopEnabled')}
+                  description={t('wslDistro.interopEnabledDesc')}
                   checked={config.interopEnabled ?? true}
                   onChange={(v) => updateConfig("interopEnabled", v)}
                   testId="distro-interop-enabled"
                 />
                 <Toggle
-                  label="Append Windows PATH"
-                  description="Add Windows PATH directories to Linux PATH"
+                  label={t('wslDistro.appendWindowsPath')}
+                  description={t('wslDistro.appendWindowsPathDesc')}
                   checked={config.interopAppendWindowsPath ?? true}
                   onChange={(v) => updateConfig("interopAppendWindowsPath", v)}
                   testId="distro-append-path"
@@ -252,24 +251,24 @@ export function WslDistroSettings() {
                   <SparklesIcon className="text-white" size="md" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-medium text-theme-text-primary">Boot</h3>
-                  <p className="text-sm text-theme-text-muted">Startup configuration</p>
+                  <h3 className="text-lg font-medium text-theme-text-primary">{t('wslDistro.boot')}</h3>
+                  <p className="text-sm text-theme-text-muted">{t('wslDistro.bootDesc')}</p>
                 </div>
               </div>
               <div className="space-y-1 divide-y divide-theme-border-primary/50">
                 <Toggle
-                  label="Enable systemd"
-                  description="Start systemd as the init system (requires WSL 0.67.6+)"
+                  label={t('wslDistro.systemd')}
+                  description={t('wslDistro.systemdDesc')}
                   checked={config.bootSystemd ?? true}
                   onChange={(v) => updateConfig("bootSystemd", v)}
                   testId="distro-systemd"
                 />
                 <SettingInput
-                  label="Boot Command"
-                  description="Command to run on distribution boot"
+                  label={t('wslDistro.bootCommand')}
+                  description={t('wslDistro.bootCommandDesc')}
                   value={config.bootCommand || ""}
                   onChange={(v) => updateConfig("bootCommand", v || undefined)}
-                  placeholder="Optional startup command"
+                  placeholder={t('wslDistro.bootCommandPlaceholder')}
                   testId="distro-boot-command"
                 />
               </div>
@@ -284,17 +283,17 @@ export function WslDistroSettings() {
                   <UserIcon className="text-white" size="md" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-medium text-theme-text-primary">User</h3>
-                  <p className="text-sm text-theme-text-muted">Default user settings</p>
+                  <h3 className="text-lg font-medium text-theme-text-primary">{t('wslDistro.user')}</h3>
+                  <p className="text-sm text-theme-text-muted">{t('wslDistro.userDesc')}</p>
                 </div>
               </div>
               <div className="space-y-1">
                 <SettingInput
-                  label="Default User"
-                  description="Default user when launching this distribution"
+                  label={t('wslDistro.defaultUser')}
+                  description={t('wslDistro.defaultUserDesc')}
                   value={config.userDefault || ""}
                   onChange={(v) => updateConfig("userDefault", v || undefined)}
-                  placeholder="e.g., ubuntu"
+                  placeholder={t('wslDistro.defaultUserPlaceholder')}
                   testId="distro-default-user"
                 />
               </div>
@@ -304,7 +303,7 @@ export function WslDistroSettings() {
           {error && (
             <div className="p-4 bg-red-900/30 border border-red-700/50 rounded-xl" data-testid="distro-config-error">
               <p className="text-sm text-red-400">
-                <span className="font-medium">Error:</span> {error}
+                <span className="font-medium">{t('wslDistro.errorLabel')}</span> {error}
               </p>
             </div>
           )}
@@ -316,7 +315,7 @@ export function WslDistroSettings() {
                   onClick={() => setError(null)}
                   className="px-4 py-3 bg-theme-bg-tertiary hover:bg-theme-bg-hover text-theme-text-secondary font-medium rounded-lg transition-colors"
                 >
-                  Dismiss
+                  {t('common:button.dismiss')}
                 </button>
               )}
               <button
@@ -325,7 +324,7 @@ export function WslDistroSettings() {
                 data-testid="distro-save-button"
                 className="px-6 py-3 bg-theme-accent-primary hover:opacity-90 text-theme-bg-primary font-medium rounded-lg shadow-lg shadow-black/30 transition-colors disabled:opacity-50"
               >
-                {isSaving ? "Saving..." : error ? "Retry Save" : "Save Changes"}
+                {isSaving ? t('wslDistro.saving') : error ? t('wslDistro.retrySave') : t('wslDistro.saveChanges')}
               </button>
             </div>
           )}

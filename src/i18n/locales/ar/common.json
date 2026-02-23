@@ -1,0 +1,67 @@
+{
+  "button": {
+    "cancel": "إلغاء",
+    "close": "إغلاق",
+    "save": "حفظ",
+    "delete": "حذف",
+    "confirm": "تأكيد",
+    "retry": "إعادة المحاولة",
+    "browse": "تصفح",
+    "back": "رجوع",
+    "dismiss": "تجاهل",
+    "learnMore": "معرفة المزيد",
+    "resetToDefault": "إعادة تعيين إلى الافتراضي",
+    "clear": "مسح البحث",
+    "edit": "تعديل",
+    "run": "تشغيل"
+  },
+  "label": {
+    "name": "الاسم",
+    "status": "الحالة",
+    "version": "الإصدار",
+    "size": "الحجم",
+    "location": "الموقع",
+    "default": "افتراضي",
+    "yes": "نعم",
+    "no": "لا",
+    "on": "تشغيل",
+    "off": "إيقاف",
+    "loading": "جارٍ التحميل...",
+    "none": "لا يوجد",
+    "ip": "IP",
+    "copied": "تم النسخ!",
+    "disk": "القرص",
+    "memory": "الذاكرة",
+    "cpu": "CPU",
+    "installed": "مثبّت",
+    "notInstalled": "غير مثبّت"
+  },
+  "status": {
+    "online": "متصل",
+    "offline": "غير متصل",
+    "primary": "أساسي",
+    "compacting": "جارٍ الضغط",
+    "operational": "يعمل",
+    "standby": "استعداد"
+  },
+  "unit": {
+    "gb": "GB",
+    "tb": "TB"
+  },
+  "validation": {
+    "invalidChars": "يمكن أن يحتوي الاسم فقط على أحرف وأرقام ونقاط وشرطات سفلية وشرطات",
+    "duplicateName": "توزيعة باسم \"{{name}}\" موجودة بالفعل",
+    "nameExists": "توزيعة بهذا الاسم موجودة بالفعل",
+    "required": "هذا الحقل مطلوب"
+  },
+  "wslVersion": {
+    "wsl1": "WSL 1",
+    "wsl2": "WSL 2"
+  },
+  "errors": {
+    "unknown": "حدث خطأ غير معروف"
+  },
+  "noOutput": "لا يوجد مخرجات",
+  "output": "المخرجات",
+  "ranOn": "تم التشغيل على: {{distro}}"
+}

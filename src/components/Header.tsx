@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { getVersion } from "@tauri-apps/api/app";
 import { useDistroStore } from "../store/distroStore";
 import { ImportDialog } from "./ImportDialog";
@@ -14,6 +15,7 @@ interface HeaderProps {
 }
 
 export function Header({ onOpenSettings }: HeaderProps) {
+  const { t } = useTranslation("header");
   const { shutdownAll, fetchDistros, openSystemTerminal, isLoading, actionInProgress, distributions } = useDistroStore();
   const [showImportDialog, setShowImportDialog] = useState(false);
   const [showNewDialog, setShowNewDialog] = useState(false);
@@ -102,7 +104,7 @@ export function Header({ onOpenSettings }: HeaderProps) {
                 )}
               </div>
               <p className="text-xs font-mono text-theme-text-muted tracking-wider uppercase whitespace-nowrap">
-                Mission Control
+                {t('subtitle')}
               </p>
             </div>
           </div>
@@ -146,7 +148,7 @@ export function Header({ onOpenSettings }: HeaderProps) {
             disabled={isLoading || !!actionInProgress}
             data-testid="new-distro-button"
           >
-            New
+            {t('button.new')}
           </Button>
 
           {/* Secondary actions */}
@@ -159,7 +161,7 @@ export function Header({ onOpenSettings }: HeaderProps) {
             disabled={isLoading || !!actionInProgress}
             data-testid="import-button"
           >
-            Import
+            {t('button.import')}
           </Button>
 
           <Button
@@ -171,7 +173,7 @@ export function Header({ onOpenSettings }: HeaderProps) {
             disabled={isLoading || !!actionInProgress}
             data-testid="refresh-button"
           >
-            Sync
+            {t('button.sync')}
           </Button>
 
           {/* Danger action */}
@@ -184,7 +186,7 @@ export function Header({ onOpenSettings }: HeaderProps) {
             disabled={isLoading || !!actionInProgress}
             data-testid="shutdown-all-button"
           >
-            Shutdown
+            {t('button.shutdown')}
           </Button>
 
           {/* Divider */}
@@ -193,7 +195,7 @@ export function Header({ onOpenSettings }: HeaderProps) {
           {/* System Terminal */}
           <IconButton
             icon={<TerminalWindowIcon size="md" />}
-            label="Open WSL System Shell"
+            label={t('button.systemTerminal')}
             variant="ghost"
             colorScheme="amber"
             onClick={() => openSystemTerminal()}
@@ -204,7 +206,7 @@ export function Header({ onOpenSettings }: HeaderProps) {
           {/* Help */}
           <IconButton
             icon={<HelpIcon size="md" />}
-            label="Help"
+            label={t('button.help')}
             variant="ghost"
             onClick={() => setShowHelpDialog(true)}
             data-testid="help-button"
@@ -213,7 +215,7 @@ export function Header({ onOpenSettings }: HeaderProps) {
           {/* Settings */}
           <IconButton
             icon={<SettingsIcon size="md" />}
-            label="Settings"
+            label={t('button.settings')}
             variant="ghost"
             onClick={onOpenSettings}
             data-testid="settings-button"
@@ -228,9 +230,9 @@ export function Header({ onOpenSettings }: HeaderProps) {
       <NewDistroDialog isOpen={showNewDialog} onClose={() => setShowNewDialog(false)} />
       <ConfirmDialog
         isOpen={showShutdownConfirm}
-        title="Shutdown All Distributions"
-        message="This will shutdown all running WSL distributions. Any unsaved work will be lost."
-        confirmLabel="Shutdown All"
+        title={t('shutdownAll.title')}
+        message={t('shutdownAll.message')}
+        confirmLabel={t('shutdownAll.confirm')}
         onConfirm={handleShutdownAll}
         onCancel={() => setShowShutdownConfirm(false)}
         danger

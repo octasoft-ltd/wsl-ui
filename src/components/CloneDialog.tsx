@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { open } from "@tauri-apps/plugin-dialog";
 import { wslService } from "../services/wslService";
 import { useDistroStore } from "../store/distroStore";
@@ -13,6 +14,7 @@ interface CloneDialogProps {
 }
 
 export function CloneDialog({ isOpen, sourceName, onClose }: CloneDialogProps) {
+  const { t } = useTranslation("dialogs");
   const [newName, setNewName] = useState(`${sourceName}-clone`);
   // Track if user has customized the path (vs using auto-generated default)
   const [isCustomPath, setIsCustomPath] = useState(false);
@@ -78,7 +80,7 @@ export function CloneDialog({ isOpen, sourceName, onClose }: CloneDialogProps) {
         const pathToValidate = isCustomPath ? customPath : "";
         const validation = await wslService.validateInstallPath(pathToValidate, trimmedName);
         if (!validation.isValid) {
-          setPathError(validation.error || "Invalid install location");
+          setPathError(validation.error || t('clone.invalidLocation'));
         } else {
           setPathError(null);
         }
@@ -97,7 +99,7 @@ export function CloneDialog({ isOpen, sourceName, onClose }: CloneDialogProps) {
     const selectedPath = await open({
       directory: true,
       multiple: false,
-      title: "Select Installation Folder for Distribution",
+      title: t('clone.browseTitle'),
     });
 
     if (selectedPath && !Array.isArray(selectedPath)) {
@@ -125,18 +127,18 @@ export function CloneDialog({ isOpen, sourceName, onClose }: CloneDialogProps) {
     }
 
     if (trimmedName === sourceName) {
-      return "Clone name must be different from the source";
+      return t('clone.errorSameAsSource') as string;
     }
 
     if (!/^[a-zA-Z0-9._-]+$/.test(trimmedName)) {
-      return "Name can only contain letters, numbers, dots, underscores, and hyphens";
+      return t('common:validation.invalidChars') as string;
     }
 
     const isDuplicate = distributions.some(
       (d) => d.name.toLowerCase() === trimmedName.toLowerCase()
     );
     if (isDuplicate) {
-      return `A distribution named "${trimmedName}" already exists`;
+      return t('common:validation.duplicateName', { name: trimmedName }) as string;
     }
 
     return null;
@@ -162,7 +164,7 @@ export function CloneDialog({ isOpen, sourceName, onClose }: CloneDialogProps) {
       handleClose();
     } catch (err) {
       // Tauri returns string errors, not Error instances
-      const errorMessage = typeof err === "string" ? err : err instanceof Error ? err.message : "Failed to clone distribution";
+      const errorMessage = typeof err === "string" ? err : err instanceof Error ? err.message : t('clone.errorFailed');
       setError(errorMessage);
     } finally {
       setIsCloning(false);
@@ -199,9 +201,9 @@ export function CloneDialog({ isOpen, sourceName, onClose }: CloneDialogProps) {
           data-testid="clone-dialog"
           className="relative bg-theme-bg-secondary border border-theme-border-secondary rounded-xl shadow-2xl shadow-black/50 max-w-md w-full mx-4 p-6"
         >
-        <h2 className="text-xl font-semibold text-theme-text-primary mb-2">Clone Distribution</h2>
+        <h2 className="text-xl font-semibold text-theme-text-primary mb-2">{t('clone.title')}</h2>
         <p className="text-sm text-theme-text-secondary mb-4">
-          Create a copy of <span className="text-theme-status-warning font-medium">{sourceName}</span>
+          {t('clone.subtitle')} <span className="text-theme-status-warning font-medium">{sourceName}</span>
         </p>
 
         {error && (
@@ -215,11 +217,11 @@ export function CloneDialog({ isOpen, sourceName, onClose }: CloneDialogProps) {
 
         <div className="mb-6">
           <Input
-            label="New Distribution Name"
+            label={t('clone.nameLabel')}
             value={newName}
             onChange={(e) => setNewName(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Enter name for the clone"
+            placeholder={t('clone.namePlaceholder')}
             disabled={isCloning}
             autoFocus
             data-testid="clone-name-input"
@@ -233,7 +235,7 @@ export function CloneDialog({ isOpen, sourceName, onClose }: CloneDialogProps) {
         <div className="mb-6">
           <div className="flex items-center justify-between mb-1">
             <label className="text-sm font-medium text-theme-text-primary">
-              Installation Location
+              {t('clone.locationLabel')}
             </label>
             {isCustomPath && (
               <button
@@ -242,17 +244,17 @@ export function CloneDialog({ isOpen, sourceName, onClose }: CloneDialogProps) {
                 className="text-xs text-theme-accent-primary hover:underline"
                 disabled={isCloning}
               >
-                Reset to default
+                {t('common:button.resetToDefault')}
               </button>
             )}
           </div>
           <PathInput
             value={effectivePath}
             onChange={(e) => handlePathChange(e.target.value)}
-            placeholder="Select installation folder..."
+            placeholder={t('clone.locationPlaceholder')}
             disabled={isCloning}
             onBrowse={handleBrowseLocation}
-            helperText={isCustomPath ? "Using custom location" : "Using default location"}
+            helperText={isCustomPath ? t('clone.locationCustom') : t('clone.locationDefault')}
             error={pathError || undefined}
             showErrorIcon
             errorTestId="clone-path-error"
@@ -279,7 +281,7 @@ export function CloneDialog({ isOpen, sourceName, onClose }: CloneDialogProps) {
                   d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
                 />
               </svg>
-              <span>Cloning distribution... This may take a while for large distros.</span>
+              <span>{t('clone.progress')}</span>
             </div>
           </div>
         )}
@@ -291,7 +293,7 @@ export function CloneDialog({ isOpen, sourceName, onClose }: CloneDialogProps) {
             data-testid="clone-cancel-button"
             className="px-4 py-2 text-sm font-medium text-theme-text-secondary bg-theme-bg-tertiary hover:bg-theme-bg-hover rounded-lg transition-colors disabled:opacity-50"
           >
-            Cancel
+            {t('common:button.cancel')}
           </button>
           <button
             onClick={handleClone}
@@ -300,11 +302,11 @@ export function CloneDialog({ isOpen, sourceName, onClose }: CloneDialogProps) {
             className="px-4 py-2 text-sm font-medium bg-theme-accent-primary hover:opacity-90 text-theme-bg-primary rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
           >
             {isCloning ? (
-              "Cloning..."
+              t('clone.cloning')
             ) : (
               <>
                 <CopyIcon size="sm" />
-                Clone
+                {t('clone.clone')}
               </>
             )}
           </button>

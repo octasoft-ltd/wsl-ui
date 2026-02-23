@@ -1,0 +1,40 @@
+{
+  "loading": "システムを初期化中...",
+  "emptyState": {
+    "title": "インスタンスが見つかりません",
+    "description": "WSL ディストリビューションをインストールして始めましょう"
+  },
+  "filter": {
+    "all": "すべて",
+    "allSources": "すべてのソース",
+    "allSourcesMobile": "すべて",
+    "onlineTooltip": "オンライン ({{count}})",
+    "offlineTooltip": "オフライン ({{count}})",
+    "showWsl1": "WSL 1 を表示 ({{count}})",
+    "hideWsl1": "WSL 1 を非表示 ({{count}})",
+    "showWsl2": "WSL 2 を表示 ({{count}})",
+    "hideWsl2": "WSL 2 を非表示 ({{count}})",
+    "v1": "v1",
+    "v2": "v2"
+  },
+  "emptyFilter": {
+    "noDistros": "ディストリビューションが見つかりません",
+    "noMatch": "現在のフィルターに一致するディストリビューションはありません",
+    "clearFilters": "フィルターをクリア"
+  },
+  "card": {
+    "suspend": "一時停止",
+    "launch": "起動",
+    "openTerminal": "ターミナルを開く",
+    "openRdp": "リモートデスクトップを開く",
+    "quickActions": "クイックアクション",
+    "deleteDistro": "ディストリビューションを削除",
+    "ipTooltip": "クリックして IP アドレスをコピー"
+  },
+  "deleteDialog": {
+    "title": "ディストリビューションの削除",
+    "message": "\"{{name}}\" を削除してもよろしいですか？この操作は元に戻せません。このディストリビューション内のすべてのデータが完全に失われます。",
+    "messageDefault": "\"{{name}}\" を削除してもよろしいですか？この操作は元に戻せません。このディストリビューション内のすべてのデータが完全に失われます。\n\n警告：これはデフォルトのディストリビューションです。削除後、別のディストリビューションをデフォルトに設定しない限り、WSL コマンドは失敗します。",
+    "confirm": "削除"
+  }
+}

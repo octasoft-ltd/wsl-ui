@@ -1,0 +1,96 @@
+{
+  "quickActions": {
+    "title": "Acciones rápidas",
+    "info": "Información de la distribución",
+    "explorer": "Abrir Explorador de archivos",
+    "ide": "Abrir en IDE",
+    "restart": "Reiniciar",
+    "export": "Exportar a archivo...",
+    "clone": "Clonar...",
+    "setDefault": "Establecer como predeterminada",
+    "alreadyDefault": "Distribución predeterminada"
+  },
+  "manage": {
+    "title": "Administrar",
+    "move": "Mover distribución...",
+    "resize": "Redimensionar disco...",
+    "compact": "Compactar disco...",
+    "user": "Establecer usuario predeterminado...",
+    "rename": "Renombrar...",
+    "sparse": "Modo disperso",
+    "version": "Establecer versión de WSL"
+  },
+  "customActions": {
+    "title": "Acciones personalizadas",
+    "requiresStop": "Requiere detener la distribución",
+    "requiresShutdown": "Requiere apagar WSL"
+  },
+  "sparseConfirm": {
+    "title": "¿Habilitar modo disperso?",
+    "message": "Advertencia: Microsoft ha señalado que el soporte de VHD disperso puede causar corrupción de datos. Aunque puede ayudar a recuperar espacio en disco automáticamente, existe riesgo de pérdida de datos. Asegúrese de tener copias de seguridad antes de habilitar esta función.",
+    "confirm": "Habilitar de todos modos"
+  },
+  "outputDialog": {
+    "titleSuffix": "- Salida",
+    "noOutput": "Sin salida."
+  },
+  "editor": {
+    "iconLabel": "Ícono",
+    "availableVars": "Variables disponibles:"
+  },
+  "exportTitle": "Exportar acciones personalizadas",
+  "importTitle": "Importar acciones personalizadas",
+  "badge": {
+    "startup": "Inicio"
+  },
+  "scope": {
+    "all": "Todas las distribuciones",
+    "pattern": "Patrón: {{pattern}}",
+    "count_one": "{{count}} distribución",
+    "count_other": "{{count}} distribuciones"
+  },
+  "sparseChanged": "Modo disperso cambiado",
+  "sparseChangedMessage": "Modo disperso {{state}} para {{name}}",
+  "sparseToggleFailed": "Error al cambiar el modo disperso",
+  "sparseToggle": "Cambiar modo disperso",
+  "actionFailed": "La acción falló",
+  "actionFailedMessage": "Error al ejecutar la acción",
+  "distroIdUnavailable": "ID de distribución no disponible",
+  "requiresSudo": "Requiere contraseña de sudo",
+  "confirmRunTitle": "¿Ejecutar \"{{action}}\"?",
+  "confirmRunMessage": "¿Está seguro de que desea ejecutar esta acción en {{name}}?",
+  "customActionsSettings": {
+    "title": "Acciones personalizadas",
+    "description": "Defina comandos de shell que aparecen en el menú de acciones rápidas de la distribución",
+    "addAction": "Agregar acción",
+    "editAction": "Editar acción",
+    "noActions": "No hay acciones personalizadas configuradas",
+    "noActionsHint": "Agregue su primera acción personalizada para comenzar",
+    "name": "Nombre",
+    "namePlaceholder": "ej., Actualizar sistema",
+    "command": "Comando",
+    "commandPlaceholder": "ej., sudo apt update && sudo apt upgrade -y",
+    "sudo": "Ejecutar con sudo",
+    "sudoDesc": "Ejecutar el comando con privilegios elevados",
+    "runOnStartup": "Ejecutar al inicio",
+    "runOnStartupDesc": "Ejecutar cuando una distribución coincidente se inicia",
+    "confirmBeforeRun": "Confirmar antes de ejecutar",
+    "runInTerminal": "Ejecutar en terminal",
+    "runInTerminalDesc": "Ejecutar el comando en una ventana de terminal visible",
+    "showOutput": "Mostrar salida",
+    "showOutputDesc": "Mostrar la salida del comando en un diálogo",
+    "target": "Distribuciones objetivo",
+    "targetAll": "Todas las distribuciones",
+    "targetSpecific": "Distribuciones específicas",
+    "targetRegex": "Patrón regex",
+    "targetPlaceholder": "ej., Ubuntu.*",
+    "save": "Guardar",
+    "delete": "Eliminar",
+    "deleteConfirm": "¿Está seguro de que desea eliminar esta acción?",
+    "importExport": "Importar/Exportar",
+    "importActions": "Importar",
+    "exportActions": "Exportar",
+    "importSuccess": "Acciones importadas correctamente",
+    "exportSuccess": "Acciones exportadas correctamente"
+  }
+}

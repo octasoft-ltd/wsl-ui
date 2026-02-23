@@ -1,6 +1,7 @@
 {
   "ideCommand": "code",
   "terminalCommand": "auto",
+  "locale": "auto",
   "closeAction": "ask",
   "telemetryEnabled": false,
   "telemetryPromptSeen": false,

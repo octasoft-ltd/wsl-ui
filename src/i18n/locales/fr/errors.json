@@ -1,0 +1,21 @@
+{
+  "boundary": {
+    "title": "Une erreur est survenue",
+    "message": "L'application a rencontré une erreur inattendue. Veuillez réessayer.",
+    "tryAgain": "Réessayer"
+  },
+  "system": {
+    "title": "Erreur système",
+    "timeoutTip": "Astuce : Si vous avez récemment installé une nouvelle distribution, fermez les fenêtres de terminal qui ont été ouvertes automatiquement lors de l'installation.",
+    "forceShutdown": "Forcer l'arrêt de WSL",
+    "forceShutdownTitle": "Forcer l'arrêt de WSL",
+    "forceShutdownMessage": "Cela terminera de force tous les processus WSL en utilisant 'wsl --shutdown --force'. Tout travail non enregistré dans vos distributions Linux peut être perdu. Cette action est irréversible.",
+    "forceShutdownConfirm": "Forcer l'arrêt"
+  },
+  "wslUpdate": {
+    "title": "Mise à jour WSL",
+    "success": "Mise à jour terminée avec succès",
+    "cancelled": "Mise à jour WSL",
+    "failedTitle": "La mise à jour WSL a échoué"
+  }
+}

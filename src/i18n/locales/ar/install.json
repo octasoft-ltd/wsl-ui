@@ -1,0 +1,156 @@
+{
+  "title": "إضافة توزيعة",
+  "subtitle": "اختر كيف تريد تثبيت توزيعة Linux الخاصة بك",
+  "mode": {
+    "quickInstall": "تثبيت سريع",
+    "quickInstallDesc": "التثبيت من Microsoft Store",
+    "download": "تنزيل",
+    "downloadDesc": "تنزيل مباشر باسم مخصص",
+    "community": "المجتمع",
+    "communityDesc": "تصفح كتالوج صور LXC",
+    "container": "حاوية",
+    "containerDesc": "إنشاء من صورة حاوية"
+  },
+  "info": {
+    "quickInstall": "توزيعات رسمية من Microsoft Store. يتم التثبيت في الموقع المُدار بواسطة Windows الافتراضي.",
+    "download": "يمكن تخصيص هذا الكتالوج في الإعدادات > مصادر التوزيعات. يتم حفظ عناوين URL المخصصة للاستخدام المستقبلي.",
+    "community": "صور من {{url}}. يمكن التكوين في الإعدادات > مصادر التوزيعات.",
+    "container": "وقت التشغيل المحدد المكوّن في الإعدادات: {{runtime}}"
+  },
+  "containerRuntime": {
+    "builtin": "OCI مدمج (السجلات العامة فقط)",
+    "docker": "Docker (يدعم السجلات المصادق عليها)",
+    "podman": "Podman (يدعم السجلات المصادق عليها)",
+    "custom": "مخصص: {{path}}"
+  },
+  "filter": {
+    "all": "الكل"
+  },
+  "loading": "جارٍ تحميل التوزيعات المتاحة...",
+  "empty": "لا توجد توزيعات متاحة",
+  "install": "تثبيت",
+  "useUrl": "استخدام URL",
+  "useImage": "استخدام صورة",
+  "placeholder": {
+    "url": "مثال، https://example.com/distro-rootfs.tar.gz",
+    "image": "مثال، alpine:latest, gitlab/gitlab-runner:latest"
+  },
+  "customUrl": {
+    "label": "URL مخصص",
+    "description": "أدخل رابطاً مباشراً لأرشيف rootfs"
+  },
+  "customImage": {
+    "label": "صورة مخصصة",
+    "description": "أدخل أي مرجع صورة OCI"
+  },
+  "alreadyInstalled": "\"{{name}}\" مثبّت بالفعل",
+  "progress": {
+    "installingStore": "جارٍ التثبيت من Microsoft Store...",
+    "success": "تم التثبيت بنجاح!",
+    "downloading": "جارٍ التنزيل: {{percent}}% ({{downloaded}} / {{total}})",
+    "importing": "جارٍ الاستيراد إلى WSL...",
+    "pullingImage": "جارٍ سحب صورة الحاوية...",
+    "downloadFailed": "فشل التنزيل"
+  },
+  "trademarkDisclaimer": "شعارات توزيعات Linux هي علامات تجارية لأصحابها المعنيين وتُستخدم هنا لأغراض التعريف فقط.\nهذا التطبيق غير تابع لأي مشروع توزيعة أو معتمد منه.",
+  "installingAs": "جارٍ التثبيت باسم \"{{name}}\"",
+  "noDownloadable": "لم يتم تكوين توزيعات قابلة للتنزيل",
+  "noContainerImages": "لم يتم تكوين صور حاويات",
+  "communityDisabled": "كتالوج المجتمع معطّل",
+  "communityDisabledHint": "قم بتفعيله في الإعدادات > مصادر التوزيعات",
+  "useCustomUrl": "استخدم URL مخصصاً بدلاً من ذلك",
+  "useCustomImage": "استخدم صورة مخصصة بدلاً من ذلك",
+  "catalogDisabled": "كتالوج المجتمع معطّل. قم بتفعيله في الإعدادات.",
+  "catalogLoadError": "فشل تحميل الكتالوج",
+  "catalogNoMatch": "لا توجد توزيعات تطابق \"{{query}}\"",
+  "catalogVersionCount_one": "{{count}} إصدار متاح",
+  "catalogVersionCount_other": "{{count}} إصدارات متاحة",
+  "catalogCacheInfo": "تم تخزين الكتالوج مؤقتاً {{date}} في {{time}}",
+  "errorNoDistro": "يرجى اختيار توزيعة",
+  "errorInstallFailed": "فشل تثبيت التوزيعة",
+  "errorCreateFailed": "فشل إنشاء التوزيعة",
+  "downloadStarting": "جارٍ بدء التنزيل...",
+  "downloading": "جارٍ تنزيل {{name}} {{release}}...",
+  "customDistribution": "توزيعة مخصصة",
+  "customUrlName": "عنوان URL مخصص",
+  "customImageName": "صورة مخصصة",
+  "distroSources": {
+    "title": "مصادر التوزيعات",
+    "description": "تكوين مكان تنزيل التوزيعات",
+    "addUrl": "إضافة URL",
+    "removeUrl": "إزالة",
+    "urlPlaceholder": "https://example.com/distro-rootfs.tar.gz",
+    "name": "الاسم",
+    "namePlaceholder": "مثال، Alpine Linux",
+    "url": "URL",
+    "noSources": "لم يتم تكوين مصادر مخصصة",
+    "builtInSources": "المصادر المدمجة متاحة دائماً",
+    "tab": {
+      "quickInstall": "تثبيت سريع",
+      "container": "حاوية",
+      "download": "تنزيل"
+    },
+    "badge": {
+      "builtIn": "مدمج"
+    },
+    "form": {
+      "nameRequired": "الاسم *",
+      "description": "الوصف",
+      "downloadUrl": "عنوان URL للتنزيل *",
+      "sizeOptional": "الحجم (اختياري)",
+      "containerImage": "صورة الحاوية *",
+      "distroId": "معرّف التوزيعة *",
+      "distroIdHint": "يجب أن يتطابق مع المعرّف من <code>wsl --list --online</code>",
+      "placeholder": {
+        "downloadName": "مثال، Ubuntu 24.04 LTS",
+        "downloadDescription": "مثال، Noble Numbat - أحدث LTS",
+        "downloadUrl": "https://example.com/distro.tar.gz",
+        "downloadSize": "مثال، ~370 MB",
+        "containerName": "مثال، Rocky Linux 9",
+        "containerDescription": "مثال، Linux جاهز للمؤسسات",
+        "containerImage": "مثال، docker.io/library/rockylinux:9",
+        "msStoreDistroId": "مثال، Ubuntu-24.04",
+        "msStoreDescription": "مثال، Noble Numbat"
+      }
+    },
+    "button": {
+      "update": "تحديث",
+      "add": "إضافة",
+      "cancel": "إلغاء"
+    },
+    "dialog": {
+      "editDownloadSource": "تعديل مصدر التنزيل",
+      "addDownloadSource": "إضافة مصدر تنزيل",
+      "editContainerImage": "تعديل صورة الحاوية",
+      "addContainerImage": "إضافة صورة حاوية",
+      "editQuickInstallMetadata": "تعديل بيانات التثبيت السريع",
+      "addQuickInstallMetadata": "إضافة بيانات التثبيت السريع",
+      "resetDownloadSources": "إعادة تعيين مصادر التنزيل",
+      "resetDownloadSourcesMessage": "سيؤدي هذا إلى إعادة تعيين جميع مصادر التنزيل إلى قيمها الافتراضية. ستتم إزالة مصادرك المخصصة.",
+      "resetDownloads": "إعادة تعيين التنزيلات",
+      "resetContainerImages": "إعادة تعيين صور الحاويات",
+      "resetContainerImagesMessage": "سيؤدي هذا إلى إعادة تعيين جميع صور الحاويات إلى قيمها الافتراضية. ستتم إزالة صورك المخصصة.",
+      "resetContainers": "إعادة تعيين الحاويات",
+      "resetQuickInstallMetadata": "إعادة تعيين بيانات التثبيت السريع",
+      "resetQuickInstallMetadataMessage": "سيؤدي هذا إلى إعادة تعيين جميع بيانات التثبيت السريع إلى قيمها الافتراضية. ستتم إزالة بياناتك المخصصة.",
+      "resetMetadata": "إعادة تعيين البيانات"
+    },
+    "empty": {
+      "downloads": "لم يتم تكوين مصادر تنزيل.",
+      "containers": "لم يتم تكوين صور حاويات.",
+      "quickInstall": "لم يتم تكوين بيانات التثبيت السريع."
+    },
+    "info": {
+      "quickInstall": "توفر بيانات التثبيت السريع معلومات العرض (اللون، الوصف) للتوزيعات التي يرجعها <code>wsl --list --online</code>. قائمة التوزيعات نفسها مقدمة من Microsoft."
+    },
+    "toggle": {
+      "disable": "تعطيل",
+      "enable": "تفعيل"
+    },
+    "action": {
+      "edit": "تعديل",
+      "delete": "حذف",
+      "dismissError": "تجاهل الخطأ"
+    }
+  }
+}

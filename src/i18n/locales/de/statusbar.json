@@ -1,0 +1,22 @@
+{
+  "wsl": "WSL",
+  "instances": "Instanzen",
+  "active": "Aktiv",
+  "mem": "Spch",
+  "primary": "Primär",
+  "dev": "Dev",
+  "disk": "FESTPLATTE",
+  "updateWsl": {
+    "updating": "Warte auf Administratorgenehmigung... Suchen Sie nach einem UAC-Dialog",
+    "preRelease": "WSL aktualisieren (Vorabversion) - Erfordert Administrator",
+    "default": "WSL aktualisieren - Erfordert Administrator",
+    "uac": "UAC"
+  },
+  "diskMounts": {
+    "empty": "Festplatteneinbindungen",
+    "count": "Festplatteneinbindungen ({{count}} eingebunden)"
+  },
+  "preflight": {
+    "retry": "Prüfung wiederholen"
+  }
+}

@@ -1,0 +1,67 @@
+{
+  "button": {
+    "cancel": "Cancelar",
+    "close": "Fechar",
+    "save": "Salvar",
+    "delete": "Excluir",
+    "confirm": "Confirmar",
+    "retry": "Tentar novamente",
+    "browse": "Procurar",
+    "back": "Voltar",
+    "dismiss": "Descartar",
+    "learnMore": "Saiba mais",
+    "resetToDefault": "Restaurar padrão",
+    "clear": "Limpar busca",
+    "edit": "Editar",
+    "run": "Executar"
+  },
+  "label": {
+    "name": "Nome",
+    "status": "Status",
+    "version": "Versão",
+    "size": "Tamanho",
+    "location": "Localização",
+    "default": "Padrão",
+    "yes": "Sim",
+    "no": "Não",
+    "on": "Ativado",
+    "off": "Desativado",
+    "loading": "Carregando...",
+    "none": "Nenhum",
+    "ip": "IP",
+    "copied": "Copiado!",
+    "disk": "Disco",
+    "memory": "Memória",
+    "cpu": "CPU",
+    "installed": "Instalado",
+    "notInstalled": "Não instalado"
+  },
+  "status": {
+    "online": "Online",
+    "offline": "Offline",
+    "primary": "Principal",
+    "compacting": "Compactando",
+    "operational": "OPERACIONAL",
+    "standby": "EM ESPERA"
+  },
+  "unit": {
+    "gb": "GB",
+    "tb": "TB"
+  },
+  "validation": {
+    "invalidChars": "O nome só pode conter letras, números, pontos, sublinhados e hífens",
+    "duplicateName": "Já existe uma distribuição chamada \"{{name}}\"",
+    "nameExists": "Já existe uma distribuição com este nome",
+    "required": "Este campo é obrigatório"
+  },
+  "wslVersion": {
+    "wsl1": "WSL 1",
+    "wsl2": "WSL 2"
+  },
+  "errors": {
+    "unknown": "Ocorreu um erro desconhecido"
+  },
+  "noOutput": "Sem saída",
+  "output": "Saída",
+  "ranOn": "Executado em: {{distro}}"
+}

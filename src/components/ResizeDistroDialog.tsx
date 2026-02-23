@@ -5,6 +5,7 @@
  */
 
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { wslService, type VhdSizeInfo } from "../services/wslService";
 import { useDistroStore } from "../store/distroStore";
 import { useNotificationStore } from "../store/notificationStore";
@@ -24,6 +25,7 @@ interface ResizeDistroDialogProps {
 type SizeUnit = "GB" | "TB";
 
 export function ResizeDistroDialog({ isOpen, distro, onClose }: ResizeDistroDialogProps) {
+  const { t } = useTranslation("dialogs");
   const [sizeValue, setSizeValue] = useState<string>("256");
   const [sizeUnit, setSizeUnit] = useState<SizeUnit>("GB");
   const [isResizing, setIsResizing] = useState(false);
@@ -82,12 +84,12 @@ export function ResizeDistroDialog({ isOpen, distro, onClose }: ResizeDistroDial
     const sizeString = getSizeString();
 
     if (sizeBytes < 1_000_000_000) {
-      setError("Size must be at least 1 GB");
+      setError(t('resize.errorMinSize'));
       return;
     }
 
     if (vhdSize && sizeBytes <= vhdSize.virtualSize) {
-      setError(`New size must be larger than current virtual size (${formatSize(vhdSize.virtualSize)})`);
+      setError(t('resize.errorTooSmall', { size: formatSize(vhdSize.virtualSize) }));
       return;
     }
 
@@ -99,13 +101,13 @@ export function ResizeDistroDialog({ isOpen, distro, onClose }: ResizeDistroDial
       await fetchDistros();
       addNotification({
         type: "success",
-        title: "Disk Resized",
-        message: `${distro.name} disk resized to ${sizeString}`,
+        title: t('resize.successTitle'),
+        message: t('resize.successMessage', { name: distro.name, size: sizeString }),
       });
       handleClose();
     } catch (err) {
       // Tauri returns string errors, not Error instances
-      const errorMessage = typeof err === "string" ? err : err instanceof Error ? err.message : "Failed to resize distribution";
+      const errorMessage = typeof err === "string" ? err : err instanceof Error ? err.message : t('resize.errorFailed');
       setError(errorMessage);
     } finally {
       setIsResizing(false);
@@ -135,8 +137,8 @@ export function ResizeDistroDialog({ isOpen, distro, onClose }: ResizeDistroDial
   return (
     <Modal isOpen={isOpen} onClose={handleClose} closeOnBackdrop={!isResizing}>
       <ModalHeader
-        title={`Resize "${distro.name}" Disk`}
-        subtitle="Adjust the maximum size of the virtual disk"
+        title={t('resize.title', { name: distro.name })}
+        subtitle={t('resize.subtitle')}
         onClose={handleClose}
         showCloseButton={!isResizing}
       />
@@ -152,29 +154,29 @@ export function ResizeDistroDialog({ isOpen, distro, onClose }: ResizeDistroDial
           <div className="p-3 bg-theme-bg-tertiary/50 border border-theme-border-secondary rounded-lg space-y-3">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <span className="text-theme-text-muted text-xs uppercase tracking-wider">Virtual Size (Max)</span>
+                <span className="text-theme-text-muted text-xs uppercase tracking-wider">{t('resize.virtualSize')}</span>
                 <p className="text-theme-text-primary font-medium">
-                  {vhdSize !== null ? formatSize(vhdSize.virtualSize) : "Loading..."}
+                  {vhdSize !== null ? formatSize(vhdSize.virtualSize) : t('common:label.loading')}
                 </p>
               </div>
               <div>
-                <span className="text-theme-text-muted text-xs uppercase tracking-wider">File Size (Actual)</span>
+                <span className="text-theme-text-muted text-xs uppercase tracking-wider">{t('resize.fileSize')}</span>
                 <p className="text-theme-text-secondary font-medium">
-                  {vhdSize !== null ? formatSize(vhdSize.fileSize) : "Loading..."}
+                  {vhdSize !== null ? formatSize(vhdSize.fileSize) : t('common:label.loading')}
                 </p>
               </div>
             </div>
             <div className="pt-2 border-t border-theme-border-secondary/50">
-              <span className="text-theme-text-muted text-xs uppercase tracking-wider">New Virtual Size</span>
+              <span className="text-theme-text-muted text-xs uppercase tracking-wider">{t('resize.newVirtualSize')}</span>
               <p className="text-theme-accent-primary font-medium">
-                {isValidSize ? formatSize(sizeBytes) : "Invalid"}
+                {isValidSize ? formatSize(sizeBytes) : t('resize.invalid')}
               </p>
             </div>
           </div>
 
           <div>
             <label className="block text-sm font-medium text-theme-text-secondary mb-1">
-              New Size
+              {t('resize.newSize')}
             </label>
             <div className="flex gap-2">
               <input
@@ -204,9 +206,7 @@ export function ResizeDistroDialog({ isOpen, distro, onClose }: ResizeDistroDial
           <div className="p-3 bg-[rgba(var(--status-warning-rgb),0.15)] border border-[rgba(var(--status-warning-rgb),0.3)] rounded-lg flex items-start gap-3">
             <WarningIcon size="sm" className="text-theme-status-warning mt-0.5 shrink-0" />
             <div className="text-theme-status-warning/80 text-sm">
-              <strong className="text-theme-status-warning">Note:</strong> You can only <em>increase</em> the virtual disk size.
-              The new size must be larger than the current virtual size.
-              The file size on disk (sparse) will remain small until you use the space.
+              <strong className="text-theme-status-warning">{t('resize.note')}</strong> {t('resize.noteDescription')}
             </div>
           </div>
         </div>
@@ -229,7 +229,7 @@ export function ResizeDistroDialog({ isOpen, distro, onClose }: ResizeDistroDial
                   d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
                 />
               </svg>
-              <span>Resizing disk...</span>
+              <span>{t('resize.progress')}</span>
             </div>
           </div>
         )}
@@ -237,7 +237,7 @@ export function ResizeDistroDialog({ isOpen, distro, onClose }: ResizeDistroDial
 
       <ModalFooter>
         <Button variant="secondary" onClick={handleClose} disabled={isResizing}>
-          Cancel
+          {t('common:button.cancel')}
         </Button>
         <Button
           variant="primary"
@@ -245,7 +245,7 @@ export function ResizeDistroDialog({ isOpen, distro, onClose }: ResizeDistroDial
           disabled={isResizing || !isValidSize}
           loading={isResizing}
         >
-          Resize
+          {t('resize.resize')}
         </Button>
       </ModalFooter>
     </Modal>

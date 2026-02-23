@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { wslService, type DownloadProgress } from "../services/wslService";
 import { useDistroStore } from "../store/distroStore";
 import { useSettingsStore } from "../store/settingsStore";
@@ -35,28 +36,29 @@ interface NewDistroDialogProps {
 
 type InstallMode = "quick" | "custom" | "community" | "container";
 
+// Mode config uses keys for i18n lookup - labels are resolved at render time
 const MODE_CONFIG = {
   quick: {
-    label: "Quick Install",
-    description: "Install from Microsoft Store",
+    labelKey: "mode.quickInstall",
+    descriptionKey: "mode.quickInstallDesc",
     color: "emerald",
     Icon: StoreIcon,
   },
   community: {
-    label: "Community",
-    description: "Browse LXC image catalog",
+    labelKey: "mode.community",
+    descriptionKey: "mode.communityDesc",
     color: "purple",
     Icon: LxcIcon,
   },
   container: {
-    label: "Container",
-    description: "Create from container image",
+    labelKey: "mode.container",
+    descriptionKey: "mode.containerDesc",
     color: "orange",
     Icon: ContainerIcon,
   },
   custom: {
-    label: "Download",
-    description: "Direct download with custom name",
+    labelKey: "mode.download",
+    descriptionKey: "mode.downloadDesc",
     color: "blue",
     Icon: SourceDownloadIcon,
   },
@@ -70,6 +72,7 @@ interface PendingInstallItem {
 }
 
 export function NewDistroDialog({ isOpen, onClose }: NewDistroDialogProps) {
+  const { t } = useTranslation("install");
   const [mode, setMode] = useState<InstallMode>("quick");
   const [catalog, setCatalog] = useState<DistroCatalog | null>(null);
   const [onlineDistros, setOnlineDistros] = useState<string[]>([]);
@@ -179,7 +182,7 @@ export function NewDistroDialog({ isOpen, onClose }: NewDistroDialogProps) {
     setError(null);
 
     if (!selectedDistro) {
-      setError("Please select a distribution");
+      setError(t('errorNoDistro'));
       return;
     }
 
@@ -187,16 +190,16 @@ export function NewDistroDialog({ isOpen, onClose }: NewDistroDialogProps) {
       (d) => d.name.toLowerCase() === selectedDistro.toLowerCase()
     );
     if (exists) {
-      setError(`"${selectedDistro}" is already installed`);
+      setError(t('alreadyInstalled', { name: selectedDistro }));
       return;
     }
 
     setIsCreating(true);
-    setProgress("Installing from Microsoft Store...");
+    setProgress(t('progress.installingStore'));
 
     try {
       await wslService.quickInstallDistribution(selectedDistro);
-      setProgress("Installed successfully!");
+      setProgress(t('progress.success'));
       await fetchDistros();
       await markFirstInstallComplete();
 
@@ -212,7 +215,7 @@ export function NewDistroDialog({ isOpen, onClose }: NewDistroDialogProps) {
         ? err.message
         : typeof err === 'string'
           ? err
-          : "Failed to install distribution";
+          : t('errorInstallFailed');
       setError(errorMessage);
       setProgress(null);
     } finally {
@@ -230,7 +233,7 @@ export function NewDistroDialog({ isOpen, onClose }: NewDistroDialogProps) {
       if (!url) return;
 
       setIsCreating(true);
-      setProgress("Starting download...");
+      setProgress(t('downloadStarting'));
       setDownloadProgress(null);
 
       const unlisten = await wslService.onDownloadProgress((progress) => {
@@ -240,14 +243,14 @@ export function NewDistroDialog({ isOpen, onClose }: NewDistroDialogProps) {
             const percent = progress.percent != null ? Math.round(progress.percent) : 0;
             const downloaded = formatBytes(progress.bytesDownloaded);
             const total = progress.totalBytes ? formatBytes(progress.totalBytes) : "?";
-            throttledSetProgress(`Downloading: ${percent}% (${downloaded} / ${total})`);
+            throttledSetProgress(t('progress.downloading', { percent, downloaded, total }));
           } else if (progress.stage === "importing") {
-            setProgress("Importing into WSL...");
+            setProgress(t('progress.importing'));
           } else if (progress.stage === "complete") {
-            setProgress("Installed successfully!");
+            setProgress(t('progress.success'));
           } else if (progress.stage === "error") {
             setProgress(null);
-            setError("Download failed");
+            setError(t('progress.downloadFailed'));
           }
         }
       });
@@ -269,7 +272,7 @@ export function NewDistroDialog({ isOpen, onClose }: NewDistroDialogProps) {
             config.wslVersion,
           );
         }
-        setProgress("Installed successfully!");
+        setProgress(t('progress.success'));
 
         // Save custom URL to catalog for future use
         if (useCustomUrl && url) {
@@ -281,7 +284,7 @@ export function NewDistroDialog({ isOpen, onClose }: NewDistroDialogProps) {
               const suggestedName = filename.replace(/\.(tar\.gz|tar\.xz|tar|rootfs)$/i, '').replace(/[^a-zA-Z0-9]/g, '-');
               const newDownloadDistro: DownloadDistro = {
                 id: `custom-${Date.now()}`,
-                name: suggestedName || 'Custom Distribution',
+                name: suggestedName || t('customDistribution'),
                 description: url,
                 url: url,
                 enabled: true,
@@ -312,7 +315,7 @@ export function NewDistroDialog({ isOpen, onClose }: NewDistroDialogProps) {
           ? err.message
           : typeof err === 'string'
             ? err
-            : "Failed to install distribution";
+            : t('errorInstallFailed');
         setError(errorMessage);
         setProgress(null);
       } finally {
@@ -325,7 +328,7 @@ export function NewDistroDialog({ isOpen, onClose }: NewDistroDialogProps) {
       }
     } else if (mode === "community" && selectedLxcDistro) {
       setIsCreating(true);
-      setProgress(`Downloading ${selectedLxcDistro.name} ${selectedLxcDistro.releaseTitle}...`);
+      setProgress(t('downloading', { name: selectedLxcDistro.name, release: selectedLxcDistro.releaseTitle }));
       setDownloadProgress(null);
 
       const unlisten = await wslService.onDownloadProgress((progress) => {
@@ -335,14 +338,14 @@ export function NewDistroDialog({ isOpen, onClose }: NewDistroDialogProps) {
             const percent = progress.percent != null ? Math.round(progress.percent) : 0;
             const downloaded = formatBytes(progress.bytesDownloaded);
             const total = progress.totalBytes ? formatBytes(progress.totalBytes) : formatBytes(selectedLxcDistro.sizeBytes);
-            throttledSetProgress(`Downloading: ${percent}% (${downloaded} / ${total})`);
+            throttledSetProgress(t('progress.downloading', { percent, downloaded, total }));
           } else if (progress.stage === "importing") {
-            setProgress("Importing into WSL...");
+            setProgress(t('progress.importing'));
           } else if (progress.stage === "complete") {
-            setProgress("Installed successfully!");
+            setProgress(t('progress.success'));
           } else if (progress.stage === "error") {
             setProgress(null);
-            setError("Download failed");
+            setError(t('progress.downloadFailed'));
           }
         }
       });
@@ -355,7 +358,7 @@ export function NewDistroDialog({ isOpen, onClose }: NewDistroDialogProps) {
           config.installLocation,
           config.wslVersion,
         );
-        setProgress("Installed successfully!");
+        setProgress(t('progress.success'));
         setSelectedLxcDistro(null);
         await fetchDistros();
         await markFirstInstallComplete();
@@ -372,7 +375,7 @@ export function NewDistroDialog({ isOpen, onClose }: NewDistroDialogProps) {
           ? err.message
           : typeof err === 'string'
             ? err
-            : "Failed to install distribution";
+            : t('errorInstallFailed');
         setError(errorMessage);
         setProgress(null);
       } finally {
@@ -388,7 +391,7 @@ export function NewDistroDialog({ isOpen, onClose }: NewDistroDialogProps) {
       if (!image) return;
 
       setIsCreating(true);
-      setProgress("Pulling container image...");
+      setProgress(t('progress.pullingImage'));
 
       try {
         await wslService.createFromImage(
@@ -397,7 +400,7 @@ export function NewDistroDialog({ isOpen, onClose }: NewDistroDialogProps) {
           config.installLocation,
           config.wslVersion,
         );
-        setProgress("Installed successfully!");
+        setProgress(t('progress.success'));
 
         // Save custom image to catalog for future use
         if (useCustomImage && image) {
@@ -438,7 +441,7 @@ export function NewDistroDialog({ isOpen, onClose }: NewDistroDialogProps) {
           ? err.message
           : typeof err === 'string'
             ? err
-            : "Failed to create distribution";
+            : t('errorCreateFailed');
         setError(errorMessage);
         setProgress(null);
       } finally {
@@ -495,7 +498,7 @@ export function NewDistroDialog({ isOpen, onClose }: NewDistroDialogProps) {
     const filename = urlObj.pathname.split('/').pop() || 'custom';
     const suggestedName = filename.replace(/\.(tar\.gz|tar\.xz|tar|rootfs)$/i, '').replace(/[^a-zA-Z0-9]/g, '-');
     setPendingInstallItem({
-      name: "Custom URL",
+      name: t('customUrlName'),
       suggestedName: suggestedName || "custom-distro",
       description: customUrl.trim(),
     });
@@ -522,13 +525,13 @@ export function NewDistroDialog({ isOpen, onClose }: NewDistroDialogProps) {
     try {
       const info = await wslService.parseImageReference(customImage.trim());
       setPendingInstallItem({
-        name: "Custom Image",
+        name: t('customImageName'),
         suggestedName: info.suggestedName,
         description: info.fullReference,
       });
     } catch {
       setPendingInstallItem({
-        name: "Custom Image",
+        name: t('customImageName'),
         suggestedName: "custom-container",
         description: customImage.trim(),
       });
@@ -597,15 +600,15 @@ export function NewDistroDialog({ isOpen, onClose }: NewDistroDialogProps) {
           {/* Header */}
           <div className="px-6 pt-6 pb-4">
             <div className="flex items-center justify-between mb-1">
-              <h2 className="text-2xl font-semibold text-theme-text-primary">Add Distribution</h2>
+              <h2 className="text-2xl font-semibold text-theme-text-primary">{t('title')}</h2>
               <IconButton
                 icon={<CloseIcon size="md" />}
-                label="Close"
+                label={t('common:button.close')}
                 variant="ghost"
                 onClick={handleClose}
               />
             </div>
-            <p className="text-sm text-theme-text-muted">Choose how you want to install your Linux distribution</p>
+            <p className="text-sm text-theme-text-muted">{t('subtitle')}</p>
           </div>
 
           {/* Mode Selector - Card style */}
@@ -647,8 +650,8 @@ export function NewDistroDialog({ isOpen, onClose }: NewDistroDialogProps) {
                         <config.Icon className="w-5 h-5" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="font-medium text-theme-text-primary text-sm">{config.label}</div>
-                        <div className="text-xs text-theme-text-muted mt-0.5 leading-tight">{config.description}</div>
+                        <div className="font-medium text-theme-text-primary text-sm">{t(config.labelKey)}</div>
+                        <div className="text-xs text-theme-text-muted mt-0.5 leading-tight">{t(config.descriptionKey)}</div>
                       </div>
                     </div>
                     {isActive && (
@@ -670,7 +673,7 @@ export function NewDistroDialog({ isOpen, onClose }: NewDistroDialogProps) {
                   <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
                 </svg>
                 <p className="text-sm text-blue-300">
-                  This catalog can be customized in <strong>Settings &gt; Distribution Sources</strong>. Custom URLs are saved for future use.
+                  {t('info.download')}
                 </p>
               </div>
             </div>
@@ -684,7 +687,7 @@ export function NewDistroDialog({ isOpen, onClose }: NewDistroDialogProps) {
                   <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
                 </svg>
                 <p className="text-sm text-purple-300">
-                  Images from <a href={settings.distributionSources.lxcBaseUrl} target="_blank" rel="noopener noreferrer" className="underline hover:text-purple-200">{settings.distributionSources.lxcBaseUrl}</a>. Configure in <strong>Settings &gt; Distribution Sources</strong>.
+                  {t('info.community', { url: settings.distributionSources.lxcBaseUrl })}
                 </p>
               </div>
             </div>
@@ -698,17 +701,16 @@ export function NewDistroDialog({ isOpen, onClose }: NewDistroDialogProps) {
                   <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
                 </svg>
                 <div className="text-sm text-orange-300">
-                  <span>Selected Runtime configured in settings: </span>
-                  <span className="font-semibold">
-                  {(() => {
-                    const runtime = settings.containerRuntime;
-                    if (runtime === "builtin") return "Built-in OCI (public registries only)";
-                    if (runtime === "docker") return "Docker (supports authenticated registries)";
-                    if (runtime === "podman") return "Podman (supports authenticated registries)";
-                    if (typeof runtime === "object" && "custom" in runtime) return `Custom: ${runtime.custom}`;
-                    return "Built-in OCI";
-                  })()}
-                  </span>
+                  {t('info.container', {
+                    runtime: (() => {
+                      const runtime = settings.containerRuntime;
+                      if (runtime === "builtin") return t('containerRuntime.builtin');
+                      if (runtime === "docker") return t('containerRuntime.docker');
+                      if (runtime === "podman") return t('containerRuntime.podman');
+                      if (typeof runtime === "object" && "custom" in runtime) return t('containerRuntime.custom', { path: runtime.custom });
+                      return t('containerRuntime.builtin');
+                    })()
+                  })}
                 </div>
               </div>
             </div>
@@ -777,7 +779,7 @@ export function NewDistroDialog({ isOpen, onClose }: NewDistroDialogProps) {
                     <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
                   </svg>
                   <p className="text-sm text-emerald-300">
-                    Official distributions from the <a href="ms-windows-store://search/?query=WSL" className="underline hover:text-emerald-200">Microsoft Store</a>. Installs to the default Windows-managed location.
+                    {t('info.quickInstall')}
                   </p>
                 </div>
 
@@ -787,12 +789,12 @@ export function NewDistroDialog({ isOpen, onClose }: NewDistroDialogProps) {
                       <circle className="opacity-20" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" fill="none" />
                       <path className="opacity-80" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                     </svg>
-                    <span className="text-sm">Loading available distributions...</span>
+                    <span className="text-sm">{t('loading')}</span>
                   </div>
                 ) : enabledOnlineDistros.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-16 text-theme-text-muted">
                     <LinuxLogo size={48} className="mb-3 opacity-50" />
-                    <span className="text-sm">No distributions available</span>
+                    <span className="text-sm">{t('empty')}</span>
                   </div>
                 ) : (
                   <div className="animate-fade-in" data-testid="quick-install-content">
@@ -806,7 +808,7 @@ export function NewDistroDialog({ isOpen, onClose }: NewDistroDialogProps) {
                             : "bg-theme-bg-tertiary text-theme-text-muted border border-theme-border-secondary hover:text-theme-text-secondary hover:border-theme-border-primary"
                         }`}
                       >
-                        All
+                        {t('filter.all')}
                       </button>
                       {(Object.entries(DISTRO_FAMILY_NAMES) as [DistroFamily, string][]).map(([family, name]) => {
                         const count = enabledOnlineDistros.filter(d => {
@@ -872,7 +874,7 @@ export function NewDistroDialog({ isOpen, onClose }: NewDistroDialogProps) {
                               )}
                             </div>
                             {exists ? (
-                              <span className="text-xs text-theme-text-muted bg-theme-bg-tertiary px-2 py-1 rounded-md">Installed</span>
+                              <span className="text-xs text-theme-text-muted bg-theme-bg-tertiary px-2 py-1 rounded-md">{t('common:label.installed')}</span>
                             ) : isSelected ? (
                               <div className="w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center shadow-lg shadow-emerald-500/30">
                                 <CheckIcon size="sm" className="text-white" />
@@ -894,12 +896,12 @@ export function NewDistroDialog({ isOpen, onClose }: NewDistroDialogProps) {
                 {downloadableDistros.length === 0 && !useCustomUrl ? (
                   <div className="flex flex-col items-center justify-center py-16 text-theme-text-muted">
                     <DownloadIcon size="lg" className="mb-3 opacity-50" />
-                    <span className="text-sm mb-4">No downloadable distributions configured</span>
+                    <span className="text-sm mb-4">{t('noDownloadable')}</span>
                     <button
                       onClick={() => setUseCustomUrl(true)}
                       className="text-sm text-theme-accent-primary hover:underline"
                     >
-                      Use a custom URL instead
+                      {t('useCustomUrl')}
                     </button>
                   </div>
                 ) : downloadableDistros.length === 0 && useCustomUrl ? (
@@ -912,15 +914,15 @@ export function NewDistroDialog({ isOpen, onClose }: NewDistroDialogProps) {
                         </svg>
                       </div>
                       <div>
-                        <div className="font-medium text-theme-text-primary text-sm">Custom URL</div>
-                        <div className="text-xs text-theme-text-muted">Enter a direct link to a rootfs tarball</div>
+                        <div className="font-medium text-theme-text-primary text-sm">{t('customUrl.label')}</div>
+                        <div className="text-xs text-theme-text-muted">{t('customUrl.description')}</div>
                       </div>
                     </div>
                     <input
                       type="text"
                       value={customUrl}
                       onChange={(e) => setCustomUrl(e.target.value)}
-                      placeholder="e.g., https://example.com/distro-rootfs.tar.gz"
+                      placeholder={t('placeholder.url')}
                       disabled={isCreating}
                       className="w-full px-3 py-2.5 bg-theme-bg-primary border border-theme-border-secondary rounded-lg text-theme-text-primary placeholder-theme-text-muted text-sm font-mono focus:outline-none focus:border-blue-500/50"
                     />
@@ -937,7 +939,7 @@ export function NewDistroDialog({ isOpen, onClose }: NewDistroDialogProps) {
                             : "bg-theme-bg-tertiary text-theme-text-muted border border-theme-border-secondary hover:text-theme-text-secondary hover:border-theme-border-primary"
                         }`}
                       >
-                        All
+                        {t('filter.all')}
                       </button>
                       {(Object.entries(DISTRO_FAMILY_NAMES) as [DistroFamily, string][]).map(([family, name]) => {
                         const count = downloadableDistros.filter(d => getDistroFamily(d.id) === family).length;
@@ -1021,8 +1023,8 @@ export function NewDistroDialog({ isOpen, onClose }: NewDistroDialogProps) {
                           </svg>
                         </div>
                         <div className="flex-1">
-                          <div className="font-medium text-theme-text-primary text-sm">Custom URL</div>
-                          <div className="text-xs text-theme-text-muted">Enter a direct link to a rootfs tarball</div>
+                          <div className="font-medium text-theme-text-primary text-sm">{t('customUrl.label')}</div>
+                          <div className="text-xs text-theme-text-muted">{t('customUrl.description')}</div>
                         </div>
                         {customUrl.trim() && (
                           <button
@@ -1030,7 +1032,7 @@ export function NewDistroDialog({ isOpen, onClose }: NewDistroDialogProps) {
                             disabled={isCreating}
                             className="px-3 py-1.5 text-xs font-medium bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition-colors disabled:opacity-50"
                           >
-                            Use URL
+                            {t('useUrl')}
                           </button>
                         )}
                       </div>
@@ -1038,7 +1040,7 @@ export function NewDistroDialog({ isOpen, onClose }: NewDistroDialogProps) {
                         type="text"
                         value={customUrl}
                         onChange={(e) => { setCustomUrl(e.target.value); setSelectedDistro(null); }}
-                        placeholder="e.g., https://example.com/distro-rootfs.tar.gz"
+                        placeholder={t('placeholder.url')}
                         disabled={isCreating}
                         className="w-full px-3 py-2.5 bg-theme-bg-primary border border-theme-border-secondary rounded-lg text-theme-text-primary placeholder-theme-text-muted text-sm font-mono focus:outline-none focus:border-blue-500/50"
                       />
@@ -1054,8 +1056,8 @@ export function NewDistroDialog({ isOpen, onClose }: NewDistroDialogProps) {
                 {!settings.distributionSources.lxcEnabled ? (
                   <div className="flex flex-col items-center justify-center py-16 text-theme-text-muted">
                     <LinuxLogo size={48} className="mb-3 opacity-50" />
-                    <span className="text-sm mb-2">Community catalog is disabled</span>
-                    <span className="text-xs text-theme-text-muted">Enable it in Settings &gt; Distribution Sources</span>
+                    <span className="text-sm mb-2">{t('communityDisabled')}</span>
+                    <span className="text-xs text-theme-text-muted">{t('communityDisabledHint')}</span>
                   </div>
                 ) : (
                   <div data-testid="lxc-content">
@@ -1075,12 +1077,12 @@ export function NewDistroDialog({ isOpen, onClose }: NewDistroDialogProps) {
                 {containerImages.length === 0 && !useCustomImage ? (
                   <div className="flex flex-col items-center justify-center py-16 text-theme-text-muted">
                     <DockerLogo size={48} className="mb-3 opacity-50" />
-                    <span className="text-sm mb-4">No container images configured</span>
+                    <span className="text-sm mb-4">{t('noContainerImages')}</span>
                     <button
                       onClick={() => setUseCustomImage(true)}
                       className="text-sm text-theme-accent-primary hover:underline"
                     >
-                      Use a custom image instead
+                      {t('useCustomImage')}
                     </button>
                   </div>
                 ) : (
@@ -1140,8 +1142,8 @@ export function NewDistroDialog({ isOpen, onClose }: NewDistroDialogProps) {
                           </svg>
                         </div>
                         <div className="flex-1">
-                          <div className="font-medium text-theme-text-primary text-sm">Custom Image</div>
-                          <div className="text-xs text-theme-text-muted">Enter any OCI image reference</div>
+                          <div className="font-medium text-theme-text-primary text-sm">{t('customImage.label')}</div>
+                          <div className="text-xs text-theme-text-muted">{t('customImage.description')}</div>
                         </div>
                         {customImage.trim() && (
                           <button
@@ -1149,7 +1151,7 @@ export function NewDistroDialog({ isOpen, onClose }: NewDistroDialogProps) {
                             disabled={isCreating}
                             className="px-3 py-1.5 text-xs font-medium bg-orange-600 hover:bg-orange-500 text-white rounded-lg transition-colors disabled:opacity-50"
                           >
-                            Use Image
+                            {t('useImage')}
                           </button>
                         )}
                       </div>
@@ -1157,7 +1159,7 @@ export function NewDistroDialog({ isOpen, onClose }: NewDistroDialogProps) {
                         type="text"
                         value={customImage}
                         onChange={(e) => { setCustomImage(e.target.value); setSelectedContainer(null); }}
-                        placeholder="e.g., alpine:latest, gitlab/gitlab-runner:latest"
+                        placeholder={t('placeholder.image')}
                         disabled={isCreating}
                         className="w-full px-3 py-2.5 bg-theme-bg-primary border border-theme-border-secondary rounded-lg text-theme-text-primary placeholder-theme-text-muted text-sm font-mono focus:outline-none focus:border-orange-500/50"
                       />
@@ -1169,10 +1171,8 @@ export function NewDistroDialog({ isOpen, onClose }: NewDistroDialogProps) {
 
             {/* Trademark disclaimer */}
             <div className="mt-6 pt-4 border-t border-theme-border-primary">
-              <p className="text-[11px] text-theme-text-muted text-center leading-relaxed">
-                Linux distribution logos are trademarks of their respective owners and are used here for identification purposes only.
-                <br />
-                This application is not affiliated with or endorsed by any distribution project.
+              <p className="text-[11px] text-theme-text-muted text-center leading-relaxed whitespace-pre-line">
+                {t('trademarkDisclaimer')}
               </p>
             </div>
           </div>
@@ -1183,7 +1183,7 @@ export function NewDistroDialog({ isOpen, onClose }: NewDistroDialogProps) {
               {/* Selection summary - only for quick mode */}
               <div className="text-sm text-theme-text-muted font-mono truncate max-w-md">
                 {mode === "quick" && selectedDistro && (
-                  <span>Installing as <span className="text-theme-text-secondary">"{selectedDistro}"</span></span>
+                  <span>{t('installingAs', { name: selectedDistro })}</span>
                 )}
               </div>
 
@@ -1195,7 +1195,7 @@ export function NewDistroDialog({ isOpen, onClose }: NewDistroDialogProps) {
                   onClick={handleClose}
                   disabled={isCreating}
                 >
-                  Cancel
+                  {t('common:button.cancel')}
                 </Button>
                 {/* Install button only for quick mode - other modes use config dialog */}
                 {mode === "quick" && (
@@ -1208,7 +1208,7 @@ export function NewDistroDialog({ isOpen, onClose }: NewDistroDialogProps) {
                     loading={isCreating}
                     icon={!isCreating ? <DownloadIcon size="sm" /> : undefined}
                   >
-                    {isCreating ? "Installing..." : "Install"}
+                    {isCreating ? `${t('install')}...` : t('install')}
                   </Button>
                 )}
               </div>

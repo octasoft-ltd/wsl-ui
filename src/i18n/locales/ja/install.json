@@ -1,0 +1,156 @@
+{
+  "title": "ディストリビューションの追加",
+  "subtitle": "Linux ディストリビューションのインストール方法を選択",
+  "mode": {
+    "quickInstall": "クイックインストール",
+    "quickInstallDesc": "Microsoft Store からインストール",
+    "download": "ダウンロード",
+    "downloadDesc": "カスタム名で直接ダウンロード",
+    "community": "コミュニティ",
+    "communityDesc": "LXC イメージカタログを参照",
+    "container": "コンテナ",
+    "containerDesc": "コンテナイメージから作成"
+  },
+  "info": {
+    "quickInstall": "Microsoft Store の公式ディストリビューション。デフォルトの Windows 管理場所にインストールされます。",
+    "download": "このカタログは 設定 > ディストリビューションソース でカスタマイズできます。カスタム URL は今後の使用のために保存されます。",
+    "community": "{{url}} からのイメージ。設定 > ディストリビューションソース で設定してください。",
+    "container": "設定で選択されたランタイム：{{runtime}}"
+  },
+  "containerRuntime": {
+    "builtin": "組み込み OCI（パブリックレジストリのみ）",
+    "docker": "Docker（認証付きレジストリをサポート）",
+    "podman": "Podman（認証付きレジストリをサポート）",
+    "custom": "カスタム：{{path}}"
+  },
+  "filter": {
+    "all": "すべて"
+  },
+  "loading": "利用可能なディストリビューションを読み込み中...",
+  "empty": "利用可能なディストリビューションがありません",
+  "install": "インストール",
+  "useUrl": "URL を使用",
+  "useImage": "イメージを使用",
+  "placeholder": {
+    "url": "例：https://example.com/distro-rootfs.tar.gz",
+    "image": "例：alpine:latest、gitlab/gitlab-runner:latest"
+  },
+  "customUrl": {
+    "label": "カスタム URL",
+    "description": "rootfs tarball への直接リンクを入力"
+  },
+  "customImage": {
+    "label": "カスタムイメージ",
+    "description": "任意の OCI イメージ参照を入力"
+  },
+  "alreadyInstalled": "\"{{name}}\" は既にインストールされています",
+  "progress": {
+    "installingStore": "Microsoft Store からインストール中...",
+    "success": "インストールが完了しました！",
+    "downloading": "ダウンロード中：{{percent}}%（{{downloaded}} / {{total}}）",
+    "importing": "WSL にインポート中...",
+    "pullingImage": "コンテナイメージを取得中...",
+    "downloadFailed": "ダウンロードに失敗しました"
+  },
+  "trademarkDisclaimer": "Linux ディストリビューションのロゴは各所有者の商標であり、識別目的でのみ使用しています。\nこのアプリケーションはいかなるディストリビューションプロジェクトとも提携・推薦関係にありません。",
+  "installingAs": "\"{{name}}\" としてインストール中",
+  "noDownloadable": "ダウンロード可能なディストリビューションが設定されていません",
+  "noContainerImages": "コンテナイメージが設定されていません",
+  "communityDisabled": "コミュニティカタログは無効です",
+  "communityDisabledHint": "設定 > ディストリビューションソース で有効にしてください",
+  "useCustomUrl": "代わりにカスタム URL を使用",
+  "useCustomImage": "代わりにカスタムイメージを使用",
+  "catalogDisabled": "コミュニティカタログは無効です。設定で有効にしてください。",
+  "catalogLoadError": "カタログの読み込みに失敗しました",
+  "catalogNoMatch": "\"{{query}}\" に一致するディストリビューションはありません",
+  "catalogVersionCount_one": "{{count}} 個のバージョンが利用可能",
+  "catalogVersionCount_other": "{{count}} 個のバージョンが利用可能",
+  "catalogCacheInfo": "カタログキャッシュ：{{date}} {{time}}",
+  "errorNoDistro": "ディストリビューションを選択してください",
+  "errorInstallFailed": "ディストリビューションのインストールに失敗しました",
+  "errorCreateFailed": "ディストリビューションの作成に失敗しました",
+  "downloadStarting": "ダウンロードを開始中...",
+  "downloading": "{{name}} {{release}} をダウンロード中...",
+  "customDistribution": "カスタムディストリビューション",
+  "customUrlName": "カスタム URL",
+  "customImageName": "カスタムイメージ",
+  "distroSources": {
+    "title": "ディストリビューションソース",
+    "description": "ディストリビューションのダウンロード元を設定",
+    "addUrl": "URL を追加",
+    "removeUrl": "削除",
+    "urlPlaceholder": "https://example.com/distro-rootfs.tar.gz",
+    "name": "名前",
+    "namePlaceholder": "例：Alpine Linux",
+    "url": "URL",
+    "noSources": "カスタムソースが設定されていません",
+    "builtInSources": "組み込みソースは常に利用可能です",
+    "tab": {
+      "quickInstall": "クイックインストール",
+      "container": "コンテナ",
+      "download": "ダウンロード"
+    },
+    "badge": {
+      "builtIn": "組み込み"
+    },
+    "form": {
+      "nameRequired": "名前 *",
+      "description": "説明",
+      "downloadUrl": "ダウンロード URL *",
+      "sizeOptional": "サイズ（任意）",
+      "containerImage": "コンテナイメージ *",
+      "distroId": "ディストリビューション ID *",
+      "distroIdHint": "<code>wsl --list --online</code> の ID と一致する必要があります",
+      "placeholder": {
+        "downloadName": "例：Ubuntu 24.04 LTS",
+        "downloadDescription": "例：Noble Numbat - 最新 LTS",
+        "downloadUrl": "https://example.com/distro.tar.gz",
+        "downloadSize": "例：約370 MB",
+        "containerName": "例：Rocky Linux 9",
+        "containerDescription": "例：エンタープライズ対応 Linux",
+        "containerImage": "例：docker.io/library/rockylinux:9",
+        "msStoreDistroId": "例：Ubuntu-24.04",
+        "msStoreDescription": "例：Noble Numbat"
+      }
+    },
+    "button": {
+      "update": "更新",
+      "add": "追加",
+      "cancel": "キャンセル"
+    },
+    "dialog": {
+      "editDownloadSource": "ダウンロードソースを編集",
+      "addDownloadSource": "ダウンロードソースを追加",
+      "editContainerImage": "コンテナイメージを編集",
+      "addContainerImage": "コンテナイメージを追加",
+      "editQuickInstallMetadata": "クイックインストールメタデータを編集",
+      "addQuickInstallMetadata": "クイックインストールメタデータを追加",
+      "resetDownloadSources": "ダウンロードソースをリセット",
+      "resetDownloadSourcesMessage": "すべてのダウンロードソースがデフォルト値にリセットされます。カスタムソースは削除されます。",
+      "resetDownloads": "ダウンロードをリセット",
+      "resetContainerImages": "コンテナイメージをリセット",
+      "resetContainerImagesMessage": "すべてのコンテナイメージがデフォルト値にリセットされます。カスタムイメージは削除されます。",
+      "resetContainers": "コンテナをリセット",
+      "resetQuickInstallMetadata": "クイックインストールメタデータをリセット",
+      "resetQuickInstallMetadataMessage": "すべてのクイックインストールメタデータがデフォルト値にリセットされます。カスタムメタデータは削除されます。",
+      "resetMetadata": "メタデータをリセット"
+    },
+    "empty": {
+      "downloads": "ダウンロードソースが設定されていません。",
+      "containers": "コンテナイメージが設定されていません。",
+      "quickInstall": "クイックインストールメタデータが設定されていません。"
+    },
+    "info": {
+      "quickInstall": "クイックインストールメタデータは、<code>wsl --list --online</code> で返されるディストリビューションの表示情報（色、説明）を提供します。ディストリビューション一覧自体は Microsoft が提供しています。"
+    },
+    "toggle": {
+      "disable": "無効にする",
+      "enable": "有効にする"
+    },
+    "action": {
+      "edit": "編集",
+      "delete": "削除",
+      "dismissError": "エラーを閉じる"
+    }
+  }
+}

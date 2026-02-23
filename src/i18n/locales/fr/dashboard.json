@@ -1,0 +1,40 @@
+{
+  "loading": "Initialisation des systèmes...",
+  "emptyState": {
+    "title": "Aucune instance détectée",
+    "description": "Déployez une distribution WSL pour commencer"
+  },
+  "filter": {
+    "all": "Toutes",
+    "allSources": "Toutes les sources",
+    "allSourcesMobile": "Toutes",
+    "onlineTooltip": "En ligne ({{count}})",
+    "offlineTooltip": "Hors ligne ({{count}})",
+    "showWsl1": "Afficher WSL 1 ({{count}})",
+    "hideWsl1": "Masquer WSL 1 ({{count}})",
+    "showWsl2": "Afficher WSL 2 ({{count}})",
+    "hideWsl2": "Masquer WSL 2 ({{count}})",
+    "v1": "v1",
+    "v2": "v2"
+  },
+  "emptyFilter": {
+    "noDistros": "Aucune distribution trouvée",
+    "noMatch": "Aucune distribution ne correspond aux filtres actuels",
+    "clearFilters": "Effacer les filtres"
+  },
+  "card": {
+    "suspend": "Suspendre",
+    "launch": "Lancer",
+    "openTerminal": "Ouvrir le terminal",
+    "openRdp": "Ouvrir le Bureau à distance",
+    "quickActions": "Actions rapides",
+    "deleteDistro": "Supprimer la distribution",
+    "ipTooltip": "Cliquer pour copier l'adresse IP"
+  },
+  "deleteDialog": {
+    "title": "Supprimer la distribution",
+    "message": "Êtes-vous sûr de vouloir supprimer \"{{name}}\" ? Cette action est irréversible et toutes les données de cette distribution seront définitivement perdues.",
+    "messageDefault": "Êtes-vous sûr de vouloir supprimer \"{{name}}\" ? Cette action est irréversible et toutes les données de cette distribution seront définitivement perdues.\n\nAvertissement : C'est votre distribution par défaut. Après la suppression, les commandes WSL échoueront à moins que vous ne définissiez une autre distribution comme par défaut.",
+    "confirm": "Supprimer"
+  }
+}

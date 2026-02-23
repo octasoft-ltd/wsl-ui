@@ -1,0 +1,134 @@
+{
+  "title": "ヘルプとドキュメント",
+  "subtitle": "WSL UI の使い方を学ぶ",
+  "gettingStarted": {
+    "title": "はじめに",
+    "whatIsWslUi": "WSL UI とは？",
+    "whatIsWslUiText": "WSL UI は Windows Subsystem for Linux (WSL) ディストリビューションを管理するためのデスクトップアプリケーションです。Linux ディストリビューションの起動、停止、作成、設定などの一般的な WSL 操作にグラフィカルインターフェースを提供します。",
+    "mainDashboard": "メインダッシュボード",
+    "mainDashboardText": "メインビューでは、インストールされたすべての WSL ディストリビューションがカードとして表示されます。各カードにはディストリビューション名、ステータス（オンライン/オフライン）、ディスク使用量、クイックアクションボタンが表示されます。",
+    "quickActions": "クイックアクション",
+    "quickActionsText": "ディストリビューションカードのメニューボタン（3 つのドット）をクリックすると、ターミナルの起動、エクスプローラー、IDE の起動、ディストリビューションの管理などのクイックアクションにアクセスできます。"
+  },
+  "distroManagement": {
+    "title": "ディストリビューション管理",
+    "startingStoppingTitle": "起動と停止",
+    "start": "ディストリビューションを起動",
+    "stop": "実行中のディストリビューションを停止",
+    "setAsDefault": "デフォルトに設定",
+    "setAsDefaultText": "ディストリビューション名を指定せずに WSL コマンドを実行する際に使用するデフォルトのディストリビューションを設定します。",
+    "resourceMonitoring": "リソース監視",
+    "resourceMonitoringText": "実行中のディストリビューションはリアルタイムの CPU とメモリ使用量を表示します。すべてのディストリビューションでディスクサイズが表示されます。"
+  },
+  "advancedOps": {
+    "title": "高度な操作",
+    "rename": "名前変更",
+    "renameText": "ディストリビューション名を変更します。Windows ターミナルプロファイルとスタートメニューのショートカットも更新できます。ディストリビューションの停止が必要です。",
+    "move": "移動",
+    "moveText": "ディストリビューションを別のドライブまたはフォルダーに移動します。ディスク領域の管理に便利です。WSL の完全なシャットダウンが必要です。",
+    "resizeDisk": "ディスクサイズの変更",
+    "resizeDiskText": "より多くのスペースが必要なディストリビューションの仮想ディスクサイズを拡張します。拡張のみサポートされています（縮小は不可）。WSL のシャットダウンが必要です。",
+    "setWslVersion": "WSL バージョンの設定",
+    "setWslVersionText": "WSL 1 と WSL 2 を切り替えます。WSL 2 は完全な Linux カーネルでより高いパフォーマンスを提供します。変換には数分かかる場合があります。",
+    "sparseMode": "スパースモード",
+    "sparseModeText": "自動ディスク領域回収を有効にします。ディストリビューション内でファイルを削除すると、仮想ディスクが自動的に縮小します。",
+    "compactDisk": "ディスクの圧縮",
+    "compactDiskText": "ディストリビューションの仮想ディスクから未使用の領域を回収するワンクリック最適化。fstrim の実行、WSL のシャットダウン、VHDX ファイルの圧縮を自動的に行います。管理者権限が必要で、1〜2 分かかります。"
+  },
+  "creatingDistros": {
+    "title": "ディストリビューションの作成",
+    "quickInstall": "クイックインストール（Microsoft Store）",
+    "quickInstallText": "Ubuntu、Debian、openSUSE などの公式ディストリビューションをワンクリックでインストールできます。",
+    "containerImages": "コンテナイメージ",
+    "containerImagesText": "Docker または Podman のコンテナイメージからディストリビューションを作成できます。Docker Hub やその他のレジストリに対応しています。",
+    "directDownload": "直接ダウンロード",
+    "directDownloadText": "設定した URL から rootfs アーカイブをダウンロードできます。Alpine、NixOS、Void Linux などが含まれます。",
+    "communityCatalog": "コミュニティカタログ（LXC）",
+    "communityCatalogText": "Linux Containers イメージサーバーから数百種類のディストリビューションを参照できます。"
+  },
+  "backupRestore": {
+    "title": "バックアップと復元",
+    "export": "エクスポート",
+    "exportText": "ディストリビューションを .tar アーカイブファイルに保存してバックアップや移行に使用できます。後から同じマシンや別のマシンで復元できます。",
+    "import": "インポート",
+    "importText": ".tar アーカイブからディストリビューションを復元できます。インポートするディストリビューションの名前とインストール場所を選択します。",
+    "clone": "クローン",
+    "cloneText": "既存のディストリビューションを新しい名前でコピーできます。テストや派生環境の作成に便利です。"
+  },
+  "customActions": {
+    "title": "カスタムアクション",
+    "whatAre": "カスタムアクションとは？",
+    "whatAreText": "カスタムアクションはクイックアクションメニューに表示されるユーザー定義のシェルコマンドです。システム更新、バックアップ、開発環境セットアップなどの一般的なタスク用のアクションを作成できます。",
+    "variables": "変数",
+    "variablesText": "実行時に自動置換されるコマンド変数を使用できます：",
+    "varDistroName": "ディストリビューション名",
+    "varHome": "ホームディレクトリパス",
+    "varUser": "デフォルトユーザー",
+    "varWindowsHome": "Windows ユーザーディレクトリ",
+    "targeting": "対象ディストリビューション",
+    "targetingText": "アクションはすべてのディストリビューション、名前で指定した特定のディストリビューション、または正規表現パターンに一致するディストリビューションを対象にできます。"
+  },
+  "theming": {
+    "title": "テーマと外観",
+    "builtinThemes": "組み込みテーマ",
+    "builtinThemesText": "ダーク、ライト、中間トーンを含む 17 種類のテーマから選択できます。人気のテーマには Obsidian、Dracula、Nord、Solarized があります。",
+    "accessibilityThemes": "アクセシビリティテーマ",
+    "accessibilityThemesText": "視覚に障がいのあるユーザー向けに 2 つのハイコントラストテーマを用意しています：ハイコントラスト（ダーク）とハイコントラスト（ライト）。",
+    "customTheme": "カスタムテーマ",
+    "customThemeText": "背景、テキスト、ボーダー、アクセントカラーなど 29 種類の色をカスタマイズして独自のテーマを作成できます。"
+  },
+  "keyboardShortcuts": {
+    "title": "キーボードショートカット",
+    "tab": "Tab",
+    "tabAction": "次の要素",
+    "shiftTab": "Shift+Tab",
+    "shiftTabAction": "前の要素",
+    "enter": "Enter",
+    "enterAction": "実行 / 送信",
+    "escape": "Escape",
+    "escapeAction": "ダイアログまたはメニューを閉じる",
+    "space": "Space",
+    "spaceAction": "チェックボックスの切り替え",
+    "accessibility": "アクセシビリティ",
+    "accessibilityText": "WSL UI はスクリーンリーダーとキーボードナビゲーションをサポートし、視覚効果を抑えるシステム設定に対応しています。"
+  },
+  "settingsOverview": {
+    "title": "設定の概要",
+    "terminal": "ターミナル：Windows ターミナル、カスタムターミナルアプリ、またはコマンドプロンプトの設定",
+    "ide": "IDE：VS Code、Cursor、またはカスタム IDE 連携の設定",
+    "wslGlobal": "WSL グローバル：メモリ、CPU、スワップ、ネットワークモード、WSLg の設定",
+    "perDistro": "ディストリビューション別：自動マウントオプション、ネットワーク設定、systemd、ブートコマンド",
+    "polling": "ポーリング：ステータスとリソースの自動更新間隔の調整",
+    "timeouts": "タイムアウト：低速システム用の操作タイムアウトの設定",
+    "executables": "実行ファイルパス：WSL、PowerShell、その他のツールのデフォルトパスの上書き"
+  },
+  "integrations": {
+    "title": "連携",
+    "terminal": "ターミナル連携",
+    "terminalText": "Windows ターミナル、コマンドプロンプト、または任意のカスタムターミナルアプリでディストリビューションを開きます。設定でお好みのターミナルを設定してください。",
+    "ide": "IDE 連携",
+    "ideText": "VS Code やその他の IDE でディストリビューションを直接開きます。ディストリビューションのルートフォルダーがエディターで開きます。",
+    "fileExplorer": "エクスプローラー",
+    "fileExplorerText": "\\\\wsl$ ネットワークパスを使用して、Windows エクスプローラーでディストリビューションのファイルを参照できます。",
+    "systemTray": "システムトレイ",
+    "systemTrayText": "システムトレイに最小化してすばやくアクセスできます。閉じるときの動作は設定で変更できます。"
+  },
+  "troubleshooting": {
+    "title": "トラブルシューティング",
+    "wslNotDetected": "WSL が検出されません",
+    "wslNotDetectedText": "WSL がインストールされ有効になっていることを確認してください。PowerShell で wsl --status を実行して確認してください。WSL の Windows 機能を有効にする必要がある場合があります。",
+    "operationsTimeout": "操作のタイムアウト",
+    "operationsTimeoutText": "操作が頻繁にタイムアウトする場合は、設定 > タイムアウト でタイムアウト値を増やしてください。アプリは問題発生時に負荷を軽減するため指数バックオフを使用します。",
+    "distroWontStart": "ディストリビューションが起動しない",
+    "distroWontStartText": "wsl --shutdown で WSL を再起動してから、ディストリビューションを再度起動してみてください。",
+    "fullGuide": "完全なトラブルシューティングガイド"
+  },
+  "resources": {
+    "title": "リソースとサポート",
+    "wslUiWebsite": "WSL UI ウェブサイト",
+    "githubRepo": "GitHub リポジトリ",
+    "reportIssue": "問題を報告",
+    "octasoftWebsite": "Octasoft Ltd ウェブサイト",
+    "microsoftDocs": "Microsoft WSL ドキュメント"
+  }
+}

@@ -316,9 +316,10 @@ describe("Timeout and Error Scenarios", () => {
       const debianCard = await $(selectors.distroCardByName("Debian"));
       const startButton = await debianCard.$(selectors.startButton);
 
-      // First attempt
+      // First attempt - ensure button is interactive before clicking
+      await waitForElementClickable(startButton, 5000);
       await startButton.click();
-      await waitForErrorBanner(5000);
+      await waitForErrorBanner(10000);
 
       // Dismiss first error
       const errorBanner1 = await $(selectors.errorBanner);

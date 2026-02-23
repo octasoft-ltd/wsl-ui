@@ -1,0 +1,96 @@
+{
+  "quickActions": {
+    "title": "快捷操作",
+    "info": "发行版信息",
+    "explorer": "打开文件资源管理器",
+    "ide": "在 IDE 中打开",
+    "restart": "重启",
+    "export": "导出到文件...",
+    "clone": "克隆...",
+    "setDefault": "设为默认",
+    "alreadyDefault": "默认发行版"
+  },
+  "manage": {
+    "title": "管理",
+    "move": "移动发行版...",
+    "resize": "调整磁盘大小...",
+    "compact": "压缩磁盘...",
+    "user": "设置默认用户...",
+    "rename": "重命名...",
+    "sparse": "稀疏模式",
+    "version": "设置 WSL 版本"
+  },
+  "customActions": {
+    "title": "自定义操作",
+    "requiresStop": "需要停止发行版",
+    "requiresShutdown": "需要关闭 WSL"
+  },
+  "sparseConfirm": {
+    "title": "启用稀疏模式？",
+    "message": "警告：Microsoft 已标记稀疏 VHD 支持可能导致数据损坏。虽然它可以帮助自动回收磁盘空间，但存在数据丢失的风险。启用此功能前请确保已备份数据。",
+    "confirm": "仍然启用"
+  },
+  "outputDialog": {
+    "titleSuffix": "- 输出",
+    "noOutput": "无输出。"
+  },
+  "editor": {
+    "iconLabel": "图标",
+    "availableVars": "可用变量："
+  },
+  "exportTitle": "导出自定义操作",
+  "importTitle": "导入自定义操作",
+  "badge": {
+    "startup": "启动"
+  },
+  "scope": {
+    "all": "所有发行版",
+    "pattern": "模式：{{pattern}}",
+    "count_one": "{{count}} 个发行版",
+    "count_other": "{{count}} 个发行版"
+  },
+  "sparseChanged": "稀疏模式已更改",
+  "sparseChangedMessage": "{{name}} 的稀疏模式已{{state}}",
+  "sparseToggleFailed": "切换稀疏模式失败",
+  "sparseToggle": "切换稀疏模式",
+  "actionFailed": "操作失败",
+  "actionFailedMessage": "运行操作失败",
+  "distroIdUnavailable": "发行版 ID 不可用",
+  "requiresSudo": "需要 sudo 密码",
+  "confirmRunTitle": "运行 \"{{action}}\"？",
+  "confirmRunMessage": "确定要在 {{name}} 上运行此操作吗？",
+  "customActionsSettings": {
+    "title": "自定义操作",
+    "description": "定义显示在发行版快捷操作菜单中的 Shell 命令",
+    "addAction": "添加操作",
+    "editAction": "编辑操作",
+    "noActions": "未配置自定义操作",
+    "noActionsHint": "添加您的第一个自定义操作以开始使用",
+    "name": "名称",
+    "namePlaceholder": "例如：更新系统",
+    "command": "命令",
+    "commandPlaceholder": "例如：sudo apt update && sudo apt upgrade -y",
+    "sudo": "以 sudo 运行",
+    "sudoDesc": "以管理员权限执行命令",
+    "runOnStartup": "启动时运行",
+    "runOnStartupDesc": "在匹配的发行版启动时执行",
+    "confirmBeforeRun": "运行前确认",
+    "runInTerminal": "在终端中运行",
+    "runInTerminalDesc": "在可见的终端窗口中执行命令",
+    "showOutput": "显示输出",
+    "showOutputDesc": "在对话框中显示命令输出",
+    "target": "目标发行版",
+    "targetAll": "所有发行版",
+    "targetSpecific": "特定发行版",
+    "targetRegex": "正则表达式模式",
+    "targetPlaceholder": "例如：Ubuntu.*",
+    "save": "保存",
+    "delete": "删除",
+    "deleteConfirm": "确定要删除此操作吗？",
+    "importExport": "导入/导出",
+    "importActions": "导入",
+    "exportActions": "导出",
+    "importSuccess": "操作已成功导入",
+    "exportSuccess": "操作已成功导出"
+  }
+}

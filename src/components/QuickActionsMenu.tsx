@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import type { Distribution } from "../types/distribution";
 import { useDistroStore } from "../store/distroStore";
 import { useActionsStore } from "../store/actionsStore";
@@ -59,6 +60,7 @@ interface QuickAction {
 }
 
 export function QuickActionsMenu({ distro, disabled, onOpenChange }: QuickActionsMenuProps) {
+  const { t } = useTranslation("actions");
   const [isOpen, setIsOpenState] = useState(false);
 
   const setIsOpen = (open: boolean) => {
@@ -117,17 +119,17 @@ export function QuickActionsMenu({ distro, disabled, onOpenChange }: QuickAction
       setSparseEnabled(newState);
       addNotification({
         type: "success",
-        title: "Sparse Mode Changed",
-        message: `Sparse mode ${newState ? "enabled" : "disabled"} for ${distro.name}`,
+        title: t('sparseChanged'),
+        message: t('sparseChangedMessage', { name: distro.name, state: newState ? t('common:label.on') : t('common:label.off') }),
       });
       setIsOpen(false);
       setShowManageSubmenu(false);
     } catch (err) {
       // Tauri returns string errors, not Error instances
-      const errorMessage = typeof err === "string" ? err : err instanceof Error ? err.message : "Unknown error occurred";
+      const errorMessage = typeof err === "string" ? err : err instanceof Error ? err.message : t('common:errors.unknown');
       addNotification({
         type: "error",
-        title: "Failed to Toggle Sparse Mode",
+        title: t('sparseToggleFailed'),
         message: errorMessage,
       });
     } finally {
@@ -138,7 +140,7 @@ export function QuickActionsMenu({ distro, disabled, onOpenChange }: QuickAction
   // Handle sparse toggle with stop-before-action pattern
   // Requires full WSL shutdown as VHDX must not be in use
   const handleSparseWithStopCheck = () => {
-    executeWithStopCheck(distro, "Toggle Sparse Mode", () => {
+    executeWithStopCheck(distro, t('sparseToggle'), () => {
       handleToggleSparse();
     }, { requiresShutdown: true });
     setIsOpen(false);
@@ -193,8 +195,8 @@ export function QuickActionsMenu({ distro, disabled, onOpenChange }: QuickAction
       } catch (error) {
         addNotification({
           type: "error",
-          title: "Action Failed",
-          message: `Failed to run action: ${error instanceof Error ? error.message : "Unknown error"}`,
+          title: t('actionFailed'),
+          message: `${t('actionFailedMessage')}: ${error instanceof Error ? error.message : t('common:errors.unknown')}`,
         });
       }
       return;
@@ -236,8 +238,8 @@ export function QuickActionsMenu({ distro, disabled, onOpenChange }: QuickAction
           } catch (error) {
             addNotification({
               type: "error",
-              title: "Action Failed",
-              message: `Failed to run action: ${error instanceof Error ? error.message : "Unknown error"}`,
+              title: t('actionFailed'),
+              message: `${t('actionFailedMessage')}: ${error instanceof Error ? error.message : t('common:errors.unknown')}`,
             });
           }
           return;
@@ -316,7 +318,7 @@ export function QuickActionsMenu({ distro, disabled, onOpenChange }: QuickAction
   const builtInActions: QuickAction[] = [
     {
       id: "info",
-      label: "Distribution Info",
+      label: t('quickActions.info'),
       icon: <InfoIcon size="sm" />,
       action: () => {
         setShowInfoDialog(true);
@@ -325,7 +327,7 @@ export function QuickActionsMenu({ distro, disabled, onOpenChange }: QuickAction
     },
     {
       id: "explorer",
-      label: "Open File Explorer",
+      label: t('quickActions.explorer'),
       icon: <FolderIcon size="sm" />,
       action: () => {
         openFileExplorer(distro.name);
@@ -334,7 +336,7 @@ export function QuickActionsMenu({ distro, disabled, onOpenChange }: QuickAction
     },
     {
       id: "ide",
-      label: "Open in IDE",
+      label: t('quickActions.ide'),
       icon: <CodeIcon size="sm" />,
       action: () => {
         openIDE(distro.name);
@@ -343,7 +345,7 @@ export function QuickActionsMenu({ distro, disabled, onOpenChange }: QuickAction
     },
     {
       id: "restart",
-      label: "Restart",
+      label: t('quickActions.restart'),
       icon: <RefreshIcon size="sm" />,
       action: () => {
         restartDistro(distro.name, distro.id);
@@ -352,7 +354,7 @@ export function QuickActionsMenu({ distro, disabled, onOpenChange }: QuickAction
     },
     {
       id: "export",
-      label: "Export to File...",
+      label: t('quickActions.export'),
       icon: <UploadIcon size="sm" />,
       requiresStopped: true,
       action: () => {
@@ -364,7 +366,7 @@ export function QuickActionsMenu({ distro, disabled, onOpenChange }: QuickAction
     },
     {
       id: "clone",
-      label: "Clone...",
+      label: t('quickActions.clone'),
       icon: <CopyIcon size="sm" />,
       requiresStopped: true,
       action: () => {
@@ -376,7 +378,7 @@ export function QuickActionsMenu({ distro, disabled, onOpenChange }: QuickAction
     },
     {
       id: "default",
-      label: distro.isDefault ? "Default Distribution" : "Set as Default",
+      label: distro.isDefault ? t('quickActions.alreadyDefault') : t('quickActions.setDefault'),
       icon: <StarIcon size="sm" filled={distro.isDefault} />,
       action: () => {
         if (!distro.isDefault) {
@@ -397,7 +399,7 @@ export function QuickActionsMenu({ distro, disabled, onOpenChange }: QuickAction
     <div className="relative" ref={menuRef}>
       <IconButton
         icon={<MenuIcon size="sm" />}
-        label="Quick Actions"
+        label={t('quickActions.title')}
         variant="secondary"
         className="btn-cyber"
         onClick={handleToggleMenu}
@@ -443,7 +445,7 @@ export function QuickActionsMenu({ distro, disabled, onOpenChange }: QuickAction
                   <span
                     data-testid="requires-stop-indicator"
                     className="ml-auto text-theme-status-warning"
-                    title="Requires stopping distribution"
+                    title={t('customActions.requiresStop')}
                   >
                     <PauseIcon size="sm" />
                   </span>
@@ -461,7 +463,7 @@ export function QuickActionsMenu({ distro, disabled, onOpenChange }: QuickAction
               >
                 <span className="flex items-center gap-3">
                   <span className="text-theme-text-muted"><SettingsIcon size="sm" /></span>
-                  Manage
+                  {t('manage.title')}
                 </span>
                 <ChevronRightIcon size="sm" className={`text-theme-text-muted transition-transform ${showManageSubmenu ? "rotate-90" : ""}`} />
               </button>
@@ -482,12 +484,12 @@ export function QuickActionsMenu({ distro, disabled, onOpenChange }: QuickAction
                       className="w-full flex items-center gap-3 px-6 py-2 text-sm text-left text-theme-text-secondary hover:bg-theme-bg-tertiary hover:text-theme-text-primary transition-all"
                     >
                       <span className="text-theme-text-muted"><FolderIcon size="sm" /></span>
-                      Move Distribution...
+                      {t('manage.move')}
                       {distro.state === "Running" && (
                         <span
                           data-testid="requires-shutdown-indicator"
                           className="ml-auto text-theme-status-error"
-                          title="Requires WSL shutdown"
+                          title={t('customActions.requiresShutdown')}
                         >
                           <PowerIcon size="sm" />
                         </span>
@@ -508,12 +510,12 @@ export function QuickActionsMenu({ distro, disabled, onOpenChange }: QuickAction
                       className="w-full flex items-center gap-3 px-6 py-2 text-sm text-left text-theme-text-secondary hover:bg-theme-bg-tertiary hover:text-theme-text-primary transition-all"
                     >
                       <span className="text-theme-text-muted"><ServerIcon size="sm" /></span>
-                      Resize Disk...
+                      {t('manage.resize')}
                       {distro.state === "Running" && (
                         <span
                           data-testid="requires-shutdown-indicator"
                           className="ml-auto text-theme-status-error"
-                          title="Requires WSL shutdown"
+                          title={t('customActions.requiresShutdown')}
                         >
                           <PowerIcon size="sm" />
                         </span>
@@ -533,7 +535,7 @@ export function QuickActionsMenu({ distro, disabled, onOpenChange }: QuickAction
                       className="w-full flex items-center gap-3 px-6 py-2 text-sm text-left text-theme-text-secondary hover:bg-theme-bg-tertiary hover:text-theme-text-primary transition-all"
                     >
                       <span className="text-theme-text-muted"><CompressIcon size="sm" /></span>
-                      Compact Disk...
+                      {t('manage.compact')}
                     </button>
                   )}
                   <button
@@ -546,7 +548,7 @@ export function QuickActionsMenu({ distro, disabled, onOpenChange }: QuickAction
                     className="w-full flex items-center gap-3 px-6 py-2 text-sm text-left text-theme-text-secondary hover:bg-theme-bg-tertiary hover:text-theme-text-primary transition-all"
                   >
                     <span className="text-theme-text-muted"><UserIcon size="sm" /></span>
-                    Set Default User...
+                    {t('manage.user')}
                   </button>
                   <button
                     onClick={() => {
@@ -558,7 +560,7 @@ export function QuickActionsMenu({ distro, disabled, onOpenChange }: QuickAction
                       setShowManageSubmenu(false);
                     }}
                     disabled={!distro.id}
-                    title={!distro.id ? "Distribution ID not available" : undefined}
+                    title={!distro.id ? t('distroIdUnavailable') : undefined}
                     data-testid="manage-action-rename"
                     className="w-full flex items-center gap-3 px-6 py-2 text-sm text-left text-theme-text-secondary hover:bg-theme-bg-tertiary hover:text-theme-text-primary transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-theme-text-secondary"
                   >
@@ -567,12 +569,12 @@ export function QuickActionsMenu({ distro, disabled, onOpenChange }: QuickAction
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                       </svg>
                     </span>
-                    Rename...
+                    {t('manage.rename')}
                     {distro.state === "Running" && (
                       <span
                         data-testid="requires-stop-indicator"
                         className="ml-auto text-theme-status-warning"
-                        title="Requires stopping distribution"
+                        title={t('customActions.requiresStop')}
                       >
                         <PauseIcon size="sm" />
                       </span>
@@ -588,20 +590,20 @@ export function QuickActionsMenu({ distro, disabled, onOpenChange }: QuickAction
                     >
                       <span className="flex items-center gap-3">
                         <span className="text-theme-text-muted"><SparklesIcon size="sm" /></span>
-                        Sparse Mode
+                        {t('manage.sparse')}
                       </span>
                       <div className="flex items-center gap-2">
                         {distro.state === "Running" && (
                           <span
                             data-testid="requires-shutdown-indicator"
                             className="text-theme-status-error"
-                            title="Requires WSL shutdown"
+                            title={t('customActions.requiresShutdown')}
                           >
                             <PowerIcon size="sm" />
                           </span>
                         )}
                         <span className={`text-xs px-2 py-0.5 rounded ${sparseEnabled ? "bg-[rgba(var(--status-running-rgb),0.1)] text-theme-status-running border border-[rgba(var(--status-running-rgb),0.3)]" : "bg-theme-bg-tertiary text-theme-text-muted border border-theme-border-secondary"}`}>
-                          {sparseEnabled ? "On" : "Off"}
+                          {sparseEnabled ? t('common:label.on') : t('common:label.off')}
                         </span>
                       </div>
                     </button>
@@ -623,14 +625,14 @@ export function QuickActionsMenu({ distro, disabled, onOpenChange }: QuickAction
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
                         </svg>
                       </span>
-                      Set WSL Version
+                      {t('manage.version')}
                     </span>
                     <div className="flex items-center gap-2">
                       {distro.state === "Running" && (
                         <span
                           data-testid="requires-stop-indicator"
                           className="text-theme-status-warning"
-                          title="Requires stopping distribution"
+                          title={t('customActions.requiresStop')}
                         >
                           <PauseIcon size="sm" />
                         </span>
@@ -649,7 +651,7 @@ export function QuickActionsMenu({ distro, disabled, onOpenChange }: QuickAction
               <>
                 <div className="border-t border-theme-border-primary my-1" />
                 <div className="px-4 py-1.5 text-xs text-theme-text-muted uppercase tracking-wider font-mono">
-                  Custom Actions
+                  {t('customActions.title')}
                 </div>
                 {applicableActions.map((action) => (
                   <button
@@ -674,13 +676,13 @@ export function QuickActionsMenu({ distro, disabled, onOpenChange }: QuickAction
                         <span
                           data-testid="requires-stop-indicator"
                           className="text-theme-status-warning"
-                          title="Requires stopping distribution"
+                          title={t('customActions.requiresStop')}
                         >
                           <PauseIcon size="sm" />
                         </span>
                       )}
                       {action.requiresSudo && (
-                        <span className="text-xs text-theme-text-muted opacity-60" title="Requires sudo password">
+                        <span className="text-xs text-theme-text-muted opacity-60" title={t('requiresSudo')}>
                           🔒
                         </span>
                       )}
@@ -746,9 +748,9 @@ export function QuickActionsMenu({ distro, disabled, onOpenChange }: QuickAction
       {/* Confirm Dialog for custom actions */}
       <ConfirmDialog
         isOpen={!!showConfirmDialog}
-        title={`Run "${showConfirmDialog?.actionName}"?`}
-        message={`Are you sure you want to run this action on ${distro.name}?`}
-        confirmLabel="Run"
+        title={t('confirmRunTitle', { action: showConfirmDialog?.actionName })}
+        message={t('confirmRunMessage', { action: showConfirmDialog?.actionName, name: distro.name })}
+        confirmLabel={t('common:button.run')}
         onConfirm={handleConfirmAction}
         onCancel={() => setShowConfirmDialog(null)}
       />
@@ -756,9 +758,9 @@ export function QuickActionsMenu({ distro, disabled, onOpenChange }: QuickAction
       {/* Sparse Mode Warning Dialog */}
       <ConfirmDialog
         isOpen={showSparseConfirm}
-        title="Enable Sparse Mode?"
-        message="Warning: Microsoft has flagged sparse VHD support as potentially causing data corruption. While it can help reclaim disk space automatically, there is a risk of data loss. Make sure you have backups before enabling this feature."
-        confirmLabel="Enable Anyway"
+        title={t('sparseConfirm.title')}
+        message={t('sparseConfirm.message')}
+        confirmLabel={t('sparseConfirm.confirm')}
         onConfirm={() => {
           setShowSparseConfirm(false);
           handleToggleSparse(true);
@@ -795,10 +797,10 @@ export function QuickActionsMenu({ distro, disabled, onOpenChange }: QuickAction
               <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-theme-accent-primary/50 to-transparent" />
 
               <div className="flex items-center justify-between px-5 py-4 border-b border-theme-border-primary">
-                <h3 className="font-semibold text-theme-text-primary">{showOutputDialog.title} - Output</h3>
+                <h3 className="font-semibold text-theme-text-primary">{showOutputDialog.title} {t('outputDialog.titleSuffix')}</h3>
                 <IconButton
                   icon={<CloseIcon size="md" />}
-                  label="Close"
+                  label={t('common:button.close')}
                   variant="ghost"
                   onClick={() => setShowOutputDialog(null)}
                 />
@@ -811,7 +813,7 @@ export function QuickActionsMenu({ distro, disabled, onOpenChange }: QuickAction
                   <pre className="mt-2 text-sm text-theme-status-error font-mono whitespace-pre-wrap">{showOutputDialog.error}</pre>
                 )}
                 {!showOutputDialog.output && !showOutputDialog.error && (
-                  <p className="text-theme-text-muted text-sm font-mono">No output.</p>
+                  <p className="text-theme-text-muted text-sm font-mono">{t('outputDialog.noOutput')}</p>
                 )}
               </div>
             </div>

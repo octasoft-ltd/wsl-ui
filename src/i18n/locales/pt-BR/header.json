@@ -1,0 +1,17 @@
+{
+  "subtitle": "Centro de Controle",
+  "button": {
+    "new": "Novo",
+    "import": "Importar",
+    "sync": "Sincronizar",
+    "shutdown": "Desligar",
+    "systemTerminal": "Abrir terminal do sistema WSL",
+    "help": "Ajuda",
+    "settings": "Configurações"
+  },
+  "shutdownAll": {
+    "title": "Desligar todas as distribuições",
+    "message": "Isso desligará todas as distribuições WSL em execução. Qualquer trabalho não salvo será perdido.",
+    "confirm": "Desligar tudo"
+  }
+}

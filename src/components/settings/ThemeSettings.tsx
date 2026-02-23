@@ -5,73 +5,74 @@
  */
 
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useTheme } from "../../themes";
 import type { ThemeColors, ThemeId } from "../../themes";
 import { PaletteIcon, CheckIcon, ResetIcon, ChevronDownIcon, ChevronUpIcon } from "../icons";
 
 // Color groups for the custom theme editor
-const COLOR_GROUPS = [
+const COLOR_GROUP_KEYS = [
   {
-    name: "Background",
+    nameKey: "theme.colors.background",
     colors: [
-      { key: "bgPrimary" as const, label: "Primary" },
-      { key: "bgSecondary" as const, label: "Secondary" },
-      { key: "bgTertiary" as const, label: "Tertiary" },
-      { key: "bgHover" as const, label: "Hover" },
-      { key: "bgSelected" as const, label: "Selected" },
+      { key: "bgPrimary" as const, labelKey: "theme.colors.primary" },
+      { key: "bgSecondary" as const, labelKey: "theme.colors.secondary" },
+      { key: "bgTertiary" as const, labelKey: "theme.colors.tertiary" },
+      { key: "bgHover" as const, labelKey: "theme.colors.hover" },
+      { key: "bgSelected" as const, labelKey: "theme.colors.selected" },
     ],
   },
   {
-    name: "Text",
+    nameKey: "theme.colors.text",
     colors: [
-      { key: "textPrimary" as const, label: "Primary" },
-      { key: "textSecondary" as const, label: "Secondary" },
-      { key: "textMuted" as const, label: "Muted" },
-      { key: "textAccent" as const, label: "Accent" },
+      { key: "textPrimary" as const, labelKey: "theme.colors.primary" },
+      { key: "textSecondary" as const, labelKey: "theme.colors.secondary" },
+      { key: "textMuted" as const, labelKey: "theme.colors.muted" },
+      { key: "textAccent" as const, labelKey: "theme.colors.accent" },
     ],
   },
   {
-    name: "Border",
+    nameKey: "theme.colors.border",
     colors: [
-      { key: "borderPrimary" as const, label: "Primary" },
-      { key: "borderSecondary" as const, label: "Secondary" },
-      { key: "borderAccent" as const, label: "Accent" },
+      { key: "borderPrimary" as const, labelKey: "theme.colors.primary" },
+      { key: "borderSecondary" as const, labelKey: "theme.colors.secondary" },
+      { key: "borderAccent" as const, labelKey: "theme.colors.accent" },
     ],
   },
   {
-    name: "Accent",
+    nameKey: "theme.colors.accent",
     colors: [
-      { key: "accentPrimary" as const, label: "Primary" },
-      { key: "accentSecondary" as const, label: "Secondary" },
+      { key: "accentPrimary" as const, labelKey: "theme.colors.primary" },
+      { key: "accentSecondary" as const, labelKey: "theme.colors.secondary" },
     ],
   },
   {
-    name: "Status",
+    nameKey: "theme.colors.status",
     colors: [
-      { key: "statusRunning" as const, label: "Running" },
-      { key: "statusStopped" as const, label: "Stopped" },
-      { key: "statusWarning" as const, label: "Warning" },
-      { key: "statusError" as const, label: "Error" },
-      { key: "statusSuccess" as const, label: "Success" },
+      { key: "statusRunning" as const, labelKey: "theme.colors.running" },
+      { key: "statusStopped" as const, labelKey: "theme.colors.stopped" },
+      { key: "statusWarning" as const, labelKey: "theme.colors.warning" },
+      { key: "statusError" as const, labelKey: "theme.colors.error" },
+      { key: "statusSuccess" as const, labelKey: "theme.colors.success" },
     ],
   },
   {
-    name: "Buttons",
+    nameKey: "theme.colors.buttons",
     colors: [
-      { key: "buttonPrimary" as const, label: "Primary" },
-      { key: "buttonPrimaryHover" as const, label: "Primary Hover" },
-      { key: "buttonSecondary" as const, label: "Secondary" },
-      { key: "buttonSecondaryHover" as const, label: "Secondary Hover" },
-      { key: "buttonDanger" as const, label: "Danger" },
-      { key: "buttonDangerHover" as const, label: "Danger Hover" },
+      { key: "buttonPrimary" as const, labelKey: "theme.colors.primary" },
+      { key: "buttonPrimaryHover" as const, labelKey: "theme.colors.primaryHover" },
+      { key: "buttonSecondary" as const, labelKey: "theme.colors.secondary" },
+      { key: "buttonSecondaryHover" as const, labelKey: "theme.colors.secondaryHover" },
+      { key: "buttonDanger" as const, labelKey: "theme.colors.danger" },
+      { key: "buttonDangerHover" as const, labelKey: "theme.colors.dangerHover" },
     ],
   },
   {
-    name: "Scrollbar",
+    nameKey: "theme.colors.scrollbar",
     colors: [
-      { key: "scrollbarTrack" as const, label: "Track" },
-      { key: "scrollbarThumb" as const, label: "Thumb" },
-      { key: "scrollbarThumbHover" as const, label: "Thumb Hover" },
+      { key: "scrollbarTrack" as const, labelKey: "theme.colors.track" },
+      { key: "scrollbarThumb" as const, labelKey: "theme.colors.thumb" },
+      { key: "scrollbarThumbHover" as const, labelKey: "theme.colors.thumbHover" },
     ],
   },
 ];
@@ -144,6 +145,7 @@ function ColorGroup({ name, colors, values, onChange }: ColorGroupProps) {
 }
 
 export function ThemeSettings() {
+  const { t } = useTranslation("settings");
   const { themeId, setTheme, availableThemes, customColors, updateCustomColors, resetCustomColors } =
     useTheme();
 
@@ -166,8 +168,8 @@ export function ThemeSettings() {
               <PaletteIcon size="md" className="text-white" />
             </div>
             <div>
-              <h2 className="text-lg font-medium text-(--text-primary)">Color Theme</h2>
-              <p className="text-sm text-(--text-muted)">Choose your preferred color scheme</p>
+              <h2 className="text-lg font-medium text-(--text-primary)">{t('theme.title')}</h2>
+              <p className="text-sm text-(--text-muted)">{t('theme.description')}</p>
             </div>
           </div>
 
@@ -203,7 +205,7 @@ export function ThemeSettings() {
                   </div>
 
                   <div className="font-medium text-(--text-primary) text-sm">{theme.name}</div>
-                  <div className="text-xs text-(--text-muted) mt-0.5">{theme.description}</div>
+                  <div className="text-xs text-(--text-muted) mt-0.5">{t(`theme.builtIn.${theme.id}`, theme.description)}</div>
                 </button>
               );
             })}
@@ -222,8 +224,8 @@ export function ThemeSettings() {
                   <PaletteIcon size="md" className="text-white" />
                 </div>
                 <div>
-                  <h2 className="text-lg font-medium text-(--text-primary)">Custom Colors</h2>
-                  <p className="text-sm text-(--text-muted)">Fine-tune your color scheme</p>
+                  <h2 className="text-lg font-medium text-(--text-primary)">{t('theme.customColors')}</h2>
+                  <p className="text-sm text-(--text-muted)">{t('theme.customColorsDesc')}</p>
                 </div>
               </div>
               <button
@@ -231,16 +233,16 @@ export function ThemeSettings() {
                 className="flex items-center gap-2 px-3 py-2 text-sm text-(--text-muted) hover:text-(--text-primary) bg-(--bg-tertiary) hover:bg-(--bg-hover) border border-(--border-secondary) rounded-lg transition-colors"
               >
                 <ResetIcon size="sm" />
-                Reset to Default
+                {t('theme.resetToDefault')}
               </button>
             </div>
 
             <div className="space-y-3">
-              {COLOR_GROUPS.map((group) => (
+              {COLOR_GROUP_KEYS.map((group) => (
                 <ColorGroup
-                  key={group.name}
-                  name={group.name}
-                  colors={group.colors}
+                  key={group.nameKey}
+                  name={t(group.nameKey)}
+                  colors={group.colors.map((c) => ({ key: c.key, label: t(c.labelKey) }))}
                   values={customColors}
                   onChange={handleColorChange}
                 />
@@ -248,7 +250,7 @@ export function ThemeSettings() {
             </div>
 
             <p className="mt-4 text-xs text-(--text-muted)">
-              Tip: Changes are applied immediately and saved automatically.
+              {t('theme.tip')}
             </p>
           </div>
         </section>

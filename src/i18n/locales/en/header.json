@@ -1,0 +1,17 @@
+{
+  "subtitle": "Mission Control",
+  "button": {
+    "new": "New",
+    "import": "Import",
+    "sync": "Sync",
+    "shutdown": "Shutdown",
+    "systemTerminal": "Open WSL System Shell",
+    "help": "Help",
+    "settings": "Settings"
+  },
+  "shutdownAll": {
+    "title": "Shutdown All Distributions",
+    "message": "This will shutdown all running WSL distributions. Any unsaved work will be lost.",
+    "confirm": "Shutdown All"
+  }
+}

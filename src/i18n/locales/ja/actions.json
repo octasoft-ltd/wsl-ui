@@ -1,0 +1,96 @@
+{
+  "quickActions": {
+    "title": "クイックアクション",
+    "info": "ディストリビューション情報",
+    "explorer": "エクスプローラーで開く",
+    "ide": "IDE で開く",
+    "restart": "再起動",
+    "export": "ファイルにエクスポート...",
+    "clone": "クローン...",
+    "setDefault": "デフォルトに設定",
+    "alreadyDefault": "デフォルトディストリビューション"
+  },
+  "manage": {
+    "title": "管理",
+    "move": "ディストリビューションを移動...",
+    "resize": "ディスクサイズを変更...",
+    "compact": "ディスクを圧縮...",
+    "user": "デフォルトユーザーを設定...",
+    "rename": "名前を変更...",
+    "sparse": "スパースモード",
+    "version": "WSL バージョンを設定"
+  },
+  "customActions": {
+    "title": "カスタムアクション",
+    "requiresStop": "ディストリビューションの停止が必要",
+    "requiresShutdown": "WSL のシャットダウンが必要"
+  },
+  "sparseConfirm": {
+    "title": "スパースモードを有効にしますか？",
+    "message": "警告：Microsoft はスパース VHD サポートがデータ破損を引き起こす可能性があると警告しています。ディスク領域を自動的に回収するのに役立ちますが、データ損失のリスクがあります。この機能を有効にする前にバックアップを取得してください。",
+    "confirm": "それでも有効にする"
+  },
+  "outputDialog": {
+    "titleSuffix": "- 出力",
+    "noOutput": "出力なし。"
+  },
+  "editor": {
+    "iconLabel": "アイコン",
+    "availableVars": "利用可能な変数："
+  },
+  "exportTitle": "カスタムアクションをエクスポート",
+  "importTitle": "カスタムアクションをインポート",
+  "badge": {
+    "startup": "起動時"
+  },
+  "scope": {
+    "all": "すべてのディストリビューション",
+    "pattern": "パターン：{{pattern}}",
+    "count_one": "{{count}} 個のディストリビューション",
+    "count_other": "{{count}} 個のディストリビューション"
+  },
+  "sparseChanged": "スパースモードが変更されました",
+  "sparseChangedMessage": "{{name}} のスパースモードを {{state}} に変更しました",
+  "sparseToggleFailed": "スパースモードの切り替えに失敗しました",
+  "sparseToggle": "スパースモードを切り替え",
+  "actionFailed": "アクションに失敗しました",
+  "actionFailedMessage": "アクションの実行に失敗しました",
+  "distroIdUnavailable": "ディストリビューション ID が利用できません",
+  "requiresSudo": "sudo パスワードが必要です",
+  "confirmRunTitle": "「{{action}}」を実行しますか？",
+  "confirmRunMessage": "{{name}} でこのアクションを実行してもよろしいですか？",
+  "customActionsSettings": {
+    "title": "カスタムアクション",
+    "description": "ディストリビューションのクイックアクションメニューに表示されるシェルコマンドを定義",
+    "addAction": "アクションを追加",
+    "editAction": "アクションを編集",
+    "noActions": "カスタムアクションが設定されていません",
+    "noActionsHint": "カスタムアクションを追加して始めましょう",
+    "name": "名前",
+    "namePlaceholder": "例：システム更新",
+    "command": "コマンド",
+    "commandPlaceholder": "例：sudo apt update && sudo apt upgrade -y",
+    "sudo": "sudo で実行",
+    "sudoDesc": "管理者権限でコマンドを実行",
+    "runOnStartup": "起動時に実行",
+    "runOnStartupDesc": "一致するディストリビューションの起動時に実行",
+    "confirmBeforeRun": "実行前に確認",
+    "runInTerminal": "ターミナルで実行",
+    "runInTerminalDesc": "表示可能なターミナルウィンドウでコマンドを実行",
+    "showOutput": "出力を表示",
+    "showOutputDesc": "コマンド出力をダイアログに表示",
+    "target": "対象ディストリビューション",
+    "targetAll": "すべてのディストリビューション",
+    "targetSpecific": "特定のディストリビューション",
+    "targetRegex": "正規表現パターン",
+    "targetPlaceholder": "例：Ubuntu.*",
+    "save": "保存",
+    "delete": "削除",
+    "deleteConfirm": "このアクションを削除してもよろしいですか？",
+    "importExport": "インポート/エクスポート",
+    "importActions": "インポート",
+    "exportActions": "エクスポート",
+    "importSuccess": "アクションが正常にインポートされました",
+    "exportSuccess": "アクションが正常にエクスポートされました"
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "loading": "Inicializando sistemas...",
+  "emptyState": {
+    "title": "No se detectaron instancias",
+    "description": "Instale una distribución WSL para comenzar"
+  },
+  "filter": {
+    "all": "Todas",
+    "allSources": "Todos los orígenes",
+    "allSourcesMobile": "Todos",
+    "onlineTooltip": "En línea ({{count}})",
+    "offlineTooltip": "Sin conexión ({{count}})",
+    "showWsl1": "Mostrar WSL 1 ({{count}})",
+    "hideWsl1": "Ocultar WSL 1 ({{count}})",
+    "showWsl2": "Mostrar WSL 2 ({{count}})",
+    "hideWsl2": "Ocultar WSL 2 ({{count}})",
+    "v1": "v1",
+    "v2": "v2"
+  },
+  "emptyFilter": {
+    "noDistros": "No se encontraron distribuciones",
+    "noMatch": "Ninguna distribución coincide con los filtros actuales",
+    "clearFilters": "Limpiar filtros"
+  },
+  "card": {
+    "suspend": "Suspender",
+    "launch": "Iniciar",
+    "openTerminal": "Abrir terminal",
+    "openRdp": "Abrir Escritorio remoto",
+    "quickActions": "Acciones rápidas",
+    "deleteDistro": "Eliminar distribución",
+    "ipTooltip": "Clic para copiar la dirección IP"
+  },
+  "deleteDialog": {
+    "title": "Eliminar distribución",
+    "message": "¿Está seguro de que desea eliminar \"{{name}}\"? Esta acción no se puede deshacer y todos los datos de esta distribución se perderán permanentemente.",
+    "messageDefault": "¿Está seguro de que desea eliminar \"{{name}}\"? Esta acción no se puede deshacer y todos los datos de esta distribución se perderán permanentemente.\n\nAdvertencia: Esta es su distribución predeterminada. Después de la eliminación, los comandos WSL fallarán a menos que establezca otra distribución como predeterminada.",
+    "confirm": "Eliminar"
+  }
+}

@@ -1,0 +1,96 @@
+{
+  "quickActions": {
+    "title": "إجراءات سريعة",
+    "info": "معلومات التوزيعة",
+    "explorer": "فتح مستكشف الملفات",
+    "ide": "فتح في IDE",
+    "restart": "إعادة التشغيل",
+    "export": "تصدير إلى ملف...",
+    "clone": "استنساخ...",
+    "setDefault": "تعيين كافتراضي",
+    "alreadyDefault": "التوزيعة الافتراضية"
+  },
+  "manage": {
+    "title": "إدارة",
+    "move": "نقل التوزيعة...",
+    "resize": "تغيير حجم القرص...",
+    "compact": "ضغط القرص...",
+    "user": "تعيين المستخدم الافتراضي...",
+    "rename": "إعادة التسمية...",
+    "sparse": "الوضع المتناثر",
+    "version": "تعيين إصدار WSL"
+  },
+  "customActions": {
+    "title": "إجراءات مخصصة",
+    "requiresStop": "يتطلب إيقاف التوزيعة",
+    "requiresShutdown": "يتطلب إيقاف WSL"
+  },
+  "sparseConfirm": {
+    "title": "تفعيل الوضع المتناثر؟",
+    "message": "تحذير: حددت Microsoft دعم VHD المتناثر على أنه قد يسبب تلف البيانات. على الرغم من أنه يمكن أن يساعد في استعادة مساحة القرص تلقائياً، إلا أن هناك خطر فقدان البيانات. تأكد من وجود نسخ احتياطية قبل تفعيل هذه الميزة.",
+    "confirm": "تفعيل على أي حال"
+  },
+  "outputDialog": {
+    "titleSuffix": "- المخرجات",
+    "noOutput": "لا توجد مخرجات."
+  },
+  "editor": {
+    "iconLabel": "الأيقونة",
+    "availableVars": "المتغيرات المتاحة:"
+  },
+  "exportTitle": "تصدير الإجراءات المخصصة",
+  "importTitle": "استيراد الإجراءات المخصصة",
+  "badge": {
+    "startup": "بدء التشغيل"
+  },
+  "scope": {
+    "all": "جميع التوزيعات",
+    "pattern": "النمط: {{pattern}}",
+    "count_one": "{{count}} توزيعة",
+    "count_other": "{{count}} توزيعات"
+  },
+  "sparseChanged": "تم تغيير الوضع المتناثر",
+  "sparseChangedMessage": "الوضع المتناثر {{state}} لـ {{name}}",
+  "sparseToggleFailed": "فشل تبديل الوضع المتناثر",
+  "sparseToggle": "تبديل الوضع المتناثر",
+  "actionFailed": "فشل الإجراء",
+  "actionFailedMessage": "فشل تشغيل الإجراء",
+  "distroIdUnavailable": "معرّف التوزيعة غير متاح",
+  "requiresSudo": "يتطلب كلمة مرور sudo",
+  "confirmRunTitle": "تشغيل \"{{action}}\"؟",
+  "confirmRunMessage": "هل أنت متأكد من رغبتك في تشغيل هذا الإجراء على {{name}}؟",
+  "customActionsSettings": {
+    "title": "إجراءات مخصصة",
+    "description": "حدد أوامر الصدفة التي تظهر في قائمة الإجراءات السريعة للتوزيعة",
+    "addAction": "إضافة إجراء",
+    "editAction": "تعديل الإجراء",
+    "noActions": "لم يتم تكوين إجراءات مخصصة",
+    "noActionsHint": "أضف أول إجراء مخصص للبدء",
+    "name": "الاسم",
+    "namePlaceholder": "مثال، تحديث النظام",
+    "command": "الأمر",
+    "commandPlaceholder": "مثال، sudo apt update && sudo apt upgrade -y",
+    "sudo": "تشغيل بصلاحيات sudo",
+    "sudoDesc": "تنفيذ الأمر بصلاحيات مرتفعة",
+    "runOnStartup": "تشغيل عند بدء التشغيل",
+    "runOnStartupDesc": "تنفيذ عند بدء توزيعة مطابقة",
+    "confirmBeforeRun": "تأكيد قبل التشغيل",
+    "runInTerminal": "تشغيل في الطرفية",
+    "runInTerminalDesc": "تنفيذ الأمر في نافذة طرفية مرئية",
+    "showOutput": "إظهار المخرجات",
+    "showOutputDesc": "عرض مخرجات الأمر في مربع حوار",
+    "target": "التوزيعات المستهدفة",
+    "targetAll": "جميع التوزيعات",
+    "targetSpecific": "توزيعات محددة",
+    "targetRegex": "نمط Regex",
+    "targetPlaceholder": "مثال، Ubuntu.*",
+    "save": "حفظ",
+    "delete": "حذف",
+    "deleteConfirm": "هل أنت متأكد من رغبتك في حذف هذا الإجراء؟",
+    "importExport": "استيراد/تصدير",
+    "importActions": "استيراد",
+    "exportActions": "تصدير",
+    "importSuccess": "تم استيراد الإجراءات بنجاح",
+    "exportSuccess": "تم تصدير الإجراءات بنجاح"
+  }
+}

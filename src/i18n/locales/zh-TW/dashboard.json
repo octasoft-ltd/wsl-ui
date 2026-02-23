@@ -1,0 +1,40 @@
+{
+  "loading": "正在初始化系統...",
+  "emptyState": {
+    "title": "未偵測到執行個體",
+    "description": "部署一個 WSL 發行版以開始使用"
+  },
+  "filter": {
+    "all": "全部",
+    "allSources": "所有來源",
+    "allSourcesMobile": "全部",
+    "onlineTooltip": "線上 ({{count}})",
+    "offlineTooltip": "離線 ({{count}})",
+    "showWsl1": "顯示 WSL 1 ({{count}})",
+    "hideWsl1": "隱藏 WSL 1 ({{count}})",
+    "showWsl2": "顯示 WSL 2 ({{count}})",
+    "hideWsl2": "隱藏 WSL 2 ({{count}})",
+    "v1": "v1",
+    "v2": "v2"
+  },
+  "emptyFilter": {
+    "noDistros": "未找到發行版",
+    "noMatch": "沒有發行版符合目前的篩選條件",
+    "clearFilters": "清除篩選"
+  },
+  "card": {
+    "suspend": "暫停",
+    "launch": "啟動",
+    "openTerminal": "開啟終端",
+    "openRdp": "開啟遠端桌面",
+    "quickActions": "快捷操作",
+    "deleteDistro": "刪除發行版",
+    "ipTooltip": "點擊複製 IP 位址"
+  },
+  "deleteDialog": {
+    "title": "刪除發行版",
+    "message": "確定要刪除 \"{{name}}\" 嗎？此操作無法復原，該發行版中的所有資料將永久遺失。",
+    "messageDefault": "確定要刪除 \"{{name}}\" 嗎？此操作無法復原，該發行版中的所有資料將永久遺失。\n\n警告：這是您的預設發行版。刪除後，WSL 命令將失敗，除非您將其他發行版設為預設。",
+    "confirm": "刪除"
+  }
+}

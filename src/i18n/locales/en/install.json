@@ -1,0 +1,156 @@
+{
+  "title": "Add Distribution",
+  "subtitle": "Choose how you want to install your Linux distribution",
+  "mode": {
+    "quickInstall": "Quick Install",
+    "quickInstallDesc": "Install from Microsoft Store",
+    "download": "Download",
+    "downloadDesc": "Direct download with custom name",
+    "community": "Community",
+    "communityDesc": "Browse LXC image catalog",
+    "container": "Container",
+    "containerDesc": "Create from container image"
+  },
+  "info": {
+    "quickInstall": "Official distributions from the Microsoft Store. Installs to the default Windows-managed location.",
+    "download": "This catalog can be customized in Settings > Distribution Sources. Custom URLs are saved for future use.",
+    "community": "Images from {{url}}. Configure in Settings > Distribution Sources.",
+    "container": "Selected Runtime configured in settings: {{runtime}}"
+  },
+  "containerRuntime": {
+    "builtin": "Built-in OCI (public registries only)",
+    "docker": "Docker (supports authenticated registries)",
+    "podman": "Podman (supports authenticated registries)",
+    "custom": "Custom: {{path}}"
+  },
+  "filter": {
+    "all": "All"
+  },
+  "loading": "Loading available distributions...",
+  "empty": "No distributions available",
+  "install": "Install",
+  "useUrl": "Use URL",
+  "useImage": "Use Image",
+  "placeholder": {
+    "url": "e.g., https://example.com/distro-rootfs.tar.gz",
+    "image": "e.g., alpine:latest, gitlab/gitlab-runner:latest"
+  },
+  "customUrl": {
+    "label": "Custom URL",
+    "description": "Enter a direct link to a rootfs tarball"
+  },
+  "customImage": {
+    "label": "Custom Image",
+    "description": "Enter any OCI image reference"
+  },
+  "alreadyInstalled": "\"{{name}}\" is already installed",
+  "progress": {
+    "installingStore": "Installing from Microsoft Store...",
+    "success": "Installed successfully!",
+    "downloading": "Downloading: {{percent}}% ({{downloaded}} / {{total}})",
+    "importing": "Importing into WSL...",
+    "pullingImage": "Pulling container image...",
+    "downloadFailed": "Download failed"
+  },
+  "trademarkDisclaimer": "Linux distribution logos are trademarks of their respective owners and are used here for identification purposes only.\nThis application is not affiliated with or endorsed by any distribution project.",
+  "installingAs": "Installing as \"{{name}}\"",
+  "noDownloadable": "No downloadable distributions configured",
+  "noContainerImages": "No container images configured",
+  "communityDisabled": "Community catalog is disabled",
+  "communityDisabledHint": "Enable it in Settings > Distribution Sources",
+  "useCustomUrl": "Use a custom URL instead",
+  "useCustomImage": "Use a custom image instead",
+  "catalogDisabled": "Community catalog is disabled. Enable it in Settings.",
+  "catalogLoadError": "Failed to load catalog",
+  "catalogNoMatch": "No distributions match \"{{query}}\"",
+  "catalogVersionCount_one": "{{count}} version available",
+  "catalogVersionCount_other": "{{count}} versions available",
+  "catalogCacheInfo": "Catalog cached {{date}} at {{time}}",
+  "errorNoDistro": "Please select a distribution",
+  "errorInstallFailed": "Failed to install distribution",
+  "errorCreateFailed": "Failed to create distribution",
+  "downloadStarting": "Starting download...",
+  "downloading": "Downloading {{name}} {{release}}...",
+  "customDistribution": "Custom Distribution",
+  "customUrlName": "Custom URL",
+  "customImageName": "Custom Image",
+  "distroSources": {
+    "title": "Distribution Sources",
+    "description": "Configure where to download distributions from",
+    "addUrl": "Add URL",
+    "removeUrl": "Remove",
+    "urlPlaceholder": "https://example.com/distro-rootfs.tar.gz",
+    "name": "Name",
+    "namePlaceholder": "e.g., Alpine Linux",
+    "url": "URL",
+    "noSources": "No custom sources configured",
+    "builtInSources": "Built-in sources are always available",
+    "tab": {
+      "quickInstall": "Quick Install",
+      "container": "Container",
+      "download": "Download"
+    },
+    "badge": {
+      "builtIn": "built-in"
+    },
+    "form": {
+      "nameRequired": "Name *",
+      "description": "Description",
+      "downloadUrl": "Download URL *",
+      "sizeOptional": "Size (optional)",
+      "containerImage": "Container Image *",
+      "distroId": "Distro ID *",
+      "distroIdHint": "Must match the ID from <code>wsl --list --online</code>",
+      "placeholder": {
+        "downloadName": "e.g., Ubuntu 24.04 LTS",
+        "downloadDescription": "e.g., Noble Numbat - Latest LTS",
+        "downloadUrl": "https://example.com/distro.tar.gz",
+        "downloadSize": "e.g., ~370 MB",
+        "containerName": "e.g., Rocky Linux 9",
+        "containerDescription": "e.g., Enterprise-ready Linux",
+        "containerImage": "e.g., docker.io/library/rockylinux:9",
+        "msStoreDistroId": "e.g., Ubuntu-24.04",
+        "msStoreDescription": "e.g., Noble Numbat"
+      }
+    },
+    "button": {
+      "update": "Update",
+      "add": "Add",
+      "cancel": "Cancel"
+    },
+    "dialog": {
+      "editDownloadSource": "Edit Download Source",
+      "addDownloadSource": "Add Download Source",
+      "editContainerImage": "Edit Container Image",
+      "addContainerImage": "Add Container Image",
+      "editQuickInstallMetadata": "Edit Quick Install Metadata",
+      "addQuickInstallMetadata": "Add Quick Install Metadata",
+      "resetDownloadSources": "Reset Download Sources",
+      "resetDownloadSourcesMessage": "This will reset all download sources to their default values. Your custom sources will be removed.",
+      "resetDownloads": "Reset Downloads",
+      "resetContainerImages": "Reset Container Images",
+      "resetContainerImagesMessage": "This will reset all container images to their default values. Your custom images will be removed.",
+      "resetContainers": "Reset Containers",
+      "resetQuickInstallMetadata": "Reset Quick Install Metadata",
+      "resetQuickInstallMetadataMessage": "This will reset all Quick Install metadata to their default values. Your custom metadata will be removed.",
+      "resetMetadata": "Reset Metadata"
+    },
+    "empty": {
+      "downloads": "No download sources configured.",
+      "containers": "No container images configured.",
+      "quickInstall": "No Quick Install metadata configured."
+    },
+    "info": {
+      "quickInstall": "Quick Install metadata provides display info (color, description) for distros returned by <code>wsl --list --online</code>. The distro list itself is provided by Microsoft."
+    },
+    "toggle": {
+      "disable": "Disable",
+      "enable": "Enable"
+    },
+    "action": {
+      "edit": "Edit",
+      "delete": "Delete",
+      "dismissError": "Dismiss error"
+    }
+  }
+}

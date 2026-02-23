@@ -1,0 +1,22 @@
+{
+  "wsl": "WSL",
+  "instances": "執行個體",
+  "active": "使用中",
+  "mem": "記憶體",
+  "primary": "主要",
+  "dev": "開發",
+  "disk": "磁碟",
+  "updateWsl": {
+    "updating": "正在等待系統管理員核准... 請查看 UAC 對話方塊",
+    "preRelease": "更新 WSL（預先發行）- 需要系統管理員權限",
+    "default": "更新 WSL - 需要系統管理員權限",
+    "uac": "UAC"
+  },
+  "diskMounts": {
+    "empty": "磁碟掛載",
+    "count": "磁碟掛載（已掛載 {{count}} 個）"
+  },
+  "preflight": {
+    "retry": "重新檢查"
+  }
+}

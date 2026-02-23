@@ -1,0 +1,17 @@
+{
+  "subtitle": "Centre de contrôle",
+  "button": {
+    "new": "Nouveau",
+    "import": "Importer",
+    "sync": "Synchroniser",
+    "shutdown": "Arrêter",
+    "systemTerminal": "Ouvrir le terminal système WSL",
+    "help": "Aide",
+    "settings": "Paramètres"
+  },
+  "shutdownAll": {
+    "title": "Arrêter toutes les distributions",
+    "message": "Cela arrêtera toutes les distributions WSL en cours d'exécution. Tout travail non enregistré sera perdu.",
+    "confirm": "Tout arrêter"
+  }
+}

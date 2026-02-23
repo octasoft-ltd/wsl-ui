@@ -1,0 +1,21 @@
+{
+  "boundary": {
+    "title": "حدث خطأ ما",
+    "message": "واجه التطبيق خطأً غير متوقع. يرجى المحاولة مرة أخرى.",
+    "tryAgain": "إعادة المحاولة"
+  },
+  "system": {
+    "title": "خطأ في النظام",
+    "timeoutTip": "نصيحة: إذا قمت مؤخراً بتثبيت توزيعة جديدة، أغلق أي نوافذ طرفية تم فتحها تلقائياً أثناء التثبيت.",
+    "forceShutdown": "إيقاف WSL بالقوة",
+    "forceShutdownTitle": "إيقاف WSL بالقوة",
+    "forceShutdownMessage": "سيؤدي هذا إلى إنهاء جميع عمليات WSL بالقوة باستخدام 'wsl --shutdown --force'. قد يتم فقدان أي عمل غير محفوظ في توزيعات Linux الخاصة بك. لا يمكن التراجع عن هذا الإجراء.",
+    "forceShutdownConfirm": "إيقاف بالقوة"
+  },
+  "wslUpdate": {
+    "title": "تحديث WSL",
+    "success": "تم التحديث بنجاح",
+    "cancelled": "تحديث WSL",
+    "failedTitle": "فشل تحديث WSL"
+  }
+}

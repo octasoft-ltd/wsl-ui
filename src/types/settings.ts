@@ -104,6 +104,8 @@ export type ReviewPromptState = 'pending' | 'reminded' | 'completed' | 'declined
 export interface AppSettings {
   ideCommand: string;
   terminalCommand: string;
+  /** Display language: "auto" for system detection, or a language code like "en", "zh-CN", etc. */
+  locale: string;
   /** What to do when the user clicks the window close button */
   closeAction: CloseAction;
   /** Whether anonymous usage telemetry is enabled */
@@ -143,6 +145,7 @@ export interface AppSettings {
 export const DEFAULT_SETTINGS: AppSettings = {
   ideCommand: "code",
   terminalCommand: "auto",
+  locale: "auto",
   closeAction: "ask",
   telemetryEnabled: false,
   telemetryPromptSeen: false,

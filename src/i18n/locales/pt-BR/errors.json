@@ -1,0 +1,21 @@
+{
+  "boundary": {
+    "title": "Algo deu errado",
+    "message": "O aplicativo encontrou um erro inesperado. Por favor, tente novamente.",
+    "tryAgain": "Tentar novamente"
+  },
+  "system": {
+    "title": "Erro do sistema",
+    "timeoutTip": "Dica: Se você instalou recentemente uma nova distribuição, feche as janelas de terminal que foram abertas automaticamente durante a instalação.",
+    "forceShutdown": "Forçar desligamento do WSL",
+    "forceShutdownTitle": "Forçar desligamento do WSL",
+    "forceShutdownMessage": "Isso encerrará forçadamente todos os processos WSL usando 'wsl --shutdown --force'. Qualquer trabalho não salvo em suas distribuições Linux pode ser perdido. Esta ação não pode ser desfeita.",
+    "forceShutdownConfirm": "Forçar desligamento"
+  },
+  "wslUpdate": {
+    "title": "Atualização do WSL",
+    "success": "Atualização concluída com sucesso",
+    "cancelled": "Atualização do WSL",
+    "failedTitle": "A atualização do WSL falhou"
+  }
+}

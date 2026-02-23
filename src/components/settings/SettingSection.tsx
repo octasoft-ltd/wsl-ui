@@ -5,6 +5,7 @@
  */
 
 import { useState, useMemo, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import type { PresetOption } from "./constants";
 
 interface SettingSectionProps {
@@ -41,6 +42,7 @@ export function SettingSection({
   onCustomValueSave,
   testId,
 }: SettingSectionProps) {
+  const { t } = useTranslation("settings");
   // Track if user explicitly selected custom mode (even if currentValue matches a preset)
   const [isCustomMode, setIsCustomMode] = useState(false);
 
@@ -102,11 +104,12 @@ export function SettingSection({
   };
 
   // Extract gradient color from iconGradient for section styling
-  const gradientColor = iconGradient.includes("violet") || iconGradient.includes("purple")
-    ? "violet"
-    : iconGradient.includes("emerald") || iconGradient.includes("teal")
-    ? "emerald"
-    : "amber";
+  function resolveGradientColor(): "violet" | "emerald" | "amber" {
+    if (iconGradient.includes("violet") || iconGradient.includes("purple")) return "violet";
+    if (iconGradient.includes("emerald") || iconGradient.includes("teal")) return "emerald";
+    return "amber";
+  }
+  const gradientColor = resolveGradientColor();
 
   const sectionStyles = {
     violet: "from-violet-900/20 via-theme-bg-secondary/50 to-theme-bg-secondary/50 border-violet-800/30",
@@ -178,7 +181,7 @@ export function SettingSection({
 
             {selectedPreset === "custom" && (
               <div className="mt-4 p-4 bg-theme-bg-secondary/50 rounded-lg border border-theme-border-secondary/50" data-testid={testId ? `${testId}-custom-section` : undefined}>
-                <label className="block text-sm font-medium text-theme-text-secondary mb-2">Custom Command</label>
+                <label className="block text-sm font-medium text-theme-text-secondary mb-2">{t('settingSection.customCommand')}</label>
                 <div className="flex gap-2">
                   <input
                     type="text"
@@ -194,7 +197,7 @@ export function SettingSection({
                     data-testid={testId ? `${testId}-custom-save` : undefined}
                     className="px-4 py-2 bg-theme-accent-primary hover:opacity-90 text-theme-bg-primary font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    Save
+                    {t('common:button.save')}
                   </button>
                 </div>
                 <div className="mt-3 text-xs text-theme-text-muted">{customHelpText}</div>
@@ -203,7 +206,7 @@ export function SettingSection({
 
             <div className="mt-4 p-3 bg-theme-bg-secondary/30 rounded-lg border border-theme-border-primary/50">
               <div className="flex items-center gap-2 text-sm">
-                <span className="text-theme-text-muted">Current setting:</span>
+                <span className="text-theme-text-muted">{t('settingSection.currentSetting')}</span>
                 <code className="px-2 py-0.5 bg-theme-bg-secondary rounded-sm text-theme-accent-primary font-mono">{currentValue}</code>
               </div>
             </div>

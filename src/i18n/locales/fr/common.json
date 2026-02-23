@@ -1,0 +1,67 @@
+{
+  "button": {
+    "cancel": "Annuler",
+    "close": "Fermer",
+    "save": "Enregistrer",
+    "delete": "Supprimer",
+    "confirm": "Confirmer",
+    "retry": "Réessayer",
+    "browse": "Parcourir",
+    "back": "Retour",
+    "dismiss": "Ignorer",
+    "learnMore": "En savoir plus",
+    "resetToDefault": "Réinitialiser par défaut",
+    "clear": "Effacer la recherche",
+    "edit": "Modifier",
+    "run": "Exécuter"
+  },
+  "label": {
+    "name": "Nom",
+    "status": "État",
+    "version": "Version",
+    "size": "Taille",
+    "location": "Emplacement",
+    "default": "Par défaut",
+    "yes": "Oui",
+    "no": "Non",
+    "on": "Activé",
+    "off": "Désactivé",
+    "loading": "Chargement...",
+    "none": "Aucun",
+    "ip": "IP",
+    "copied": "Copié !",
+    "disk": "Disque",
+    "memory": "Mémoire",
+    "cpu": "CPU",
+    "installed": "Installé",
+    "notInstalled": "Non installé"
+  },
+  "status": {
+    "online": "En ligne",
+    "offline": "Hors ligne",
+    "primary": "Principal",
+    "compacting": "Compactage",
+    "operational": "OPÉRATIONNEL",
+    "standby": "EN VEILLE"
+  },
+  "unit": {
+    "gb": "Go",
+    "tb": "To"
+  },
+  "validation": {
+    "invalidChars": "Le nom ne peut contenir que des lettres, des chiffres, des points, des tirets bas et des tirets",
+    "duplicateName": "Une distribution nommée \"{{name}}\" existe déjà",
+    "nameExists": "Une distribution portant ce nom existe déjà",
+    "required": "Ce champ est obligatoire"
+  },
+  "wslVersion": {
+    "wsl1": "WSL 1",
+    "wsl2": "WSL 2"
+  },
+  "errors": {
+    "unknown": "Une erreur inconnue est survenue"
+  },
+  "noOutput": "Aucune sortie",
+  "output": "Sortie",
+  "ranOn": "Exécuté sur : {{distro}}"
+}

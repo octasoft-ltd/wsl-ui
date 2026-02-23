@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, memo } from "react";
+import { useTranslation } from "react-i18next";
 import { lxcCatalogService } from "../services/lxcCatalogService";
 import { useSettingsStore } from "../store/settingsStore";
 import type { LxcDistribution, LxcDistributionGroup } from "../types/lxcCatalog";
@@ -14,6 +15,7 @@ interface LxcCatalogBrowserProps {
 }
 
 function LxcCatalogBrowserInner({ selectedDistro, onSelect, disabled }: LxcCatalogBrowserProps) {
+  const { t } = useTranslation("install");
   const { settings } = useSettingsStore();
   const [distributions, setDistributions] = useState<LxcDistribution[]>([]);
   const [groups, setGroups] = useState<LxcDistributionGroup[]>([]);
@@ -25,7 +27,7 @@ function LxcCatalogBrowserInner({ selectedDistro, onSelect, disabled }: LxcCatal
 
   const loadCatalog = useCallback(async (forceRefresh = false) => {
     if (!settings.distributionSources.lxcEnabled) {
-      setError("Community catalog is disabled. Enable it in Settings.");
+      setError(t('catalogDisabled'));
       setLoading(false);
       return;
     }
@@ -45,7 +47,7 @@ function LxcCatalogBrowserInner({ selectedDistro, onSelect, disabled }: LxcCatal
       setExpandedGroups(new Set());
     } catch (err) {
       // Tauri returns string errors, not Error instances
-      const errorMessage = typeof err === "string" ? err : err instanceof Error ? err.message : "Failed to load catalog";
+      const errorMessage = typeof err === "string" ? err : err instanceof Error ? err.message : t('catalogLoadError');
       setError(errorMessage);
     } finally {
       setLoading(false);
@@ -109,8 +111,8 @@ function LxcCatalogBrowserInner({ selectedDistro, onSelect, disabled }: LxcCatal
           <circle className="opacity-20" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" fill="none" />
           <path className="opacity-80" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
         </svg>
-        <span className="text-sm">Loading community distributions...</span>
-        <span className="text-xs text-theme-text-muted mt-1">This may take a moment on first load</span>
+        <span className="text-sm">{t('loading')}</span>
+        <span className="text-xs text-theme-text-muted mt-1"></span>
       </div>
     );
   }
@@ -126,7 +128,7 @@ function LxcCatalogBrowserInner({ selectedDistro, onSelect, disabled }: LxcCatal
           onClick={() => loadCatalog(true)}
           className="text-xs text-theme-accent-primary hover:underline"
         >
-          Try again
+          {t('common:button.retry')}
         </button>
       </div>
     );
@@ -141,7 +143,7 @@ function LxcCatalogBrowserInner({ selectedDistro, onSelect, disabled }: LxcCatal
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search distributions..."
+            placeholder={t('dialogs:diskMount.searchPlaceholder')}
             disabled={disabled}
             className="w-full pl-10 pr-4 py-2.5 bg-theme-bg-tertiary border border-theme-border-secondary rounded-xl text-theme-text-primary placeholder-theme-text-muted focus:outline-none focus:border-theme-accent-primary text-sm disabled:opacity-50"
           />
@@ -152,7 +154,7 @@ function LxcCatalogBrowserInner({ selectedDistro, onSelect, disabled }: LxcCatal
             <button
               onClick={() => setSearchQuery("")}
               className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-theme-text-muted hover:text-theme-text-primary transition-colors"
-              title="Clear search"
+              title={t('common:button.clear')}
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -164,7 +166,7 @@ function LxcCatalogBrowserInner({ selectedDistro, onSelect, disabled }: LxcCatal
           onClick={() => loadCatalog(true)}
           disabled={disabled || loading}
           className="p-2.5 bg-theme-bg-tertiary hover:bg-theme-bg-hover border border-theme-border-secondary text-theme-text-secondary rounded-xl transition-colors disabled:opacity-50"
-          title="Refresh catalog"
+          title={t('dialogs:diskMount.refreshCatalog')}
         >
           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -175,7 +177,7 @@ function LxcCatalogBrowserInner({ selectedDistro, onSelect, disabled }: LxcCatal
       {filteredGroups.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16 text-theme-text-muted">
           <LinuxLogo size={48} className="mb-3 opacity-50" />
-          <span className="text-sm">No distributions match "{searchQuery}"</span>
+          <span className="text-sm">{t('catalogNoMatch', { query: searchQuery })}</span>
         </div>
       ) : (
         <>
@@ -233,7 +235,7 @@ function LxcCatalogBrowserInner({ selectedDistro, onSelect, disabled }: LxcCatal
                 <div className="flex-1 min-w-0">
                   <div className="font-medium text-theme-text-primary">{group.displayName}</div>
                   <div className="text-xs text-theme-text-muted">
-                    {group.releases.length} version{group.releases.length !== 1 ? "s" : ""} available
+                    {t('catalogVersionCount', { count: group.releases.length })}
                   </div>
                 </div>
                 {isExpanded ? (
@@ -301,7 +303,7 @@ function LxcCatalogBrowserInner({ selectedDistro, onSelect, disabled }: LxcCatal
       {/* Cache info */}
       {cacheInfo.lastUpdated && (
         <div className="mt-4 text-xs text-theme-text-muted text-center">
-          Catalog cached {new Date(cacheInfo.lastUpdated).toLocaleDateString()} at {new Date(cacheInfo.lastUpdated).toLocaleTimeString()}
+          {t('catalogCacheInfo', { date: new Date(cacheInfo.lastUpdated).toLocaleDateString(), time: new Date(cacheInfo.lastUpdated).toLocaleTimeString() })}
         </div>
       )}
 

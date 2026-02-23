@@ -4,34 +4,20 @@
  * Allows users to configure which container runtime to use for pulling OCI images.
  */
 
+import { useTranslation } from "react-i18next";
 import { useSettingsStore } from "../../store/settingsStore";
 import { DockerLogo } from "../icons/DistroLogos";
 import type { ContainerRuntime } from "../../types/settings";
 
-const RUNTIME_OPTIONS: { value: string; label: string; description: string }[] = [
-  {
-    value: "builtin",
-    label: "Built-in OCI",
-    description: "Native implementation, no external dependencies. Works with public registries.",
-  },
-  {
-    value: "docker",
-    label: "Docker",
-    description: "Use Docker CLI. Supports private registries with existing Docker authentication.",
-  },
-  {
-    value: "podman",
-    label: "Podman",
-    description: "Use Podman CLI. Supports private registries with existing Podman authentication.",
-  },
-  {
-    value: "custom",
-    label: "Custom",
-    description: "Specify a custom container runtime command.",
-  },
+const RUNTIME_OPTION_KEYS = [
+  { value: "builtin", labelKey: "containerRuntime.builtin", descKey: "containerRuntime.builtinDesc" },
+  { value: "docker", labelKey: "containerRuntime.docker", descKey: "containerRuntime.dockerDesc" },
+  { value: "podman", labelKey: "containerRuntime.podman", descKey: "containerRuntime.podmanDesc" },
+  { value: "custom", labelKey: "containerRuntime.custom", descKey: "containerRuntime.customDesc" },
 ];
 
 export function ContainerRuntimeSettings() {
+  const { t } = useTranslation("settings");
   const { settings, updateSetting } = useSettingsStore();
 
   const currentRuntime = settings.containerRuntime;
@@ -61,22 +47,21 @@ export function ContainerRuntimeSettings() {
               <DockerLogo size={24} />
             </div>
             <div>
-              <h2 className="text-lg font-medium text-theme-text-primary">Container Runtime</h2>
-              <p className="text-sm text-theme-text-muted">Configure how container images are pulled</p>
+              <h2 className="text-lg font-medium text-theme-text-primary">{t('containerRuntime.title')}</h2>
+              <p className="text-sm text-theme-text-muted">{t('containerRuntime.description')}</p>
             </div>
           </div>
 
           {/* Info box */}
           <div className="mb-6 p-4 bg-theme-bg-tertiary/50 border border-theme-border-secondary/50 rounded-lg">
             <p className="text-xs text-theme-text-muted">
-              Choose how to pull container images. The built-in OCI implementation works for public registries.
-              For private registries that require authentication, use Docker or Podman with your existing credentials.
+              {t('containerRuntime.infoBox')}
             </p>
           </div>
 
           {/* Runtime Options */}
           <div className="space-y-3">
-            {RUNTIME_OPTIONS.map((option) => (
+            {RUNTIME_OPTION_KEYS.map((option) => (
               <label
                 key={option.value}
                 className={`flex items-start gap-3 p-4 rounded-lg border cursor-pointer transition-all ${
@@ -94,8 +79,8 @@ export function ContainerRuntimeSettings() {
                   className="mt-1 accent-orange-500"
                 />
                 <div className="flex-1">
-                  <div className="font-medium text-theme-text-primary">{option.label}</div>
-                  <div className="text-xs text-theme-text-muted mt-0.5">{option.description}</div>
+                  <div className="font-medium text-theme-text-primary">{t(option.labelKey)}</div>
+                  <div className="text-xs text-theme-text-muted mt-0.5">{t(option.descKey)}</div>
                 </div>
               </label>
             ))}
@@ -105,16 +90,16 @@ export function ContainerRuntimeSettings() {
           {selectedValue === "custom" && (
             <div className="mt-4 pl-7">
               <label className="block text-sm font-medium text-theme-text-primary mb-1">
-                Custom Command
+                {t('containerRuntime.customCommand')}
               </label>
               <p className="text-xs text-theme-text-muted mb-2">
-                Command to export container image to stdout (receives image reference as argument)
+                {t('containerRuntime.customCommandDesc')}
               </p>
               <input
                 type="text"
                 value={customCommand}
                 onChange={(e) => handleCustomCommandChange(e.target.value)}
-                placeholder="docker"
+                placeholder={t('containerRuntime.customPlaceholder')}
                 className="w-full px-3 py-2 bg-theme-bg-secondary border border-theme-border-secondary rounded-lg text-theme-text-primary placeholder:text-theme-text-muted/50 focus:outline-hidden focus:border-orange-500 font-mono text-sm"
               />
             </div>

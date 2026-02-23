@@ -1,0 +1,17 @@
+{
+  "subtitle": "Centro de Control",
+  "button": {
+    "new": "Nuevo",
+    "import": "Importar",
+    "sync": "Sincronizar",
+    "shutdown": "Apagar",
+    "systemTerminal": "Abrir terminal del sistema WSL",
+    "help": "Ayuda",
+    "settings": "Configuración"
+  },
+  "shutdownAll": {
+    "title": "Apagar todas las distribuciones",
+    "message": "Esto apagará todas las distribuciones WSL en ejecución. Se perderá cualquier trabajo no guardado.",
+    "confirm": "Apagar todo"
+  }
+}

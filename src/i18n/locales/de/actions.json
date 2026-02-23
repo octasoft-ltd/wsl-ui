@@ -1,0 +1,96 @@
+{
+  "quickActions": {
+    "title": "Schnellaktionen",
+    "info": "Distributionsinformationen",
+    "explorer": "Datei-Explorer öffnen",
+    "ide": "In IDE öffnen",
+    "restart": "Neu starten",
+    "export": "In Datei exportieren...",
+    "clone": "Klonen...",
+    "setDefault": "Als Standard festlegen",
+    "alreadyDefault": "Standarddistribution"
+  },
+  "manage": {
+    "title": "Verwalten",
+    "move": "Distribution verschieben...",
+    "resize": "Festplattengröße ändern...",
+    "compact": "Festplatte komprimieren...",
+    "user": "Standardbenutzer festlegen...",
+    "rename": "Umbenennen...",
+    "sparse": "Sparse-Modus",
+    "version": "WSL-Version festlegen"
+  },
+  "customActions": {
+    "title": "Benutzerdefinierte Aktionen",
+    "requiresStop": "Erfordert das Anhalten der Distribution",
+    "requiresShutdown": "Erfordert WSL-Herunterfahren"
+  },
+  "sparseConfirm": {
+    "title": "Sparse-Modus aktivieren?",
+    "message": "Warnung: Microsoft hat darauf hingewiesen, dass die Sparse-VHD-Unterstützung möglicherweise Datenbeschädigung verursachen kann. Obwohl sie helfen kann, Festplattenplatz automatisch zurückzugewinnen, besteht ein Risiko von Datenverlust. Stellen Sie sicher, dass Sie Sicherungen haben, bevor Sie diese Funktion aktivieren.",
+    "confirm": "Trotzdem aktivieren"
+  },
+  "outputDialog": {
+    "titleSuffix": "- Ausgabe",
+    "noOutput": "Keine Ausgabe."
+  },
+  "editor": {
+    "iconLabel": "Symbol",
+    "availableVars": "Verfügbare Variablen:"
+  },
+  "exportTitle": "Benutzerdefinierte Aktionen exportieren",
+  "importTitle": "Benutzerdefinierte Aktionen importieren",
+  "badge": {
+    "startup": "Autostart"
+  },
+  "scope": {
+    "all": "Alle Distributionen",
+    "pattern": "Muster: {{pattern}}",
+    "count_one": "{{count}} Distribution",
+    "count_other": "{{count}} Distributionen"
+  },
+  "sparseChanged": "Sparse-Modus geändert",
+  "sparseChangedMessage": "Sparse-Modus {{state}} für {{name}}",
+  "sparseToggleFailed": "Sparse-Modus konnte nicht umgeschaltet werden",
+  "sparseToggle": "Sparse-Modus umschalten",
+  "actionFailed": "Aktion fehlgeschlagen",
+  "actionFailedMessage": "Aktion konnte nicht ausgeführt werden",
+  "distroIdUnavailable": "Distributions-ID nicht verfügbar",
+  "requiresSudo": "Erfordert Sudo-Passwort",
+  "confirmRunTitle": "„{{action}}“ ausführen?",
+  "confirmRunMessage": "Sind Sie sicher, dass Sie diese Aktion auf {{name}} ausführen möchten?",
+  "customActionsSettings": {
+    "title": "Benutzerdefinierte Aktionen",
+    "description": "Shell-Befehle definieren, die im Schnellaktionen-Menü der Distribution erscheinen",
+    "addAction": "Aktion hinzufügen",
+    "editAction": "Aktion bearbeiten",
+    "noActions": "Keine benutzerdefinierten Aktionen konfiguriert",
+    "noActionsHint": "Fügen Sie Ihre erste benutzerdefinierte Aktion hinzu, um zu beginnen",
+    "name": "Name",
+    "namePlaceholder": "z.B. System aktualisieren",
+    "command": "Befehl",
+    "commandPlaceholder": "z.B. sudo apt update && sudo apt upgrade -y",
+    "sudo": "Mit sudo ausführen",
+    "sudoDesc": "Den Befehl mit erhöhten Berechtigungen ausführen",
+    "runOnStartup": "Beim Start ausführen",
+    "runOnStartupDesc": "Ausführen, wenn eine passende Distribution startet",
+    "confirmBeforeRun": "Vor dem Ausführen bestätigen",
+    "runInTerminal": "Im Terminal ausführen",
+    "runInTerminalDesc": "Befehl in einem sichtbaren Terminalfenster ausführen",
+    "showOutput": "Ausgabe anzeigen",
+    "showOutputDesc": "Befehlsausgabe in einem Dialog anzeigen",
+    "target": "Ziel-Distributionen",
+    "targetAll": "Alle Distributionen",
+    "targetSpecific": "Bestimmte Distributionen",
+    "targetRegex": "Regex-Muster",
+    "targetPlaceholder": "z.B. Ubuntu.*",
+    "save": "Speichern",
+    "delete": "Löschen",
+    "deleteConfirm": "Sind Sie sicher, dass Sie diese Aktion löschen möchten?",
+    "importExport": "Importieren/Exportieren",
+    "importActions": "Importieren",
+    "exportActions": "Exportieren",
+    "importSuccess": "Aktionen erfolgreich importiert",
+    "exportSuccess": "Aktionen erfolgreich exportiert"
+  }
+}

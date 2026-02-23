@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useMountStore } from "../store/mountStore";
 import { TrashIcon } from "./icons";
 
@@ -10,6 +11,7 @@ interface MountedDisksPanelProps {
 }
 
 export function MountedDisksPanel({ isOpen, onClose, onMountNew, anchorRef }: MountedDisksPanelProps) {
+  const { t } = useTranslation("dialogs");
   const panelRef = useRef<HTMLDivElement>(null);
   const [unmountingPath, setUnmountingPath] = useState<string | null>(null);
   const { mountedDisks, trackedMounts, isLoading, isUnmounting, loadMountedDisks, unmountDisk, unmountAll, error, clearError } = useMountStore();
@@ -102,7 +104,7 @@ export function MountedDisksPanel({ isOpen, onClose, onMountNew, anchorRef }: Mo
       <div className="px-3 py-2.5 border-b border-theme-border-primary">
         <div className="flex items-center justify-between">
           <span className="text-xs font-medium text-theme-text-muted uppercase tracking-wide font-mono" data-testid="mounted-disks-title">
-            WSL Disk Mounts
+            {t('mountedDisks.title')}
           </span>
           {mountedDisks.length > 0 && (
             <button
@@ -111,7 +113,7 @@ export function MountedDisksPanel({ isOpen, onClose, onMountNew, anchorRef }: Mo
               data-testid="unmount-all-button"
               className="text-xs px-2 py-0.5 text-theme-status-error hover:bg-[rgba(var(--status-error-rgb),0.15)] rounded transition-colors disabled:opacity-50"
             >
-              {isUnmounting ? "..." : "Unmount All"}
+              {isUnmounting ? "..." : t('mountedDisks.unmountAll')}
             </button>
           )}
         </div>
@@ -142,9 +144,9 @@ export function MountedDisksPanel({ isOpen, onClose, onMountNew, anchorRef }: Mo
         ) : mountedDisks.length === 0 ? (
           <div className="px-3 py-6 text-center" data-testid="mounted-disks-empty">
             <div className="text-theme-status-stopped text-2xl mb-1">○</div>
-            <p className="text-xs text-theme-text-muted">No disks mounted</p>
+            <p className="text-xs text-theme-text-muted">{t('mountedDisks.noDisks')}</p>
             <p className="text-xs text-theme-status-stopped mt-1">
-              Use "Mount Disk" to attach VHD or physical disks
+              {t('mountedDisks.noDisksHint')}
             </p>
           </div>
         ) : (
@@ -171,7 +173,7 @@ export function MountedDisksPanel({ isOpen, onClose, onMountNew, anchorRef }: Mo
                         disabled={isUnmounting}
                         data-testid={`unmount-disk-${index}`}
                         className="p-1 text-theme-text-muted hover:text-theme-status-error hover:bg-[rgba(var(--status-error-rgb),0.1)] rounded transition-colors disabled:opacity-50"
-                        title="Unmount this disk"
+                        title={t('mountedDisks.unmountDisk')}
                       >
                         {isThisUnmounting ? (
                           <div className="w-3 h-3 border border-theme-text-muted border-t-transparent rounded-full animate-spin" />
@@ -204,7 +206,7 @@ export function MountedDisksPanel({ isOpen, onClose, onMountNew, anchorRef }: Mo
           className="w-full px-3 py-1.5 text-xs font-medium text-theme-accent-primary hover:bg-[rgba(var(--accent-primary-rgb),0.1)] rounded transition-colors flex items-center justify-center gap-1.5"
         >
           <span>+</span>
-          <span>Mount Disk</span>
+          <span>{t('mountedDisks.mountDisk')}</span>
         </button>
       </div>
     </div>
