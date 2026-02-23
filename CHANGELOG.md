@@ -5,6 +5,27 @@ All notable changes to WSL UI will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.17.0](https://github.com/octasoft-ltd/wsl-ui/compare/v0.16.2...v0.17.0) (2026-02-23)
+
+
+### Features
+
+* Add "request a language" link in language settings ([7f972dc](https://github.com/octasoft-ltd/wsl-ui/commit/7f972dcf1a59dccb9d152426cf0381e321deefe4))
+* Add i18n support with 11 languages ([277f84b](https://github.com/octasoft-ltd/wsl-ui/commit/277f84b4fd2865eca101d181c3c7a48cd17eaa20))
+* Add i18n support with 11 languages + troubleshooting links ([573130b](https://github.com/octasoft-ltd/wsl-ui/commit/573130be567379985eecd3f131868abc66b7c18b))
+* Add Troubleshooting links. ([a634734](https://github.com/octasoft-ltd/wsl-ui/commit/a6347343101121e8690a7d843c34a9854a84b2eb))
+* Battle tested WSL GUI setup scripts. ([3f4e686](https://github.com/octasoft-ltd/wsl-ui/commit/3f4e686bb0728087effe228042ba5595d32ae3eb))
+* Switch to GPL v3 license ([76c7ec6](https://github.com/octasoft-ltd/wsl-ui/commit/76c7ec67edb2a0a7f6ad4181b74753695a73391f))
+
+
+### Bug Fixes
+
+* Complete i18n coverage - translate all remaining hardcoded strings ([6e87410](https://github.com/octasoft-ltd/wsl-ui/commit/6e874109b8f659a414b643583c9127bd86bbf3db))
+* Fix 5 e2e test failures across 3 spec files ([c2f93a8](https://github.com/octasoft-ltd/wsl-ui/commit/c2f93a8d8a0b7016cc2755a2964c30902fc41ea3))
+* Fix language auto-detection for zh-TW and regional variants ([c32e68d](https://github.com/octasoft-ltd/wsl-ui/commit/c32e68df868417eb0ed51a30ec5b562347356eb8))
+* Native-speaker quality review of all translations ([fd5fb16](https://github.com/octasoft-ltd/wsl-ui/commit/fd5fb16cd42d4c98fc51d5d270fec471c004184b))
+* Translate theme descriptions in all locales ([3de1d63](https://github.com/octasoft-ltd/wsl-ui/commit/3de1d63743c244611c3303c0ed7dbb0990d7567c))
+
 ## [0.16.2](https://github.com/octasoft-ltd/wsl-ui/compare/v0.16.1...v0.16.2) (2026-02-09)
 
 
