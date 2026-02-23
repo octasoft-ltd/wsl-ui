@@ -82,7 +82,9 @@
     "title": "Language",
     "description": "Choose the display language for the application",
     "auto": "Auto-detect",
-    "autoDesc": "Use your system language setting"
+    "autoDesc": "Use your system language setting",
+    "requestLanguage": "Don't see your language?",
+    "requestLanguageLink": "Request it on GitHub"
   },
   "troubleshooting": {
     "title": "Troubleshooting",

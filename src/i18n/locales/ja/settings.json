@@ -82,7 +82,9 @@
     "title": "言語",
     "description": "アプリケーションの表示言語を選択",
     "auto": "自動検出",
-    "autoDesc": "システムの言語設定を使用"
+    "autoDesc": "システムの言語設定を使用",
+    "requestLanguage": "お探しの言語がありませんか？",
+    "requestLanguageLink": "GitHubでリクエスト"
   },
   "troubleshooting": {
     "title": "トラブルシューティング",

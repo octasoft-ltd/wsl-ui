@@ -82,7 +82,9 @@
     "title": "भाषा",
     "description": "एप्लिकेशन की प्रदर्शन भाषा चुनें",
     "auto": "स्वतः पहचानें",
-    "autoDesc": "अपनी सिस्टम भाषा सेटिंग का उपयोग करें"
+    "autoDesc": "अपनी सिस्टम भाषा सेटिंग का उपयोग करें",
+    "requestLanguage": "अपनी भाषा नहीं दिख रही?",
+    "requestLanguageLink": "GitHub पर अनुरोध करें"
   },
   "troubleshooting": {
     "title": "समस्या निवारण",

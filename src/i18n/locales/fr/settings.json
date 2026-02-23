@@ -82,7 +82,9 @@
     "title": "Langue",
     "description": "Choisir la langue d'affichage de l'application",
     "auto": "Détection automatique",
-    "autoDesc": "Utiliser le paramètre de langue de votre système"
+    "autoDesc": "Utiliser le paramètre de langue de votre système",
+    "requestLanguage": "Vous ne trouvez pas votre langue ?",
+    "requestLanguageLink": "Demandez-la sur GitHub"
   },
   "troubleshooting": {
     "title": "Dépannage",

@@ -82,7 +82,9 @@
     "title": "Idioma",
     "description": "Elija el idioma de visualización de la aplicación",
     "auto": "Autodetección",
-    "autoDesc": "Usar la configuración de idioma del sistema"
+    "autoDesc": "Usar la configuración de idioma del sistema",
+    "requestLanguage": "¿No ves tu idioma?",
+    "requestLanguageLink": "Solicítalo en GitHub"
   },
   "troubleshooting": {
     "title": "Solución de problemas",

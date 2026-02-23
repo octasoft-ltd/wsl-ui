@@ -82,7 +82,9 @@
     "title": "语言",
     "description": "选择应用程序的显示语言",
     "auto": "自动检测",
-    "autoDesc": "使用系统语言设置"
+    "autoDesc": "使用系统语言设置",
+    "requestLanguage": "没有找到您的语言？",
+    "requestLanguageLink": "在 GitHub 上请求"
   },
   "troubleshooting": {
     "title": "故障排除",

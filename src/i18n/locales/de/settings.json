@@ -82,7 +82,9 @@
     "title": "Sprache",
     "description": "Wählen Sie die Anzeigesprache für die Anwendung",
     "auto": "Automatische Erkennung",
-    "autoDesc": "Ihre Systemspracheinstellung verwenden"
+    "autoDesc": "Ihre Systemspracheinstellung verwenden",
+    "requestLanguage": "Ihre Sprache nicht dabei?",
+    "requestLanguageLink": "Auf GitHub anfragen"
   },
   "troubleshooting": {
     "title": "Fehlerbehebung",

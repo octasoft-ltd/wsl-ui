@@ -82,7 +82,9 @@
     "title": "اللغة",
     "description": "اختر لغة العرض للتطبيق",
     "auto": "اكتشاف تلقائي",
-    "autoDesc": "استخدام إعداد لغة النظام"
+    "autoDesc": "استخدام إعداد لغة النظام",
+    "requestLanguage": "لا ترى لغتك؟",
+    "requestLanguageLink": "اطلبها على GitHub"
   },
   "troubleshooting": {
     "title": "استكشاف الأخطاء وإصلاحها",
