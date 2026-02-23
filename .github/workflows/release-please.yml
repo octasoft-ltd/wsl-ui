@@ -323,7 +323,7 @@ jobs:
           The installer is published by Octasoft Ltd from their official GitHub repository:
           https://github.com/octasoft-ltd/wsl-ui
 
-          License: Business Source License 1.1
+          License: GNU General Public License v3.0
           https://github.com/octasoft-ltd/wsl-ui/blob/main/LICENSE
           "@ | Out-File -FilePath "choco/tools/VERIFICATION.txt" -Encoding utf8
 
