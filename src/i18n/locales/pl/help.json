@@ -1,0 +1,134 @@
+{
+  "title": "Pomoc i dokumentacja",
+  "subtitle": "Dowiedz się, jak korzystać z WSL UI",
+  "gettingStarted": {
+    "title": "Rozpoczęcie pracy",
+    "whatIsWslUi": "Czym jest WSL UI?",
+    "whatIsWslUiText": "WSL UI to aplikacja desktopowa do zarządzania dystrybucjami Windows Subsystem for Linux (WSL). Zapewnia interfejs graficzny do typowych operacji WSL, takich jak uruchamianie, zatrzymywanie, tworzenie i konfigurowanie dystrybucji Linuksa.",
+    "mainDashboard": "Panel główny",
+    "mainDashboardText": "Widok główny pokazuje wszystkie zainstalowane dystrybucje WSL jako karty. Każda karta wyświetla nazwę dystrybucji, status (online/offline), użycie dysku i przyciski szybkich akcji.",
+    "quickActions": "Szybkie akcje",
+    "quickActionsText": "Kliknij przycisk menu (trzy kropki) na karcie dowolnej dystrybucji, aby uzyskać dostęp do szybkich akcji, takich jak otwieranie terminala, eksploratora plików, IDE lub zarządzanie dystrybucją."
+  },
+  "distroManagement": {
+    "title": "Zarządzanie dystrybucjami",
+    "startingStoppingTitle": "Uruchamianie i zatrzymywanie",
+    "start": "Uruchom dystrybucję",
+    "stop": "Zatrzymaj uruchomioną dystrybucję",
+    "setAsDefault": "Ustaw jako domyślną",
+    "setAsDefaultText": "Ustaw dystrybucję jako domyślną, aby używać jej przy uruchamianiu poleceń WSL bez podawania nazwy dystrybucji.",
+    "resourceMonitoring": "Monitorowanie zasobów",
+    "resourceMonitoringText": "Uruchomione dystrybucje pokazują użycie CPU i pamięci w czasie rzeczywistym. Rozmiar dysku jest wyświetlany dla wszystkich dystrybucji."
+  },
+  "advancedOps": {
+    "title": "Operacje zaawansowane",
+    "rename": "Zmień nazwę",
+    "renameText": "Zmień nazwę dystrybucji. Możesz również zaktualizować profil Windows Terminal i skrót w menu Start. Wymaga zatrzymania dystrybucji.",
+    "move": "Przenieś",
+    "moveText": "Przenieś dystrybucję na inny dysk lub do innego folderu. Przydatne do zarządzania przestrzenią dyskową. Wymaga pełnego zatrzymania WSL.",
+    "resizeDisk": "Zmień rozmiar dysku",
+    "resizeDiskText": "Zwiększ rozmiar dysku wirtualnego dla dystrybucji potrzebujących więcej miejsca. Obsługiwane jest tylko powiększanie (nie zmniejszanie). Wymaga zatrzymania WSL.",
+    "setWslVersion": "Ustaw wersję WSL",
+    "setWslVersionText": "Konwertuj między WSL 1 a WSL 2. WSL 2 oferuje lepszą wydajność dzięki pełnemu jądru Linuksa. Konwersja może zająć kilka minut.",
+    "sparseMode": "Tryb rzadki",
+    "sparseModeText": "Włącz automatyczne odzyskiwanie miejsca na dysku. Dysk wirtualny będzie się zmniejszał w miarę usuwania plików w dystrybucji.",
+    "compactDisk": "Kompaktuj dysk",
+    "compactDiskText": "Optymalizacja jednym kliknięciem odzyskująca nieużywaną przestrzeń z dysku wirtualnego dystrybucji. Automatycznie uruchamia fstrim, zamyka WSL i kompaktuje plik VHDX. Wymaga uprawnień administratora i trwa 1-2 minuty."
+  },
+  "creatingDistros": {
+    "title": "Tworzenie dystrybucji",
+    "quickInstall": "Szybka instalacja (Microsoft Store)",
+    "quickInstallText": "Instalacja jednym kliknięciem oficjalnych dystrybucji, takich jak Ubuntu, Debian i openSUSE.",
+    "containerImages": "Obrazy kontenerów",
+    "containerImagesText": "Twórz dystrybucje z obrazów kontenerów Docker lub Podman. Obsługuje Docker Hub i inne rejestry.",
+    "directDownload": "Pobieranie bezpośrednie",
+    "directDownloadText": "Pobieraj archiwa rootfs z konfigurowalnych adresów URL. Obejmuje Alpine, NixOS, Void Linux i wiele innych.",
+    "communityCatalog": "Katalog społecznościowy (LXC)",
+    "communityCatalogText": "Przeglądaj setki dystrybucji z serwera obrazów Linux Containers."
+  },
+  "backupRestore": {
+    "title": "Kopia zapasowa i przywracanie",
+    "export": "Eksportuj",
+    "exportText": "Zapisz dystrybucję do pliku archiwum .tar w celu tworzenia kopii zapasowej lub migracji. Możesz ją później przywrócić lub na innym komputerze.",
+    "import": "Importuj",
+    "importText": "Przywróć dystrybucję z archiwum .tar. Wybierz nazwę i lokalizację instalacji dla importowanej dystrybucji.",
+    "clone": "Klonuj",
+    "cloneText": "Utwórz kopię istniejącej dystrybucji z nową nazwą. Przydatne do testowania lub tworzenia wariantów."
+  },
+  "customActions": {
+    "title": "Akcje niestandardowe",
+    "whatAre": "Czym są akcje niestandardowe?",
+    "whatAreText": "Akcje niestandardowe to zdefiniowane przez użytkownika polecenia powłoki, które pojawiają się w menu szybkich akcji. Twórz akcje dla typowych zadań, takich jak aktualizacja systemu, kopie zapasowe czy konfiguracja środowiska deweloperskiego.",
+    "variables": "Zmienne",
+    "variablesText": "Używaj zmiennych w poleceniach, które są zastępowane w czasie wykonania:",
+    "varDistroName": "Nazwa dystrybucji",
+    "varHome": "Ścieżka katalogu domowego",
+    "varUser": "Użytkownik domyślny",
+    "varWindowsHome": "Katalog użytkownika Windows",
+    "targeting": "Kierowanie do dystrybucji",
+    "targetingText": "Akcje mogą być kierowane do wszystkich dystrybucji, konkretnych dystrybucji po nazwie lub dystrybucji pasujących do wzorca regex."
+  },
+  "theming": {
+    "title": "Motywy i wygląd",
+    "builtinThemes": "Wbudowane motywy",
+    "builtinThemesText": "Wybierz spośród 17 profesjonalnie zaprojektowanych motywów, w tym ciemnych, jasnych i pośrednich. Popularne motywy to Obsidian, Dracula, Nord i Solarized.",
+    "accessibilityThemes": "Motywy dostępności",
+    "accessibilityThemesText": "Dwa motywy o wysokim kontraście są dostępne dla użytkowników ze słabym wzrokiem: Wysoki kontrast (ciemny) i Wysoki kontrast (jasny).",
+    "customTheme": "Motyw niestandardowy",
+    "customThemeText": "Stwórz własny motyw z pełną kontrolą nad 29 zmiennymi kolorów, w tym tłami, tekstem, obramowaniami, akcentami i innymi."
+  },
+  "keyboardShortcuts": {
+    "title": "Skróty klawiszowe",
+    "tab": "Tab",
+    "tabAction": "Następny element",
+    "shiftTab": "Shift+Tab",
+    "shiftTabAction": "Poprzedni element",
+    "enter": "Enter",
+    "enterAction": "Aktywuj / Zatwierdź",
+    "escape": "Escape",
+    "escapeAction": "Zamknij okno dialogowe lub menu",
+    "space": "Spacja",
+    "spaceAction": "Przełącz pole wyboru",
+    "accessibility": "Dostępność",
+    "accessibilityText": "WSL UI obsługuje czytniki ekranu, nawigację klawiaturową i respektuje preferencje systemowe dotyczące ograniczonego ruchu."
+  },
+  "settingsOverview": {
+    "title": "Przegląd ustawień",
+    "terminal": "Terminal: Skonfiguruj Windows Terminal, niestandardowe aplikacje terminala lub wiersz polecenia",
+    "ide": "IDE: Skonfiguruj integrację z VS Code, Cursor lub niestandardowym IDE",
+    "wslGlobal": "WSL Globalne: Konfiguruj pamięć, CPU, wymianę, tryb sieci i WSLg",
+    "perDistro": "Dla każdej dystrybucji: opcje automatycznego montowania, ustawienia sieci, systemd i polecenia startowe",
+    "polling": "Odpytywanie: Dostosuj interwały automatycznego odświeżania statusu i zasobów",
+    "timeouts": "Limity czasu: Konfiguruj limity czasu operacji dla wolnych systemów",
+    "executables": "Ścieżki do plików wykonywalnych: Nadpisz domyślne ścieżki dla WSL, PowerShell i innych narzędzi"
+  },
+  "integrations": {
+    "title": "Integracje",
+    "terminal": "Integracja z terminalem",
+    "terminalText": "Otwieraj dystrybucje w Windows Terminal, Wierszu polecenia lub dowolnej niestandardowej aplikacji terminala. Skonfiguruj preferowany terminal w Ustawieniach.",
+    "ide": "Integracja z IDE",
+    "ideText": "Otwieraj dystrybucje bezpośrednio w VS Code lub innych IDE. Folder główny dystrybucji otwiera się w edytorze.",
+    "fileExplorer": "Eksplorator plików",
+    "fileExplorerText": "Przeglądaj pliki dystrybucji w Eksploratorze Windows za pomocą ścieżki sieciowej \\\\wsl$.",
+    "systemTray": "Zasobnik systemowy",
+    "systemTrayText": "Minimalizuj do zasobnika systemowego w celu szybkiego dostępu. Skonfiguruj zachowanie zamykania w Ustawieniach."
+  },
+  "troubleshooting": {
+    "title": "Rozwiązywanie problemów",
+    "wslNotDetected": "WSL nie wykryty",
+    "wslNotDetectedText": "Upewnij się, że WSL jest zainstalowany i włączony. Uruchom wsl --status w PowerShell, aby sprawdzić. Może być konieczne włączenie funkcji Windows dla WSL.",
+    "operationsTimeout": "Przekroczenia limitu czasu operacji",
+    "operationsTimeoutText": "Jeśli operacje często przekraczają limit czasu, zwiększ wartości limitów w Ustawieniach > Limity czasu. Aplikacja stosuje wykładnicze wycofywanie, aby zmniejszyć obciążenie podczas problemów.",
+    "distroWontStart": "Dystrybucja nie chce się uruchomić",
+    "distroWontStartText": "Spróbuj ponownie uruchomić WSL poleceniem wsl --shutdown, a następnie uruchom dystrybucję ponownie.",
+    "fullGuide": "Pełny przewodnik rozwiązywania problemów"
+  },
+  "resources": {
+    "title": "Zasoby i wsparcie",
+    "wslUiWebsite": "Strona WSL UI",
+    "githubRepo": "Repozytorium GitHub",
+    "reportIssue": "Zgłoś problem",
+    "octasoftWebsite": "Strona Octasoft Ltd",
+    "microsoftDocs": "Dokumentacja Microsoft WSL"
+  }
+}

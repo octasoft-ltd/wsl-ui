@@ -1,0 +1,96 @@
+{
+  "quickActions": {
+    "title": "Szybkie akcje",
+    "info": "Informacje o dystrybucji",
+    "explorer": "Otwórz Eksplorator plików",
+    "ide": "Otwórz w IDE",
+    "restart": "Uruchom ponownie",
+    "export": "Eksportuj do pliku...",
+    "clone": "Klonuj...",
+    "setDefault": "Ustaw jako domyślną",
+    "alreadyDefault": "Dystrybucja domyślna"
+  },
+  "manage": {
+    "title": "Zarządzaj",
+    "move": "Przenieś dystrybucję...",
+    "resize": "Zmień rozmiar dysku...",
+    "compact": "Kompaktuj dysk...",
+    "user": "Ustaw domyślnego użytkownika...",
+    "rename": "Zmień nazwę...",
+    "sparse": "Tryb rzadki",
+    "version": "Ustaw wersję WSL"
+  },
+  "customActions": {
+    "title": "Akcje niestandardowe",
+    "requiresStop": "Wymaga zatrzymania dystrybucji",
+    "requiresShutdown": "Wymaga zatrzymania WSL"
+  },
+  "sparseConfirm": {
+    "title": "Włączyć tryb rzadki?",
+    "message": "Ostrzeżenie: Microsoft oznaczył obsługę rzadkich dysków VHD jako potencjalnie powodującą uszkodzenie danych. Chociaż może pomóc automatycznie odzyskać miejsce na dysku, istnieje ryzyko utraty danych. Upewnij się, że masz kopie zapasowe przed włączeniem tej funkcji.",
+    "confirm": "Włącz mimo to"
+  },
+  "outputDialog": {
+    "titleSuffix": "- Dane wyjściowe",
+    "noOutput": "Brak danych wyjściowych."
+  },
+  "editor": {
+    "iconLabel": "Ikona",
+    "availableVars": "Dostępne zmienne:"
+  },
+  "exportTitle": "Eksportuj akcje niestandardowe",
+  "importTitle": "Importuj akcje niestandardowe",
+  "badge": {
+    "startup": "Uruchamianie"
+  },
+  "scope": {
+    "all": "Wszystkie dystrybucje",
+    "pattern": "Wzorzec: {{pattern}}",
+    "count_one": "{{count}} dystrybucja",
+    "count_other": "{{count}} dystrybucji"
+  },
+  "sparseChanged": "Tryb rzadki zmieniony",
+  "sparseChangedMessage": "Tryb rzadki {{state}} dla {{name}}",
+  "sparseToggleFailed": "Nie udało się przełączyć trybu rzadkiego",
+  "sparseToggle": "Przełącz tryb rzadki",
+  "actionFailed": "Akcja nie powiodła się",
+  "actionFailedMessage": "Nie udało się uruchomić akcji",
+  "distroIdUnavailable": "ID dystrybucji niedostępne",
+  "requiresSudo": "Wymaga hasła sudo",
+  "confirmRunTitle": "Uruchomić \"{{action}}\"?",
+  "confirmRunMessage": "Czy na pewno chcesz uruchomić tę akcję na {{name}}?",
+  "customActionsSettings": {
+    "title": "Akcje niestandardowe",
+    "description": "Definiuj polecenia powłoki wyświetlane w menu szybkich akcji dystrybucji",
+    "addAction": "Dodaj akcję",
+    "editAction": "Edytuj akcję",
+    "noActions": "Nie skonfigurowano akcji niestandardowych",
+    "noActionsHint": "Dodaj swoją pierwszą akcję niestandardową, aby rozpocząć",
+    "name": "Nazwa",
+    "namePlaceholder": "np. Aktualizuj system",
+    "command": "Polecenie",
+    "commandPlaceholder": "np. sudo apt update && sudo apt upgrade -y",
+    "sudo": "Uruchom z sudo",
+    "sudoDesc": "Wykonaj polecenie z podwyższonymi uprawnieniami",
+    "runOnStartup": "Uruchom przy starcie",
+    "runOnStartupDesc": "Wykonaj, gdy pasująca dystrybucja się uruchomi",
+    "confirmBeforeRun": "Potwierdź przed uruchomieniem",
+    "showOutput": "Pokaż dane wyjściowe",
+    "showOutputDesc": "Wyświetl dane wyjściowe polecenia w oknie dialogowym",
+    "runInTerminal": "Uruchom w terminalu",
+    "runInTerminalDesc": "Wykonaj polecenie w widocznym oknie terminala",
+    "target": "Dystrybucje docelowe",
+    "targetAll": "Wszystkie dystrybucje",
+    "targetSpecific": "Konkretne dystrybucje",
+    "targetRegex": "Wzorzec regex",
+    "targetPlaceholder": "np. Ubuntu.*",
+    "save": "Zapisz",
+    "delete": "Usuń",
+    "deleteConfirm": "Czy na pewno chcesz usunąć tę akcję?",
+    "importExport": "Import/Eksport",
+    "importActions": "Importuj",
+    "exportActions": "Eksportuj",
+    "importSuccess": "Akcje zaimportowane pomyślnie",
+    "exportSuccess": "Akcje wyeksportowane pomyślnie"
+  }
+}

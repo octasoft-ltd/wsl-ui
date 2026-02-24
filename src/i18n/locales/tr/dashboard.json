@@ -1,0 +1,40 @@
+{
+  "loading": "Sistemler başlatılıyor...",
+  "emptyState": {
+    "title": "Örnek Algılanamadı",
+    "description": "Başlamak için bir WSL dağıtımı kurun"
+  },
+  "filter": {
+    "all": "Tümü",
+    "allSources": "Tüm Kaynaklar",
+    "allSourcesMobile": "Tümü",
+    "onlineTooltip": "Çevrimiçi ({{count}})",
+    "offlineTooltip": "Çevrimdışı ({{count}})",
+    "showWsl1": "WSL 1 Göster ({{count}})",
+    "hideWsl1": "WSL 1 Gizle ({{count}})",
+    "showWsl2": "WSL 2 Göster ({{count}})",
+    "hideWsl2": "WSL 2 Gizle ({{count}})",
+    "v1": "v1",
+    "v2": "v2"
+  },
+  "emptyFilter": {
+    "noDistros": "Dağıtım bulunamadı",
+    "noMatch": "Geçerli filtrelerle eşleşen dağıtım yok",
+    "clearFilters": "Filtreleri temizle"
+  },
+  "card": {
+    "suspend": "Askıya Al",
+    "launch": "Başlat",
+    "openTerminal": "Terminal Aç",
+    "openRdp": "Uzak Masaüstü'nü Aç",
+    "quickActions": "Hızlı Eylemler",
+    "deleteDistro": "Dağıtımı sil",
+    "ipTooltip": "IP adresini kopyalamak için tıklayın"
+  },
+  "deleteDialog": {
+    "title": "Dağıtımı Sil",
+    "message": "\"{{name}}\" dağıtımını silmek istediğinizden emin misiniz? Bu işlem geri alınamaz ve bu dağıtımdaki tüm veriler kalıcı olarak silinecektir.",
+    "messageDefault": "\"{{name}}\" dağıtımını silmek istediğinizden emin misiniz? Bu işlem geri alınamaz ve bu dağıtımdaki tüm veriler kalıcı olarak silinecektir.\n\nUyarı: Bu varsayılan dağıtımınızdır. Silindikten sonra, başka bir dağıtımı varsayılan olarak ayarlamadığınız sürece WSL komutları başarısız olacaktır.",
+    "confirm": "Sil"
+  }
+}

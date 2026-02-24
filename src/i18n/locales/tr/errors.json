@@ -1,0 +1,21 @@
+{
+  "boundary": {
+    "title": "Bir şeyler ters gitti",
+    "message": "Uygulama beklenmeyen bir hatayla karşılaştı. Lütfen tekrar deneyin.",
+    "tryAgain": "Tekrar Dene"
+  },
+  "system": {
+    "title": "Sistem Hatası",
+    "timeoutTip": "İpucu: Yakın zamanda yeni bir dağıtım yüklediyseniz, yükleme sırasında otomatik olarak açılan terminal pencerelerini kapatın.",
+    "forceShutdown": "WSL'yi Zorla Kapat",
+    "forceShutdownTitle": "WSL'yi Zorla Kapat",
+    "forceShutdownMessage": "Bu işlem 'wsl --shutdown --force' kullanarak tüm WSL süreçlerini zorla sonlandıracaktır. Linux dağıtımlarınızdaki kaydedilmemiş çalışmalar kaybolabilir. Bu işlem geri alınamaz.",
+    "forceShutdownConfirm": "Zorla Kapat"
+  },
+  "wslUpdate": {
+    "title": "WSL Güncellemesi",
+    "success": "Güncelleme başarıyla tamamlandı",
+    "cancelled": "WSL Güncellemesi",
+    "failedTitle": "WSL Güncellemesi Başarısız"
+  }
+}

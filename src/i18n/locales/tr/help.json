@@ -1,0 +1,134 @@
+{
+  "title": "Yardım ve Belgeler",
+  "subtitle": "WSL UI kullanımını öğrenin",
+  "gettingStarted": {
+    "title": "Başlarken",
+    "whatIsWslUi": "WSL UI Nedir?",
+    "whatIsWslUiText": "WSL UI, Windows Subsystem for Linux (WSL) dağıtımlarını yönetmek için bir masaüstü uygulamasıdır. Başlatma, durdurma, oluşturma ve yapılandırma gibi yaygın WSL işlemleri için grafiksel bir arayüz sağlar.",
+    "mainDashboard": "Ana Pano",
+    "mainDashboardText": "Ana görünüm, yüklü tüm WSL dağıtımlarınızı kart olarak gösterir. Her kart; dağıtım adını, durumunu (çevrimiçi/çevrimdışı), disk kullanımını ve hızlı eylem düğmelerini görüntüler.",
+    "quickActions": "Hızlı Eylemler",
+    "quickActionsText": "Terminal açma, dosya gezgini, IDE veya dağıtımı yönetme gibi hızlı eylemlere erişmek için herhangi bir dağıtım kartındaki menü düğmesine (üç nokta) tıklayın."
+  },
+  "distroManagement": {
+    "title": "Dağıtım Yönetimi",
+    "startingStoppingTitle": "Başlatma ve Durdurma",
+    "start": "Bir dağıtımı başlat",
+    "stop": "Çalışan bir dağıtımı durdur",
+    "setAsDefault": "Varsayılan Olarak Ayarla",
+    "setAsDefaultText": "Dağıtım adı belirtmeden WSL komutlarını çalıştırırken kullanmak üzere bir dağıtımı varsayılan olarak ayarlayın.",
+    "resourceMonitoring": "Kaynak İzleme",
+    "resourceMonitoringText": "Çalışan dağıtımlar gerçek zamanlı CPU ve bellek kullanımını gösterir. Disk boyutu tüm dağıtımlar için görüntülenir."
+  },
+  "advancedOps": {
+    "title": "Gelişmiş İşlemler",
+    "rename": "Yeniden Adlandır",
+    "renameText": "Bir dağıtımın adını değiştirin. Ayrıca Windows Terminal profilini ve Başlat Menüsü kısayolunu da güncelleyebilirsiniz. Dağıtımın durdurulmuş olması gerekir.",
+    "move": "Taşı",
+    "moveText": "Bir dağıtımı farklı bir sürücüye veya klasöre taşıyın. Disk alanı yönetimi için yararlıdır. WSL'nin tamamen kapatılmış olması gerekir.",
+    "resizeDisk": "Diski Yeniden Boyutlandır",
+    "resizeDiskText": "Daha fazla alana ihtiyaç duyan dağıtımlar için sanal disk boyutunu genişletin. Yalnızca genişletme desteklenir (küçültme desteklenmez). WSL kapatılmalıdır.",
+    "setWslVersion": "WSL Sürümünü Ayarla",
+    "setWslVersionText": "WSL 1 ve WSL 2 arasında dönüştürme yapın. WSL 2, tam bir Linux çekirdeği ile daha iyi performans sunar. Dönüştürme birkaç dakika sürebilir.",
+    "sparseMode": "Seyrek Modu",
+    "sparseModeText": "Otomatik disk alanı geri kazanımını etkinleştirin. Dağıtım içindeki dosyaları sildikçe sanal disk küçülecektir.",
+    "compactDisk": "Diski Sıkıştır",
+    "compactDiskText": "Bir dağıtımın sanal diskinden kullanılmayan alanı geri kazanmak için tek tıkla optimizasyon. Otomatik olarak fstrim çalıştırır, WSL'yi kapatır ve VHDX dosyasını sıkıştırır. Yönetici yetkileri gerektirir ve 1-2 dakika sürer."
+  },
+  "creatingDistros": {
+    "title": "Dağıtım Oluşturma",
+    "quickInstall": "Hızlı Kurulum (Microsoft Store)",
+    "quickInstallText": "Ubuntu, Debian ve openSUSE gibi resmi dağıtımların tek tıkla kurulumu.",
+    "containerImages": "Kapsayıcı Kalıpları",
+    "containerImagesText": "Docker veya Podman kapsayıcı kalıplarından dağıtım oluşturun. Docker Hub ve diğer kayıt defterlerini destekler.",
+    "directDownload": "Doğrudan İndirme",
+    "directDownloadText": "Yapılandırılabilir URL'lerden rootfs arşivlerini indirin. Alpine, NixOS, Void Linux ve daha fazlasını içerir.",
+    "communityCatalog": "Topluluk Kataloğu (LXC)",
+    "communityCatalogText": "Linux Containers kalıp sunucusundan yüzlerce dağıtıma göz atın."
+  },
+  "backupRestore": {
+    "title": "Yedekleme ve Geri Yükleme",
+    "export": "Dışa Aktar",
+    "exportText": "Yedekleme veya taşıma için bir dağıtımı .tar arşiv dosyasına kaydedin. Daha sonra veya başka bir makinede geri yükleyebilirsiniz.",
+    "import": "İçe Aktar",
+    "importText": "Bir .tar arşivinden dağıtımı geri yükleyin. İçe aktarılan dağıtım için bir ad ve yükleme konumu seçin.",
+    "clone": "Kopyala",
+    "cloneText": "Mevcut bir dağıtımın yeni bir adla kopyasını oluşturun. Test etmek veya çeşitlemeler oluşturmak için yararlıdır."
+  },
+  "customActions": {
+    "title": "Özel Eylemler",
+    "whatAre": "Özel Eylemler Nedir?",
+    "whatAreText": "Özel eylemler, hızlı eylemler menüsünde görünen kullanıcı tanımlı kabuk komutlarıdır. Sistem güncellemeleri, yedeklemeler veya geliştirme ortamı kurulumu gibi yaygın görevler için eylemler oluşturun.",
+    "variables": "Değişkenler",
+    "variablesText": "Komutlarınızda çalışma zamanında değiştirilen değişkenler kullanın:",
+    "varDistroName": "Dağıtım adı",
+    "varHome": "Ana dizin yolu",
+    "varUser": "Varsayılan kullanıcı",
+    "varWindowsHome": "Windows kullanıcı dizini",
+    "targeting": "Dağıtımları Hedefleme",
+    "targetingText": "Eylemler tüm dağıtımları, ada göre belirli dağıtımları veya regex deseniyle eşleşen dağıtımları hedefleyebilir."
+  },
+  "theming": {
+    "title": "Temalar ve Görünüm",
+    "builtinThemes": "Yerleşik Temalar",
+    "builtinThemesText": "Koyu, açık ve ara tonlar dahil profesyonelce tasarlanmış 17 tema arasından seçim yapın. Popüler temalar arasında Obsidian, Dracula, Nord ve Solarized bulunur.",
+    "accessibilityThemes": "Erişilebilirlik Temaları",
+    "accessibilityThemesText": "Az gören kullanıcılar için iki yüksek karşıtlık teması mevcuttur: Yüksek Karşıtlık (koyu) ve Yüksek Karşıtlık Açık.",
+    "customTheme": "Özel Tema",
+    "customThemeText": "Arka planlar, metin, kenarlıklar, vurgular ve daha fazlası dahil 29 renk değişkeni üzerinde tam kontrolle kendi temanızı oluşturun."
+  },
+  "keyboardShortcuts": {
+    "title": "Klavye Kısayolları",
+    "tab": "Tab",
+    "tabAction": "Sonraki öğe",
+    "shiftTab": "Shift+Tab",
+    "shiftTabAction": "Önceki öğe",
+    "enter": "Enter",
+    "enterAction": "Etkinleştir / Gönder",
+    "escape": "Escape",
+    "escapeAction": "İletişim kutusunu veya menüyü kapat",
+    "space": "Boşluk",
+    "spaceAction": "Onay kutusunu değiştir",
+    "accessibility": "Erişilebilirlik",
+    "accessibilityText": "WSL UI, ekran okuyucuları, klavye ile gezinmeyi destekler ve azaltılmış hareket için sistem tercihlerine uyar."
+  },
+  "settingsOverview": {
+    "title": "Ayarlara Genel Bakış",
+    "terminal": "Terminal: Windows Terminal, özel terminal uygulamaları veya komut istemi yapılandır",
+    "ide": "IDE: VS Code, Cursor veya özel IDE entegrasyonu ayarla",
+    "wslGlobal": "WSL Genel: Bellek, CPU, takas, ağ modu ve WSLg yapılandır",
+    "perDistro": "Dağıtım Bazında: Otomatik bağlama seçenekleri, ağ ayarları, systemd ve önyükleme komutları",
+    "polling": "Yoklama: Durum ve kaynaklar için otomatik yenileme aralıklarını ayarla",
+    "timeouts": "Zaman Aşımları: Yavaş sistemler için işlem zaman aşımlarını yapılandır",
+    "executables": "Yürütülebilir Dosya Yolları: WSL, PowerShell ve diğer araçlar için varsayılan yolları geçersiz kıl"
+  },
+  "integrations": {
+    "title": "Entegrasyonlar",
+    "terminal": "Terminal Entegrasyonu",
+    "terminalText": "Dağıtımları Windows Terminal, Komut İstemi veya herhangi bir özel terminal uygulamasında açın. Tercih ettiğiniz terminali Ayarlar'dan yapılandırın.",
+    "ide": "IDE Entegrasyonu",
+    "ideText": "Dağıtımları doğrudan VS Code veya diğer IDE'lerde açın. Dağıtımın kök klasörü düzenleyicinizde açılır.",
+    "fileExplorer": "Dosya Gezgini",
+    "fileExplorerText": "\\\\wsl$ ağ yolunu kullanarak dağıtım dosyalarına Windows Gezgini'nden göz atın.",
+    "systemTray": "Sistem Tepsisi",
+    "systemTrayText": "Hızlı erişim için sistem tepsisine küçültün. Kapatma davranışını Ayarlar'dan yapılandırın."
+  },
+  "troubleshooting": {
+    "title": "Sorun Giderme",
+    "wslNotDetected": "WSL Algılanamadı",
+    "wslNotDetectedText": "WSL'nin yüklü ve etkin olduğundan emin olun. Kontrol etmek için PowerShell'de wsl --status komutunu çalıştırın. WSL için Windows özelliklerini etkinleştirmeniz gerekebilir.",
+    "operationsTimeout": "İşlemler Zaman Aşımına Uğruyor",
+    "operationsTimeoutText": "İşlemler sık sık zaman aşımına uğruyorsa Ayarlar > Zaman Aşımları bölümünden zaman aşımı değerlerini artırın. Uygulama, sorunlar sırasında yükü azaltmak için üstel geri çekilme kullanır.",
+    "distroWontStart": "Dağıtım Başlatılamıyor",
+    "distroWontStartText": "WSL'yi wsl --shutdown ile yeniden başlatmayı deneyin, ardından dağıtımı tekrar başlatın.",
+    "fullGuide": "Tam Sorun Giderme Kılavuzu"
+  },
+  "resources": {
+    "title": "Kaynaklar ve Destek",
+    "wslUiWebsite": "WSL UI Web Sitesi",
+    "githubRepo": "GitHub Deposu",
+    "reportIssue": "Sorun Bildir",
+    "octasoftWebsite": "Octasoft Ltd Web Sitesi",
+    "microsoftDocs": "Microsoft WSL Belgeleri"
+  }
+}

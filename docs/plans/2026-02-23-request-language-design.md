@@ -32,10 +32,10 @@ I'd like to request support for this language in WSL UI.
 
 ## i18n
 
-Add `language.requestLanguage` and `language.requestLanguageDesc` keys to the `settings` namespace in all 11 locales.
+Add `language.requestLanguage` and `language.requestLanguageDesc` keys to the `settings` namespace in all supported locales.
 
 ## Files to modify
 
 - `src/components/settings/LanguageSettings.tsx` - Add the link below the language list
 - `src/i18n/locales/en/settings.json` - Add English translation keys
-- `src/i18n/locales/{other}/settings.json` - Add translated keys for all 10 other locales
+- `src/i18n/locales/{other}/settings.json` - Add translated keys for all other locales

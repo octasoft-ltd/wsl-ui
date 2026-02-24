@@ -1,0 +1,156 @@
+{
+  "title": "Добавить дистрибутив",
+  "subtitle": "Выберите способ установки дистрибутива Linux",
+  "mode": {
+    "quickInstall": "Быстрая установка",
+    "quickInstallDesc": "Установить из Microsoft Store",
+    "download": "Скачать",
+    "downloadDesc": "Прямая загрузка с пользовательским именем",
+    "community": "Сообщество",
+    "communityDesc": "Обзор каталога образов LXC",
+    "container": "Контейнер",
+    "containerDesc": "Создать из образа контейнера"
+  },
+  "info": {
+    "quickInstall": "Официальные дистрибутивы из Microsoft Store. Установка в расположение по умолчанию, управляемое Windows.",
+    "download": "Этот каталог можно настроить в разделе Настройки > Источники дистрибутивов. Пользовательские URL сохраняются для дальнейшего использования.",
+    "community": "Образы с {{url}}. Настройка в разделе Настройки > Источники дистрибутивов.",
+    "container": "Выбранная среда выполнения в настройках: {{runtime}}"
+  },
+  "containerRuntime": {
+    "builtin": "Встроенный OCI (только публичные реестры)",
+    "docker": "Docker (поддержка реестров с аутентификацией)",
+    "podman": "Podman (поддержка реестров с аутентификацией)",
+    "custom": "Пользовательский: {{path}}"
+  },
+  "filter": {
+    "all": "Все"
+  },
+  "loading": "Загрузка доступных дистрибутивов...",
+  "empty": "Нет доступных дистрибутивов",
+  "install": "Установить",
+  "useUrl": "Использовать URL",
+  "useImage": "Использовать образ",
+  "placeholder": {
+    "url": "напр., https://example.com/distro-rootfs.tar.gz",
+    "image": "напр., alpine:latest, gitlab/gitlab-runner:latest"
+  },
+  "customUrl": {
+    "label": "Пользовательский URL",
+    "description": "Введите прямую ссылку на архив rootfs"
+  },
+  "customImage": {
+    "label": "Пользовательский образ",
+    "description": "Введите любую ссылку на образ OCI"
+  },
+  "alreadyInstalled": "\"{{name}}\" уже установлен",
+  "progress": {
+    "installingStore": "Установка из Microsoft Store...",
+    "success": "Успешно установлен!",
+    "downloading": "Загрузка: {{percent}}% ({{downloaded}} / {{total}})",
+    "importing": "Импорт в WSL...",
+    "pullingImage": "Загрузка образа контейнера...",
+    "downloadFailed": "Ошибка загрузки"
+  },
+  "trademarkDisclaimer": "Логотипы дистрибутивов Linux являются товарными знаками их владельцев и используются здесь исключительно для идентификации.\nДанное приложение не связано ни с одним проектом дистрибутивов и не одобрено ими.",
+  "installingAs": "Установка как \"{{name}}\"",
+  "noDownloadable": "Загружаемые дистрибутивы не настроены",
+  "noContainerImages": "Образы контейнеров не настроены",
+  "communityDisabled": "Каталог сообщества отключён",
+  "communityDisabledHint": "Включите в разделе Настройки > Источники дистрибутивов",
+  "useCustomUrl": "Использовать пользовательский URL",
+  "useCustomImage": "Использовать пользовательский образ",
+  "catalogDisabled": "Каталог сообщества отключён. Включите его в настройках.",
+  "catalogLoadError": "Не удалось загрузить каталог",
+  "catalogNoMatch": "Нет дистрибутивов, соответствующих \"{{query}}\"",
+  "catalogVersionCount_one": "{{count}} версия доступна",
+  "catalogVersionCount_other": "{{count}} версий доступно",
+  "catalogCacheInfo": "Каталог кэширован {{date}} в {{time}}",
+  "errorNoDistro": "Выберите дистрибутив",
+  "errorInstallFailed": "Не удалось установить дистрибутив",
+  "errorCreateFailed": "Не удалось создать дистрибутив",
+  "downloadStarting": "Начало загрузки...",
+  "downloading": "Загрузка {{name}} {{release}}...",
+  "customDistribution": "Пользовательский дистрибутив",
+  "customUrlName": "Пользовательский URL",
+  "customImageName": "Пользовательский образ",
+  "distroSources": {
+    "title": "Источники дистрибутивов",
+    "description": "Настроить источники загрузки дистрибутивов",
+    "addUrl": "Добавить URL",
+    "removeUrl": "Удалить",
+    "urlPlaceholder": "https://example.com/distro-rootfs.tar.gz",
+    "name": "Имя",
+    "namePlaceholder": "напр., Alpine Linux",
+    "url": "URL",
+    "noSources": "Пользовательские источники не настроены",
+    "builtInSources": "Встроенные источники всегда доступны",
+    "tab": {
+      "quickInstall": "Быстрая установка",
+      "container": "Контейнер",
+      "download": "Скачать"
+    },
+    "badge": {
+      "builtIn": "встроенный"
+    },
+    "form": {
+      "nameRequired": "Имя *",
+      "description": "Описание",
+      "downloadUrl": "URL загрузки *",
+      "sizeOptional": "Размер (необязательно)",
+      "containerImage": "Образ контейнера *",
+      "distroId": "Идентификатор дистрибутива *",
+      "distroIdHint": "Должен совпадать с идентификатором из <code>wsl --list --online</code>",
+      "placeholder": {
+        "downloadName": "напр., Ubuntu 24.04 LTS",
+        "downloadDescription": "напр., Noble Numbat - Latest LTS",
+        "downloadUrl": "https://example.com/distro.tar.gz",
+        "downloadSize": "напр., ~370 МБ",
+        "containerName": "напр., Rocky Linux 9",
+        "containerDescription": "напр., Enterprise-ready Linux",
+        "containerImage": "напр., docker.io/library/rockylinux:9",
+        "msStoreDistroId": "напр., Ubuntu-24.04",
+        "msStoreDescription": "напр., Noble Numbat"
+      }
+    },
+    "button": {
+      "update": "Обновить",
+      "add": "Добавить",
+      "cancel": "Отмена"
+    },
+    "dialog": {
+      "editDownloadSource": "Редактировать источник загрузки",
+      "addDownloadSource": "Добавить источник загрузки",
+      "editContainerImage": "Редактировать образ контейнера",
+      "addContainerImage": "Добавить образ контейнера",
+      "editQuickInstallMetadata": "Редактировать метаданные быстрой установки",
+      "addQuickInstallMetadata": "Добавить метаданные быстрой установки",
+      "resetDownloadSources": "Сбросить источники загрузки",
+      "resetDownloadSourcesMessage": "Все источники загрузки будут сброшены к значениям по умолчанию. Ваши пользовательские источники будут удалены.",
+      "resetDownloads": "Сбросить загрузки",
+      "resetContainerImages": "Сбросить образы контейнеров",
+      "resetContainerImagesMessage": "Все образы контейнеров будут сброшены к значениям по умолчанию. Ваши пользовательские образы будут удалены.",
+      "resetContainers": "Сбросить контейнеры",
+      "resetQuickInstallMetadata": "Сбросить метаданные быстрой установки",
+      "resetQuickInstallMetadataMessage": "Все метаданные быстрой установки будут сброшены к значениям по умолчанию. Ваши пользовательские метаданные будут удалены.",
+      "resetMetadata": "Сбросить метаданные"
+    },
+    "empty": {
+      "downloads": "Источники загрузки не настроены.",
+      "containers": "Образы контейнеров не настроены.",
+      "quickInstall": "Метаданные быстрой установки не настроены."
+    },
+    "info": {
+      "quickInstall": "Метаданные быстрой установки содержат информацию для отображения (цвет, описание) дистрибутивов, возвращаемых командой <code>wsl --list --online</code>. Сам список дистрибутивов предоставляется Microsoft."
+    },
+    "toggle": {
+      "disable": "Отключить",
+      "enable": "Включить"
+    },
+    "action": {
+      "edit": "Редактировать",
+      "delete": "Удалить",
+      "dismissError": "Закрыть ошибку"
+    }
+  }
+}

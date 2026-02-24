@@ -1,0 +1,17 @@
+{
+  "subtitle": "Centrum sterowania",
+  "button": {
+    "new": "Nowa",
+    "import": "Importuj",
+    "sync": "Synchronizuj",
+    "shutdown": "Zatrzymaj",
+    "systemTerminal": "Otwórz powłokę systemową WSL",
+    "help": "Pomoc",
+    "settings": "Ustawienia"
+  },
+  "shutdownAll": {
+    "title": "Zatrzymaj wszystkie dystrybucje",
+    "message": "To zatrzyma wszystkie uruchomione dystrybucje WSL. Niezapisane prace zostaną utracone.",
+    "confirm": "Zatrzymaj wszystkie"
+  }
+}

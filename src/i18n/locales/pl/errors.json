@@ -1,0 +1,21 @@
+{
+  "boundary": {
+    "title": "Coś poszło nie tak",
+    "message": "Aplikacja napotkała nieoczekiwany błąd. Spróbuj ponownie.",
+    "tryAgain": "Spróbuj ponownie"
+  },
+  "system": {
+    "title": "Błąd systemowy",
+    "timeoutTip": "Wskazówka: Jeśli niedawno zainstalowano nową dystrybucję, zamknij wszystkie okna terminala, które zostały automatycznie otwarte podczas instalacji.",
+    "forceShutdown": "Wymuś zatrzymanie WSL",
+    "forceShutdownTitle": "Wymuś zatrzymanie WSL",
+    "forceShutdownMessage": "To wymusi zakończenie wszystkich procesów WSL za pomocą 'wsl --shutdown --force'. Niezapisane prace w dystrybucjach Linuksa mogą zostać utracone. Tej operacji nie można cofnąć.",
+    "forceShutdownConfirm": "Wymuś zatrzymanie"
+  },
+  "wslUpdate": {
+    "title": "Aktualizacja WSL",
+    "success": "Aktualizacja zakończona pomyślnie",
+    "cancelled": "Aktualizacja WSL",
+    "failedTitle": "Aktualizacja WSL nie powiodła się"
+  }
+}

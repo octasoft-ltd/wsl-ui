@@ -1,0 +1,40 @@
+{
+  "loading": "Inicjalizowanie systemów...",
+  "emptyState": {
+    "title": "Nie wykryto instancji",
+    "description": "Wdróż dystrybucję WSL, aby rozpocząć"
+  },
+  "filter": {
+    "all": "Wszystkie",
+    "allSources": "Wszystkie źródła",
+    "allSourcesMobile": "Wszystkie",
+    "onlineTooltip": "Online ({{count}})",
+    "offlineTooltip": "Offline ({{count}})",
+    "showWsl1": "Pokaż WSL 1 ({{count}})",
+    "hideWsl1": "Ukryj WSL 1 ({{count}})",
+    "showWsl2": "Pokaż WSL 2 ({{count}})",
+    "hideWsl2": "Ukryj WSL 2 ({{count}})",
+    "v1": "v1",
+    "v2": "v2"
+  },
+  "emptyFilter": {
+    "noDistros": "Nie znaleziono dystrybucji",
+    "noMatch": "Żadna dystrybucja nie pasuje do bieżących filtrów",
+    "clearFilters": "Wyczyść filtry"
+  },
+  "card": {
+    "suspend": "Wstrzymaj",
+    "launch": "Uruchom",
+    "openTerminal": "Otwórz Terminal",
+    "openRdp": "Otwórz Pulpit zdalny",
+    "quickActions": "Szybkie akcje",
+    "deleteDistro": "Usuń dystrybucję",
+    "ipTooltip": "Kliknij, aby skopiować adres IP"
+  },
+  "deleteDialog": {
+    "title": "Usuń dystrybucję",
+    "message": "Czy na pewno chcesz usunąć \"{{name}}\"? Tej operacji nie można cofnąć, a wszystkie dane w tej dystrybucji zostaną trwale utracone.",
+    "messageDefault": "Czy na pewno chcesz usunąć \"{{name}}\"? Tej operacji nie można cofnąć, a wszystkie dane w tej dystrybucji zostaną trwale utracone.\n\nOstrzeżenie: To jest Twoja domyślna dystrybucja. Po usunięciu polecenia WSL nie będą działać, dopóki nie ustawisz innej dystrybucji jako domyślnej.",
+    "confirm": "Usuń"
+  }
+}
