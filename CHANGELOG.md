@@ -5,6 +5,19 @@ All notable changes to WSL UI will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.18.0](https://github.com/octasoft-ltd/wsl-ui/compare/v0.17.0...v0.18.0) (2026-02-24)
+
+
+### Features
+
+* Add Russian, Polish and Turkish language support ([10621d3](https://github.com/octasoft-ltd/wsl-ui/commit/10621d36067c85adf023fc96cf5bbf9f5793bac3))
+
+
+### Bug Fixes
+
+* Update Chocolatey VERIFICATION.txt license to GPL v3 ([3165c24](https://github.com/octasoft-ltd/wsl-ui/commit/3165c249266726c7fe3bfd893a45c8a792b77f96))
+* Update Chocolatey VERIFICATION.txt license to GPL v3 ([ddb5dfe](https://github.com/octasoft-ltd/wsl-ui/commit/ddb5dfefdcf96c61e22b879a821be1bbc5cb3259))
+
 ## [0.17.0](https://github.com/octasoft-ltd/wsl-ui/compare/v0.16.2...v0.17.0) (2026-02-23)
 
 
