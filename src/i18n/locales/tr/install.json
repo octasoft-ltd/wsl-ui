@@ -1,0 +1,156 @@
+{
+  "title": "Dağıtım Ekle",
+  "subtitle": "Linux dağıtımınızı nasıl yüklemek istediğinizi seçin",
+  "mode": {
+    "quickInstall": "Hızlı Kurulum",
+    "quickInstallDesc": "Microsoft Store'dan yükle",
+    "download": "İndir",
+    "downloadDesc": "Özel adla doğrudan indirme",
+    "community": "Topluluk",
+    "communityDesc": "LXC kalıp kataloğuna göz at",
+    "container": "Kapsayıcı",
+    "containerDesc": "Kapsayıcı kalıbından oluştur"
+  },
+  "info": {
+    "quickInstall": "Microsoft Store'dan resmi dağıtımlar. Windows tarafından yönetilen varsayılan konuma yüklenir.",
+    "download": "Bu katalog Ayarlar > Dağıtım Kaynakları bölümünden özelleştirilebilir. Özel URL'ler gelecekte kullanılmak üzere kaydedilir.",
+    "community": "{{url}} adresindeki kalıplar. Ayarlar > Dağıtım Kaynakları bölümünden yapılandırın.",
+    "container": "Ayarlarda yapılandırılmış seçili çalışma zamanı: {{runtime}}"
+  },
+  "containerRuntime": {
+    "builtin": "Yerleşik OCI (yalnızca genel kayıt defterleri)",
+    "docker": "Docker (kimlik doğrulamalı kayıt defterlerini destekler)",
+    "podman": "Podman (kimlik doğrulamalı kayıt defterlerini destekler)",
+    "custom": "Özel: {{path}}"
+  },
+  "filter": {
+    "all": "Tümü"
+  },
+  "loading": "Kullanılabilir dağıtımlar yükleniyor...",
+  "empty": "Kullanılabilir dağıtım yok",
+  "install": "Yükle",
+  "useUrl": "URL Kullan",
+  "useImage": "Kalıbı Kullan",
+  "placeholder": {
+    "url": "örn., https://example.com/distro-rootfs.tar.gz",
+    "image": "örn., alpine:latest, gitlab/gitlab-runner:latest"
+  },
+  "customUrl": {
+    "label": "Özel URL",
+    "description": "Bir rootfs arşivine doğrudan bağlantı girin"
+  },
+  "customImage": {
+    "label": "Özel Kalıp",
+    "description": "Herhangi bir OCI kalıp referansı girin"
+  },
+  "alreadyInstalled": "\"{{name}}\" zaten yüklü",
+  "progress": {
+    "installingStore": "Microsoft Store'dan yükleniyor...",
+    "success": "Başarıyla yüklendi!",
+    "downloading": "İndiriliyor: {{percent}}% ({{downloaded}} / {{total}})",
+    "importing": "WSL'ye içe aktarılıyor...",
+    "pullingImage": "Kapsayıcı kalıbı çekiliyor...",
+    "downloadFailed": "İndirme başarısız"
+  },
+  "trademarkDisclaimer": "Linux dağıtım logoları ilgili sahiplerinin ticari markalarıdır ve burada yalnızca tanımlama amacıyla kullanılmaktadır.\nBu uygulama herhangi bir dağıtım projesiyle bağlantılı değildir veya onlar tarafından desteklenmemektedir.",
+  "installingAs": "\"{{name}}\" olarak yükleniyor",
+  "noDownloadable": "Yapılandırılmış indirilebilir dağıtım yok",
+  "noContainerImages": "Yapılandırılmış kapsayıcı kalıbı yok",
+  "communityDisabled": "Topluluk kataloğu devre dışı",
+  "communityDisabledHint": "Ayarlar > Dağıtım Kaynakları bölümünden etkinleştirin",
+  "useCustomUrl": "Bunun yerine özel bir URL kullanın",
+  "useCustomImage": "Bunun yerine özel bir kalıp kullanın",
+  "catalogDisabled": "Topluluk kataloğu devre dışı. Ayarlar'dan etkinleştirin.",
+  "catalogLoadError": "Katalog yüklenemedi",
+  "catalogNoMatch": "\"{{query}}\" ile eşleşen dağıtım yok",
+  "catalogVersionCount_one": "{{count}} sürüm mevcut",
+  "catalogVersionCount_other": "{{count}} sürüm mevcut",
+  "catalogCacheInfo": "Katalog {{date}} tarihinde {{time}} saatinde önbelleğe alındı",
+  "errorNoDistro": "Lütfen bir dağıtım seçin",
+  "errorInstallFailed": "Dağıtım yüklenemedi",
+  "errorCreateFailed": "Dağıtım oluşturulamadı",
+  "downloadStarting": "İndirme başlatılıyor...",
+  "downloading": "{{name}} {{release}} indiriliyor...",
+  "customDistribution": "Özel Dağıtım",
+  "customUrlName": "Özel URL",
+  "customImageName": "Özel Kalıp",
+  "distroSources": {
+    "title": "Dağıtım Kaynakları",
+    "description": "Dağıtımların nereden indirileceğini yapılandır",
+    "addUrl": "URL Ekle",
+    "removeUrl": "Kaldır",
+    "urlPlaceholder": "https://example.com/distro-rootfs.tar.gz",
+    "name": "Ad",
+    "namePlaceholder": "örn., Alpine Linux",
+    "url": "URL",
+    "noSources": "Yapılandırılmış özel kaynak yok",
+    "builtInSources": "Yerleşik kaynaklar her zaman kullanılabilir",
+    "tab": {
+      "quickInstall": "Hızlı Kurulum",
+      "container": "Kapsayıcı",
+      "download": "İndir"
+    },
+    "badge": {
+      "builtIn": "yerleşik"
+    },
+    "form": {
+      "nameRequired": "Ad *",
+      "description": "Açıklama",
+      "downloadUrl": "İndirme URL'si *",
+      "sizeOptional": "Boyut (isteğe bağlı)",
+      "containerImage": "Kapsayıcı Kalıbı *",
+      "distroId": "Dağıtım Kimliği *",
+      "distroIdHint": "<code>wsl --list --online</code> komutundaki kimlik ile eşleşmelidir",
+      "placeholder": {
+        "downloadName": "örn., Ubuntu 24.04 LTS",
+        "downloadDescription": "örn., Noble Numbat - En Son LTS",
+        "downloadUrl": "https://example.com/distro.tar.gz",
+        "downloadSize": "örn., ~370 MB",
+        "containerName": "örn., Rocky Linux 9",
+        "containerDescription": "örn., Kurumsal kullanıma hazır Linux",
+        "containerImage": "örn., docker.io/library/rockylinux:9",
+        "msStoreDistroId": "örn., Ubuntu-24.04",
+        "msStoreDescription": "örn., Noble Numbat"
+      }
+    },
+    "button": {
+      "update": "Güncelle",
+      "add": "Ekle",
+      "cancel": "İptal"
+    },
+    "dialog": {
+      "editDownloadSource": "İndirme Kaynağını Düzenle",
+      "addDownloadSource": "İndirme Kaynağı Ekle",
+      "editContainerImage": "Kapsayıcı Kalıbını Düzenle",
+      "addContainerImage": "Kapsayıcı Kalıbı Ekle",
+      "editQuickInstallMetadata": "Hızlı Kurulum Meta Verisini Düzenle",
+      "addQuickInstallMetadata": "Hızlı Kurulum Meta Verisi Ekle",
+      "resetDownloadSources": "İndirme Kaynaklarını Sıfırla",
+      "resetDownloadSourcesMessage": "Bu işlem tüm indirme kaynaklarını varsayılan değerlerine sıfırlayacaktır. Özel kaynaklarınız kaldırılacaktır.",
+      "resetDownloads": "İndirmeleri Sıfırla",
+      "resetContainerImages": "Kapsayıcı Kalıplarını Sıfırla",
+      "resetContainerImagesMessage": "Bu işlem tüm kapsayıcı kalıplarını varsayılan değerlerine sıfırlayacaktır. Özel kalıplarınız kaldırılacaktır.",
+      "resetContainers": "Kapsayıcıları Sıfırla",
+      "resetQuickInstallMetadata": "Hızlı Kurulum Meta Verisini Sıfırla",
+      "resetQuickInstallMetadataMessage": "Bu işlem tüm Hızlı Kurulum meta verilerini varsayılan değerlerine sıfırlayacaktır. Özel meta verileriniz kaldırılacaktır.",
+      "resetMetadata": "Meta Veriyi Sıfırla"
+    },
+    "empty": {
+      "downloads": "Yapılandırılmış indirme kaynağı yok.",
+      "containers": "Yapılandırılmış kapsayıcı kalıbı yok.",
+      "quickInstall": "Yapılandırılmış Hızlı Kurulum meta verisi yok."
+    },
+    "info": {
+      "quickInstall": "Hızlı Kurulum meta verisi, <code>wsl --list --online</code> tarafından döndürülen dağıtımlar için görüntüleme bilgileri (renk, açıklama) sağlar. Dağıtım listesinin kendisi Microsoft tarafından sağlanmaktadır."
+    },
+    "toggle": {
+      "disable": "Devre Dışı Bırak",
+      "enable": "Etkinleştir"
+    },
+    "action": {
+      "edit": "Düzenle",
+      "delete": "Sil",
+      "dismissError": "Hatayı kapat"
+    }
+  }
+}

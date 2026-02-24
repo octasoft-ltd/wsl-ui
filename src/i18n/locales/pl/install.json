@@ -1,0 +1,156 @@
+{
+  "title": "Dodaj dystrybucję",
+  "subtitle": "Wybierz sposób instalacji dystrybucji Linuksa",
+  "mode": {
+    "quickInstall": "Szybka instalacja",
+    "quickInstallDesc": "Zainstaluj z Microsoft Store",
+    "download": "Pobierz",
+    "downloadDesc": "Pobieranie bezpośrednie z niestandardową nazwą",
+    "community": "Społeczność",
+    "communityDesc": "Przeglądaj katalog obrazów LXC",
+    "container": "Kontener",
+    "containerDesc": "Utwórz z obrazu kontenera"
+  },
+  "info": {
+    "quickInstall": "Oficjalne dystrybucje z Microsoft Store. Instalowane w domyślnej lokalizacji zarządzanej przez Windows.",
+    "download": "Ten katalog można dostosować w Ustawieniach > Źródła dystrybucji. Niestandardowe adresy URL są zapisywane do przyszłego użytku.",
+    "community": "Obrazy z {{url}}. Skonfiguruj w Ustawieniach > Źródła dystrybucji.",
+    "container": "Wybrane środowisko uruchomieniowe skonfigurowane w ustawieniach: {{runtime}}"
+  },
+  "containerRuntime": {
+    "builtin": "Wbudowany OCI (tylko publiczne rejestry)",
+    "docker": "Docker (obsługuje rejestry z uwierzytelnianiem)",
+    "podman": "Podman (obsługuje rejestry z uwierzytelnianiem)",
+    "custom": "Niestandardowy: {{path}}"
+  },
+  "filter": {
+    "all": "Wszystkie"
+  },
+  "loading": "Wczytywanie dostępnych dystrybucji...",
+  "empty": "Brak dostępnych dystrybucji",
+  "install": "Zainstaluj",
+  "useUrl": "Użyj URL",
+  "useImage": "Użyj obrazu",
+  "placeholder": {
+    "url": "np. https://example.com/distro-rootfs.tar.gz",
+    "image": "np. alpine:latest, gitlab/gitlab-runner:latest"
+  },
+  "customUrl": {
+    "label": "Niestandardowy URL",
+    "description": "Wprowadź bezpośredni link do archiwum rootfs"
+  },
+  "customImage": {
+    "label": "Obraz niestandardowy",
+    "description": "Wprowadź dowolną referencję obrazu OCI"
+  },
+  "alreadyInstalled": "\"{{name}}\" jest już zainstalowana",
+  "progress": {
+    "installingStore": "Instalowanie z Microsoft Store...",
+    "success": "Zainstalowano pomyślnie!",
+    "downloading": "Pobieranie: {{percent}}% ({{downloaded}} / {{total}})",
+    "importing": "Importowanie do WSL...",
+    "pullingImage": "Pobieranie obrazu kontenera...",
+    "downloadFailed": "Pobieranie nie powiodło się"
+  },
+  "trademarkDisclaimer": "Loga dystrybucji Linuksa są znakami towarowymi ich właścicieli i są używane tutaj wyłącznie w celach identyfikacyjnych.\nTa aplikacja nie jest powiązana z żadnym projektem dystrybucji ani przez niego wspierana.",
+  "installingAs": "Instalowanie jako \"{{name}}\"",
+  "noDownloadable": "Nie skonfigurowano dystrybucji do pobrania",
+  "noContainerImages": "Nie skonfigurowano obrazów kontenerów",
+  "communityDisabled": "Katalog społecznościowy jest wyłączony",
+  "communityDisabledHint": "Włącz w Ustawieniach > Źródła dystrybucji",
+  "useCustomUrl": "Użyj niestandardowego URL",
+  "useCustomImage": "Użyj niestandardowego obrazu",
+  "catalogDisabled": "Katalog społecznościowy jest wyłączony. Włącz go w Ustawieniach.",
+  "catalogLoadError": "Nie udało się wczytać katalogu",
+  "catalogNoMatch": "Żadna dystrybucja nie pasuje do \"{{query}}\"",
+  "catalogVersionCount_one": "{{count}} wersja dostępna",
+  "catalogVersionCount_other": "{{count}} wersji dostępnych",
+  "catalogCacheInfo": "Katalog zapisany w pamięci podręcznej {{date}} o {{time}}",
+  "errorNoDistro": "Wybierz dystrybucję",
+  "errorInstallFailed": "Nie udało się zainstalować dystrybucji",
+  "errorCreateFailed": "Nie udało się utworzyć dystrybucji",
+  "downloadStarting": "Rozpoczynanie pobierania...",
+  "downloading": "Pobieranie {{name}} {{release}}...",
+  "customDistribution": "Dystrybucja niestandardowa",
+  "customUrlName": "Niestandardowy URL",
+  "customImageName": "Obraz niestandardowy",
+  "distroSources": {
+    "title": "Źródła dystrybucji",
+    "description": "Konfiguruj źródła pobierania dystrybucji",
+    "addUrl": "Dodaj URL",
+    "removeUrl": "Usuń",
+    "urlPlaceholder": "https://example.com/distro-rootfs.tar.gz",
+    "name": "Nazwa",
+    "namePlaceholder": "np. Alpine Linux",
+    "url": "URL",
+    "noSources": "Nie skonfigurowano niestandardowych źródeł",
+    "builtInSources": "Wbudowane źródła są zawsze dostępne",
+    "tab": {
+      "quickInstall": "Szybka instalacja",
+      "container": "Kontener",
+      "download": "Pobierz"
+    },
+    "badge": {
+      "builtIn": "wbudowany"
+    },
+    "form": {
+      "nameRequired": "Nazwa *",
+      "description": "Opis",
+      "downloadUrl": "URL pobierania *",
+      "sizeOptional": "Rozmiar (opcjonalny)",
+      "containerImage": "Obraz kontenera *",
+      "distroId": "ID dystrybucji *",
+      "distroIdHint": "Musi odpowiadać ID z <code>wsl --list --online</code>",
+      "placeholder": {
+        "downloadName": "np. Ubuntu 24.04 LTS",
+        "downloadDescription": "np. Noble Numbat - Latest LTS",
+        "downloadUrl": "https://example.com/distro.tar.gz",
+        "downloadSize": "np. ~370 MB",
+        "containerName": "np. Rocky Linux 9",
+        "containerDescription": "np. Enterprise-ready Linux",
+        "containerImage": "np. docker.io/library/rockylinux:9",
+        "msStoreDistroId": "np. Ubuntu-24.04",
+        "msStoreDescription": "np. Noble Numbat"
+      }
+    },
+    "button": {
+      "update": "Aktualizuj",
+      "add": "Dodaj",
+      "cancel": "Anuluj"
+    },
+    "dialog": {
+      "editDownloadSource": "Edytuj źródło pobierania",
+      "addDownloadSource": "Dodaj źródło pobierania",
+      "editContainerImage": "Edytuj obraz kontenera",
+      "addContainerImage": "Dodaj obraz kontenera",
+      "editQuickInstallMetadata": "Edytuj metadane szybkiej instalacji",
+      "addQuickInstallMetadata": "Dodaj metadane szybkiej instalacji",
+      "resetDownloadSources": "Resetuj źródła pobierania",
+      "resetDownloadSourcesMessage": "To zresetuje wszystkie źródła pobierania do wartości domyślnych. Twoje niestandardowe źródła zostaną usunięte.",
+      "resetDownloads": "Resetuj pobierania",
+      "resetContainerImages": "Resetuj obrazy kontenerów",
+      "resetContainerImagesMessage": "To zresetuje wszystkie obrazy kontenerów do wartości domyślnych. Twoje niestandardowe obrazy zostaną usunięte.",
+      "resetContainers": "Resetuj kontenery",
+      "resetQuickInstallMetadata": "Resetuj metadane szybkiej instalacji",
+      "resetQuickInstallMetadataMessage": "To zresetuje wszystkie metadane szybkiej instalacji do wartości domyślnych. Twoje niestandardowe metadane zostaną usunięte.",
+      "resetMetadata": "Resetuj metadane"
+    },
+    "empty": {
+      "downloads": "Nie skonfigurowano źródeł pobierania.",
+      "containers": "Nie skonfigurowano obrazów kontenerów.",
+      "quickInstall": "Nie skonfigurowano metadanych szybkiej instalacji."
+    },
+    "info": {
+      "quickInstall": "Metadane szybkiej instalacji dostarczają informacje wyświetlane (kolor, opis) dla dystrybucji zwracanych przez <code>wsl --list --online</code>. Sama lista dystrybucji jest dostarczana przez Microsoft."
+    },
+    "toggle": {
+      "disable": "Wyłącz",
+      "enable": "Włącz"
+    },
+    "action": {
+      "edit": "Edytuj",
+      "delete": "Usuń",
+      "dismissError": "Odrzuć błąd"
+    }
+  }
+}

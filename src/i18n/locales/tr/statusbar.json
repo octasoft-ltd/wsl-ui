@@ -1,0 +1,22 @@
+{
+  "wsl": "WSL",
+  "instances": "Örnekler",
+  "active": "Etkin",
+  "mem": "Bellek",
+  "primary": "Birincil",
+  "dev": "Geliştirme",
+  "disk": "DİSK",
+  "updateWsl": {
+    "updating": "Yönetici onayı bekleniyor... UAC iletişim kutusunu kontrol edin",
+    "preRelease": "WSL'yi Güncelle (ön sürüm) - Yönetici gerektirir",
+    "default": "WSL'yi Güncelle - Yönetici gerektirir",
+    "uac": "UAC"
+  },
+  "diskMounts": {
+    "empty": "Disk Bağlamaları",
+    "count": "Disk Bağlamaları ({{count}} bağlı)"
+  },
+  "preflight": {
+    "retry": "Denetimi Yeniden Dene"
+  }
+}

@@ -1,0 +1,96 @@
+{
+  "quickActions": {
+    "title": "Hızlı Eylemler",
+    "info": "Dağıtım Bilgisi",
+    "explorer": "Dosya Gezgini'ni Aç",
+    "ide": "IDE'de Aç",
+    "restart": "Yeniden Başlat",
+    "export": "Dosyaya Aktar...",
+    "clone": "Kopyala...",
+    "setDefault": "Varsayılan Olarak Ayarla",
+    "alreadyDefault": "Varsayılan Dağıtım"
+  },
+  "manage": {
+    "title": "Yönet",
+    "move": "Dağıtımı Taşı...",
+    "resize": "Diski Yeniden Boyutlandır...",
+    "compact": "Diski Sıkıştır...",
+    "user": "Varsayılan Kullanıcıyı Ayarla...",
+    "rename": "Yeniden Adlandır...",
+    "sparse": "Seyrek Modu",
+    "version": "WSL Sürümünü Ayarla"
+  },
+  "customActions": {
+    "title": "Özel Eylemler",
+    "requiresStop": "Dağıtımın durdurulması gerekiyor",
+    "requiresShutdown": "WSL kapatılmalıdır"
+  },
+  "sparseConfirm": {
+    "title": "Seyrek Modu Etkinleştirilsin mi?",
+    "message": "Uyarı: Microsoft, seyrek VHD desteğinin veri bozulmasına neden olabileceği konusunda uyarıda bulunmuştur. Disk alanını otomatik olarak geri kazanmaya yardımcı olsa da veri kaybı riski vardır. Bu özelliği etkinleştirmeden önce yedeklerinizin olduğundan emin olun.",
+    "confirm": "Yine de Etkinleştir"
+  },
+  "outputDialog": {
+    "titleSuffix": "- Çıktı",
+    "noOutput": "Çıktı yok."
+  },
+  "editor": {
+    "iconLabel": "Simge",
+    "availableVars": "Kullanılabilir değişkenler:"
+  },
+  "exportTitle": "Özel Eylemleri Dışa Aktar",
+  "importTitle": "Özel Eylemleri İçe Aktar",
+  "badge": {
+    "startup": "Başlangıç"
+  },
+  "scope": {
+    "all": "Tüm dağıtımlar",
+    "pattern": "Desen: {{pattern}}",
+    "count_one": "{{count}} dağıtım",
+    "count_other": "{{count}} dağıtım"
+  },
+  "sparseChanged": "Seyrek Modu Değiştirildi",
+  "sparseChangedMessage": "{{name}} için seyrek modu {{state}}",
+  "sparseToggleFailed": "Seyrek Modu Değiştirilemedi",
+  "sparseToggle": "Seyrek Modunu Değiştir",
+  "actionFailed": "Eylem Başarısız",
+  "actionFailedMessage": "Eylem çalıştırılamadı",
+  "distroIdUnavailable": "Dağıtım kimliği kullanılamıyor",
+  "requiresSudo": "sudo parolası gerektirir",
+  "confirmRunTitle": "\"{{action}}\" çalıştırılsın mı?",
+  "confirmRunMessage": "Bu eylemi {{name}} üzerinde çalıştırmak istediğinizden emin misiniz?",
+  "customActionsSettings": {
+    "title": "Özel Eylemler",
+    "description": "Dağıtım hızlı eylemler menüsünde görünecek kabuk komutlarını tanımlayın",
+    "addAction": "Eylem Ekle",
+    "editAction": "Eylemi Düzenle",
+    "noActions": "Yapılandırılmış özel eylem yok",
+    "noActionsHint": "Başlamak için ilk özel eyleminizi ekleyin",
+    "name": "Ad",
+    "namePlaceholder": "örn., Sistemi Güncelle",
+    "command": "Komut",
+    "commandPlaceholder": "örn., sudo apt update && sudo apt upgrade -y",
+    "sudo": "sudo ile çalıştır",
+    "sudoDesc": "Komutu yükseltilmiş yetkilerle çalıştır",
+    "runOnStartup": "Başlangıçta Çalıştır",
+    "runOnStartupDesc": "Eşleşen bir dağıtım başlatıldığında çalıştır",
+    "confirmBeforeRun": "Çalıştırmadan önce onayla",
+    "showOutput": "Çıktıyı Göster",
+    "showOutputDesc": "Komut çıktısını bir iletişim kutusunda göster",
+    "runInTerminal": "Terminalde Çalıştır",
+    "runInTerminalDesc": "Komutu görünür bir terminal penceresinde çalıştır",
+    "target": "Hedef Dağıtımlar",
+    "targetAll": "Tüm dağıtımlar",
+    "targetSpecific": "Belirli dağıtımlar",
+    "targetRegex": "Regex deseni",
+    "targetPlaceholder": "örn., Ubuntu.*",
+    "save": "Kaydet",
+    "delete": "Sil",
+    "deleteConfirm": "Bu eylemi silmek istediğinizden emin misiniz?",
+    "importExport": "İçe/Dışa Aktarma",
+    "importActions": "İçe Aktar",
+    "exportActions": "Dışa Aktar",
+    "importSuccess": "Eylemler başarıyla içe aktarıldı",
+    "exportSuccess": "Eylemler başarıyla dışa aktarıldı"
+  }
+}

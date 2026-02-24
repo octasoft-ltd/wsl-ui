@@ -1,0 +1,67 @@
+{
+  "button": {
+    "cancel": "Anuluj",
+    "close": "Zamknij",
+    "save": "Zapisz",
+    "delete": "Usuń",
+    "confirm": "Potwierdź",
+    "retry": "Ponów próbę",
+    "browse": "Przeglądaj",
+    "back": "Wstecz",
+    "dismiss": "Odrzuć",
+    "learnMore": "Dowiedz się więcej",
+    "resetToDefault": "Resetuj do domyślnych",
+    "clear": "Wyczyść wyszukiwanie",
+    "edit": "Edytuj",
+    "run": "Uruchom"
+  },
+  "label": {
+    "name": "Nazwa",
+    "status": "Status",
+    "version": "Wersja",
+    "size": "Rozmiar",
+    "location": "Lokalizacja",
+    "default": "Domyślna",
+    "yes": "Tak",
+    "no": "Nie",
+    "on": "Wł.",
+    "off": "Wył.",
+    "loading": "Ładowanie...",
+    "none": "Brak",
+    "ip": "IP",
+    "copied": "Skopiowano!",
+    "disk": "Dysk",
+    "memory": "Pamięć",
+    "cpu": "CPU",
+    "installed": "Zainstalowana",
+    "notInstalled": "Niezainstalowana"
+  },
+  "status": {
+    "online": "Online",
+    "offline": "Offline",
+    "primary": "Główny",
+    "compacting": "Kompaktowanie",
+    "operational": "OPERACYJNY",
+    "standby": "GOTOWOŚĆ"
+  },
+  "unit": {
+    "gb": "GB",
+    "tb": "TB"
+  },
+  "validation": {
+    "invalidChars": "Nazwa może zawierać tylko litery, cyfry, kropki, podkreślenia i łączniki",
+    "duplicateName": "Dystrybucja o nazwie \"{{name}}\" już istnieje",
+    "nameExists": "Dystrybucja o tej nazwie już istnieje",
+    "required": "To pole jest wymagane"
+  },
+  "wslVersion": {
+    "wsl1": "WSL 1",
+    "wsl2": "WSL 2"
+  },
+  "errors": {
+    "unknown": "Wystąpił nieznany błąd"
+  },
+  "noOutput": "Brak danych wyjściowych",
+  "output": "Dane wyjściowe",
+  "ranOn": "Uruchomiono na: {{distro}}"
+}

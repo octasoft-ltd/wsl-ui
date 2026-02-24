@@ -1,0 +1,67 @@
+{
+  "button": {
+    "cancel": "İptal",
+    "close": "Kapat",
+    "save": "Kaydet",
+    "delete": "Sil",
+    "confirm": "Onayla",
+    "retry": "Yeniden Dene",
+    "browse": "Göz At",
+    "back": "Geri",
+    "dismiss": "Kapat",
+    "learnMore": "Daha Fazla Bilgi",
+    "resetToDefault": "Varsayılana sıfırla",
+    "clear": "Aramayı temizle",
+    "edit": "Düzenle",
+    "run": "Çalıştır"
+  },
+  "label": {
+    "name": "Ad",
+    "status": "Durum",
+    "version": "Sürüm",
+    "size": "Boyut",
+    "location": "Konum",
+    "default": "Varsayılan",
+    "yes": "Evet",
+    "no": "Hayır",
+    "on": "Açık",
+    "off": "Kapalı",
+    "loading": "Yükleniyor...",
+    "none": "Hiçbiri",
+    "ip": "IP",
+    "copied": "Kopyalandı!",
+    "disk": "Disk",
+    "memory": "Bellek",
+    "cpu": "CPU",
+    "installed": "Yüklü",
+    "notInstalled": "Yüklü değil"
+  },
+  "status": {
+    "online": "Çevrimiçi",
+    "offline": "Çevrimdışı",
+    "primary": "Birincil",
+    "compacting": "Sıkıştırılıyor",
+    "operational": "ÇALIŞIYOR",
+    "standby": "BEKLEME"
+  },
+  "unit": {
+    "gb": "GB",
+    "tb": "TB"
+  },
+  "validation": {
+    "invalidChars": "Ad yalnızca harf, rakam, nokta, alt çizgi ve kısa çizgi içerebilir",
+    "duplicateName": "\"{{name}}\" adında bir dağıtım zaten mevcut",
+    "nameExists": "Bu adda bir dağıtım zaten mevcut",
+    "required": "Bu alan zorunludur"
+  },
+  "wslVersion": {
+    "wsl1": "WSL 1",
+    "wsl2": "WSL 2"
+  },
+  "errors": {
+    "unknown": "Bilinmeyen bir hata oluştu"
+  },
+  "noOutput": "Çıktı yok",
+  "output": "Çıktı",
+  "ranOn": "Çalıştırıldığı dağıtım: {{distro}}"
+}

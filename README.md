@@ -24,6 +24,31 @@ Built with [Tauri](https://tauri.app/) (Rust) and [React](https://react.dev/)
 
 See the [User Guide](docs/USER-GUIDE.md) for detailed features and screenshots.
 
+## Language Support
+
+WSL UI is available in multiple languages. The app automatically detects your
+system language, or you can switch manually from the settings.
+
+| Language | Native Name |
+|----------|-------------|
+| English | English |
+| Arabic | العربية |
+| Chinese (Simplified) | 简体中文 |
+| Chinese (Traditional) | 繁體中文 |
+| French | Français |
+| German | Deutsch |
+| Hindi | हिन्दी |
+| Japanese | 日本語 |
+| Korean | 한국어 |
+| Polish | Polski |
+| Portuguese (Brazil) | Português (Brasil) |
+| Russian | Русский |
+| Spanish | Español |
+| Turkish | Türkçe |
+
+Don't see your language?
+[Open an issue](https://github.com/octasoft-ltd/wsl-ui/issues) to request it.
+
 ## Installation
 
 ### From Microsoft Store

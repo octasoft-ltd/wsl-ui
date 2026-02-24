@@ -11,6 +11,7 @@ A complete guide to managing your WSL distributions with WSL UI.
 - [Linux Desktop Setup Scripts](#linux-desktop-setup-scripts)
 - [Backup and Restore](#backup-and-restore)
 - [Custom Actions](#custom-actions)
+- [Language](#language)
 - [Settings](#settings)
 - [Themes](#themes)
 - [Keyboard Shortcuts & Accessibility](#keyboard-shortcuts--accessibility)
@@ -211,6 +212,30 @@ Use these variables in your commands:
 - `${HOME}` - Linux home directory
 - `${USER}` - Default user
 - `${WINDOWS_HOME}` - Windows home in WSL path format
+
+---
+
+## Language
+
+WSL UI supports multiple languages and automatically detects your system language on first launch.
+
+### Changing Language
+
+1. Open **Settings** from the gear icon in the header
+2. Select the **Language** tab
+3. Choose your preferred language from the list
+
+The change takes effect immediately - no restart required.
+
+### Auto-Detection
+
+On first launch, WSL UI matches your Windows display language to the closest supported language. For example, `fr-CA` (French Canadian) will resolve to French, and `zh-TW` will resolve to Traditional Chinese.
+
+If your language isn't detected correctly, you can always switch manually in settings.
+
+### Requesting a New Language
+
+Don't see your language? [Open an issue](https://github.com/octasoft-ltd/wsl-ui/issues) to request it.
 
 ---
 
