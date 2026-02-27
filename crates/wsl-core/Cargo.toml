@@ -1,6 +1,6 @@
 [package]
 name = "wsl-core"
-version = "0.18.0"
+version = "0.18.1"
 edition = "2021"
 description = "Core WSL management logic - parsing and types"
 license = "GPL-3.0-only"
