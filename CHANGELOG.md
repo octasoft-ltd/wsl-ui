@@ -5,6 +5,14 @@ All notable changes to WSL UI will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.18.1](https://github.com/octasoft-ltd/wsl-ui/compare/v0.18.0...v0.18.1) (2026-02-27)
+
+
+### Bug Fixes
+
+* Sync language preference to localStorage for persistence ([485bc15](https://github.com/octasoft-ltd/wsl-ui/commit/485bc15a0a0543e152df4dd22ce598d76259dc1e))
+* Sync language preference to localStorage for persistence across restarts ([f113b93](https://github.com/octasoft-ltd/wsl-ui/commit/f113b933be37c7474a8cf68721cedaf959a8d62f)), closes [#39](https://github.com/octasoft-ltd/wsl-ui/issues/39)
+
 ## [0.18.0](https://github.com/octasoft-ltd/wsl-ui/compare/v0.17.0...v0.18.0) (2026-02-24)
 
 
