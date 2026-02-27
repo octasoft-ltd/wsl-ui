@@ -20,15 +20,16 @@ export function LanguageSettings() {
   const handleLanguageChange = async (locale: string) => {
     await updateSetting("locale", locale);
 
-    if (locale === "auto") {
-      // Reset to browser-detected language
-      const targetLang = resolveLanguage(navigator.language || "en");
-      await loadLanguage(targetLang);
-      i18n.changeLanguage(targetLang);
-    } else {
-      await loadLanguage(locale);
-      i18n.changeLanguage(locale);
-    }
+    const targetLang = locale === "auto"
+      ? resolveLanguage(navigator.language || "en")
+      : locale;
+
+    // Sync to localStorage so i18next LanguageDetector restores the correct
+    // language on next startup (before Tauri settings are loaded asynchronously)
+    localStorage.setItem("wsl-ui-language", targetLang);
+
+    await loadLanguage(targetLang);
+    i18n.changeLanguage(targetLang);
 
     // Set RTL direction for Arabic
     const langConfig = supportedLanguages.find((l) => l.code === (locale === "auto" ? i18n.language : locale));

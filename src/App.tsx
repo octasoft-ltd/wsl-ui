@@ -117,6 +117,9 @@ function App() {
     const targetLang = locale === "auto"
       ? resolveLanguage(navigator.language)
       : locale;
+    // Sync localStorage so i18next LanguageDetector uses the correct language
+    // on next startup before Tauri settings load asynchronously
+    localStorage.setItem("wsl-ui-language", targetLang);
     if (i18n.language !== targetLang) {
       loadLanguage(targetLang).then(() => i18n.changeLanguage(targetLang));
     }
