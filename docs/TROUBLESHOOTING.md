@@ -125,7 +125,7 @@ The WSL service or VM can become unresponsive due to:
 
 ### Related
 - Default timeouts: Quick (10s), Default (30s), Long operations (600s)
-- Settings path: `%APPDATA%\wsl-ui\settings.json`
+- Settings path: `%LOCALAPPDATA%\wsl-ui\settings.json`
 
 ---
 
@@ -796,6 +796,75 @@ Users may intentionally disable GUI applications to:
 - WSLg GitHub: https://github.com/microsoft/wslg
 - WSL configuration: https://learn.microsoft.com/en-us/windows/wsl/wsl-config
 - The system distro is based on CBL-Mariner (now Azure Linux)
+
+---
+
+## Issue #12: Language settings reset to English after restart
+
+### Symptoms
+- User selects a non-English language (e.g., 简体中文, Español)
+- Language works correctly during the session
+- After closing and reopening the app, the language reverts to English
+- The `settings.json` file still has the correct `locale` value
+
+### Root Cause
+On startup, the locale sync effect in `App.tsx` fired immediately with `DEFAULT_SETTINGS` (which has `locale: "auto"`) **before** `loadSettings()` had finished loading the real settings from Tauri. This caused:
+
+1. `locale = "auto"` resolved to English (or browser default)
+2. `localStorage.setItem("wsl-ui-language", "en")` overwrote the saved language preference
+3. When the real settings loaded moments later, i18next LanguageDetector had already cached `"en"` in localStorage
+
+The fix gates the locale sync effect on the `hasLoaded` flag, so it only runs after `loadSettings()` completes.
+
+### Diagnosis
+1. Check the settings file for the correct locale value:
+   ```
+   %LOCALAPPDATA%\wsl-ui\settings.json
+   ```
+   Look for the `"locale"` field — it should contain the language code (e.g., `"zh-CN"`, `"es"`, `"fr"`)
+
+2. Check application logs for locale sync messages:
+   ```
+   %LOCALAPPDATA%\wsl-ui\logs\
+   ```
+   Look for `[App] Locale sync:` entries — these show the resolved locale values at startup
+
+3. Check WebView2 localStorage (used by i18next LanguageDetector):
+   ```
+   %LOCALAPPDATA%\wsl-ui\EBWebView\
+   ```
+
+### Solution
+**Fixed in v0.18.2** by gating the locale sync effect on `hasLoaded`:
+```typescript
+useEffect(() => {
+  if (!hasLoaded) return; // Don't sync until real settings are loaded
+  // ... locale sync logic
+}, [hasLoaded, settings?.locale, i18n]);
+```
+
+**Workaround for v0.18.1:** Manually set the locale in the settings file:
+1. Close the application
+2. Open `%LOCALAPPDATA%\wsl-ui\settings.json` in a text editor
+3. Set the `"locale"` field to your desired language code:
+   ```json
+   {
+     "locale": "zh-CN"
+   }
+   ```
+4. Save the file and reopen the application
+5. If the language still resets, also clear the WebView2 cache in `%LOCALAPPDATA%\wsl-ui\EBWebView\`
+
+### Files Changed
+- `src/App.tsx`: Added `hasLoaded` guard to locale sync effect + debug logging
+- `src/store/settingsStore.ts`: Added `hasLoaded` flag to settings store + debug logging
+- `src/components/settings/LanguageSettings.tsx`: Added debug logging for language changes
+- `src/i18n/index.ts`: Added debug logging for lazy-loaded language bundles
+
+### Related
+- GitHub Issue: #42
+- All install methods (NSIS installer, MSI, portable) share the same config directory at `%LOCALAPPDATA%\wsl-ui\` — there is no conflict between install types
+- Enable debug logging in Settings → Logging for more detail in logs
 
 ---
 
