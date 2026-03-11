@@ -22,6 +22,7 @@ pub use wsl_command::mock::MockErrorType;
 pub use wsl_command::MockUpdateResult;
 
 use std::sync::{Arc, OnceLock};
+use std::sync::atomic::{AtomicU8, Ordering};
 
 use resource::{MockResourceMonitor, RealResourceMonitor};
 use terminal::{MockTerminalExecutor, RealTerminalExecutor};
@@ -147,4 +148,78 @@ pub fn set_mock_update_result(result: MockUpdateResult) {
     if let Some(mock) = mock_wsl_executor() {
         mock.set_update_result(result);
     }
+}
+
+// === WSL Feature Detection ===
+
+// 0 = unchecked, 1 = supported, 2 = not supported
+static DISTRIBUTION_ID_SUPPORT: AtomicU8 = AtomicU8::new(0);
+
+/// Check whether the installed WSL version supports `--distribution-id`.
+/// This flag was introduced in WSL 2.4.4. On older versions, using it causes
+/// error 0x80070002 (file not found). The result is cached after first probe.
+pub fn supports_distribution_id() -> bool {
+    let cached = DISTRIBUTION_ID_SUPPORT.load(Ordering::Relaxed);
+    if cached != 0 {
+        return cached == 1;
+    }
+
+    let supported = probe_distribution_id_support();
+    DISTRIBUTION_ID_SUPPORT.store(if supported { 1 } else { 2 }, Ordering::Relaxed);
+
+    if !supported {
+        log::info!("WSL does not support --distribution-id (version < 2.4.4); falling back to -d");
+    }
+
+    supported
+}
+
+/// Probe for --distribution-id support by checking the WSL version string.
+/// Returns true if WSL version >= 2.4.4.
+fn probe_distribution_id_support() -> bool {
+    use crate::settings::get_executable_paths;
+    use crate::utils::hidden_command;
+    use std::process::Stdio;
+
+    let paths = get_executable_paths();
+    let output = hidden_command(&paths.wsl)
+        .args(["--version"])
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .output();
+
+    let output = match output {
+        Ok(o) => o,
+        Err(_) => return false,
+    };
+
+    let stdout = wsl_core::decode_wsl_output(&output.stdout);
+
+    // Parse "WSL version: X.Y.Z" (or localized variant)
+    for line in stdout.lines() {
+        let line = line.trim();
+        if line.to_lowercase().starts_with("wsl") && line.contains(':') {
+            if let Some(version_str) = line.split(':').nth(1) {
+                let version_str = version_str.trim();
+                return is_version_gte(version_str, 2, 4, 4);
+            }
+        }
+    }
+
+    // If we can't parse the version, assume older WSL without support
+    false
+}
+
+/// Check if a version string "major.minor.patch..." is >= the given threshold.
+fn is_version_gte(version: &str, req_major: u32, req_minor: u32, req_patch: u32) -> bool {
+    let parts: Vec<u32> = version
+        .split('.')
+        .filter_map(|p| p.parse().ok())
+        .collect();
+
+    let major = parts.first().copied().unwrap_or(0);
+    let minor = parts.get(1).copied().unwrap_or(0);
+    let patch = parts.get(2).copied().unwrap_or(0);
+
+    (major, minor, patch) >= (req_major, req_minor, req_patch)
 }
