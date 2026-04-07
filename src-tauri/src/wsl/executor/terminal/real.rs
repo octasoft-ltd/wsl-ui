@@ -1008,3 +1008,32 @@ fn open_terminal_with_command_cmd(distro: &str, id: Option<&str>, command: &str)
         .map_err(|e| WslError::CommandFailed(e.to_string()))?;
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_strip_guid_braces_with_braces() {
+        assert_eq!(
+            strip_guid_braces("{3c002dba-d670-4eed-b0c2-97e6eb929d06}"),
+            "3c002dba-d670-4eed-b0c2-97e6eb929d06"
+        );
+    }
+
+    #[test]
+    fn test_strip_guid_braces_without_braces() {
+        assert_eq!(
+            strip_guid_braces("3c002dba-d670-4eed-b0c2-97e6eb929d06"),
+            "3c002dba-d670-4eed-b0c2-97e6eb929d06"
+        );
+    }
+
+    #[test]
+    fn test_strip_guid_braces_uppercase() {
+        assert_eq!(
+            strip_guid_braces("{3C002DBA-D670-4EED-B0C2-97E6EB929D06}"),
+            "3C002DBA-D670-4EED-B0C2-97E6EB929D06"
+        );
+    }
+}

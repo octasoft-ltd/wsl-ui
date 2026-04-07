@@ -195,11 +195,12 @@ fn probe_distribution_id_support() -> bool {
 
     let stdout = wsl_core::decode_wsl_output(&output.stdout);
 
-    // Parse "WSL version: X.Y.Z" (or localized variant)
+    // Parse "WSL version: X.Y.Z".
+    // Match "wsl version:" exactly (not "wslg version:", "wsl2 version:", etc.)
     for line in stdout.lines() {
-        let line = line.trim();
-        if line.to_lowercase().starts_with("wsl") && line.contains(':') {
-            if let Some(version_str) = line.split(':').nth(1) {
+        let lower = line.trim().to_lowercase();
+        if lower.starts_with("wsl version:") {
+            if let Some(version_str) = lower.split(':').nth(1) {
                 let version_str = version_str.trim();
                 return is_version_gte(version_str, 2, 4, 4);
             }
@@ -222,4 +223,36 @@ fn is_version_gte(version: &str, req_major: u32, req_minor: u32, req_patch: u32)
     let patch = parts.get(2).copied().unwrap_or(0);
 
     (major, minor, patch) >= (req_major, req_minor, req_patch)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_is_version_gte_above_threshold() {
+        assert!(is_version_gte("2.7.0.0", 2, 4, 4));
+        assert!(is_version_gte("2.6.3.0", 2, 4, 4));
+        assert!(is_version_gte("2.4.4.0", 2, 4, 4));
+        assert!(is_version_gte("3.0.0", 2, 4, 4));
+    }
+
+    #[test]
+    fn test_is_version_gte_below_threshold() {
+        assert!(!is_version_gte("2.4.3.0", 2, 4, 4));
+        assert!(!is_version_gte("2.3.9.0", 2, 4, 4));
+        assert!(!is_version_gte("1.9.9", 2, 4, 4));
+        assert!(!is_version_gte("0.0.0", 2, 4, 4));
+    }
+
+    #[test]
+    fn test_is_version_gte_exact_threshold() {
+        assert!(is_version_gte("2.4.4", 2, 4, 4));
+    }
+
+    #[test]
+    fn test_is_version_gte_unparseable_returns_false() {
+        assert!(!is_version_gte("", 2, 4, 4));
+        assert!(!is_version_gte("not-a-version", 2, 4, 4));
+    }
 }
