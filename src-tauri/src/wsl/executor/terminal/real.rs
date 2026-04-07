@@ -591,7 +591,7 @@ fn has_template_placeholders(cmd: &str) -> bool {
 /// Placeholders:
 ///   $WSL - path to wsl.exe
 ///   $DISTRO_ARGS - expands to "--distribution-id <guid> --cd ~" (preferred)
-///   $DISTRO_ID - distribution GUID (legacy)
+///   $DISTRO_ID - distribution GUID on WSL >= 2.4.4, falls back to name on older WSL (legacy)
 ///   $DISTRO_NAME - distribution name (legacy)
 fn expand_template(template: &str, distro: &str, id: Option<&str>, wsl_path: &str) -> String {
     let result = template.replace("$WSL", wsl_path);
@@ -605,7 +605,9 @@ fn expand_template(template: &str, distro: &str, id: Option<&str>, wsl_path: &st
 
     // Legacy placeholders for backwards compatibility
     let result = result.replace("$DISTRO_NAME", distro);
-    let distro_id = id.map(|g| strip_guid_braces(g)).unwrap_or_else(|| distro.to_string());
+    let distro_id = id.filter(|_| supports_distribution_id())
+        .map(|g| strip_guid_braces(g))
+        .unwrap_or_else(|| distro.to_string());
     result.replace("$DISTRO_ID", &distro_id)
 }
 
