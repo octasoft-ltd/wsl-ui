@@ -868,6 +868,97 @@ useEffect(() => {
 
 ---
 
+## Issue #13: Garbled or incorrect text after reinstalling WSL UI
+
+### Symptoms
+- UI text appears garbled, shows wrong language, or reverts to English after reinstalling WSL UI
+- Switching from the Microsoft Store version to the EXE installer (or vice versa) causes the issue
+- The problem persists even after uninstalling and reinstalling again
+- Language settings appear correct in the app settings, but the UI text does not match
+
+### Root Cause
+WSL UI stores app state in `%LOCALAPPDATA%\wsl-ui\` in two forms that **survive uninstall**:
+
+1. **Tauri persistent settings** — `%LOCALAPPDATA%\wsl-ui\settings.json`. Includes your saved language preference and other settings.
+2. **WebView2 browser data** — `%LOCALAPPDATA%\wsl-ui\EBWebView`. Includes `localStorage`, which the i18n system uses to remember the active display language (`wsl-ui-language` key).
+
+When you reinstall WSL UI, neither location is cleared. If the previous install left stale or corrupted data (for example, a partially-saved language state from a crash), the new install will read it and behave unexpectedly.
+
+This is especially visible for non-English locales, where the language bundle is lazy-loaded at startup. If the stored language code is invalid or the bundle fails to load, the app falls back to English — but the settings page may still show the old language as "selected".
+
+### Diagnosis
+1. Check the stored language in settings:
+   ```powershell
+   type "$env:LOCALAPPDATA\wsl-ui\settings.json"
+   ```
+   Look for the `locale` field. If it contains an invalid or unexpected language code, that is the likely cause.
+
+2. Check the WebView2 localStorage data (optional, advanced):
+   The `wsl-ui-language` key in localStorage can be inspected using Edge DevTools or by checking the LevelDB files in:
+   ```
+   %LOCALAPPDATA%\wsl-ui\EBWebView\Default\Local Storage
+   ```
+
+### Solution
+**Recommended: clear the app data before reinstalling**
+
+1. Uninstall WSL UI
+2. Delete the app data directory (covers both settings and WebView2 data):
+   ```powershell
+   Remove-Item -Recurse -Force "$env:LOCALAPPDATA\wsl-ui"
+   ```
+3. Reinstall WSL UI
+
+**Quick fix (without reinstalling):**
+
+1. Manually edit the settings file to reset the language:
+   ```powershell
+   notepad "$env:LOCALAPPDATA\wsl-ui\settings.json"
+   ```
+   Find the `locale` field and set it to `"auto"` or a valid language code (e.g., `"zh-CN"`):
+   ```json
+   {
+     "locale": "auto"
+   }
+   ```
+   Save the file and restart WSL UI.
+
+2. Alternatively, reset the language setting inside the app:
+   - Go to **Settings → Application → Language**
+   - Select **Auto-detect** or your preferred language
+   - Restart WSL UI to confirm it persists
+
+### Valid language codes
+The following language codes are supported:
+
+| Code | Language |
+|------|----------|
+| `en` | English |
+| `zh-CN` | Chinese (Simplified) |
+| `zh-TW` | Chinese (Traditional) |
+| `ja` | Japanese |
+| `ko` | Korean |
+| `es` | Spanish |
+| `hi` | Hindi |
+| `fr` | French |
+| `de` | German |
+| `pt-BR` | Portuguese (Brazil) |
+| `ar` | Arabic |
+| `ru` | Russian |
+| `pl` | Polish |
+| `tr` | Turkish |
+| `it` | Italian |
+| `auto` | System language (auto-detect) |
+
+### Files Changed
+- `docs/TROUBLESHOOTING.md`: Added this entry documenting the issue and cleanup steps
+
+### Related
+- GitHub issue: https://github.com/octasoft-ltd/wsl-ui/issues/52
+- App data location: `%LOCALAPPDATA%\wsl-ui\`
+
+---
+
 ## Template for New Issues
 
 ```markdown
