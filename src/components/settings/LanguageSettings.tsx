@@ -8,6 +8,7 @@ import { useTranslation } from "react-i18next";
 import { useSettingsStore } from "../../store/settingsStore";
 import { supportedLanguages, loadLanguage, resolveLanguage } from "../../i18n";
 import { GlobeIcon, ExternalLinkIcon } from "../icons";
+import { debug } from "../../utils/logger";
 
 export function LanguageSettings() {
   const { t, i18n } = useTranslation("settings");
@@ -18,11 +19,11 @@ export function LanguageSettings() {
   const currentLocale = settings.locale || "auto";
 
   const handleLanguageChange = async (locale: string) => {
-    await updateSetting("locale", locale);
-
     const targetLang = locale === "auto"
       ? resolveLanguage(navigator.language || "en")
       : locale;
+    debug(`[LanguageSettings] Language changed: locale=${locale}, targetLang=${targetLang}`);
+    await updateSetting("locale", locale);
 
     // Sync to localStorage so i18next LanguageDetector restores the correct
     // language on next startup (before Tauri settings are loaded asynchronously)
