@@ -33,7 +33,7 @@ function App() {
   const { t, i18n } = useTranslation("errors");
   const { distributions, fetchDistros, error, isTimeoutError, clearError, forceKillWsl, actionInProgress, isLoading: distrosLoading } = useDistroStore();
   const { showMountDialog, closeMountDialog, loadMountedDisks } = useMountStore();
-  const { settings, loadSettings, updateSetting } = useSettingsStore();
+  const { settings, loadSettings, updateSetting, hasLoaded } = useSettingsStore();
   const { notifications, removeNotification } = useNotificationStore();
   const { checkPreflight, isReady: wslReady } = usePreflightStore();
   const { startupActionOutput, clearStartupActionOutput } = useActionsStore();
@@ -111,9 +111,11 @@ function App() {
   }, [settings]);
 
   // Sync locale from settings to i18next
+  // Guard on hasLoaded to prevent overwriting localStorage with DEFAULT_SETTINGS
+  // before Tauri settings have finished loading asynchronously.
   useEffect(() => {
-    if (!settings) return;
-    const locale = settings.locale || "auto";
+    if (!hasLoaded) return;
+    const locale = settings?.locale || "auto";
     const targetLang = locale === "auto"
       ? resolveLanguage(navigator.language)
       : locale;
@@ -126,7 +128,7 @@ function App() {
     // Set RTL direction for Arabic
     const langConfig = supportedLanguages.find((l) => l.code === targetLang);
     document.documentElement.dir = langConfig && "dir" in langConfig && langConfig.dir === "rtl" ? "rtl" : "ltr";
-  }, [settings?.locale, i18n]);
+  }, [hasLoaded, settings?.locale, i18n]);
 
   // Track app_started event (once per session, if telemetry enabled and distros loaded)
   useEffect(() => {
