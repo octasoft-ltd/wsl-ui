@@ -44,6 +44,7 @@ export const supportedLanguages = [
   { code: "ru", name: "Russian", nativeName: "Русский" },
   { code: "pl", name: "Polish", nativeName: "Polski" },
   { code: "tr", name: "Turkish", nativeName: "Türkçe" },
+  { code: "it", name: "Italian", nativeName: "Italiano" },
 ] as const;
 
 export type SupportedLanguage = (typeof supportedLanguages)[number]["code"];
@@ -95,6 +96,7 @@ const languageImports: Record<string, () => Promise<Record<string, Record<string
   ru: () => import("./locales/ru/index").then((m) => m.default),
   pl: () => import("./locales/pl/index").then((m) => m.default),
   tr: () => import("./locales/tr/index").then((m) => m.default),
+  it: () => import("./locales/it/index").then((m) => m.default),
 };
 
 export async function loadLanguage(lng: string): Promise<void> {

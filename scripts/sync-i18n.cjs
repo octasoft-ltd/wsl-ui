@@ -17,7 +17,7 @@ const FILES = [
   'statusbar.json',
 ];
 
-const NON_EN_LOCALES = ['ar', 'de', 'es', 'fr', 'hi', 'ja', 'ko', 'pt-BR', 'zh-CN', 'zh-TW'];
+const NON_EN_LOCALES = ['ar', 'de', 'es', 'fr', 'hi', 'it', 'ja', 'ko', 'pl', 'pt-BR', 'ru', 'tr', 'zh-CN', 'zh-TW'];
 
 /**
  * Collect all leaf key paths from a nested object.
