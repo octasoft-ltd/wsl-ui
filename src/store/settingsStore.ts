@@ -54,6 +54,7 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
         },
       };
       info("[SettingsStore] Settings loaded successfully");
+      debug(`[SettingsStore] Loaded locale: ${settings.locale ?? "(undefined, will use auto)"}`);
       set({ settings, isLoading: false, hasLoaded: true });
     } catch (error) {
       logger.error("Failed to load settings:", "SettingsStore", error);
