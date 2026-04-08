@@ -596,10 +596,18 @@ pub async fn install_nvidia_container_toolkit(name: String, id: Option<String>) 
     .map_err(|e| format!("Task failed: {}", e))?
 }
 
-/// Generate CDI specs for NVIDIA GPUs using nvidia-ctk.
-/// Writes the spec to /etc/cdi/nvidia.yaml so containers can request the GPU
-/// via `--device nvidia.com/gpu=all`.
-/// Returns the command output.
+/// Generate CDI specs for NVIDIA GPUs using nvidia-ctk, then post-process the spec
+/// to remove mount entries that reference /usr/lib/wsl/drivers/ paths.
+///
+/// On WSL2, nvidia-ctk cdi generate writes entries for Windows driver DLLs found at
+/// /usr/lib/wsl/drivers/nvXXX.inf_amd64_*/libcuda.so.1.1 into the CDI spec. These paths
+/// cannot be bind-mounted by crun into containers, causing:
+///   "crun: cannot stat /usr/lib/wsl/drivers/...: No such file or directory"
+///
+/// The post-processing step strips those entries from the generated YAML, leaving only
+/// the properly accessible /usr/lib/wsl/lib/ entries.
+///
+/// Returns combined command output.
 #[tauri::command]
 pub async fn generate_cdi_specs(name: String, id: Option<String>) -> Result<String, String> {
     validate_distro_name(&name).map_err(|e| e.to_string())?;
@@ -618,7 +626,7 @@ pub async fn generate_cdi_specs(name: String, id: Option<String>) -> Result<Stri
             return Err(format!("Failed to create /etc/cdi directory: {}", mkdir_output.stderr.trim()));
         }
 
-        let output = wsl_executor()
+        let gen_output = wsl_executor()
             .exec_as_root(
                 &name,
                 id.as_deref(),
@@ -626,13 +634,47 @@ pub async fn generate_cdi_specs(name: String, id: Option<String>) -> Result<Stri
             )
             .map_err(|e| format!("Failed to generate CDI specs: {}", e))?;
 
-        let combined = format!("{}\n{}", output.stdout, output.stderr).trim().to_string();
+        let gen_combined = format!("{}\n{}", gen_output.stdout, gen_output.stderr).trim().to_string();
 
-        if !output.success {
-            return Err(format!("CDI generation failed:\n{}", combined));
+        if !gen_output.success {
+            return Err(format!("CDI generation failed:\n{}", gen_combined));
         }
 
-        Ok(combined)
+        // Post-process: remove mount entries referencing /usr/lib/wsl/drivers/.
+        // Those Windows driver DLL paths cannot be bind-mounted by crun in containers.
+        // The CDI YAML mount entries appear as pairs of consecutive lines:
+        //   - hostPath: /usr/lib/wsl/drivers/...
+        //     containerPath: /some/path
+        // We skip both lines whenever the hostPath is under /usr/lib/wsl/drivers/.
+        let cleanup_cmd = r#"python3 -c "
+lines = open('/etc/cdi/nvidia.yaml').readlines()
+out = []
+skip_next = False
+for l in lines:
+    if skip_next:
+        skip_next = False
+        if 'containerPath:' in l:
+            continue
+    if '/usr/lib/wsl/drivers/' in l and 'hostPath' in l:
+        skip_next = True
+        continue
+    out.append(l)
+open('/etc/cdi/nvidia.yaml', 'w').writelines(out)
+print('CDI spec cleaned: removed Windows driver mount entries')
+" 2>&1"#;
+
+        let clean_output = wsl_executor()
+            .exec_as_root(&name, id.as_deref(), cleanup_cmd)
+            .map_err(|e| format!("Failed to clean CDI spec: {}", e))?;
+
+        let full_output = format!("{}\n{}", gen_combined, clean_output.stdout.trim()).trim().to_string();
+
+        if !clean_output.success {
+            // Non-fatal: return generation output with a warning
+            return Ok(format!("{}\nWarning: could not clean CDI spec: {}", full_output, clean_output.stderr.trim()));
+        }
+
+        Ok(full_output)
     })
     .await
     .map_err(|e| format!("Task failed: {}", e))?
