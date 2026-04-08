@@ -5,6 +5,57 @@ All notable changes to WSL UI will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.19.0](https://github.com/octasoft-ltd/wsl-ui/compare/v0.18.1...v0.19.0) (2026-04-08)
+
+
+### Features
+
+* add greptile.json configuration for AI code review ([f0b4aba](https://github.com/octasoft-ltd/wsl-ui/commit/f0b4aba03542a2477e6f08e8039a32a50dc3111c))
+* add greptile.json for AI code review configuration ([29cd37d](https://github.com/octasoft-ltd/wsl-ui/commit/29cd37d01b74ca86a695bc7bbfbfafb0f05c6e47))
+* **i18n:** add community translation contribution workflow ([3e802e2](https://github.com/octasoft-ltd/wsl-ui/commit/3e802e211c91d913bbbc58f34124cb61b5b46f29))
+* **i18n:** add community translation contribution workflow (OCT-356) ([113290e](https://github.com/octasoft-ltd/wsl-ui/commit/113290e11c04f589a6182f38d393fedb34a774a1))
+* **i18n:** add Italian (it) language support ([0399a73](https://github.com/octasoft-ltd/wsl-ui/commit/0399a73b5ae1500d97b62bb9cd87eef5c1d32705))
+* **i18n:** add Italian (it) language support ([24b88d1](https://github.com/octasoft-ltd/wsl-ui/commit/24b88d1ed2f3564774398cbe71b35feab01685a7))
+* **OCT-448:** add GPU support settings and status detection ([c7568cf](https://github.com/octasoft-ltd/wsl-ui/commit/c7568cf1c796668c26506a255b37f6929f2f0e27))
+* **OCT-448:** add GPU support settings and status detection ([a6438da](https://github.com/octasoft-ltd/wsl-ui/commit/a6438da5897f6c36b1227138530af905d49999a3))
+* **OCT-450:** add NVIDIA Container Toolkit detection and guided CDI setup ([4fe5ddf](https://github.com/octasoft-ltd/wsl-ui/commit/4fe5ddfcc37a42ab5823e34186aabe11e30627d7))
+
+
+### Bug Fixes
+
+* apply profile-first logic to with-command terminal paths (OCT-320) ([a8c6733](https://github.com/octasoft-ltd/wsl-ui/commit/a8c6733b4d094d9b6c9428d48ef0b697cfcd8dfa))
+* exclude github-actions[bot] from greptile developer seats ([a6cec22](https://github.com/octasoft-ltd/wsl-ui/commit/a6cec22d63b2623e93bfdc63ddfe8686b9ac3145))
+* exclude github-actions[bot] from greptile reviews (OCT-439) ([fce689d](https://github.com/octasoft-ltd/wsl-ui/commit/fce689d9726d523f4aef2c33b9c623b497d61143))
+* gate \$DISTRO_ID expansion on supports_distribution_id() (OCT-3) ([52edae7](https://github.com/octasoft-ltd/wsl-ui/commit/52edae715990dfd1d861c9ddd374428053d3fb2d))
+* Gate locale sync on hasLoaded and add debug logging for language persistence ([8454da3](https://github.com/octasoft-ltd/wsl-ui/commit/8454da30427ed3b77134f42ec00276b2c0042f08)), closes [#42](https://github.com/octasoft-ltd/wsl-ui/issues/42)
+* Gate locale sync on hasLoaded and add debug logging for language… ([0f38610](https://github.com/octasoft-ltd/wsl-ui/commit/0f3861043daa5656c00d2af7e596a55c32453355))
+* **i18n:** use absolute URL in language request issue template (OCT-356) ([a35770e](https://github.com/octasoft-ltd/wsl-ui/commit/a35770ee051e699662bec9fb8462761d0ed6d768))
+* **ime:** prevent Enter key from triggering actions during IME composition (OCT-431) ([5f81602](https://github.com/octasoft-ltd/wsl-ui/commit/5f816026df8713549983e271b7dac31eb4496677))
+* **ime:** prevent Enter key triggering actions during IME composition ([3244bc1](https://github.com/octasoft-ltd/wsl-ui/commit/3244bc1724e710bd148acd115943751aaf81a0de))
+* **OCT-313:** language not applied on restart ([daecbdb](https://github.com/octasoft-ltd/wsl-ui/commit/daecbdb1d376d128c2fcebed818c4a89f30b1871))
+* **OCT-313:** wait for settings to load before applying locale and always load translation bundle ([da127df](https://github.com/octasoft-ltd/wsl-ui/commit/da127df974e0dd2d2291cd1b553dbec35cb8d8c2))
+* **OCT-314:** fix field alignment on absent WSLg and BOM strip in extract_wsl_version ([dc3c82f](https://github.com/octasoft-ltd/wsl-ui/commit/dc3c82f970c5155ab2a075919c2d73fa245d0f91))
+* **OCT-314:** fix WSL info showing unknown on non-English locales and UI hangs ([8e9ad34](https://github.com/octasoft-ltd/wsl-ui/commit/8e9ad34e6b599f3776174af19d2e3f1ef130b300))
+* **OCT-314:** fix WSL info showing unknown on non-English locales and UI hangs ([d6cb728](https://github.com/octasoft-ltd/wsl-ui/commit/d6cb728e2789f5ede68e418ecd03a323de44da81))
+* **OCT-314:** use strict undefined check for diskSize cache to prevent refetch loop ([a5063b2](https://github.com/octasoft-ltd/wsl-ui/commit/a5063b2768b3b007c129cacb27eaf15a5cfe9382))
+* **OCT-314:** use strict undefined check for diskSize cache to prevent refetch loop ([36224c3](https://github.com/octasoft-ltd/wsl-ui/commit/36224c31113338e5a9c7f84bbc8797098c44ac0c))
+* **OCT-448:** fix NVIDIA GPU detection for WSL2 and update translations ([b6dc6cf](https://github.com/octasoft-ltd/wsl-ui/commit/b6dc6cf1afde6f45cb8458a555835cf60a895323))
+* **OCT-448:** fix NVIDIA GPU detection path for WSL2 ([b02bd1e](https://github.com/octasoft-ltd/wsl-ui/commit/b02bd1e10cfbfa7722442f6d4018ed1bf77a836a))
+* **OCT-448:** fix re-check error visibility and add proper translations ([819f6bc](https://github.com/octasoft-ltd/wsl-ui/commit/819f6bc9a44ef8061d42c687c29b070edae0aea7))
+* **OCT-450:** correct CDI spec generation for NVIDIA GPU container passthrough ([d387e31](https://github.com/octasoft-ltd/wsl-ui/commit/d387e31fd8e41398578686cdfa5481f7dc38dba1))
+* **OCT-450:** remove incorrect CDI post-processing that stripped valid CUDA mounts ([ed48c25](https://github.com/octasoft-ltd/wsl-ui/commit/ed48c254eb34f2b981f7d9365214da4604018ef7))
+* **OCT-450:** restrict CDI spec library search to /usr/lib/wsl/lib ([665488c](https://github.com/octasoft-ltd/wsl-ui/commit/665488ca27994f7cee5ce04619557ce9a624519e))
+* **OCT-450:** restrict CDI spec library search to /usr/lib/wsl/lib ([d45feff](https://github.com/octasoft-ltd/wsl-ui/commit/d45feff3d4bef0ce941ddb784ec1e305f83205b4))
+* **OCT-450:** revert invalid --library-search-paths flag from nvidia-ctk ([1e119ca](https://github.com/octasoft-ltd/wsl-ui/commit/1e119caa5b6f16a98105a8d15193656da86042eb))
+* **OCT-450:** strip WSL2 Windows driver paths from generated CDI spec ([ce6787c](https://github.com/octasoft-ltd/wsl-ui/commit/ce6787c14e9b04686a12e30117b72cacdbfc0d44))
+* prefer WT profile over distribution-id for terminal launch (OCT-320) ([39bf574](https://github.com/octasoft-ltd/wsl-ui/commit/39bf5741d35bbde9e72d491d5581c309f18c7193))
+* prefer WT profile over distribution-id for terminal launch (OCT-320) ([d5b80d8](https://github.com/octasoft-ltd/wsl-ui/commit/d5b80d844da3f2532fded84c233632a43c875919))
+* quote distro name in profile prefix; add unit tests (OCT-320) ([fb57b22](https://github.com/octasoft-ltd/wsl-ui/commit/fb57b225fdc4948e1c3824ab7e89dac486101f22))
+* Remove unnecessary VERIFICATION.txt and LICENSE.txt from Chocolatey package ([2de51ba](https://github.com/octasoft-ltd/wsl-ui/commit/2de51ba8d2036a04c71a4cf3a10b0d71d1343a93))
+* Remove unnecessary VERIFICATION.txt from Chocolatey package ([67db3b2](https://github.com/octasoft-ltd/wsl-ui/commit/67db3b29f6f6a3928d27bf136de584c5d3ec04f8))
+* strip curly braces from GUID for terminal launch ([582db96](https://github.com/octasoft-ltd/wsl-ui/commit/582db960092ad9d3815f461cf046b0b1447bbc83))
+* strip curly braces from GUID for terminal launch ([#43](https://github.com/octasoft-ltd/wsl-ui/issues/43)) ([9712152](https://github.com/octasoft-ltd/wsl-ui/commit/9712152ab025a64db39a09b9811f004168d23c47))
+
 ## [0.18.1](https://github.com/octasoft-ltd/wsl-ui/compare/v0.18.0...v0.18.1) (2026-02-27)
 
 
