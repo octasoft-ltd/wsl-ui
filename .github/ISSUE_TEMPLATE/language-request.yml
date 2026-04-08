@@ -1,0 +1,65 @@
+name: Language Request
+description: Request support for a new language in WSL UI
+title: "[Language Request] "
+labels: ["enhancement", "i18n"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping make WSL UI more accessible! Please fill in the details below.
+
+        **Want to contribute the translation yourself?** See our [translation guide](https://github.com/octasoft-ltd/wsl-ui/blob/main/CONTRIBUTING.md#contributing-translations) — it walks through the full process step by step.
+
+  - type: input
+    id: language-name
+    attributes:
+      label: Language Name
+      description: The English name of the language
+      placeholder: e.g., Italian, Dutch, Vietnamese
+    validations:
+      required: true
+
+  - type: input
+    id: language-code
+    attributes:
+      label: BCP 47 Language Code
+      description: The IETF language tag for this language (see https://en.wikipedia.org/wiki/IETF_language_tag)
+      placeholder: e.g., it, nl, vi, pt-PT
+    validations:
+      required: true
+
+  - type: input
+    id: native-name
+    attributes:
+      label: Native Name
+      description: The name of the language written in that language
+      placeholder: e.g., Italiano, Nederlands, Tiếng Việt
+    validations:
+      required: true
+
+  - type: dropdown
+    id: direction
+    attributes:
+      label: Text Direction
+      description: How text flows in this language
+      options:
+        - Left-to-right (LTR)
+        - Right-to-left (RTL)
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: contribution
+    attributes:
+      label: Contribution
+      description: Let us know if you can help translate
+      options:
+        - label: I can contribute the translation myself and will submit a pull request
+        - label: I need someone else to provide the translation
+
+  - type: textarea
+    id: notes
+    attributes:
+      label: Additional Notes
+      description: Any regional variants, dialect notes, or other context
+      required: false
