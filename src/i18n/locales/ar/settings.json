@@ -374,7 +374,17 @@
     "gpuAvailableLabel": "متوفر",
     "gpuNotAvailableLabel": "غير متوفر",
     "gpuCheckError": "تعذّر الفحص — قم بتشغيل التوزيع أولاً",
-    "gpuNote": "هو مسار GPU الأساسي في WSL2. يكتشف NVIDIA CUDA الملف /usr/lib/wsl/lib/libcuda.so.1، الذي تُحقنه برامج تشغيل NVIDIA لـWindows في WSL2 — ضروري لأعباء عمل CUDA مثل Ollama."
+    "gpuNote": "هو مسار GPU الأساسي في WSL2. يكتشف NVIDIA CUDA الملف /usr/lib/wsl/lib/libcuda.so.1، الذي تُحقنه برامج تشغيل NVIDIA لـWindows في WSL2 — ضروري لأعباء عمل CUDA مثل Ollama.",
+    "toolkitInstalled": "NVIDIA Container Toolkit",
+    "cdiSpecs": "CDI Specs (/etc/cdi/nvidia.yaml)",
+    "toolkitChecking": "Checking container toolkit...",
+    "toolkitCheckError": "Failed to check container toolkit status",
+    "toolkitSetupHint": "NVIDIA is available but container toolkit or CDI specs are not configured. Set up now to enable GPU passthrough in Podman/Docker containers.",
+    "toolkitSetup": "Set up for GPU containers",
+    "toolkitInstalling": "Installing NVIDIA Container Toolkit (this may take a few minutes)...",
+    "cdiGenerating": "Generating CDI specs...",
+    "toolkitSetupDone": "Setup complete!",
+    "toolkitSetupError": "Setup failed — check the output for details"
   },
   "distributionSources": {
     "title": "مصادر التوزيعات",

@@ -374,7 +374,17 @@
     "gpuAvailableLabel": "사용 가능",
     "gpuNotAvailableLabel": "사용 불가",
     "gpuCheckError": "확인할 수 없음 — 배포판을 먼저 시작하세요",
-    "gpuNote": "DirectX GPU는 WSL2의 기본 GPU 경로입니다. NVIDIA CUDA는 /usr/lib/wsl/lib/libcuda.so.1을 감지하며, 이는 Windows NVIDIA 드라이버가 WSL2에 주입하는 파일로 Ollama와 같은 CUDA 워크로드에 필요합니다."
+    "gpuNote": "DirectX GPU는 WSL2의 기본 GPU 경로입니다. NVIDIA CUDA는 /usr/lib/wsl/lib/libcuda.so.1을 감지하며, 이는 Windows NVIDIA 드라이버가 WSL2에 주입하는 파일로 Ollama와 같은 CUDA 워크로드에 필요합니다.",
+    "toolkitInstalled": "NVIDIA Container Toolkit",
+    "cdiSpecs": "CDI Specs (/etc/cdi/nvidia.yaml)",
+    "toolkitChecking": "Checking container toolkit...",
+    "toolkitCheckError": "Failed to check container toolkit status",
+    "toolkitSetupHint": "NVIDIA is available but container toolkit or CDI specs are not configured. Set up now to enable GPU passthrough in Podman/Docker containers.",
+    "toolkitSetup": "Set up for GPU containers",
+    "toolkitInstalling": "Installing NVIDIA Container Toolkit (this may take a few minutes)...",
+    "cdiGenerating": "Generating CDI specs...",
+    "toolkitSetupDone": "Setup complete!",
+    "toolkitSetupError": "Setup failed — check the output for details"
   },
   "distributionSources": {
     "title": "배포판 소스",

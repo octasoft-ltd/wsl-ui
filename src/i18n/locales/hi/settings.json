@@ -374,7 +374,17 @@
     "gpuAvailableLabel": "उपलब्ध",
     "gpuNotAvailableLabel": "अनुपलब्ध",
     "gpuCheckError": "जाँच संभव नहीं — पहले डिस्ट्रिब्यूशन शुरू करें",
-    "gpuNote": "DirectX GPU WSL2 का प्राथमिक GPU मार्ग है। NVIDIA CUDA /usr/lib/wsl/lib/libcuda.so.1 का पता लगाता है, जिसे Windows NVIDIA ड्राइवर WSL2 में इंजेक्ट करते हैं — Ollama जैसे CUDA कार्यभार के लिए आवश्यक।"
+    "gpuNote": "DirectX GPU WSL2 का प्राथमिक GPU मार्ग है। NVIDIA CUDA /usr/lib/wsl/lib/libcuda.so.1 का पता लगाता है, जिसे Windows NVIDIA ड्राइवर WSL2 में इंजेक्ट करते हैं — Ollama जैसे CUDA कार्यभार के लिए आवश्यक।",
+    "toolkitInstalled": "NVIDIA Container Toolkit",
+    "cdiSpecs": "CDI Specs (/etc/cdi/nvidia.yaml)",
+    "toolkitChecking": "Checking container toolkit...",
+    "toolkitCheckError": "Failed to check container toolkit status",
+    "toolkitSetupHint": "NVIDIA is available but container toolkit or CDI specs are not configured. Set up now to enable GPU passthrough in Podman/Docker containers.",
+    "toolkitSetup": "Set up for GPU containers",
+    "toolkitInstalling": "Installing NVIDIA Container Toolkit (this may take a few minutes)...",
+    "cdiGenerating": "Generating CDI specs...",
+    "toolkitSetupDone": "Setup complete!",
+    "toolkitSetupError": "Setup failed — check the output for details"
   },
   "distributionSources": {
     "title": "डिस्ट्रिब्यूशन स्रोत",

@@ -8,7 +8,7 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { wslService } from "../../services/wslService";
 import { useDistroStore } from "../../store/distroStore";
-import type { WslConf, GpuStatus } from "../../types/settings";
+import type { WslConf, GpuStatus, NvidiaContainerToolkitStatus } from "../../types/settings";
 import { DEFAULT_WSL_CONF } from "../../types/settings";
 import { Toggle, SettingInput } from "./FormControls";
 import { FolderIcon, NetworkIcon, TerminalIcon, SparklesIcon, UserIcon, GpuIcon } from "../icons";
@@ -26,6 +26,12 @@ export function WslDistroSettings() {
   const [gpuStatus, setGpuStatus] = useState<GpuStatus | null>(null);
   const [gpuChecking, setGpuChecking] = useState(false);
   const [gpuError, setGpuError] = useState<string | null>(null);
+  const [toolkitStatus, setToolkitStatus] = useState<NvidiaContainerToolkitStatus | null>(null);
+  const [toolkitChecking, setToolkitChecking] = useState(false);
+  const [toolkitError, setToolkitError] = useState<string | null>(null);
+  const [setupStep, setSetupStep] = useState<"idle" | "installing" | "generating" | "done">("idle");
+  const [setupOutput, setSetupOutput] = useState<string | null>(null);
+  const [setupError, setSetupError] = useState<string | null>(null);
 
   useEffect(() => {
     if (distributions.length > 0 && !selectedDistro) {
@@ -38,6 +44,11 @@ export function WslDistroSettings() {
       loadConfig(selectedDistro);
       setGpuStatus(null);
       setGpuError(null);
+      setToolkitStatus(null);
+      setToolkitError(null);
+      setSetupStep("idle");
+      setSetupOutput(null);
+      setSetupError(null);
     }
   }, [selectedDistro]);
 
@@ -50,6 +61,10 @@ export function WslDistroSettings() {
       const status = await wslService.getDistroGpuStatus(selectedDistro, distro?.id);
       setGpuStatus(status);
       setGpuError(null);
+      // Auto-check toolkit status when NVIDIA is available
+      if (status.nvidiaAvailable) {
+        checkToolkitStatus(distro?.id);
+      }
     } catch (err) {
       const message = err instanceof Error ? err.message : t('wslDistro.gpuCheckError');
       logger.error("Failed to check GPU status:", "WslDistroSettings", err);
@@ -57,6 +72,48 @@ export function WslDistroSettings() {
       setGpuStatus(null);
     } finally {
       setGpuChecking(false);
+    }
+  };
+
+  const checkToolkitStatus = async (id?: string) => {
+    if (!selectedDistro) return;
+    setToolkitChecking(true);
+    setToolkitError(null);
+    try {
+      const status = await wslService.checkNvidiaContainerToolkit(selectedDistro, id);
+      setToolkitStatus(status);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : t('wslDistro.toolkitCheckError');
+      logger.error("Failed to check toolkit status:", "WslDistroSettings", err);
+      setToolkitError(message);
+    } finally {
+      setToolkitChecking(false);
+    }
+  };
+
+  const runToolkitSetup = async () => {
+    if (!selectedDistro) return;
+    const distro = distributions.find(d => d.name === selectedDistro);
+    setSetupError(null);
+    setSetupOutput(null);
+
+    try {
+      setSetupStep("installing");
+      const installOut = await wslService.installNvidiaContainerToolkit(selectedDistro, distro?.id);
+      setSetupOutput(installOut);
+
+      setSetupStep("generating");
+      const cdiOut = await wslService.generateCdiSpecs(selectedDistro, distro?.id);
+      setSetupOutput(prev => `${prev ?? ""}\n\n${cdiOut}`.trim());
+
+      setSetupStep("done");
+      // Refresh toolkit status
+      await checkToolkitStatus(distro?.id);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : t('wslDistro.toolkitSetupError');
+      logger.error("Toolkit setup failed:", "WslDistroSettings", err);
+      setSetupError(message);
+      setSetupStep("idle");
     }
   };
 
@@ -345,12 +402,79 @@ export function WslDistroSettings() {
                       {gpuStatus.directxAvailable ? t('wslDistro.gpuAvailableLabel') : t('wslDistro.gpuNotAvailableLabel')}
                     </span>
                   </div>
-                  <div className="flex items-center justify-between py-2">
+                  <div className="flex items-center justify-between py-2 border-b border-theme-border-primary/50">
                     <span className="text-sm text-theme-text-primary">{t('wslDistro.gpuNvidia')}</span>
                     <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${gpuStatus.nvidiaAvailable ? 'bg-green-900/40 text-green-400' : 'bg-theme-bg-tertiary text-theme-text-muted'}`}>
                       {gpuStatus.nvidiaAvailable ? t('wslDistro.gpuAvailableLabel') : t('wslDistro.gpuNotAvailableLabel')}
                     </span>
                   </div>
+
+                  {/* Container Toolkit section — only shown when NVIDIA is available */}
+                  {gpuStatus.nvidiaAvailable && (
+                    <div className="space-y-3 pt-1">
+                      {toolkitChecking ? (
+                        <p className="text-xs text-theme-text-muted">{t('wslDistro.toolkitChecking')}</p>
+                      ) : toolkitStatus ? (
+                        <>
+                          <div className="flex items-center justify-between py-2 border-b border-theme-border-primary/50">
+                            <span className="text-sm text-theme-text-primary">{t('wslDistro.toolkitInstalled')}</span>
+                            <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${toolkitStatus.toolkitInstalled ? 'bg-green-900/40 text-green-400' : 'bg-amber-900/40 text-amber-400'}`}>
+                              {toolkitStatus.toolkitInstalled ? t('wslDistro.gpuAvailableLabel') : t('wslDistro.gpuNotAvailableLabel')}
+                            </span>
+                          </div>
+                          <div className="flex items-center justify-between py-2">
+                            <span className="text-sm text-theme-text-primary">{t('wslDistro.cdiSpecs')}</span>
+                            <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${toolkitStatus.cdiSpecsExist ? 'bg-green-900/40 text-green-400' : 'bg-amber-900/40 text-amber-400'}`}>
+                              {toolkitStatus.cdiSpecsExist
+                                ? (toolkitStatus.cdiDevices.length > 0 ? `${t('wslDistro.gpuAvailableLabel')} (${toolkitStatus.cdiDevices.length})` : t('wslDistro.gpuAvailableLabel'))
+                                : t('wslDistro.gpuNotAvailableLabel')}
+                            </span>
+                          </div>
+
+                          {/* Guided setup — shown when toolkit or CDI is not ready */}
+                          {(!toolkitStatus.toolkitInstalled || !toolkitStatus.cdiSpecsExist) && setupStep === "idle" && (
+                            <div className="mt-3 p-3 bg-amber-900/20 border border-amber-700/30 rounded-lg space-y-2" data-testid="toolkit-setup-panel">
+                              <p className="text-xs text-amber-300">{t('wslDistro.toolkitSetupHint')}</p>
+                              <button
+                                onClick={runToolkitSetup}
+                                data-testid="toolkit-setup-btn"
+                                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-theme-bg-primary bg-amber-600 hover:bg-amber-500 rounded-lg transition-colors"
+                              >
+                                {t('wslDistro.toolkitSetup')}
+                              </button>
+                              {setupError && (
+                                <pre className="text-xs text-red-400 whitespace-pre-wrap break-all mt-2">{setupError}</pre>
+                              )}
+                            </div>
+                          )}
+
+                          {/* Setup progress */}
+                          {setupStep === "installing" && (
+                            <div className="mt-3 p-3 bg-theme-bg-tertiary border border-theme-border-secondary rounded-lg">
+                              <p className="text-xs text-theme-text-muted">{t('wslDistro.toolkitInstalling')}</p>
+                            </div>
+                          )}
+                          {setupStep === "generating" && (
+                            <div className="mt-3 p-3 bg-theme-bg-tertiary border border-theme-border-secondary rounded-lg">
+                              <p className="text-xs text-theme-text-muted">{t('wslDistro.cdiGenerating')}</p>
+                              {setupOutput && (
+                                <pre className="text-xs text-theme-text-secondary whitespace-pre-wrap break-all mt-1 max-h-32 overflow-y-auto">{setupOutput}</pre>
+                              )}
+                            </div>
+                          )}
+                          {setupStep === "done" && setupOutput && (
+                            <div className="mt-3 p-3 bg-green-900/20 border border-green-700/30 rounded-lg">
+                              <p className="text-xs text-green-400 mb-1">{t('wslDistro.toolkitSetupDone')}</p>
+                              <pre className="text-xs text-theme-text-secondary whitespace-pre-wrap break-all max-h-32 overflow-y-auto">{setupOutput}</pre>
+                            </div>
+                          )}
+                        </>
+                      ) : toolkitError ? (
+                        <p className="text-xs text-theme-status-warning">{toolkitError}</p>
+                      ) : null}
+                    </div>
+                  )}
+
                   <button
                     onClick={checkGpuStatus}
                     disabled={gpuChecking}

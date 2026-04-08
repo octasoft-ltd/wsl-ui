@@ -4,7 +4,7 @@ import { save, open } from "@tauri-apps/plugin-dialog";
 import type { DistroCatalog, DownloadDistro, ContainerImage, MsStoreDistroInfo } from "../types/catalog";
 import type { Distribution, DistroMetadata } from "../types/distribution";
 import type { RdpDetectionResult, WslConfigStatus, WslConfigPendingStatus } from "../types/rdp";
-import type { WslConfig, WslConf, GpuStatus, InstalledTerminal } from "../types/settings";
+import type { WslConfig, WslConf, GpuStatus, NvidiaContainerToolkitStatus, InstalledTerminal } from "../types/settings";
 import { debug, info } from "../utils/logger";
 
 /**
@@ -396,6 +396,35 @@ export const wslService = {
   async getDistroGpuStatus(distroName: string, id?: string): Promise<GpuStatus> {
     debug(`[wslService] Checking GPU status for: ${distroName}`);
     return await invoke<GpuStatus>("get_distro_gpu_status", { name: distroName, id });
+  },
+
+  /**
+   * Check NVIDIA Container Toolkit and CDI spec status in a distribution.
+   * Only meaningful when nvidiaAvailable is true from getDistroGpuStatus.
+   */
+  async checkNvidiaContainerToolkit(distroName: string, id?: string): Promise<NvidiaContainerToolkitStatus> {
+    debug(`[wslService] Checking NVIDIA Container Toolkit for: ${distroName}`);
+    return await invoke<NvidiaContainerToolkitStatus>("check_nvidia_container_toolkit", { name: distroName, id });
+  },
+
+  /**
+   * Install NVIDIA Container Toolkit in a distribution.
+   * Detects apt/dnf and adds the NVIDIA repository before installing.
+   * Returns combined command output.
+   */
+  async installNvidiaContainerToolkit(distroName: string, id?: string): Promise<string> {
+    debug(`[wslService] Installing NVIDIA Container Toolkit for: ${distroName}`);
+    return await invoke<string>("install_nvidia_container_toolkit", { name: distroName, id });
+  },
+
+  /**
+   * Generate CDI specs for NVIDIA GPUs using nvidia-ctk.
+   * Writes /etc/cdi/nvidia.yaml in the distribution.
+   * Returns command output.
+   */
+  async generateCdiSpecs(distroName: string, id?: string): Promise<string> {
+    debug(`[wslService] Generating CDI specs for: ${distroName}`);
+    return await invoke<string>("generate_cdi_specs", { name: distroName, id });
   },
 
   // Distro Catalog functions
