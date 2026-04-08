@@ -43,7 +43,17 @@ podman run --rm --device nvidia.com/gpu=all ubuntu:22.04 nvidia-smi
 If containers run directly in your distro (no Podman machine), install and configure in that distro:
 
 **Ubuntu / Debian:**
+
+> **Prerequisites:** `curl`, `gnupg`, and `ca-certificates` must be installed first.
+> On minimal Ubuntu distros (including Ubuntu 25.10+) `gnupg` is not present by default —
+> without it `gpg --dearmor` silently writes a raw ASCII file and `apt-get update` fails
+> with `NO_PUBKEY DDCAE044F796ECB0`. Install them first:
+> ```bash
+> sudo apt-get update && sudo apt-get install -y curl gnupg ca-certificates
+> ```
+
 ```bash
+sudo apt-get install -y curl gnupg ca-certificates
 curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey \
   | sudo gpg --dearmor -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg
 curl -s -L https://nvidia.github.io/libnvidia-container/stable/deb/nvidia-container-toolkit.list \
