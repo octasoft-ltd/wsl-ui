@@ -111,7 +111,7 @@ export const useDistroStore = create<DistroStore>((set, get) => ({
       // Fetch disk sizes and OS info in background (don't block the UI).
       // Only fetch details that are not already cached to avoid flooding WSL
       // with commands on every 10-second poll cycle.
-      const distrosMissingDiskSize = distributions.filter((d) => !d.diskSize);
+      const distrosMissingDiskSize = distributions.filter((d) => d.diskSize === undefined);
       const distrosMissingOsInfo = distributions.filter(
         (d) => d.state === "Running" && !d.osInfo
       );
@@ -132,13 +132,9 @@ export const useDistroStore = create<DistroStore>((set, get) => ({
         try {
           const diskSize = await wslService.getDistributionDiskSize(distro.name);
 
-          // Only update if:
-          // 1. This fetch is still current
-          // 2. The distro still exists in the current state
-          // 3. We got a valid disk size
-          if (fetchId === currentFetchId && diskSize > 0) {
+          // Only update if this fetch is still current
+          if (fetchId === currentFetchId) {
             set((state) => {
-              // Double-check the distro still exists
               const distroExists = state.distributions.some((d) => d.name === distro.name);
               if (!distroExists) {
                 return state; // No change
