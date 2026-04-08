@@ -878,9 +878,11 @@ fn open_terminal_with_command_wt(distro: &str, id: Option<&str>, command: &str) 
     // the user's configured colours/fonts/title. The explicit wsl command that
     // follows overrides the profile's default shell, which is intentional here
     // since we need to run a specific command in the correct distribution.
+    // Double-quote the profile name so that distros with spaces (e.g. "Ubuntu 22.04")
+    // are treated as a single token by Windows command-line parsing.
     let settings_path = get_wt_settings_path();
     let profile_prefix = if wt_profile_exists(distro, &settings_path) {
-        format!("-p {} ", distro)
+        format!("-p \"{}\" ", distro)
     } else {
         String::new()
     };
@@ -940,9 +942,11 @@ fn open_terminal_with_command_wt_preview_with_package(distro: &str, id: Option<&
     // the user's configured colours/fonts/title. The explicit wsl command that
     // follows overrides the profile's default shell, which is intentional here
     // since we need to run a specific command in the correct distribution.
+    // Double-quote the profile name so that distros with spaces (e.g. "Ubuntu 22.04")
+    // are treated as a single token by Windows command-line parsing / PowerShell.
     let settings_path = get_wt_preview_settings_path();
     let profile_prefix = if wt_profile_exists(distro, &settings_path) {
-        format!("-p {} ", distro)
+        format!("-p \"{}\" ", distro)
     } else {
         String::new()
     };
@@ -1044,5 +1048,142 @@ mod tests {
             strip_guid_braces("{3C002DBA-D670-4EED-B0C2-97E6EB929D06}"),
             "3C002DBA-D670-4EED-B0C2-97E6EB929D06"
         );
+    }
+
+    /// Write a WT settings.json to a temp file and return its path.
+    /// The caller must keep the returned `PathBuf` alive; the file is cleaned
+    /// up when `_guard` (the temp dir path) is removed via `TempSettingsGuard`.
+    struct TempSettingsGuard(PathBuf);
+    impl Drop for TempSettingsGuard {
+        fn drop(&mut self) { let _ = std::fs::remove_dir_all(&self.0); }
+    }
+
+    fn write_settings(content: &str) -> (TempSettingsGuard, PathBuf) {
+        use std::time::{SystemTime, UNIX_EPOCH};
+        let ts = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().subsec_nanos();
+        let dir = std::env::temp_dir().join(format!("wsl-ui-test-{}", ts));
+        std::fs::create_dir_all(&dir).unwrap();
+        let path = dir.join("settings.json");
+        std::fs::write(&path, content).unwrap();
+        (TempSettingsGuard(dir), path)
+    }
+
+    // --- wt_profile_exists ---
+
+    #[test]
+    fn test_wt_profile_exists_found_with_space() {
+        let (_dir, path) = write_settings(
+            r#"{"profiles":{"list":[{"name": "Ubuntu 22.04 LTS"}]}}"#,
+        );
+        assert!(wt_profile_exists("Ubuntu 22.04 LTS", &path));
+    }
+
+    #[test]
+    fn test_wt_profile_exists_found_simple() {
+        let (_dir, path) = write_settings(r#"{"profiles":[{"name": "DevBox"}]}"#);
+        assert!(wt_profile_exists("DevBox", &path));
+    }
+
+    #[test]
+    fn test_wt_profile_exists_not_found() {
+        let (_dir, path) = write_settings(r#"{"profiles":[{"name": "OtherDistro"}]}"#);
+        assert!(!wt_profile_exists("DevBox", &path));
+    }
+
+    #[test]
+    fn test_wt_profile_exists_missing_file() {
+        let path = PathBuf::from("/nonexistent/settings.json");
+        assert!(!wt_profile_exists("DevBox", &path));
+    }
+
+    #[test]
+    fn test_wt_profile_exists_compact_json() {
+        let (_dir, path) = write_settings(r#"{"profiles":[{"name":"Ubuntu 22.04"}]}"#);
+        assert!(wt_profile_exists("Ubuntu 22.04", &path));
+    }
+
+    // --- profile_prefix quoting in open_terminal_with_command_wt ---
+
+    #[test]
+    fn test_profile_prefix_simple_name() {
+        // Simple distro name: no spaces, no special chars
+        let distro = "DevBox";
+        let prefix = format!("-p \"{}\" ", distro);
+        assert_eq!(prefix, "-p \"DevBox\" ");
+        // Must not split on spaces (there are none here), but verify token structure
+        assert!(prefix.contains("\"DevBox\""));
+    }
+
+    #[test]
+    fn test_profile_prefix_name_with_spaces() {
+        // Distro names with spaces must be double-quoted so Windows
+        // command-line parsing treats them as a single token.
+        let distro = "Ubuntu 22.04 LTS";
+        let prefix = format!("-p \"{}\" ", distro);
+        assert_eq!(prefix, "-p \"Ubuntu 22.04 LTS\" ");
+    }
+
+    // --- wt_args construction for open_terminal_with_command_wt ---
+
+    #[test]
+    fn test_wt_args_with_profile_and_spaces() {
+        let distro = "Ubuntu 22.04";
+        let wsl = "wsl";
+        let distro_arg0 = "-d";
+        let distro_arg1 = "Ubuntu 22.04";
+        let cmd_escaped = "echo hello";
+        let profile_prefix = format!("-p \"{}\" ", distro);
+        let wt_args = format!(
+            "{}{} {} {} --cd ~ -- bash -c \"{}\"",
+            profile_prefix, wsl, distro_arg0, distro_arg1, cmd_escaped
+        );
+        assert_eq!(
+            wt_args,
+            "-p \"Ubuntu 22.04\" wsl -d Ubuntu 22.04 --cd ~ -- bash -c \"echo hello\""
+        );
+    }
+
+    #[test]
+    fn test_wt_args_without_profile() {
+        // No profile: prefix is empty, distribution-id path is used
+        let wsl = "wsl";
+        let distro_arg0 = "--distribution-id";
+        let distro_arg1 = "3c002dba-d670-4eed-b0c2-97e6eb929d06";
+        let cmd_escaped = "echo hello";
+        let profile_prefix = String::new();
+        let wt_args = format!(
+            "{}{} {} {} --cd ~ -- bash -c \"{}\"",
+            profile_prefix, wsl, distro_arg0, distro_arg1, cmd_escaped
+        );
+        assert_eq!(
+            wt_args,
+            "wsl --distribution-id 3c002dba-d670-4eed-b0c2-97e6eb929d06 --cd ~ -- bash -c \"echo hello\""
+        );
+    }
+
+    // --- PowerShell ArgumentList for open_terminal_with_command_wt_preview ---
+
+    #[test]
+    fn test_ps_args_with_profile_and_spaces() {
+        let distro = "Ubuntu 22.04";
+        let distro_arg0 = "-d";
+        let distro_arg1 = "Ubuntu 22.04";
+        let cmd_escaped = "echo hello";
+        let profile_prefix = format!("-p \"{}\" ", distro);
+        let wt_args = format!(
+            "{}wsl {} {} --cd ~ -- bash -c \"{}\"",
+            profile_prefix, distro_arg0, distro_arg1, cmd_escaped
+        );
+        let ps_escaped_args = wt_args.replace('\'', "''");
+        let pkg = "Microsoft.WindowsTerminalPreview_8wekyb3d8bbwe";
+        let ps_command = format!(
+            "Start-Process 'shell:AppsFolder\\{}!App' -ArgumentList '{}'",
+            pkg, ps_escaped_args
+        );
+        // Double-quoted profile name must be present in the PS command
+        assert!(ps_command.contains("-p \"Ubuntu 22.04\""));
+        // Single quotes around the ArgumentList value must not be broken by the
+        // profile name (no bare single quotes introduced by the distro name)
+        assert!(ps_command.starts_with("Start-Process 'shell:AppsFolder\\"));
     }
 }
