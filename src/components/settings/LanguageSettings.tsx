@@ -112,7 +112,7 @@ export function LanguageSettings() {
 
           <div className="mt-4 pt-3 border-t border-theme-border-primary/50">
             <a
-              href="https://github.com/octasoft-ltd/wsl-ui/issues/new?title=Language+Request&body=%2A%2ALanguage+requested%3A%2A%2A+%5BPlease+specify+the+language%5D%0A%2A%2ALanguage+code+%28if+known%29%3A%2A%2A+%5Be.g.%2C+it%2C+nl%2C+ru%5D%0A%0AI%27d+like+to+request+support+for+this+language+in+WSL+UI.&labels=enhancement"
+              href="https://github.com/octasoft-ltd/wsl-ui/issues/new?template=language-request.yml"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1.5 text-sm text-theme-text-muted hover:text-theme-accent-primary transition-colors"
