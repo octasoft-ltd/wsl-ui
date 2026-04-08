@@ -43,7 +43,17 @@ podman run --rm --device nvidia.com/gpu=all ubuntu:22.04 nvidia-smi
 If containers run directly in your distro (no Podman machine), install and configure in that distro:
 
 **Ubuntu / Debian:**
+
+> **Prerequisites:** `curl`, `gnupg`, and `ca-certificates` must be installed first.
+> On minimal Ubuntu distros (including Ubuntu 25.10+) `gnupg` is not present by default —
+> without it `gpg --dearmor` silently writes a raw ASCII file and `apt-get update` fails
+> with `NO_PUBKEY DDCAE044F796ECB0`. Install them first:
+> ```bash
+> sudo apt-get update && sudo apt-get install -y curl gnupg ca-certificates
+> ```
+
 ```bash
+sudo apt-get install -y curl gnupg ca-certificates
 curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey \
   | sudo gpg --dearmor -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg
 curl -s -L https://nvidia.github.io/libnvidia-container/stable/deb/nvidia-container-toolkit.list \
@@ -61,10 +71,30 @@ sudo dnf install -y nvidia-container-toolkit
 sudo nvidia-ctk cdi generate --output=/etc/cdi/nvidia.yaml
 ```
 
-Then test:
+Then test (add `--network=host` if you hit an nftables networking error — see below):
 ```bash
-podman run --rm --device nvidia.com/gpu=all ubuntu:22.04 nvidia-smi
+podman run --rm --network=host --device nvidia.com/gpu=all ubuntu:22.04 nvidia-smi
 ```
+
+### Error: `did you mean table 'nat' in family ip?` (nftables not available)
+
+When running Podman directly in a WSL2 distro as root, you may see:
+
+```
+internal:0:0-0: Error: No such file or directory; did you mean table 'nat' in family ip?
+```
+
+**Cause:** Podman's default network backend (netavark) uses nftables for container networking. The WSL2 kernel does not load nftables modules.
+
+**Fix:** Add `--network=host` to your `podman run` commands. In WSL2, host networking is perfectly reasonable — your distro already shares the Windows network stack, so there is no meaningful isolation to lose.
+
+```bash
+podman run --rm --network=host --device nvidia.com/gpu=all ubuntu:22.04 nvidia-smi
+```
+
+For GPU workloads (Ollama, CUDA, model inference) where you don't need container-level network isolation, `--network=host` is the standard approach on WSL2.
+
+> **Alternatively:** Use Podman via a Podman machine backend (the `podman-machine-default` setup). Podman machine handles networking using QEMU user networking, which does not depend on kernel nftables and works out of the box.
 
 ### CDI spec shows "Not Available" after Windows NVIDIA driver update
 
