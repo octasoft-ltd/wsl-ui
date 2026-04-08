@@ -122,7 +122,7 @@ async function ensureEdgeDriver(): Promise<void> {
 
   const zipPath = path.join(__dirname, "msedgedriver.zip");
   const extractDir = path.join(__dirname, "msedgedriver-temp");
-  const url = `https://msedgewebdriverstorage.blob.core.windows.net/edgewebdriver/${edgeVersion}/edgedriver_win64.zip`;
+  const url = `https://msedgedriver.microsoft.com/${edgeVersion}/edgedriver_win64.zip`;
 
   // Download
   const downloadResult = spawnSync(

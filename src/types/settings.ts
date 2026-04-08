@@ -217,6 +217,26 @@ export interface WslConf {
   bootCommand?: string;
 }
 
+// GPU availability status for a distribution
+export interface GpuStatus {
+  /** Whether DirectX GPU device (/dev/dxg) is available */
+  directxAvailable: boolean;
+  /** Whether NVIDIA GPU (/dev/nvidia0) is available */
+  nvidiaAvailable: boolean;
+  /** Whether any GPU is available */
+  hasGpu: boolean;
+}
+
+// NVIDIA Container Toolkit and CDI status
+export interface NvidiaContainerToolkitStatus {
+  /** Whether nvidia-ctk is installed */
+  toolkitInstalled: boolean;
+  /** Whether /etc/cdi/nvidia.yaml exists */
+  cdiSpecsExist: boolean;
+  /** CDI device names (e.g. "nvidia.com/gpu=0") */
+  cdiDevices: string[];
+}
+
 export const DEFAULT_WSL_CONF: WslConf = {
   automountEnabled: true,
   automountMountFsTab: true,

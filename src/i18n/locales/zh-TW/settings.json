@@ -302,7 +302,11 @@
     "memoryPlaceholder": "例如 8GB",
     "processorsPlaceholder": "例如 4",
     "swapPlaceholder": "例如 4GB",
-    "errorLabel": "錯誤："
+    "errorLabel": "錯誤：",
+    "gpu": "GPU 支援",
+    "gpuDesc": "WSL2 發行版的 GPU 加速",
+    "gpuNote": "當存在相容的 GPU 和驅動程式時，WSL2 透過 DirectX 12 (DXCore) 自動提供 GPU 加速。CUDA、OpenCL、DirectML 及其他 GPU 運算 API 無須額外設定即可支援。",
+    "gpuGuiNote": "啟用上方的 GUI 應用程式，以透過 WSLg 使用 Linux GUI 應用的 GPU 加速。"
   },
   "wslDistro": {
     "title": "按發行版設定",
@@ -359,7 +363,23 @@
     "errorLabel": "錯誤：",
     "defaultUserPlaceholder": "例如 ubuntu",
     "loadError": "載入 wsl.conf 失敗",
-    "saveError": "儲存 wsl.conf 失敗"
+    "saveError": "儲存 wsl.conf 失敗",
+    "gpu": "GPU 狀態",
+    "gpuDesc": "檢查此發行版的 GPU 可用性",
+    "gpuCheck": "檢查 GPU",
+    "gpuChecking": "檢查中...",
+    "gpuRecheck": "重新檢查",
+    "gpuDirectX": "DirectX GPU (DXCore)",
+    "gpuNvidia": "NVIDIA CUDA (WSL2)",
+    "gpuAvailableLabel": "可用",
+    "gpuNotAvailableLabel": "不可用",
+    "gpuCheckError": "無法檢查 — 請先啟動發行版",
+    "gpuNote": "DirectX GPU 是 WSL2 的主要 GPU 路徑。NVIDIA CUDA 偵測 /usr/lib/wsl/lib/libcuda.so.1，該檔案由 Windows NVIDIA 馨動程式注入 WSL2 — 是 Ollama 等 CUDA 工作負載所必需的。",
+    "toolkitInstalled": "NVIDIA Container Toolkit",
+    "cdiSpecs": "CDI Specs (/etc/cdi/nvidia.yaml)",
+    "toolkitChecking": "Checking container toolkit...",
+    "toolkitCheckError": "Failed to check container toolkit status",
+    "toolkitTroubleshootingLink": "→ GPU 容器設定指南"
   },
   "distributionSources": {
     "title": "發行版來源",

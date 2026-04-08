@@ -4,6 +4,116 @@ This guide documents known issues and their solutions encountered during develop
 
 ---
 
+## GPU Containers — NVIDIA CUDA passthrough setup {#gpu-containers}
+
+WSL-UI detects whether NVIDIA CUDA is available in a distro and whether the NVIDIA Container Toolkit and CDI spec are configured. This section explains what each status means and how to fix common problems.
+
+### Understanding the status rows
+
+| Status | Meaning |
+|---|---|
+| **NVIDIA CUDA** | `/usr/lib/wsl/lib/libcuda.so.1` is present — your Windows NVIDIA driver injects CUDA into WSL2 |
+| **NVIDIA Container Toolkit** | `nvidia-ctk` is installed in the distro |
+| **CDI Specs** | `/etc/cdi/nvidia.yaml` exists and `nvidia-ctk cdi list` returns devices |
+
+### Setup for different configurations
+
+#### Podman via Podman machine (most common on Windows)
+
+If your WSL2 distro uses Podman machine as a backend (check with `podman system connection list`), containers run inside `podman-machine-default`, not your distro. The CDI spec must be configured there.
+
+Inside `podman-machine-default`:
+
+```bash
+# Install nvidia-ctk if not present (Fedora/RHEL)
+sudo dnf install -y nvidia-container-toolkit
+
+# Generate CDI spec
+sudo nvidia-ctk cdi generate --output=/etc/cdi/nvidia.yaml
+
+# Verify
+nvidia-ctk cdi list
+podman run --rm --device nvidia.com/gpu=all ubuntu:22.04 nvidia-smi
+```
+
+> **Note:** WSL-UI's toolkit status reflects the selected distro, but if that distro uses Podman machine, you must run the above commands in `podman-machine-default` directly.
+
+#### Podman or Docker running directly in your WSL2 distro
+
+If containers run directly in your distro (no Podman machine), install and configure in that distro:
+
+**Ubuntu / Debian:**
+
+> **Prerequisites:** `curl`, `gnupg`, and `ca-certificates` must be installed first.
+> On minimal Ubuntu distros (including Ubuntu 25.10+) `gnupg` is not present by default —
+> without it `gpg --dearmor` silently writes a raw ASCII file and `apt-get update` fails
+> with `NO_PUBKEY DDCAE044F796ECB0`. Install them first:
+> ```bash
+> sudo apt-get update && sudo apt-get install -y curl gnupg ca-certificates
+> ```
+
+```bash
+sudo apt-get install -y curl gnupg ca-certificates
+curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey \
+  | sudo gpg --dearmor -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg
+curl -s -L https://nvidia.github.io/libnvidia-container/stable/deb/nvidia-container-toolkit.list \
+  | sed 's#deb https://#deb [signed-by=/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg] https://#g' \
+  | sudo tee /etc/apt/sources.list.d/nvidia-container-toolkit.list
+sudo apt-get update && sudo apt-get install -y nvidia-container-toolkit
+sudo nvidia-ctk cdi generate --output=/etc/cdi/nvidia.yaml
+```
+
+**Fedora / RHEL:**
+```bash
+curl -s -L https://nvidia.github.io/libnvidia-container/stable/rpm/nvidia-container-toolkit.repo \
+  | sudo tee /etc/yum.repos.d/nvidia-container-toolkit.repo
+sudo dnf install -y nvidia-container-toolkit
+sudo nvidia-ctk cdi generate --output=/etc/cdi/nvidia.yaml
+```
+
+Then test (add `--network=host` if you hit an nftables networking error — see below):
+```bash
+podman run --rm --network=host --device nvidia.com/gpu=all ubuntu:22.04 nvidia-smi
+```
+
+### Error: `did you mean table 'nat' in family ip?` (nftables not available)
+
+When running Podman directly in a WSL2 distro as root, you may see:
+
+```
+internal:0:0-0: Error: No such file or directory; did you mean table 'nat' in family ip?
+```
+
+**Cause:** Podman's default network backend (netavark) uses nftables for container networking. The WSL2 kernel does not load nftables modules.
+
+**Fix:** Add `--network=host` to your `podman run` commands. In WSL2, host networking is perfectly reasonable — your distro already shares the Windows network stack, so there is no meaningful isolation to lose.
+
+```bash
+podman run --rm --network=host --device nvidia.com/gpu=all ubuntu:22.04 nvidia-smi
+```
+
+For GPU workloads (Ollama, CUDA, model inference) where you don't need container-level network isolation, `--network=host` is the standard approach on WSL2.
+
+> **Alternatively:** Use Podman via a Podman machine backend (the `podman-machine-default` setup). Podman machine handles networking using QEMU user networking, which does not depend on kernel nftables and works out of the box.
+
+### CDI spec shows "Not Available" after Windows NVIDIA driver update
+
+When Windows NVIDIA drivers update, a new driver store directory appears at `/usr/lib/wsl/drivers/nvmdi.inf_amd64_<newhash>/`. Any existing CDI spec pointing to the old hash becomes stale and causes:
+
+```
+crun: cannot stat '/usr/lib/wsl/drivers/nvmdi.inf_amd64_<oldhash>/libcuda.so.1.1': No such file or directory
+```
+
+**Fix:** regenerate the CDI spec in the distro where containers run:
+
+```bash
+sudo nvidia-ctk cdi generate --output=/etc/cdi/nvidia.yaml
+```
+
+This picks up the current active driver hash automatically.
+
+---
+
 ## Issue #1: Quick Install completes but distro doesn't appear in WSL list
 
 ### Symptoms
@@ -125,7 +235,7 @@ The WSL service or VM can become unresponsive due to:
 
 ### Related
 - Default timeouts: Quick (10s), Default (30s), Long operations (600s)
-- Settings path: `%APPDATA%\wsl-ui\settings.json`
+- Settings path: `%LOCALAPPDATA%\wsl-ui\settings.json`
 
 ---
 
@@ -796,6 +906,166 @@ Users may intentionally disable GUI applications to:
 - WSLg GitHub: https://github.com/microsoft/wslg
 - WSL configuration: https://learn.microsoft.com/en-us/windows/wsl/wsl-config
 - The system distro is based on CBL-Mariner (now Azure Linux)
+
+---
+
+## Issue #12: Language settings reset to English after restart
+
+### Symptoms
+- User selects a non-English language (e.g., 简体中文, Español)
+- Language works correctly during the session
+- After closing and reopening the app, the language reverts to English
+- The `settings.json` file still has the correct `locale` value
+
+### Root Cause
+On startup, the locale sync effect in `App.tsx` fired immediately with `DEFAULT_SETTINGS` (which has `locale: "auto"`) **before** `loadSettings()` had finished loading the real settings from Tauri. This caused:
+
+1. `locale = "auto"` resolved to English (or browser default)
+2. `localStorage.setItem("wsl-ui-language", "en")` overwrote the saved language preference
+3. When the real settings loaded moments later, i18next LanguageDetector had already cached `"en"` in localStorage
+
+The fix gates the locale sync effect on the `hasLoaded` flag, so it only runs after `loadSettings()` completes.
+
+### Diagnosis
+1. Check the settings file for the correct locale value:
+   ```
+   %LOCALAPPDATA%\wsl-ui\settings.json
+   ```
+   Look for the `"locale"` field — it should contain the language code (e.g., `"zh-CN"`, `"es"`, `"fr"`)
+
+2. Check application logs for locale sync messages:
+   ```
+   %LOCALAPPDATA%\wsl-ui\logs\
+   ```
+   Look for `[App] Locale sync:` entries — these show the resolved locale values at startup
+
+3. Check WebView2 localStorage (used by i18next LanguageDetector):
+   ```
+   %LOCALAPPDATA%\wsl-ui\EBWebView\
+   ```
+
+### Solution
+**Fixed in v0.18.2** by gating the locale sync effect on `hasLoaded`:
+```typescript
+useEffect(() => {
+  if (!hasLoaded) return; // Don't sync until real settings are loaded
+  // ... locale sync logic
+}, [hasLoaded, settings?.locale, i18n]);
+```
+
+**Workaround for v0.18.1:** Manually set the locale in the settings file:
+1. Close the application
+2. Open `%LOCALAPPDATA%\wsl-ui\settings.json` in a text editor
+3. Set the `"locale"` field to your desired language code:
+   ```json
+   {
+     "locale": "zh-CN"
+   }
+   ```
+4. Save the file and reopen the application
+5. If the language still resets, also clear the WebView2 cache in `%LOCALAPPDATA%\wsl-ui\EBWebView\`
+
+### Files Changed
+- `src/App.tsx`: Added `hasLoaded` guard to locale sync effect + debug logging
+- `src/store/settingsStore.ts`: Added `hasLoaded` flag to settings store + debug logging
+- `src/components/settings/LanguageSettings.tsx`: Added debug logging for language changes
+- `src/i18n/index.ts`: Added debug logging for lazy-loaded language bundles
+
+### Related
+- GitHub Issue: #42
+- All install methods (NSIS installer, MSI, portable) share the same config directory at `%LOCALAPPDATA%\wsl-ui\` — there is no conflict between install types
+- Enable debug logging in Settings → Logging for more detail in logs
+
+---
+
+## Issue #13: Garbled or incorrect text after reinstalling WSL UI
+
+### Symptoms
+- UI text appears garbled, shows wrong language, or reverts to English after reinstalling WSL UI
+- Switching from the Microsoft Store version to the EXE installer (or vice versa) causes the issue
+- The problem persists even after uninstalling and reinstalling again
+- Language settings appear correct in the app settings, but the UI text does not match
+
+### Root Cause
+WSL UI stores app state in `%LOCALAPPDATA%\wsl-ui\` in two forms that **survive uninstall**:
+
+1. **Tauri persistent settings** — `%LOCALAPPDATA%\wsl-ui\settings.json`. Includes your saved language preference and other settings.
+2. **WebView2 browser data** — `%LOCALAPPDATA%\wsl-ui\EBWebView`. Includes `localStorage`, which the i18n system uses to remember the active display language (`wsl-ui-language` key).
+
+When you reinstall WSL UI, neither location is cleared. If the previous install left stale or corrupted data (for example, a partially-saved language state from a crash), the new install will read it and behave unexpectedly.
+
+This is especially visible for non-English locales, where the language bundle is lazy-loaded at startup. If the stored language code is invalid or the bundle fails to load, the app falls back to English — but the settings page may still show the old language as "selected".
+
+### Diagnosis
+1. Check the stored language in settings:
+   ```powershell
+   type "$env:LOCALAPPDATA\wsl-ui\settings.json"
+   ```
+   Look for the `locale` field. If it contains an invalid or unexpected language code, that is the likely cause.
+
+2. Check the WebView2 localStorage data (optional, advanced):
+   The `wsl-ui-language` key in localStorage can be inspected using Edge DevTools or by checking the LevelDB files in:
+   ```
+   %LOCALAPPDATA%\wsl-ui\EBWebView\Default\Local Storage
+   ```
+
+### Solution
+**Recommended: clear the app data before reinstalling**
+
+1. Uninstall WSL UI
+2. Delete the app data directory (covers both settings and WebView2 data):
+   ```powershell
+   Remove-Item -Recurse -Force "$env:LOCALAPPDATA\wsl-ui"
+   ```
+3. Reinstall WSL UI
+
+**Quick fix (without reinstalling):**
+
+1. Manually edit the settings file to reset the language:
+   ```powershell
+   notepad "$env:LOCALAPPDATA\wsl-ui\settings.json"
+   ```
+   Find the `locale` field and set it to `"auto"` or a valid language code (e.g., `"zh-CN"`):
+   ```json
+   {
+     "locale": "auto"
+   }
+   ```
+   Save the file and restart WSL UI.
+
+2. Alternatively, reset the language setting inside the app:
+   - Go to **Settings → Application → Language**
+   - Select **Auto-detect** or your preferred language
+   - Restart WSL UI to confirm it persists
+
+### Valid language codes
+The following language codes are supported:
+
+| Code | Language |
+|------|----------|
+| `en` | English |
+| `zh-CN` | Chinese (Simplified) |
+| `zh-TW` | Chinese (Traditional) |
+| `ja` | Japanese |
+| `ko` | Korean |
+| `es` | Spanish |
+| `hi` | Hindi |
+| `fr` | French |
+| `de` | German |
+| `pt-BR` | Portuguese (Brazil) |
+| `ar` | Arabic |
+| `ru` | Russian |
+| `pl` | Polish |
+| `tr` | Turkish |
+| `it` | Italian |
+| `auto` | System language (auto-detect) |
+
+### Files Changed
+- `docs/TROUBLESHOOTING.md`: Added this entry documenting the issue and cleanup steps
+
+### Related
+- GitHub issue: https://github.com/octasoft-ltd/wsl-ui/issues/52
+- App data location: `%LOCALAPPDATA%\wsl-ui\`
 
 ---
 

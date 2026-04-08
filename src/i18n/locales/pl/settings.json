@@ -302,7 +302,11 @@
     "memoryPlaceholder": "np. 8GB",
     "processorsPlaceholder": "np. 4",
     "swapPlaceholder": "np. 4GB",
-    "errorLabel": "Błąd:"
+    "errorLabel": "Błąd:",
+    "gpu": "Obsługa GPU",
+    "gpuDesc": "Akceleracja GPU dla dystrybucji WSL2",
+    "gpuNote": "WSL2 zapewnia automatyczną akcelerację GPU przez DirectX 12 (DXCore) gdy dostępna jest kompatybilna karta graficzna i sterowniki. CUDA, OpenCL, DirectML i inne API GPU są obsługiwane bez dodatkowej konfiguracji.",
+    "gpuGuiNote": "Włącz aplikacje GUI (powyżej), aby używać akceleracji GPU dla aplikacji Linux GUI przez WSLg."
   },
   "wslDistro": {
     "title": "Konfiguracja poszczególnych dystrybucji",
@@ -359,7 +363,23 @@
     "errorLabel": "Błąd:",
     "defaultUserPlaceholder": "np. ubuntu",
     "loadError": "Nie udało się wczytać wsl.conf",
-    "saveError": "Nie udało się zapisać wsl.conf"
+    "saveError": "Nie udało się zapisać wsl.conf",
+    "gpu": "Status GPU",
+    "gpuDesc": "Sprawdź dostępność GPU w tej dystrybucji",
+    "gpuCheck": "Sprawdź GPU",
+    "gpuChecking": "Sprawdzanie...",
+    "gpuRecheck": "Sprawdź ponownie",
+    "gpuDirectX": "GPU DirectX (DXCore)",
+    "gpuNvidia": "NVIDIA CUDA (WSL2)",
+    "gpuAvailableLabel": "Dostępny",
+    "gpuNotAvailableLabel": "Niedostępny",
+    "gpuCheckError": "Nie można sprawdzić — najpierw uruchom dystrybucję",
+    "gpuNote": "DirectX GPU jest główną ścieżką GPU w WSL2. NVIDIA CUDA wykrywa /usr/lib/wsl/lib/libcuda.so.1, które sterowniki NVIDIA dla Windows wstrzykują do WSL2 — wymagane dla obciążeń CUDA takich jak Ollama.",
+    "toolkitInstalled": "NVIDIA Container Toolkit",
+    "cdiSpecs": "CDI Specs (/etc/cdi/nvidia.yaml)",
+    "toolkitChecking": "Checking container toolkit...",
+    "toolkitCheckError": "Failed to check container toolkit status",
+    "toolkitTroubleshootingLink": "→ Przewodnik konfiguracji kontenerów GPU"
   },
   "distributionSources": {
     "title": "Źródła dystrybucji",

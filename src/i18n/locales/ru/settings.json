@@ -302,7 +302,11 @@
     "memoryPlaceholder": "напр., 8GB",
     "processorsPlaceholder": "напр., 4",
     "swapPlaceholder": "напр., 4GB",
-    "errorLabel": "Ошибка:"
+    "errorLabel": "Ошибка:",
+    "gpu": "Поддержка GPU",
+    "gpuDesc": "Ускорение GPU для дистрибутивов WSL2",
+    "gpuNote": "WSL2 обеспечивает автоматическое ускорение GPU через DirectX 12 (DXCore) при наличии совместимого GPU и драйверов. CUDA, OpenCL, DirectML и другие API для вычислений на GPU поддерживаются без дополнительной настройки.",
+    "gpuGuiNote": "Включите GUI-приложения (выше), чтобы использовать ускорение GPU для Linux GUI приложений через WSLg."
   },
   "wslDistro": {
     "title": "Конфигурация по дистрибутивам",
@@ -359,7 +363,23 @@
     "errorLabel": "Ошибка:",
     "defaultUserPlaceholder": "напр., ubuntu",
     "loadError": "Не удалось загрузить wsl.conf",
-    "saveError": "Не удалось сохранить wsl.conf"
+    "saveError": "Не удалось сохранить wsl.conf",
+    "gpu": "Статус GPU",
+    "gpuDesc": "Проверить доступность GPU в этом дистрибутиве",
+    "gpuCheck": "Проверить GPU",
+    "gpuChecking": "Проверка...",
+    "gpuRecheck": "Проверить снова",
+    "gpuDirectX": "DirectX GPU (DXCore)",
+    "gpuNvidia": "NVIDIA CUDA (WSL2)",
+    "gpuAvailableLabel": "Доступно",
+    "gpuNotAvailableLabel": "Недоступно",
+    "gpuCheckError": "Невозможно проверить — сначала запустите дистрибутив",
+    "gpuNote": "DirectX GPU является основным путём GPU в WSL2. NVIDIA CUDA обнаруживает /usr/lib/wsl/lib/libcuda.so.1, который драйверы NVIDIA Windows внедряют в WSL2 — необходим для вычислительных нагрузок CUDA, таких как Ollama.",
+    "toolkitInstalled": "NVIDIA Container Toolkit",
+    "cdiSpecs": "CDI Specs (/etc/cdi/nvidia.yaml)",
+    "toolkitChecking": "Checking container toolkit...",
+    "toolkitCheckError": "Failed to check container toolkit status",
+    "toolkitTroubleshootingLink": "→ Руководство по настройке контейнеров GPU"
   },
   "distributionSources": {
     "title": "Источники дистрибутивов",
