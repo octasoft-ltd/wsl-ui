@@ -485,25 +485,17 @@ fn get_wt_preview_settings_path() -> PathBuf {
 fn open_terminal_wt(distro: &str, id: Option<&str>) -> Result<(), WslError> {
     let paths = get_executable_paths();
 
-    // When we have a distribution ID, always use wsl --distribution-id to ensure
-    // we target the correct distribution even when duplicate profile names exist
-    let args: Vec<String> = if id.is_some() {
+    // Prefer profile-based launch when a matching profile exists: this preserves
+    // the user's configured colours, fonts, and title for the distribution.
+    // Fall back to wsl --distribution-id (or -d) only when no profile is found.
+    let settings_path = get_wt_settings_path();
+    let args: Vec<String> = if wt_profile_exists(distro, &settings_path) {
+        vec!["-p".to_string(), distro.to_string()]
+    } else {
         let mut args = vec![paths.wsl.clone()];
         args.extend(wsl_distro_args(distro, id));
         args.extend(["--cd".to_string(), "~".to_string()]);
         args
-    } else {
-        // Fallback: only use profile matching when no ID is available
-        let settings_path = get_wt_settings_path();
-        let use_profile = wt_profile_exists(distro, &settings_path);
-        if use_profile {
-            vec!["-p".to_string(), distro.to_string()]
-        } else {
-            let mut args = vec![paths.wsl.clone()];
-            args.extend(wsl_distro_args(distro, id));
-            args.extend(["--cd".to_string(), "~".to_string()]);
-            args
-        }
     };
 
     log::debug!("Opening Windows Terminal: {} {:?}", paths.windows_terminal, args);
@@ -531,30 +523,21 @@ fn open_terminal_wt_preview(distro: &str, id: Option<&str>) -> Result<(), WslErr
 fn open_terminal_wt_preview_with_package(distro: &str, id: Option<&str>, package_family_name: &str) -> Result<(), WslError> {
     let paths = get_executable_paths();
 
-    // When we have a distribution ID, always use wsl --distribution-id to ensure
-    // we target the correct distribution even when duplicate profile names exist
-    let ps_command = if id.is_some() {
+    // Prefer profile-based launch when a matching profile exists: this preserves
+    // the user's configured colours, fonts, and title for the distribution.
+    // Fall back to wsl --distribution-id (or -d) only when no profile is found.
+    let settings_path = get_wt_preview_settings_path();
+    let ps_command = if wt_profile_exists(distro, &settings_path) {
+        format!(
+            "Start-Process 'shell:AppsFolder\\{}!App' -ArgumentList '-p','{}'",
+            package_family_name, distro
+        )
+    } else {
         let distro_args = wsl_distro_args(distro, id);
         format!(
             "Start-Process 'shell:AppsFolder\\{}!App' -ArgumentList 'wsl','{}','{}','--cd','~'",
             package_family_name, distro_args[0], distro_args[1]
         )
-    } else {
-        // Fallback: only use profile matching when no ID is available
-        let settings_path = get_wt_preview_settings_path();
-        let use_profile = wt_profile_exists(distro, &settings_path);
-        if use_profile {
-            format!(
-                "Start-Process 'shell:AppsFolder\\{}!App' -ArgumentList '-p','{}'",
-                package_family_name, distro
-            )
-        } else {
-            let distro_args = wsl_distro_args(distro, id);
-            format!(
-                "Start-Process 'shell:AppsFolder\\{}!App' -ArgumentList 'wsl','{}','{}','--cd','~'",
-                package_family_name, distro_args[0], distro_args[1]
-            )
-        }
     };
 
     log::debug!("Opening Windows Terminal Preview via PowerShell: {}", ps_command);
