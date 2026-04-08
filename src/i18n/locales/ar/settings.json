@@ -303,10 +303,10 @@
     "processorsPlaceholder": "مثال، 4",
     "swapPlaceholder": "مثال، 4GB",
     "errorLabel": "خطأ:",
-    "gpu": "GPU Support",
-    "gpuDesc": "GPU acceleration for WSL2 distributions",
-    "gpuNote": "WSL2 provides automatic GPU acceleration via DirectX 12 (DXCore) when a compatible GPU and driver are present. CUDA, OpenCL, DirectML, and other GPU compute APIs are supported without additional configuration.",
-    "gpuGuiNote": "Enable GUI Applications (above) to use GPU acceleration for Linux GUI apps via WSLg."
+    "gpu": "دعم وحدة معالجة الرسومات",
+    "gpuDesc": "تسريع GPU لتوزيعات WSL2",
+    "gpuNote": "يوفر WSL2 تسريعاً تلقائياً لوحدة معالجة الرسومات عبر DirectX 12 (DXCore) عند توفر GPU متوافق وبرامج تشغيل. يتم دعم CUDA وOpenCL وDirectML وواجهات برمجة تطبيقات GPU الأخرى دون الحاجة إلى تكوين إضافي.",
+    "gpuGuiNote": "قم بتمكين تطبيقات GUI (أعلاه) لاستخدام تسريع GPU لتطبيقات Linux GUI عبر WSLg."
   },
   "wslDistro": {
     "title": "تكوين لكل توزيعة",
@@ -364,17 +364,17 @@
     "defaultUserPlaceholder": "مثال، ubuntu",
     "loadError": "فشل تحميل wsl.conf",
     "saveError": "فشل حفظ wsl.conf",
-    "gpu": "GPU Status",
-    "gpuDesc": "Check GPU availability in this distribution",
-    "gpuCheck": "Check GPU",
-    "gpuChecking": "Checking...",
-    "gpuRecheck": "Check again",
-    "gpuDirectX": "DirectX GPU (DXCore)",
-    "gpuNvidia": "NVIDIA GPU",
-    "gpuAvailableLabel": "Available",
-    "gpuNotAvailableLabel": "Not Available",
-    "gpuCheckError": "Unable to check — start the distribution first",
-    "gpuNote": "GPU access in WSL2 requires a DirectX 12-compatible GPU and driver. Start the distribution before checking."
+    "gpu": "حالة GPU",
+    "gpuDesc": "التحقق من توفر GPU في هذا التوزيع",
+    "gpuCheck": "فحص GPU",
+    "gpuChecking": "جارٍ الفحص...",
+    "gpuRecheck": "إعادة الفحص",
+    "gpuDirectX": "GPU بواجهة DirectX (DXCore)",
+    "gpuNvidia": "GPU من NVIDIA",
+    "gpuAvailableLabel": "متوفر",
+    "gpuNotAvailableLabel": "غير متوفر",
+    "gpuCheckError": "تعذّر الفحص — قم بتشغيل التوزيع أولاً",
+    "gpuNote": "يتطلب الوصول إلى GPU في WSL2 وحدة معالجة رسومات وبرامج تشغيل متوافقة مع DirectX 12. قم بتشغيل التوزيع قبل الفحص."
   },
   "distributionSources": {
     "title": "مصادر التوزيعات",

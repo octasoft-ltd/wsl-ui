@@ -303,10 +303,10 @@
     "processorsPlaceholder": "örn., 4",
     "swapPlaceholder": "örn., 4GB",
     "errorLabel": "Hata:",
-    "gpu": "GPU Support",
-    "gpuDesc": "GPU acceleration for WSL2 distributions",
-    "gpuNote": "WSL2 provides automatic GPU acceleration via DirectX 12 (DXCore) when a compatible GPU and driver are present. CUDA, OpenCL, DirectML, and other GPU compute APIs are supported without additional configuration.",
-    "gpuGuiNote": "Enable GUI Applications (above) to use GPU acceleration for Linux GUI apps via WSLg."
+    "gpu": "GPU Desteği",
+    "gpuDesc": "WSL2 dağıtımları için GPU hızlandırma",
+    "gpuNote": "WSL2, uyumlu bir GPU ve sürüCü bulunduğunda DirectX 12 (DXCore) aracılığıyla otomatik GPU hızlandırması sağlar. CUDA, OpenCL, DirectML ve diğer GPU hesaplama API'leri ek yapılandırma gerektirmeden desteklenir.",
+    "gpuGuiNote": "WSLg aracılığıyla Linux GUI uygulamaları için GPU hızlandırmasını kullanmak üzere yukarıdaki GUI Uygulamalarını etkinleştirin."
   },
   "wslDistro": {
     "title": "Dağıtım Bazında Yapılandırma",
@@ -364,17 +364,17 @@
     "defaultUserPlaceholder": "örn., ubuntu",
     "loadError": "wsl.conf yüklenemedi",
     "saveError": "wsl.conf kaydedilemedi",
-    "gpu": "GPU Status",
-    "gpuDesc": "Check GPU availability in this distribution",
-    "gpuCheck": "Check GPU",
-    "gpuChecking": "Checking...",
-    "gpuRecheck": "Check again",
+    "gpu": "GPU Durumu",
+    "gpuDesc": "Bu dağıtımda GPU kullanılabilirliğini kontrol et",
+    "gpuCheck": "GPU'yu Kontrol Et",
+    "gpuChecking": "Kontrol ediliyor...",
+    "gpuRecheck": "Tekrar kontrol et",
     "gpuDirectX": "DirectX GPU (DXCore)",
     "gpuNvidia": "NVIDIA GPU",
-    "gpuAvailableLabel": "Available",
-    "gpuNotAvailableLabel": "Not Available",
-    "gpuCheckError": "Unable to check — start the distribution first",
-    "gpuNote": "GPU access in WSL2 requires a DirectX 12-compatible GPU and driver. Start the distribution before checking."
+    "gpuAvailableLabel": "Kullanılabilir",
+    "gpuNotAvailableLabel": "Kullanılamaz",
+    "gpuCheckError": "Kontrol edilemiyor — önce dağıtımı başlatın",
+    "gpuNote": "WSL2'de GPU erişimi için DirectX 12 uyumlu bir GPU ve sürücü gereklidir. Kontrol etmeden önce dağıtımı başlatın."
   },
   "distributionSources": {
     "title": "Dağıtım Kaynakları",

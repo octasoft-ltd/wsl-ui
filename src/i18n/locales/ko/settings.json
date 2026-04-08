@@ -303,10 +303,10 @@
     "processorsPlaceholder": "예: 4",
     "swapPlaceholder": "예: 4GB",
     "errorLabel": "오류:",
-    "gpu": "GPU Support",
-    "gpuDesc": "GPU acceleration for WSL2 distributions",
-    "gpuNote": "WSL2 provides automatic GPU acceleration via DirectX 12 (DXCore) when a compatible GPU and driver are present. CUDA, OpenCL, DirectML, and other GPU compute APIs are supported without additional configuration.",
-    "gpuGuiNote": "Enable GUI Applications (above) to use GPU acceleration for Linux GUI apps via WSLg."
+    "gpu": "GPU 지원",
+    "gpuDesc": "WSL2 배포판의 GPU 가속",
+    "gpuNote": "호환되는 GPU와 드라이버가 있을 경우, WSL2는 DirectX 12 (DXCore)를 통해 자동으로 GPU 가속을 제공합니다. CUDA, OpenCL, DirectML 및 기타 GPU 컴퓨팅 API는 추가 설정 없이 지원됩니다.",
+    "gpuGuiNote": "WSLg를 통해 Linux GUI 앱에 GPU 가속을 사용하려면 위의 GUI 애플리케이션을 활성화하세요."
   },
   "wslDistro": {
     "title": "배포판별 구성",
@@ -364,17 +364,17 @@
     "defaultUserPlaceholder": "예: ubuntu",
     "loadError": "wsl.conf 로드에 실패했습니다",
     "saveError": "wsl.conf 저장에 실패했습니다",
-    "gpu": "GPU Status",
-    "gpuDesc": "Check GPU availability in this distribution",
-    "gpuCheck": "Check GPU",
-    "gpuChecking": "Checking...",
-    "gpuRecheck": "Check again",
+    "gpu": "GPU 상태",
+    "gpuDesc": "이 배포판의 GPU 가용성 확인",
+    "gpuCheck": "GPU 확인",
+    "gpuChecking": "확인 중...",
+    "gpuRecheck": "다시 확인",
     "gpuDirectX": "DirectX GPU (DXCore)",
     "gpuNvidia": "NVIDIA GPU",
-    "gpuAvailableLabel": "Available",
-    "gpuNotAvailableLabel": "Not Available",
-    "gpuCheckError": "Unable to check — start the distribution first",
-    "gpuNote": "GPU access in WSL2 requires a DirectX 12-compatible GPU and driver. Start the distribution before checking."
+    "gpuAvailableLabel": "사용 가능",
+    "gpuNotAvailableLabel": "사용 불가",
+    "gpuCheckError": "확인할 수 없음 — 배포판을 먼저 시작하세요",
+    "gpuNote": "WSL2의 GPU 접근은 DirectX 12 호환 GPU와 드라이버가 필요합니다. 확인하기 전에 배포판을 시작하세요."
   },
   "distributionSources": {
     "title": "배포판 소스",

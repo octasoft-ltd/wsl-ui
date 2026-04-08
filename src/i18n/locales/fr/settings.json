@@ -303,10 +303,10 @@
     "processorsPlaceholder": "ex., 4",
     "swapPlaceholder": "ex., 4 Go",
     "errorLabel": "Erreur :",
-    "gpu": "GPU Support",
-    "gpuDesc": "GPU acceleration for WSL2 distributions",
-    "gpuNote": "WSL2 provides automatic GPU acceleration via DirectX 12 (DXCore) when a compatible GPU and driver are present. CUDA, OpenCL, DirectML, and other GPU compute APIs are supported without additional configuration.",
-    "gpuGuiNote": "Enable GUI Applications (above) to use GPU acceleration for Linux GUI apps via WSLg."
+    "gpu": "Prise en charge GPU",
+    "gpuDesc": "Accélération GPU pour les distributions WSL2",
+    "gpuNote": "WSL2 fournit une accélération GPU automatique via DirectX 12 (DXCore) lorsqu'un GPU et des pilotes compatibles sont présents. CUDA, OpenCL, DirectML et d'autres API de calcul GPU sont pris en charge sans configuration supplémentaire.",
+    "gpuGuiNote": "Activez les applications GUI (ci-dessus) pour utiliser l'accélération GPU pour les applications Linux GUI via WSLg."
   },
   "wslDistro": {
     "title": "Configuration par distribution",
@@ -364,17 +364,17 @@
     "defaultUserPlaceholder": "ex., ubuntu",
     "loadError": "Échec du chargement de wsl.conf",
     "saveError": "Échec de l'enregistrement de wsl.conf",
-    "gpu": "GPU Status",
-    "gpuDesc": "Check GPU availability in this distribution",
-    "gpuCheck": "Check GPU",
-    "gpuChecking": "Checking...",
-    "gpuRecheck": "Check again",
-    "gpuDirectX": "DirectX GPU (DXCore)",
-    "gpuNvidia": "NVIDIA GPU",
-    "gpuAvailableLabel": "Available",
-    "gpuNotAvailableLabel": "Not Available",
-    "gpuCheckError": "Unable to check — start the distribution first",
-    "gpuNote": "GPU access in WSL2 requires a DirectX 12-compatible GPU and driver. Start the distribution before checking."
+    "gpu": "État GPU",
+    "gpuDesc": "Vérifier la disponibilité du GPU dans cette distribution",
+    "gpuCheck": "Vérifier le GPU",
+    "gpuChecking": "Vérification...",
+    "gpuRecheck": "Revérifier",
+    "gpuDirectX": "GPU DirectX (DXCore)",
+    "gpuNvidia": "GPU NVIDIA",
+    "gpuAvailableLabel": "Disponible",
+    "gpuNotAvailableLabel": "Non disponible",
+    "gpuCheckError": "Impossible de vérifier — démarrez d'abord la distribution",
+    "gpuNote": "L'accès GPU dans WSL2 nécessite un GPU et des pilotes compatibles DirectX 12. Démarrez la distribution avant de vérifier."
   },
   "distributionSources": {
     "title": "Sources de distributions",

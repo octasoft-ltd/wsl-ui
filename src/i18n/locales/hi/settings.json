@@ -303,10 +303,10 @@
     "processorsPlaceholder": "जैसे, 4",
     "swapPlaceholder": "जैसे, 4GB",
     "errorLabel": "त्रुटि:",
-    "gpu": "GPU Support",
-    "gpuDesc": "GPU acceleration for WSL2 distributions",
-    "gpuNote": "WSL2 provides automatic GPU acceleration via DirectX 12 (DXCore) when a compatible GPU and driver are present. CUDA, OpenCL, DirectML, and other GPU compute APIs are supported without additional configuration.",
-    "gpuGuiNote": "Enable GUI Applications (above) to use GPU acceleration for Linux GUI apps via WSLg."
+    "gpu": "GPU समर्थन",
+    "gpuDesc": "WSL2 डिस्ट्रिब्यूशन के लिए GPU त्वरण",
+    "gpuNote": "जब एक संगत GPU और ड्राइवर मौजूद हों, WSL2 DirectX 12 (DXCore) के माध्यम से स्वचालित GPU त्वरण प्रदान करता है। CUDA, OpenCL, DirectML और अन्य GPU कंप्यूट API बिना किसी अतिरिक्त कॉन्फ़िगरेशन के समर्थित हैं।",
+    "gpuGuiNote": "WSLg के माध्यम से Linux GUI एप्स के लिए GPU त्वरण उपयोग करने के लिए ऊपर GUI अनुप्रयोगों को सक्षम करें।"
   },
   "wslDistro": {
     "title": "प्रति-डिस्ट्रिब्यूशन कॉन्फ़िगरेशन",
@@ -364,17 +364,17 @@
     "defaultUserPlaceholder": "जैसे, ubuntu",
     "loadError": "wsl.conf लोड करने में विफल",
     "saveError": "wsl.conf सहेजने में विफल",
-    "gpu": "GPU Status",
-    "gpuDesc": "Check GPU availability in this distribution",
-    "gpuCheck": "Check GPU",
-    "gpuChecking": "Checking...",
-    "gpuRecheck": "Check again",
+    "gpu": "GPU स्थिति",
+    "gpuDesc": "इस डिस्ट्रिब्यूशन में GPU उपलब्धता जाँचें",
+    "gpuCheck": "GPU जाँचें",
+    "gpuChecking": "जाँच हो रही है...",
+    "gpuRecheck": "फिर जाँचें",
     "gpuDirectX": "DirectX GPU (DXCore)",
     "gpuNvidia": "NVIDIA GPU",
-    "gpuAvailableLabel": "Available",
-    "gpuNotAvailableLabel": "Not Available",
-    "gpuCheckError": "Unable to check — start the distribution first",
-    "gpuNote": "GPU access in WSL2 requires a DirectX 12-compatible GPU and driver. Start the distribution before checking."
+    "gpuAvailableLabel": "उपलब्ध",
+    "gpuNotAvailableLabel": "अनुपलब्ध",
+    "gpuCheckError": "जाँच संभव नहीं — पहले डिस्ट्रिब्यूशन शुरू करें",
+    "gpuNote": "WSL2 में GPU एक्सेस के लिए DirectX 12-संगत GPU और ड्राइवर की आवश्यकता है। जाँचने से पहले डिस्ट्रिब्यूशन शुरू करें।"
   },
   "distributionSources": {
     "title": "डिस्ट्रिब्यूशन स्रोत",

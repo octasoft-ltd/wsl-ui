@@ -49,10 +49,12 @@ export function WslDistroSettings() {
       const distro = distributions.find(d => d.name === selectedDistro);
       const status = await wslService.getDistroGpuStatus(selectedDistro, distro?.id);
       setGpuStatus(status);
+      setGpuError(null);
     } catch (err) {
       const message = err instanceof Error ? err.message : t('wslDistro.gpuCheckError');
       logger.error("Failed to check GPU status:", "WslDistroSettings", err);
       setGpuError(message);
+      setGpuStatus(null);
     } finally {
       setGpuChecking(false);
     }

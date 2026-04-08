@@ -303,10 +303,10 @@
     "processorsPlaceholder": "напр., 4",
     "swapPlaceholder": "напр., 4GB",
     "errorLabel": "Ошибка:",
-    "gpu": "GPU Support",
-    "gpuDesc": "GPU acceleration for WSL2 distributions",
-    "gpuNote": "WSL2 provides automatic GPU acceleration via DirectX 12 (DXCore) when a compatible GPU and driver are present. CUDA, OpenCL, DirectML, and other GPU compute APIs are supported without additional configuration.",
-    "gpuGuiNote": "Enable GUI Applications (above) to use GPU acceleration for Linux GUI apps via WSLg."
+    "gpu": "Поддержка GPU",
+    "gpuDesc": "Ускорение GPU для дистрибутивов WSL2",
+    "gpuNote": "WSL2 обеспечивает автоматическое ускорение GPU через DirectX 12 (DXCore) при наличии совместимого GPU и драйверов. CUDA, OpenCL, DirectML и другие API для вычислений на GPU поддерживаются без дополнительной настройки.",
+    "gpuGuiNote": "Включите GUI-приложения (выше), чтобы использовать ускорение GPU для Linux GUI приложений через WSLg."
   },
   "wslDistro": {
     "title": "Конфигурация по дистрибутивам",
@@ -364,17 +364,17 @@
     "defaultUserPlaceholder": "напр., ubuntu",
     "loadError": "Не удалось загрузить wsl.conf",
     "saveError": "Не удалось сохранить wsl.conf",
-    "gpu": "GPU Status",
-    "gpuDesc": "Check GPU availability in this distribution",
-    "gpuCheck": "Check GPU",
-    "gpuChecking": "Checking...",
-    "gpuRecheck": "Check again",
+    "gpu": "Статус GPU",
+    "gpuDesc": "Проверить доступность GPU в этом дистрибутиве",
+    "gpuCheck": "Проверить GPU",
+    "gpuChecking": "Проверка...",
+    "gpuRecheck": "Проверить снова",
     "gpuDirectX": "DirectX GPU (DXCore)",
     "gpuNvidia": "NVIDIA GPU",
-    "gpuAvailableLabel": "Available",
-    "gpuNotAvailableLabel": "Not Available",
-    "gpuCheckError": "Unable to check — start the distribution first",
-    "gpuNote": "GPU access in WSL2 requires a DirectX 12-compatible GPU and driver. Start the distribution before checking."
+    "gpuAvailableLabel": "Доступно",
+    "gpuNotAvailableLabel": "Недоступно",
+    "gpuCheckError": "Невозможно проверить — сначала запустите дистрибутив",
+    "gpuNote": "Доступ к GPU в WSL2 требует совместимого с DirectX 12 GPU и драйверов. Запустите дистрибутив перед проверкой."
   },
   "distributionSources": {
     "title": "Источники дистрибутивов",
