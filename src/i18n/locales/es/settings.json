@@ -302,7 +302,11 @@
     "memoryPlaceholder": "ej., 8GB",
     "processorsPlaceholder": "ej., 4",
     "swapPlaceholder": "ej., 4GB",
-    "errorLabel": "Error:"
+    "errorLabel": "Error:",
+    "gpu": "Compatibilidad con GPU",
+    "gpuDesc": "Aceleración GPU para distribuciones WSL2",
+    "gpuNote": "WSL2 proporciona aceleración GPU automática a través de DirectX 12 (DXCore) cuando hay una GPU y controladores compatibles. CUDA, OpenCL, DirectML y otras API de cómputo GPU son compatibles sin configuración adicional.",
+    "gpuGuiNote": "Habilite las aplicaciones GUI (arriba) para usar la aceleración GPU para aplicaciones Linux GUI a través de WSLg."
   },
   "wslDistro": {
     "title": "Configuración por distribución",
@@ -359,7 +363,18 @@
     "errorLabel": "Error:",
     "defaultUserPlaceholder": "ej., ubuntu",
     "loadError": "Error al cargar wsl.conf",
-    "saveError": "Error al guardar wsl.conf"
+    "saveError": "Error al guardar wsl.conf",
+    "gpu": "Estado de GPU",
+    "gpuDesc": "Verificar disponibilidad de GPU en esta distribución",
+    "gpuCheck": "Verificar GPU",
+    "gpuChecking": "Verificando...",
+    "gpuRecheck": "Verificar de nuevo",
+    "gpuDirectX": "GPU DirectX (DXCore)",
+    "gpuNvidia": "GPU NVIDIA",
+    "gpuAvailableLabel": "Disponible",
+    "gpuNotAvailableLabel": "No disponible",
+    "gpuCheckError": "No se puede verificar — inicie primero la distribución",
+    "gpuNote": "El acceso a GPU en WSL2 requiere una GPU y controladores compatibles con DirectX 12. Inicie la distribución antes de verificar."
   },
   "distributionSources": {
     "title": "Orígenes de distribuciones",

@@ -484,6 +484,20 @@ export function CPUIcon(props: IconProps) {
   );
 }
 
+export function GpuIcon(props: IconProps) {
+  return (
+    <svg {...getSvgProps(props)}>
+      <rect x="2" y="5" width="20" height="14" rx="2" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} />
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M6 5V3M10 5V3M14 5V3M18 5V3M6 19v2M10 19v2M14 19v2M18 19v2M9 10h6M9 14h4"
+      />
+    </svg>
+  );
+}
+
 export function NetworkIcon(props: IconProps) {
   return (
     <svg {...getSvgProps(props)}>

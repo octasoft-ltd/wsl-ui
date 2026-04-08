@@ -395,6 +395,61 @@ fn check_xrdp_port_conflict(name: &str, id: Option<&str>) -> Result<Option<u16>,
 }
 
 
+/// GPU availability status for a distribution
+#[derive(Debug, Clone, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct GpuStatus {
+    /// Whether DirectX GPU device (/dev/dxg) is available
+    pub directx_available: bool,
+    /// Whether NVIDIA GPU (/dev/nvidia0) is available
+    pub nvidia_available: bool,
+    /// Whether any GPU is available
+    pub has_gpu: bool,
+}
+
+/// Check GPU availability in a distribution by probing /dev/dxg and /dev/nvidia0
+#[tauri::command]
+pub async fn get_distro_gpu_status(name: String, id: Option<String>) -> Result<GpuStatus, String> {
+    validate_distro_name(&name).map_err(|e| e.to_string())?;
+
+    if is_mock_mode() {
+        return Ok(GpuStatus {
+            directx_available: true,
+            nvidia_available: false,
+            has_gpu: true,
+        });
+    }
+
+    tokio::task::spawn_blocking(move || {
+        let output = wsl_executor()
+            .exec(
+                &name,
+                id.as_deref(),
+                r#"echo "dxg:$(test -e /dev/dxg && echo 1 || echo 0),nvidia:$(test -e /dev/nvidia0 && echo 1 || echo 0)""#,
+            )
+            .map_err(|e| format!("Failed to check GPU status: {}", e))?;
+
+        if !output.success {
+            return Err(format!(
+                "Failed to check GPU status: {}",
+                output.stderr.trim()
+            ));
+        }
+
+        let stdout = output.stdout.trim().to_string();
+        let directx = stdout.contains("dxg:1");
+        let nvidia = stdout.contains("nvidia:1");
+
+        Ok(GpuStatus {
+            directx_available: directx,
+            nvidia_available: nvidia,
+            has_gpu: directx || nvidia,
+        })
+    })
+    .await
+    .map_err(|e| format!("Task failed: {}", e))?
+}
+
 /// Parse .wslconfig content to check if timeout settings are configured for RDP use
 /// This is extracted for testability
 fn parse_wsl_config_timeouts(content: &str) -> WslConfigStatus {

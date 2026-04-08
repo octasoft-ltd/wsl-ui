@@ -8,10 +8,10 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { wslService } from "../../services/wslService";
 import { useDistroStore } from "../../store/distroStore";
-import type { WslConf } from "../../types/settings";
+import type { WslConf, GpuStatus } from "../../types/settings";
 import { DEFAULT_WSL_CONF } from "../../types/settings";
 import { Toggle, SettingInput } from "./FormControls";
-import { FolderIcon, NetworkIcon, TerminalIcon, SparklesIcon, UserIcon } from "../icons";
+import { FolderIcon, NetworkIcon, TerminalIcon, SparklesIcon, UserIcon, GpuIcon } from "../icons";
 import { logger } from "../../utils/logger";
 
 export function WslDistroSettings() {
@@ -23,6 +23,9 @@ export function WslDistroSettings() {
   const [isSaving, setIsSaving] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [gpuStatus, setGpuStatus] = useState<GpuStatus | null>(null);
+  const [gpuChecking, setGpuChecking] = useState(false);
+  const [gpuError, setGpuError] = useState<string | null>(null);
 
   useEffect(() => {
     if (distributions.length > 0 && !selectedDistro) {
@@ -33,8 +36,29 @@ export function WslDistroSettings() {
   useEffect(() => {
     if (selectedDistro) {
       loadConfig(selectedDistro);
+      setGpuStatus(null);
+      setGpuError(null);
     }
   }, [selectedDistro]);
+
+  const checkGpuStatus = async () => {
+    if (!selectedDistro) return;
+    setGpuChecking(true);
+    setGpuError(null);
+    try {
+      const distro = distributions.find(d => d.name === selectedDistro);
+      const status = await wslService.getDistroGpuStatus(selectedDistro, distro?.id);
+      setGpuStatus(status);
+      setGpuError(null);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : t('wslDistro.gpuCheckError');
+      logger.error("Failed to check GPU status:", "WslDistroSettings", err);
+      setGpuError(message);
+      setGpuStatus(null);
+    } finally {
+      setGpuChecking(false);
+    }
+  };
 
   const loadConfig = async (distroName: string) => {
     setIsLoading(true);
@@ -297,6 +321,60 @@ export function WslDistroSettings() {
                   testId="distro-default-user"
                 />
               </div>
+            </div>
+          </section>
+
+          <section className="relative overflow-hidden bg-linear-to-br from-violet-900/20 via-theme-bg-secondary/50 to-theme-bg-secondary/50 border border-violet-800/30 rounded-xl p-6">
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-violet-500/10 via-transparent to-transparent" />
+            <div className="relative">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 rounded-lg bg-linear-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-lg shadow-violet-900/30">
+                  <GpuIcon className="text-white" size="md" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-medium text-theme-text-primary">{t('wslDistro.gpu')}</h3>
+                  <p className="text-sm text-theme-text-muted">{t('wslDistro.gpuDesc')}</p>
+                </div>
+              </div>
+
+              {gpuStatus ? (
+                <div className="space-y-3" data-testid="distro-gpu-status">
+                  <div className="flex items-center justify-between py-2 border-b border-theme-border-primary/50">
+                    <span className="text-sm text-theme-text-primary">{t('wslDistro.gpuDirectX')}</span>
+                    <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${gpuStatus.directxAvailable ? 'bg-green-900/40 text-green-400' : 'bg-theme-bg-tertiary text-theme-text-muted'}`}>
+                      {gpuStatus.directxAvailable ? t('wslDistro.gpuAvailableLabel') : t('wslDistro.gpuNotAvailableLabel')}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between py-2">
+                    <span className="text-sm text-theme-text-primary">{t('wslDistro.gpuNvidia')}</span>
+                    <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${gpuStatus.nvidiaAvailable ? 'bg-green-900/40 text-green-400' : 'bg-theme-bg-tertiary text-theme-text-muted'}`}>
+                      {gpuStatus.nvidiaAvailable ? t('wslDistro.gpuAvailableLabel') : t('wslDistro.gpuNotAvailableLabel')}
+                    </span>
+                  </div>
+                  <button
+                    onClick={checkGpuStatus}
+                    disabled={gpuChecking}
+                    className="mt-2 text-xs text-theme-text-muted hover:text-theme-text-secondary transition-colors"
+                  >
+                    {t('wslDistro.gpuRecheck')}
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {gpuError && (
+                    <p className="text-sm text-theme-status-warning">{gpuError}</p>
+                  )}
+                  <p className="text-xs text-theme-text-muted">{t('wslDistro.gpuNote')}</p>
+                  <button
+                    onClick={checkGpuStatus}
+                    disabled={gpuChecking}
+                    data-testid="distro-gpu-check-btn"
+                    className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-theme-text-primary bg-theme-bg-tertiary hover:bg-theme-bg-hover border border-theme-border-secondary rounded-lg transition-colors disabled:opacity-50"
+                  >
+                    {gpuChecking ? t('wslDistro.gpuChecking') : t('wslDistro.gpuCheck')}
+                  </button>
+                </div>
+              )}
             </div>
           </section>
 

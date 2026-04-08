@@ -302,7 +302,11 @@
     "memoryPlaceholder": "z.B. 8GB",
     "processorsPlaceholder": "z.B. 4",
     "swapPlaceholder": "z.B. 4GB",
-    "errorLabel": "Fehler:"
+    "errorLabel": "Fehler:",
+    "gpu": "GPU-Unterstützung",
+    "gpuDesc": "GPU-Beschleunigung für WSL2-Distributionen",
+    "gpuNote": "WSL2 bietet automatische GPU-Beschleunigung über DirectX 12 (DXCore), wenn ein kompatibles GPU und Treiber vorhanden sind. CUDA, OpenCL, DirectML und andere GPU-Compute-APIs werden ohne zusätzliche Konfiguration unterstützt.",
+    "gpuGuiNote": "Aktivieren Sie GUI-Anwendungen (oben), um GPU-Beschleunigung für Linux-GUI-Apps über WSLg zu nutzen."
   },
   "wslDistro": {
     "title": "Konfiguration pro Distribution",
@@ -359,7 +363,18 @@
     "errorLabel": "Fehler:",
     "defaultUserPlaceholder": "z.B. ubuntu",
     "loadError": "wsl.conf konnte nicht geladen werden",
-    "saveError": "wsl.conf konnte nicht gespeichert werden"
+    "saveError": "wsl.conf konnte nicht gespeichert werden",
+    "gpu": "GPU-Status",
+    "gpuDesc": "GPU-Verfügbarkeit in dieser Distribution prüfen",
+    "gpuCheck": "GPU prüfen",
+    "gpuChecking": "Wird geprüft...",
+    "gpuRecheck": "Erneut prüfen",
+    "gpuDirectX": "DirectX GPU (DXCore)",
+    "gpuNvidia": "NVIDIA GPU",
+    "gpuAvailableLabel": "Verfügbar",
+    "gpuNotAvailableLabel": "Nicht verfügbar",
+    "gpuCheckError": "Prüfung nicht möglich — starten Sie zuerst die Distribution",
+    "gpuNote": "GPU-Zugriff in WSL2 erfordert eine DirectX 12-kompatible GPU und Treiber. Starten Sie die Distribution vor der Prüfung."
   },
   "distributionSources": {
     "title": "Distributionsquellen",

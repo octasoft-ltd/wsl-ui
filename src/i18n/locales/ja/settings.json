@@ -302,7 +302,11 @@
     "memoryPlaceholder": "例：8GB",
     "processorsPlaceholder": "例：4",
     "swapPlaceholder": "例：4GB",
-    "errorLabel": "エラー："
+    "errorLabel": "エラー：",
+    "gpu": "GPUサポート",
+    "gpuDesc": "WSL2ディストリビューションのGPUアクセラレーション",
+    "gpuNote": "WSL2は、互換性のあるGPUとドライバーが存在する場合、DirectX 12 (DXCore)を介して自動的にGPUアクセラレーションを提供します。CUDA、OpenCL、DirectMLなどのGPUコンピュートAPIは追加設定なしでサポートされます。",
+    "gpuGuiNote": "上の『GUIアプリケーション』を有効にすると、WSLgを介してLinux GUIアプリのGPUアクセラレーションを使用できます。"
   },
   "wslDistro": {
     "title": "ディストリビューション別設定",
@@ -359,7 +363,18 @@
     "errorLabel": "エラー：",
     "defaultUserPlaceholder": "例：ubuntu",
     "loadError": "wsl.conf の読み込みに失敗しました",
-    "saveError": "wsl.conf の保存に失敗しました"
+    "saveError": "wsl.conf の保存に失敗しました",
+    "gpu": "GPUステータス",
+    "gpuDesc": "このディストリビューションのGPU可用性を確認",
+    "gpuCheck": "GPUを確認",
+    "gpuChecking": "確認中...",
+    "gpuRecheck": "再確認",
+    "gpuDirectX": "DirectX GPU (DXCore)",
+    "gpuNvidia": "NVIDIA GPU",
+    "gpuAvailableLabel": "利用可能",
+    "gpuNotAvailableLabel": "利用不可",
+    "gpuCheckError": "確認できません — 先にディストリビューションを起動してください",
+    "gpuNote": "WSL2でのGPUアクセスには、DirectX 12対応のGPUとドライバーが必要です。確認前にディストリビューションを起動してください。"
   },
   "distributionSources": {
     "title": "ディストリビューションソース",
