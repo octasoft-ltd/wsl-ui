@@ -8,6 +8,7 @@ use wsl_core::decode_wsl_output;
 use super::{CommandOutput, WslCommandExecutor};
 use crate::settings::{get_executable_paths, get_timeout_config};
 use crate::utils::hidden_command;
+use crate::wsl::executor::supports_distribution_id;
 use crate::wsl::types::{WslError, WslPreflightStatus};
 
 /// Extract WSL version from `wsl --version` output
@@ -166,8 +167,8 @@ impl WslCommandExecutor for RealWslExecutor {
 
     fn start(&self, distro: &str, id: Option<&str>) -> Result<CommandOutput, WslError> {
         // Run a quick command to start the distro
-        // Use --distribution-id if available for more reliable identification
-        match id {
+        // Use --distribution-id if available and supported for more reliable identification
+        match id.filter(|_| supports_distribution_id()) {
             Some(guid) => self.execute(&["--distribution-id", guid, "--", "echo", "started"]),
             None => self.execute(&["-d", distro, "--", "echo", "started"]),
         }
@@ -406,8 +407,8 @@ impl WslCommandExecutor for RealWslExecutor {
     }
 
     fn exec(&self, distro: &str, id: Option<&str>, command: &str) -> Result<CommandOutput, WslError> {
-        // Use --distribution-id if available for more reliable identification
-        match id {
+        // Use --distribution-id if available and supported for more reliable identification
+        match id.filter(|_| supports_distribution_id()) {
             Some(guid) => self.execute(&["--distribution-id", guid, "--", "sh", "-c", command]),
             None => self.execute(&["-d", distro, "--", "sh", "-c", command]),
         }
@@ -415,7 +416,7 @@ impl WslCommandExecutor for RealWslExecutor {
 
     fn exec_as_root(&self, distro: &str, id: Option<&str>, command: &str) -> Result<CommandOutput, WslError> {
         // Use -u root to run as root user for privileged operations
-        match id {
+        match id.filter(|_| supports_distribution_id()) {
             Some(guid) => self.execute(&["--distribution-id", guid, "-u", "root", "--", "sh", "-c", command]),
             None => self.execute(&["-d", distro, "-u", "root", "--", "sh", "-c", command]),
         }
@@ -423,8 +424,8 @@ impl WslCommandExecutor for RealWslExecutor {
 
     fn exec_with_timeout(&self, distro: &str, id: Option<&str>, command: &str, timeout_secs: u64) -> Result<CommandOutput, WslError> {
         let timeout = Duration::from_secs(timeout_secs);
-        // Use --distribution-id if available for more reliable identification
-        match id {
+        // Use --distribution-id if available and supported for more reliable identification
+        match id.filter(|_| supports_distribution_id()) {
             Some(guid) => self.execute_with_timeout(
                 &["--distribution-id", guid, "--", "sh", "-c", command],
                 timeout

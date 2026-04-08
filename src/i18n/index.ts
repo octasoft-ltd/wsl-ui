@@ -1,6 +1,7 @@
 import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
 import LanguageDetector from "i18next-browser-languagedetector";
+import { debug } from "../utils/logger";
 
 // English translations (bundled eagerly)
 import commonEn from "./locales/en/common.json";
@@ -43,6 +44,7 @@ export const supportedLanguages = [
   { code: "ru", name: "Russian", nativeName: "Русский" },
   { code: "pl", name: "Polish", nativeName: "Polski" },
   { code: "tr", name: "Turkish", nativeName: "Türkçe" },
+  { code: "it", name: "Italian", nativeName: "Italiano" },
 ] as const;
 
 export type SupportedLanguage = (typeof supportedLanguages)[number]["code"];
@@ -94,6 +96,7 @@ const languageImports: Record<string, () => Promise<Record<string, Record<string
   ru: () => import("./locales/ru/index").then((m) => m.default),
   pl: () => import("./locales/pl/index").then((m) => m.default),
   tr: () => import("./locales/tr/index").then((m) => m.default),
+  it: () => import("./locales/it/index").then((m) => m.default),
 };
 
 export async function loadLanguage(lng: string): Promise<void> {
@@ -102,6 +105,7 @@ export async function loadLanguage(lng: string): Promise<void> {
   // Check if already loaded
   if (i18n.hasResourceBundle(lng, "common")) return;
 
+  debug(`[i18n] Lazy-loading language bundle: ${lng}`);
   const loader = languageImports[lng];
   const resources = await loader();
   for (const [ns, translations] of Object.entries(resources)) {
