@@ -370,11 +370,21 @@
     "gpuChecking": "Vérification...",
     "gpuRecheck": "Revérifier",
     "gpuDirectX": "GPU DirectX (DXCore)",
-    "gpuNvidia": "GPU NVIDIA",
+    "gpuNvidia": "NVIDIA CUDA (WSL2)",
     "gpuAvailableLabel": "Disponible",
     "gpuNotAvailableLabel": "Non disponible",
     "gpuCheckError": "Impossible de vérifier — démarrez d'abord la distribution",
-    "gpuNote": "L'accès GPU dans WSL2 nécessite un GPU et des pilotes compatibles DirectX 12. Démarrez la distribution avant de vérifier."
+    "gpuNote": "DirectX GPU est le chemin GPU principal de WSL2. NVIDIA CUDA détecte /usr/lib/wsl/lib/libcuda.so.1, que les pilotes NVIDIA Windows injectent dans WSL2 — nécessaire pour les charges de travail CUDA comme Ollama.",
+    "toolkitInstalled": "NVIDIA Container Toolkit",
+    "cdiSpecs": "CDI Specs (/etc/cdi/nvidia.yaml)",
+    "toolkitChecking": "Checking container toolkit...",
+    "toolkitCheckError": "Failed to check container toolkit status",
+    "toolkitSetupHint": "NVIDIA is available but container toolkit or CDI specs are not configured. Set up now to enable GPU passthrough in Podman/Docker containers.",
+    "toolkitSetup": "Set up for GPU containers",
+    "toolkitInstalling": "Installing NVIDIA Container Toolkit (this may take a few minutes)...",
+    "cdiGenerating": "Generating CDI specs...",
+    "toolkitSetupDone": "Setup complete!",
+    "toolkitSetupError": "Setup failed — check the output for details"
   },
   "distributionSources": {
     "title": "Sources de distributions",

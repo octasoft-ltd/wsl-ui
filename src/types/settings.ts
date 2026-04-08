@@ -227,6 +227,16 @@ export interface GpuStatus {
   hasGpu: boolean;
 }
 
+// NVIDIA Container Toolkit and CDI status
+export interface NvidiaContainerToolkitStatus {
+  /** Whether nvidia-ctk is installed */
+  toolkitInstalled: boolean;
+  /** Whether /etc/cdi/nvidia.yaml exists */
+  cdiSpecsExist: boolean;
+  /** CDI device names (e.g. "nvidia.com/gpu=0") */
+  cdiDevices: string[];
+}
+
 export const DEFAULT_WSL_CONF: WslConf = {
   automountEnabled: true,
   automountMountFsTab: true,

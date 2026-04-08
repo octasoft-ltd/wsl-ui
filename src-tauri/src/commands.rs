@@ -401,13 +401,15 @@ fn check_xrdp_port_conflict(name: &str, id: Option<&str>) -> Result<Option<u16>,
 pub struct GpuStatus {
     /// Whether DirectX GPU device (/dev/dxg) is available
     pub directx_available: bool,
-    /// Whether NVIDIA GPU (/dev/nvidia0) is available
+    /// Whether NVIDIA CUDA libraries (/usr/lib/wsl/lib/libcuda.so.1) are available
     pub nvidia_available: bool,
     /// Whether any GPU is available
     pub has_gpu: bool,
 }
 
-/// Check GPU availability in a distribution by probing /dev/dxg and /dev/nvidia0
+/// Check GPU availability in a distribution.
+/// In WSL2, NVIDIA GPU is indicated by /usr/lib/wsl/lib/libcuda.so.1 (injected by
+/// the Windows NVIDIA driver), NOT by /dev/nvidia0 which is native Linux only.
 #[tauri::command]
 pub async fn get_distro_gpu_status(name: String, id: Option<String>) -> Result<GpuStatus, String> {
     validate_distro_name(&name).map_err(|e| e.to_string())?;
@@ -425,7 +427,7 @@ pub async fn get_distro_gpu_status(name: String, id: Option<String>) -> Result<G
             .exec(
                 &name,
                 id.as_deref(),
-                r#"echo "dxg:$(test -e /dev/dxg && echo 1 || echo 0),nvidia:$(test -e /dev/nvidia0 && echo 1 || echo 0)""#,
+                r#"echo "dxg:$(test -e /dev/dxg && echo 1 || echo 0),nvidia:$(test -e /usr/lib/wsl/lib/libcuda.so.1 && echo 1 || echo 0)""#,
             )
             .map_err(|e| format!("Failed to check GPU status: {}", e))?;
 
@@ -445,6 +447,191 @@ pub async fn get_distro_gpu_status(name: String, id: Option<String>) -> Result<G
             nvidia_available: nvidia,
             has_gpu: directx || nvidia,
         })
+    })
+    .await
+    .map_err(|e| format!("Task failed: {}", e))?
+}
+
+/// NVIDIA Container Toolkit and CDI status for a distribution
+#[derive(Debug, Clone, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct NvidiaContainerToolkitStatus {
+    /// Whether nvidia-ctk is installed
+    pub toolkit_installed: bool,
+    /// Whether /etc/cdi/nvidia.yaml exists
+    pub cdi_specs_exist: bool,
+    /// List of CDI device names (e.g. "nvidia.com/gpu=0")
+    pub cdi_devices: Vec<String>,
+}
+
+/// Check whether NVIDIA Container Toolkit and CDI specs are configured in a distribution.
+/// Only meaningful when nvidia_available is true from get_distro_gpu_status.
+#[tauri::command]
+pub async fn check_nvidia_container_toolkit(name: String, id: Option<String>) -> Result<NvidiaContainerToolkitStatus, String> {
+    validate_distro_name(&name).map_err(|e| e.to_string())?;
+
+    if is_mock_mode() {
+        return Ok(NvidiaContainerToolkitStatus {
+            toolkit_installed: false,
+            cdi_specs_exist: false,
+            cdi_devices: vec![],
+        });
+    }
+
+    tokio::task::spawn_blocking(move || {
+        // Check if nvidia-ctk is installed
+        let toolkit_output = wsl_executor()
+            .exec(
+                &name,
+                id.as_deref(),
+                r#"which nvidia-ctk 2>/dev/null && echo "toolkit_ok" || echo "toolkit_missing""#,
+            )
+            .map_err(|e| format!("Failed to check toolkit: {}", e))?;
+
+        let toolkit_installed = toolkit_output.stdout.contains("toolkit_ok");
+
+        // Check CDI spec exists
+        let cdi_output = wsl_executor()
+            .exec(
+                &name,
+                id.as_deref(),
+                r#"test -f /etc/cdi/nvidia.yaml && echo "cdi_ok" || echo "cdi_missing""#,
+            )
+            .map_err(|e| format!("Failed to check CDI specs: {}", e))?;
+
+        let cdi_specs_exist = cdi_output.stdout.contains("cdi_ok");
+
+        // List CDI devices if toolkit installed and CDI spec exists
+        let cdi_devices = if toolkit_installed && cdi_specs_exist {
+            let devices_output = wsl_executor()
+                .exec(
+                    &name,
+                    id.as_deref(),
+                    r#"nvidia-ctk cdi list 2>/dev/null | grep "nvidia.com/gpu" || true"#,
+                )
+                .map_err(|e| format!("Failed to list CDI devices: {}", e))?;
+
+            devices_output.stdout
+                .lines()
+                .map(|l| l.trim().to_string())
+                .filter(|l| !l.is_empty())
+                .collect()
+        } else {
+            vec![]
+        };
+
+        Ok(NvidiaContainerToolkitStatus {
+            toolkit_installed,
+            cdi_specs_exist,
+            cdi_devices,
+        })
+    })
+    .await
+    .map_err(|e| format!("Task failed: {}", e))?
+}
+
+/// Install NVIDIA Container Toolkit in a distribution.
+/// Detects the package manager (apt or dnf) and adds the NVIDIA repository before installing.
+/// Returns the combined stdout/stderr output.
+#[tauri::command]
+pub async fn install_nvidia_container_toolkit(name: String, id: Option<String>) -> Result<String, String> {
+    validate_distro_name(&name).map_err(|e| e.to_string())?;
+
+    if is_mock_mode() {
+        return Ok("Mock: NVIDIA Container Toolkit installation simulated successfully.".to_string());
+    }
+
+    tokio::task::spawn_blocking(move || {
+        // Detect package manager
+        let pm_output = wsl_executor()
+            .exec(
+                &name,
+                id.as_deref(),
+                r#"which apt-get 2>/dev/null && echo "apt" || (which dnf 2>/dev/null && echo "dnf") || echo "unknown""#,
+            )
+            .map_err(|e| format!("Failed to detect package manager: {}", e))?;
+
+        let stdout = pm_output.stdout.trim().to_string();
+        let pkg_mgr = if stdout.contains("apt") {
+            "apt"
+        } else if stdout.contains("dnf") {
+            "dnf"
+        } else {
+            return Err("Unsupported package manager. Only apt (Debian/Ubuntu) and dnf (Fedora/RHEL) are supported.".to_string());
+        };
+
+        let install_cmd = if pkg_mgr == "apt" {
+            concat!(
+                "export DEBIAN_FRONTEND=noninteractive && ",
+                "curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey",
+                " | gpg --dearmor -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg 2>&1 && ",
+                "curl -s -L https://nvidia.github.io/libnvidia-container/stable/deb/nvidia-container-toolkit.list",
+                " | sed 's#deb https://#deb [signed-by=/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg] https://#g'",
+                " | tee /etc/apt/sources.list.d/nvidia-container-toolkit.list 2>&1 && ",
+                "apt-get update -qq 2>&1 && ",
+                "apt-get install -y nvidia-container-toolkit 2>&1"
+            )
+        } else {
+            concat!(
+                "curl -s -L https://nvidia.github.io/libnvidia-container/stable/rpm/nvidia-container-toolkit.repo",
+                " | tee /etc/yum.repos.d/nvidia-container-toolkit.repo 2>&1 && ",
+                "dnf install -y nvidia-container-toolkit 2>&1"
+            )
+        };
+
+        // Use a 5-minute timeout for package installation
+        let output = wsl_executor()
+            .exec_as_root_with_timeout(&name, id.as_deref(), install_cmd, 300)
+            .map_err(|e| format!("Failed to run install: {}", e))?;
+
+        let combined = format!("{}\n{}", output.stdout, output.stderr).trim().to_string();
+
+        if !output.success {
+            return Err(format!("Installation failed:\n{}", combined));
+        }
+
+        Ok(combined)
+    })
+    .await
+    .map_err(|e| format!("Task failed: {}", e))?
+}
+
+/// Generate CDI specs for NVIDIA GPUs using nvidia-ctk.
+/// Runs `nvidia-ctk cdi generate --output=/etc/cdi/nvidia.yaml` as root.
+/// Returns the command output.
+#[tauri::command]
+pub async fn generate_cdi_specs(name: String, id: Option<String>) -> Result<String, String> {
+    validate_distro_name(&name).map_err(|e| e.to_string())?;
+
+    if is_mock_mode() {
+        return Ok("Mock: CDI specs generated at /etc/cdi/nvidia.yaml".to_string());
+    }
+
+    tokio::task::spawn_blocking(move || {
+        // Ensure /etc/cdi directory exists
+        let mkdir_output = wsl_executor()
+            .exec_as_root(&name, id.as_deref(), "mkdir -p /etc/cdi 2>&1")
+            .map_err(|e| format!("Failed to create /etc/cdi: {}", e))?;
+
+        if !mkdir_output.success {
+            return Err(format!("Failed to create /etc/cdi directory: {}", mkdir_output.stderr.trim()));
+        }
+
+        let output = wsl_executor()
+            .exec_as_root(
+                &name,
+                id.as_deref(),
+                "nvidia-ctk cdi generate --output=/etc/cdi/nvidia.yaml 2>&1",
+            )
+            .map_err(|e| format!("Failed to generate CDI specs: {}", e))?;
+
+        let combined = format!("{}\n{}", output.stdout, output.stderr).trim().to_string();
+
+        if !output.success {
+            return Err(format!("CDI generation failed:\n{}", combined));
+        }
+
+        Ok(combined)
     })
     .await
     .map_err(|e| format!("Task failed: {}", e))?

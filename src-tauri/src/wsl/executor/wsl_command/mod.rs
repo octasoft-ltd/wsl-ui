@@ -122,6 +122,10 @@ pub trait WslCommandExecutor: Send + Sync {
     /// Useful for writing to system files like /etc/wsl.conf
     fn exec_as_root(&self, distro: &str, id: Option<&str>, command: &str) -> Result<CommandOutput, WslError>;
 
+    /// Execute a command as root with a custom timeout.
+    /// Like exec_as_root but with configurable timeout for long-running privileged operations.
+    fn exec_as_root_with_timeout(&self, distro: &str, id: Option<&str>, command: &str, timeout_secs: u64) -> Result<CommandOutput, WslError>;
+
     /// Get WSL2 network IP address
     /// Uses system distro with `ip route` for reliable IP detection
     fn get_ip(&self) -> Result<CommandOutput, WslError>;

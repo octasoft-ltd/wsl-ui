@@ -302,7 +302,11 @@
     "memoryPlaceholder": "es., 8GB",
     "processorsPlaceholder": "es., 4",
     "swapPlaceholder": "es., 4GB",
-    "errorLabel": "Errore:"
+    "errorLabel": "Errore:",
+    "gpu": "Supporto GPU",
+    "gpuDesc": "Accelerazione GPU per le distribuzioni WSL2",
+    "gpuNote": "WSL2 fornisce accelerazione GPU automatica tramite DirectX 12 (DXCore) quando sono presenti una GPU e driver compatibili. CUDA, OpenCL, DirectML e altre API di calcolo GPU sono supportate senza configurazione aggiuntiva.",
+    "gpuGuiNote": "Abilita le Applicazioni GUI (sopra) per usare l'accelerazione GPU per le app Linux GUI tramite WSLg."
   },
   "wslDistro": {
     "title": "Configurazione per distribuzione",
@@ -359,7 +363,28 @@
     "errorLabel": "Errore:",
     "defaultUserPlaceholder": "es., ubuntu",
     "loadError": "Caricamento di wsl.conf fallito",
-    "saveError": "Salvataggio di wsl.conf fallito"
+    "saveError": "Salvataggio di wsl.conf fallito",
+    "gpu": "Stato GPU",
+    "gpuDesc": "Verifica la disponibilità della GPU in questa distribuzione",
+    "gpuCheck": "Verifica GPU",
+    "gpuChecking": "Verifica in corso...",
+    "gpuRecheck": "Verifica di nuovo",
+    "gpuDirectX": "DirectX GPU (DXCore)",
+    "gpuNvidia": "NVIDIA CUDA (WSL2)",
+    "gpuAvailableLabel": "Disponibile",
+    "gpuNotAvailableLabel": "Non disponibile",
+    "gpuCheckError": "Impossibile verificare — avvia prima la distribuzione",
+    "gpuNote": "DirectX GPU è il percorso GPU principale di WSL2. NVIDIA CUDA rileva /usr/lib/wsl/lib/libcuda.so.1, che i driver NVIDIA di Windows iniettano in WSL2 — necessario per i carichi di lavoro CUDA come Ollama.",
+    "toolkitInstalled": "NVIDIA Container Toolkit",
+    "cdiSpecs": "CDI Specs (/etc/cdi/nvidia.yaml)",
+    "toolkitChecking": "Checking container toolkit...",
+    "toolkitCheckError": "Failed to check container toolkit status",
+    "toolkitSetupHint": "NVIDIA is available but container toolkit or CDI specs are not configured. Set up now to enable GPU passthrough in Podman/Docker containers.",
+    "toolkitSetup": "Set up for GPU containers",
+    "toolkitInstalling": "Installing NVIDIA Container Toolkit (this may take a few minutes)...",
+    "cdiGenerating": "Generating CDI specs...",
+    "toolkitSetupDone": "Setup complete!",
+    "toolkitSetupError": "Setup failed — check the output for details"
   },
   "distributionSources": {
     "title": "Sorgenti distribuzione",
