@@ -407,26 +407,6 @@ export const wslService = {
     return await invoke<NvidiaContainerToolkitStatus>("check_nvidia_container_toolkit", { name: distroName, id });
   },
 
-  /**
-   * Install NVIDIA Container Toolkit in a distribution.
-   * Detects apt/dnf and adds the NVIDIA repository before installing.
-   * Returns combined command output.
-   */
-  async installNvidiaContainerToolkit(distroName: string, id?: string): Promise<string> {
-    debug(`[wslService] Installing NVIDIA Container Toolkit for: ${distroName}`);
-    return await invoke<string>("install_nvidia_container_toolkit", { name: distroName, id });
-  },
-
-  /**
-   * Generate CDI specs for NVIDIA GPUs using nvidia-ctk.
-   * Writes /etc/cdi/nvidia.yaml in the distribution.
-   * Returns command output.
-   */
-  async generateCdiSpecs(distroName: string, id?: string): Promise<string> {
-    debug(`[wslService] Generating CDI specs for: ${distroName}`);
-    return await invoke<string>("generate_cdi_specs", { name: distroName, id });
-  },
-
   // Distro Catalog functions
 
   /**

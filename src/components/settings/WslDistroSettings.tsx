@@ -6,6 +6,7 @@
 
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { open } from "@tauri-apps/plugin-shell";
 import { wslService } from "../../services/wslService";
 import { useDistroStore } from "../../store/distroStore";
 import type { WslConf, GpuStatus, NvidiaContainerToolkitStatus } from "../../types/settings";
@@ -29,9 +30,6 @@ export function WslDistroSettings() {
   const [toolkitStatus, setToolkitStatus] = useState<NvidiaContainerToolkitStatus | null>(null);
   const [toolkitChecking, setToolkitChecking] = useState(false);
   const [toolkitError, setToolkitError] = useState<string | null>(null);
-  const [setupStep, setSetupStep] = useState<"idle" | "installing" | "generating" | "done">("idle");
-  const [setupOutput, setSetupOutput] = useState<string | null>(null);
-  const [setupError, setSetupError] = useState<string | null>(null);
 
   useEffect(() => {
     if (distributions.length > 0 && !selectedDistro) {
@@ -46,9 +44,6 @@ export function WslDistroSettings() {
       setGpuError(null);
       setToolkitStatus(null);
       setToolkitError(null);
-      setSetupStep("idle");
-      setSetupOutput(null);
-      setSetupError(null);
     }
   }, [selectedDistro]);
 
@@ -88,32 +83,6 @@ export function WslDistroSettings() {
       setToolkitError(message);
     } finally {
       setToolkitChecking(false);
-    }
-  };
-
-  const runToolkitSetup = async () => {
-    if (!selectedDistro) return;
-    const distro = distributions.find(d => d.name === selectedDistro);
-    setSetupError(null);
-    setSetupOutput(null);
-
-    try {
-      setSetupStep("installing");
-      const installOut = await wslService.installNvidiaContainerToolkit(selectedDistro, distro?.id);
-      setSetupOutput(installOut);
-
-      setSetupStep("generating");
-      const cdiOut = await wslService.generateCdiSpecs(selectedDistro, distro?.id);
-      setSetupOutput(prev => `${prev ?? ""}\n\n${cdiOut}`.trim());
-
-      setSetupStep("done");
-      // Refresh toolkit status
-      await checkToolkitStatus(distro?.id);
-    } catch (err) {
-      const message = err instanceof Error ? err.message : t('wslDistro.toolkitSetupError');
-      logger.error("Toolkit setup failed:", "WslDistroSettings", err);
-      setSetupError(message);
-      setSetupStep("idle");
     }
   };
 
@@ -431,42 +400,13 @@ export function WslDistroSettings() {
                             </span>
                           </div>
 
-                          {/* Guided setup — shown when toolkit or CDI is not ready */}
-                          {(!toolkitStatus.toolkitInstalled || !toolkitStatus.cdiSpecsExist) && setupStep === "idle" && (
-                            <div className="mt-3 p-3 bg-amber-900/20 border border-amber-700/30 rounded-lg space-y-2" data-testid="toolkit-setup-panel">
-                              <p className="text-xs text-amber-300">{t('wslDistro.toolkitSetupHint')}</p>
-                              <button
-                                onClick={runToolkitSetup}
-                                data-testid="toolkit-setup-btn"
-                                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-theme-bg-primary bg-amber-600 hover:bg-amber-500 rounded-lg transition-colors"
-                              >
-                                {t('wslDistro.toolkitSetup')}
-                              </button>
-                              {setupError && (
-                                <pre className="text-xs text-red-400 whitespace-pre-wrap break-all mt-2">{setupError}</pre>
-                              )}
-                            </div>
-                          )}
-
-                          {/* Setup progress */}
-                          {setupStep === "installing" && (
-                            <div className="mt-3 p-3 bg-theme-bg-tertiary border border-theme-border-secondary rounded-lg">
-                              <p className="text-xs text-theme-text-muted">{t('wslDistro.toolkitInstalling')}</p>
-                            </div>
-                          )}
-                          {setupStep === "generating" && (
-                            <div className="mt-3 p-3 bg-theme-bg-tertiary border border-theme-border-secondary rounded-lg">
-                              <p className="text-xs text-theme-text-muted">{t('wslDistro.cdiGenerating')}</p>
-                              {setupOutput && (
-                                <pre className="text-xs text-theme-text-secondary whitespace-pre-wrap break-all mt-1 max-h-32 overflow-y-auto">{setupOutput}</pre>
-                              )}
-                            </div>
-                          )}
-                          {setupStep === "done" && setupOutput && (
-                            <div className="mt-3 p-3 bg-green-900/20 border border-green-700/30 rounded-lg">
-                              <p className="text-xs text-green-400 mb-1">{t('wslDistro.toolkitSetupDone')}</p>
-                              <pre className="text-xs text-theme-text-secondary whitespace-pre-wrap break-all max-h-32 overflow-y-auto">{setupOutput}</pre>
-                            </div>
+                          {(!toolkitStatus.toolkitInstalled || !toolkitStatus.cdiSpecsExist) && (
+                            <button
+                              onClick={() => open("https://github.com/octasoft-ltd/wsl-ui/blob/main/docs/TROUBLESHOOTING.md#gpu-containers")}
+                              className="text-xs text-theme-accent-primary hover:text-theme-accent-secondary transition-colors"
+                            >
+                              {t('wslDistro.toolkitTroubleshootingLink')}
+                            </button>
                           )}
                         </>
                       ) : toolkitError ? (

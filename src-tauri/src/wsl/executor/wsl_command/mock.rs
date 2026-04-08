@@ -791,11 +791,6 @@ Default Version: 2
         self.exec(distro, id, command)
     }
 
-    fn exec_as_root_with_timeout(&self, distro: &str, id: Option<&str>, command: &str, _timeout_secs: u64) -> Result<CommandOutput, WslError> {
-        debug!("Mock: exec_as_root_with_timeout distro='{}' id={:?} command='{}'", distro, id, command);
-        self.exec(distro, id, command)
-    }
-
     fn get_ip(&self) -> Result<CommandOutput, WslError> {
         if let Some(err) = self.check_error("get_ip") {
             return Err(err);
