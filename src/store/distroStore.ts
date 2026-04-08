@@ -132,8 +132,12 @@ export const useDistroStore = create<DistroStore>((set, get) => ({
         try {
           const diskSize = await wslService.getDistributionDiskSize(distro.name);
 
-          // Only update if this fetch is still current
-          if (fetchId === currentFetchId) {
+          // Only update if this fetch is still current and result is non-negative.
+          // Negative values are error sentinels that shouldn't happen with real WSL
+          // (Rust returns u64), so we don't cache them to allow a retry later.
+          // Zero IS stored — it means "VHDX not found" and caching it prevents an
+          // infinite refetch loop for distros with non-standard install paths.
+          if (fetchId === currentFetchId && diskSize >= 0) {
             set((state) => {
               const distroExists = state.distributions.some((d) => d.name === distro.name);
               if (!distroExists) {
