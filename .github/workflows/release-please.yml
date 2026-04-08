@@ -292,44 +292,6 @@ jobs:
           }
           "@ | Out-File -FilePath "choco/tools/chocolateyUninstall.ps1" -Encoding utf8
 
-          # Generate VERIFICATION.txt
-          @"
-          VERIFICATION
-
-          Verification is intended to assist the Chocolatey moderators and community in
-          verifying that this package's contents are trustworthy.
-
-          This package does not embed any binaries. Instead, it downloads the official
-          MSI installer directly from the WSL UI GitHub releases at install time.
-
-          To verify the download:
-
-          1. Go to the official GitHub releases page:
-             https://github.com/octasoft-ltd/wsl-ui/releases
-
-          2. Download the x64 MSI for the version matching this package:
-             WSL.UI_${version}_x64_en-US.msi
-
-          3. Compute the SHA256 hash of the downloaded file and compare it to the
-             checksum64 value in tools/chocolateyInstall.ps1:
-
-             Expected: $hash
-
-             PowerShell:
-               Get-FileHash -Path WSL.UI_${version}_x64_en-US.msi -Algorithm SHA256
-
-          4. The hashes should match, confirming the file has not been tampered with.
-
-          The installer is published by Octasoft Ltd from their official GitHub repository:
-          https://github.com/octasoft-ltd/wsl-ui
-
-          License: GNU General Public License v3.0
-          https://github.com/octasoft-ltd/wsl-ui/blob/main/LICENSE
-          "@ | Out-File -FilePath "choco/tools/VERIFICATION.txt" -Encoding utf8
-
-          # Copy LICENSE from repo
-          Invoke-WebRequest -Uri "https://raw.githubusercontent.com/octasoft-ltd/wsl-ui/main/LICENSE" -OutFile "choco/tools/LICENSE.txt"
-
       - name: Pack and push to Chocolatey
         shell: pwsh
         run: |
