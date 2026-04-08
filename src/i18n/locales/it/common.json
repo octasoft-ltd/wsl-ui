@@ -1,0 +1,67 @@
+{
+  "button": {
+    "cancel": "Annulla",
+    "close": "Chiudi",
+    "save": "Salva",
+    "delete": "Elimina",
+    "confirm": "Conferma",
+    "retry": "Riprova",
+    "browse": "Sfoglia",
+    "back": "Indietro",
+    "dismiss": "Ignora",
+    "learnMore": "Scopri di più",
+    "resetToDefault": "Ripristina predefinito",
+    "clear": "Cancella ricerca",
+    "edit": "Modifica",
+    "run": "Esegui"
+  },
+  "label": {
+    "name": "Nome",
+    "status": "Stato",
+    "version": "Versione",
+    "size": "Dimensione",
+    "location": "Posizione",
+    "default": "Predefinito",
+    "yes": "Sì",
+    "no": "No",
+    "on": "Attivo",
+    "off": "Disattivo",
+    "loading": "Caricamento...",
+    "none": "Nessuno",
+    "ip": "IP",
+    "copied": "Copiato!",
+    "disk": "Disco",
+    "memory": "Memoria",
+    "cpu": "CPU",
+    "installed": "Installato",
+    "notInstalled": "Non installato"
+  },
+  "status": {
+    "online": "Online",
+    "offline": "Offline",
+    "primary": "Principale",
+    "compacting": "Compattazione",
+    "operational": "OPERATIVO",
+    "standby": "STANDBY"
+  },
+  "unit": {
+    "gb": "GB",
+    "tb": "TB"
+  },
+  "validation": {
+    "invalidChars": "Il nome può contenere solo lettere, numeri, punti, trattini bassi e trattini",
+    "duplicateName": "Esiste già una distribuzione chiamata \"{{name}}\"",
+    "nameExists": "Esiste già una distribuzione con questo nome",
+    "required": "Questo campo è obbligatorio"
+  },
+  "wslVersion": {
+    "wsl1": "WSL 1",
+    "wsl2": "WSL 2"
+  },
+  "errors": {
+    "unknown": "Si è verificato un errore sconosciuto"
+  },
+  "noOutput": "Nessun output",
+  "output": "Output",
+  "ranOn": "Eseguito su: {{distro}}"
+}
