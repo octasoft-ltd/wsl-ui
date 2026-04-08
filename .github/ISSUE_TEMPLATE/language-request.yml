@@ -8,7 +8,7 @@ body:
       value: |
         Thanks for helping make WSL UI more accessible! Please fill in the details below.
 
-        **Want to contribute the translation yourself?** See our [translation guide](../../CONTRIBUTING.md#contributing-translations) — it walks through the full process step by step.
+        **Want to contribute the translation yourself?** See our [translation guide](https://github.com/octasoft-ltd/wsl-ui/blob/main/CONTRIBUTING.md#contributing-translations) — it walks through the full process step by step.
 
   - type: input
     id: language-name
