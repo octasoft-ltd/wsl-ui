@@ -17,6 +17,9 @@ use crate::wsl::types::{WslError, WslPreflightStatus};
 /// Kernel version: 5.15.167.4-1
 /// ...
 fn extract_wsl_version(output: &str) -> Option<String> {
+    // Strip BOM that appears when decoding UTF-16 LE WSL output on non-English locales.
+    // Without this, the first line starts with '\u{FEFF}' and starts_with("wsl") fails.
+    let output = output.trim_start_matches('\u{FEFF}');
     for line in output.lines() {
         let line = line.trim();
         // Handle both "WSL version:" and "WSL バージョン:" (Japanese) etc.
