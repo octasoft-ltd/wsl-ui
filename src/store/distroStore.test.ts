@@ -163,7 +163,9 @@ describe("distroStore", () => {
 
       await useDistroStore.getState().fetchDistros();
 
-      expect(useDistroStore.getState().distributions).toEqual(
+      // Use toMatchObject because fetchDistros also enriches distributions with
+      // diskSize (0 when VHDX not found) and osInfo for running distros.
+      expect(useDistroStore.getState().distributions).toMatchObject(
         mockDistributions
       );
     });
@@ -209,7 +211,8 @@ describe("distroStore", () => {
 
       // isLoading should be cleared even for silent fetch
       expect(useDistroStore.getState().isLoading).toBe(false);
-      expect(useDistroStore.getState().distributions).toEqual(mockDistributions);
+      // Use toMatchObject because fetchDistros enriches distributions with diskSize/osInfo
+      expect(useDistroStore.getState().distributions).toMatchObject(mockDistributions);
     });
 
     it("should clear isLoading on failed silent fetch", async () => {
@@ -807,7 +810,9 @@ describe("distroStore", () => {
       expect(alpine?.osInfo).toBe("Alpine OS Info");
     });
 
-    it("does not update disk size if result is 0 or negative", async () => {
+    it("stores 0 disk size but does not store negative disk size", async () => {
+      // 0 = "VHDX not found" — cached to prevent infinite refetch loop
+      // Negative = error sentinel (not possible from real Rust u64 return value)
       vi.mocked(wslService.listDistributions).mockResolvedValue(
         mockDistributions
       );
@@ -830,11 +835,11 @@ describe("distroStore", () => {
       const debian = state.distributions.find((d) => d.name === "Debian");
       const alpine = state.distributions.find((d) => d.name === "Alpine");
 
-      // Ubuntu and Debian should not have disk sizes
-      expect(ubuntu?.diskSize).toBeUndefined();
+      // Ubuntu returns 0 — stored to prevent infinite refetch for non-standard install paths
+      expect(ubuntu?.diskSize).toBe(0);
+      // Debian returns -1 (error sentinel) — not stored, allows retry next poll
       expect(debian?.diskSize).toBeUndefined();
-
-      // Alpine should have disk size
+      // Alpine returns a real size
       expect(alpine?.diskSize).toBe(1024 * 1024);
     });
   });

@@ -108,22 +108,37 @@ export const useDistroStore = create<DistroStore>((set, get) => ({
       // Always clear isLoading on success (even for silent fetches to clear initial loading state)
       set({ distributions, isLoading: false });
 
-      // Fetch disk sizes and OS info in background (don't block the UI)
-      // Use Promise.all to parallelize requests for better performance (N+1 optimization)
-      logger.info("Fetching details for", "Store", distributions.length, "distributions");
+      // Fetch disk sizes and OS info in background (don't block the UI).
+      // Only fetch details that are not already cached to avoid flooding WSL
+      // with commands on every 10-second poll cycle.
+      const distrosMissingDiskSize = distributions.filter((d) => d.diskSize === undefined);
+      const distrosMissingOsInfo = distributions.filter(
+        (d) => d.state === "Running" && !d.osInfo
+      );
 
-      // Fetch all disk sizes in parallel
-      const diskSizePromises = distributions.map(async (distro) => {
+      if (distrosMissingDiskSize.length > 0 || distrosMissingOsInfo.length > 0) {
+        logger.info(
+          "Fetching missing details:",
+          "Store",
+          distrosMissingDiskSize.length,
+          "disk sizes,",
+          distrosMissingOsInfo.length,
+          "OS infos"
+        );
+      }
+
+      // Fetch disk sizes only for distributions that don't have one yet
+      const diskSizePromises = distrosMissingDiskSize.map(async (distro) => {
         try {
           const diskSize = await wslService.getDistributionDiskSize(distro.name);
 
-          // Only update if:
-          // 1. This fetch is still current
-          // 2. The distro still exists in the current state
-          // 3. We got a valid disk size
-          if (fetchId === currentFetchId && diskSize > 0) {
+          // Only update if this fetch is still current and result is non-negative.
+          // Negative values are error sentinels that shouldn't happen with real WSL
+          // (Rust returns u64), so we don't cache them to allow a retry later.
+          // Zero IS stored — it means "VHDX not found" and caching it prevents an
+          // infinite refetch loop for distros with non-standard install paths.
+          if (fetchId === currentFetchId && diskSize >= 0) {
             set((state) => {
-              // Double-check the distro still exists
               const distroExists = state.distributions.some((d) => d.name === distro.name);
               if (!distroExists) {
                 return state; // No change
@@ -141,10 +156,10 @@ export const useDistroStore = create<DistroStore>((set, get) => ({
         }
       });
 
-      // Fetch OS info for running distros in parallel
-      const osInfoPromises = distributions
-        .filter((distro) => distro.state === "Running")
-        .map(async (distro) => {
+      // Fetch OS info only for running distros that don't have it yet.
+      // OS info (e.g. "Ubuntu 22.04 LTS") never changes for a distro, so
+      // there is no need to re-fetch it on every poll cycle.
+      const osInfoPromises = distrosMissingOsInfo.map(async (distro) => {
           try {
             const osInfo = await wslService.getDistributionOsInfo(distro.name);
 

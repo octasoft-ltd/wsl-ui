@@ -76,6 +76,91 @@ wsl-ui/
 └── docs/                   # Documentation
 ```
 
+## Contributing Translations
+
+WSL UI uses [i18next](https://www.i18next.com/) with JSON translation files. Translations live in `src/i18n/locales/`.
+
+### Adding a New Language
+
+1. **Create the locale directory**
+
+   ```bash
+   mkdir src/i18n/locales/<code>
+   ```
+
+   Use the BCP 47 language code (e.g., `it` for Italian, `nl` for Dutch, `pt-PT` for European Portuguese).
+
+2. **Copy English files as a starting point**
+
+   ```bash
+   cp src/i18n/locales/en/*.json src/i18n/locales/<code>/
+   ```
+
+3. **Translate all 10 namespace files**
+
+   | File | Contents |
+   |------|----------|
+   | `common.json` | Buttons, labels, status labels, validation messages |
+   | `header.json` | Navigation and header text |
+   | `dashboard.json` | Main dashboard content |
+   | `dialogs.json` | Modal and dialog text |
+   | `settings.json` | Settings page content |
+   | `actions.json` | Action menus and context menus |
+   | `install.json` | Installation and setup messages |
+   | `errors.json` | Error messages |
+   | `help.json` | Help and documentation text |
+   | `statusbar.json` | Status bar content |
+
+   Translate only the values — never the keys.
+
+4. **Create an index file**
+
+   Copy the structure from an existing language:
+
+   ```bash
+   cp src/i18n/locales/fr/index.ts src/i18n/locales/<code>/index.ts
+   ```
+
+   No changes needed — it re-exports all 10 namespaces by name.
+
+5. **Register the language in `src/i18n/index.ts`**
+
+   Add an entry to `supportedLanguages`:
+
+   ```ts
+   { code: "it", name: "Italian", nativeName: "Italiano" },
+   ```
+
+   For RTL languages (Arabic, Hebrew, etc.), add `dir: "rtl" as const`:
+
+   ```ts
+   { code: "he", name: "Hebrew", nativeName: "עברית", dir: "rtl" as const },
+   ```
+
+   Add a lazy-load entry to `languageImports`:
+
+   ```ts
+   it: () => import("./locales/it/index").then((m) => m.default),
+   ```
+
+6. **Test your translation**
+
+   ```bash
+   npm run tauri dev
+   ```
+
+   Open Settings → Language and select your new language. Verify all UI strings appear correctly.
+
+7. **Submit a pull request**
+
+   Follow the [PR guidelines](#pull-request-guidelines) below. In the PR description, mention the language name and code, and note any strings that were left in English intentionally (e.g., proper nouns, technical terms).
+
+### Requesting a Language
+
+If you'd like a language added but cannot translate it yourself, [open a language request issue](https://github.com/octasoft-ltd/wsl-ui/issues/new?template=language-request.yml).
+
+---
+
 ## Pull Request Guidelines
 
 ### Before Submitting

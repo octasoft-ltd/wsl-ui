@@ -12,7 +12,7 @@ use crate::validation::{
 };
 use crate::wsl::resources::parse_memory_string;
 use crate::wsl::{reset_mock_state, set_mock_error, clear_mock_errors, set_stubborn_shutdown, was_force_shutdown_used, MockErrorType, CompactResult, Distribution, DistroResourceUsage, VhdSizeInfo, WslResourceUsage, WslService, WslVersionInfo, WslPreflightStatus, MountedDisk, MountDiskOptions, PhysicalDisk, InstalledTerminal};
-use crate::wsl::executor::{terminal_executor, wsl_executor};
+use crate::wsl::executor::{terminal_executor, wsl_executor, supports_distribution_id};
 use crate::{build_tray_menu, TrayState};
 use tauri::{AppHandle, Emitter, Manager};
 
@@ -606,9 +606,13 @@ pub async fn open_terminal_with_message(name: String, id: Option<String>, messag
 
         let paths = settings::get_executable_paths();
 
-        // Build distro args
-        let distro_args = match &id {
-            Some(guid) => format!("--distribution-id {}", guid),
+        // Build distro args (only use --distribution-id when WSL version supports it)
+        // Strip curly braces from GUID to avoid PowerShell/WT argument parsing issues
+        let distro_args = match id.as_deref().filter(|_| supports_distribution_id()) {
+            Some(guid) => {
+                let bare_guid = guid.trim_start_matches('{').trim_end_matches('}');
+                format!("--distribution-id {}", bare_guid)
+            }
             None => format!("-d {}", name),
         };
 
