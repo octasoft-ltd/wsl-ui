@@ -874,10 +874,22 @@ fn open_terminal_with_command_wt(distro: &str, id: Option<&str>, command: &str) 
         .replace('\\', "\\\\")
         .replace('"', "\\\"");
 
+    // Prepend -p <profile> when a matching profile exists so the tab opens with
+    // the user's configured colours/fonts/title. The explicit wsl command that
+    // follows overrides the profile's default shell, which is intentional here
+    // since we need to run a specific command in the correct distribution.
+    let settings_path = get_wt_settings_path();
+    let profile_prefix = if wt_profile_exists(distro, &settings_path) {
+        format!("-p {} ", distro)
+    } else {
+        String::new()
+    };
+
     // Build the command line for wt.exe directly
     // Using double quotes for the bash -c argument
     let wt_args = format!(
-        "{} {} {} --cd ~ -- bash -c \"{}\"",
+        "{}{} {} {} --cd ~ -- bash -c \"{}\"",
+        profile_prefix,
         paths.wsl,
         distro_args[0],
         distro_args[1],
@@ -924,10 +936,22 @@ fn open_terminal_with_command_wt_preview_with_package(distro: &str, id: Option<&
         .replace('\\', "\\\\")
         .replace('"', "\\\"");
 
+    // Prepend -p <profile> when a matching profile exists so the tab opens with
+    // the user's configured colours/fonts/title. The explicit wsl command that
+    // follows overrides the profile's default shell, which is intentional here
+    // since we need to run a specific command in the correct distribution.
+    let settings_path = get_wt_preview_settings_path();
+    let profile_prefix = if wt_profile_exists(distro, &settings_path) {
+        format!("-p {} ", distro)
+    } else {
+        String::new()
+    };
+
     // Build the argument list as a single string
     // Use double quotes for bash -c argument
     let wt_args = format!(
-        "wsl {} {} --cd ~ -- bash -c \"{}\"",
+        "{}wsl {} {} --cd ~ -- bash -c \"{}\"",
+        profile_prefix,
         distro_args[0],
         distro_args[1],
         cmd_escaped
