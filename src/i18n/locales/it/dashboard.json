@@ -1,0 +1,40 @@
+{
+  "loading": "Inizializzazione sistemi...",
+  "emptyState": {
+    "title": "Nessuna istanza rilevata",
+    "description": "Distribuisci una distribuzione WSL per iniziare"
+  },
+  "filter": {
+    "all": "Tutti",
+    "allSources": "Tutte le sorgenti",
+    "allSourcesMobile": "Tutti",
+    "onlineTooltip": "Online ({{count}})",
+    "offlineTooltip": "Offline ({{count}})",
+    "showWsl1": "Mostra WSL 1 ({{count}})",
+    "hideWsl1": "Nascondi WSL 1 ({{count}})",
+    "showWsl2": "Mostra WSL 2 ({{count}})",
+    "hideWsl2": "Nascondi WSL 2 ({{count}})",
+    "v1": "v1",
+    "v2": "v2"
+  },
+  "emptyFilter": {
+    "noDistros": "Nessuna distribuzione trovata",
+    "noMatch": "Nessuna distribuzione corrisponde ai filtri attuali",
+    "clearFilters": "Cancella filtri"
+  },
+  "card": {
+    "suspend": "Sospendi",
+    "launch": "Avvia",
+    "openTerminal": "Apri terminale",
+    "openRdp": "Apri desktop remoto",
+    "quickActions": "Azioni rapide",
+    "deleteDistro": "Elimina distribuzione",
+    "ipTooltip": "Clicca per copiare l'indirizzo IP"
+  },
+  "deleteDialog": {
+    "title": "Elimina distribuzione",
+    "message": "Sei sicuro di voler eliminare \"{{name}}\"? Questa azione non può essere annullata e tutti i dati in questa distribuzione andranno persi definitivamente.",
+    "messageDefault": "Sei sicuro di voler eliminare \"{{name}}\"? Questa azione non può essere annullata e tutti i dati in questa distribuzione andranno persi definitivamente.\n\nAttenzione: Questa è la tua distribuzione predefinita. Dopo l'eliminazione, i comandi WSL falliranno a meno che non imposti un'altra distribuzione come predefinita.",
+    "confirm": "Elimina"
+  }
+}

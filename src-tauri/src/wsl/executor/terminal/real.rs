@@ -10,6 +10,7 @@ use std::os::windows::process::CommandExt;
 use super::{ContainerRuntime, InstalledTerminal, TerminalExecutor};
 use crate::settings::get_executable_paths;
 use crate::utils::hidden_command;
+use crate::wsl::executor::supports_distribution_id;
 use crate::wsl::types::WslError;
 
 /// Cache for detected store terminals (detected once at startup)
@@ -396,11 +397,19 @@ fn parse_command_with_quotes(cmd: &str) -> (String, Vec<String>) {
     (program, args)
 }
 
+/// Strip curly braces from a GUID string.
+/// Registry GUIDs include braces like `{3c002dba-...}`, but curly braces cause
+/// issues in PowerShell (interpreted as ScriptBlock) and some terminal launchers.
+/// WSL accepts GUIDs both with and without braces.
+fn strip_guid_braces(guid: &str) -> String {
+    guid.trim_start_matches('{').trim_end_matches('}').to_string()
+}
+
 /// Generate WSL arguments for identifying a distribution
-/// Uses --distribution-id when available for reliable identification
+/// Uses --distribution-id when available and supported for reliable identification
 fn wsl_distro_args(name: &str, id: Option<&str>) -> Vec<String> {
-    match id {
-        Some(guid) => vec!["--distribution-id".to_string(), guid.to_string()],
+    match id.filter(|_| supports_distribution_id()) {
+        Some(guid) => vec!["--distribution-id".to_string(), strip_guid_braces(guid)],
         None => vec!["-d".to_string(), name.to_string()],
     }
 }
@@ -582,22 +591,24 @@ fn has_template_placeholders(cmd: &str) -> bool {
 /// Placeholders:
 ///   $WSL - path to wsl.exe
 ///   $DISTRO_ARGS - expands to "--distribution-id <guid> --cd ~" (preferred)
-///   $DISTRO_ID - distribution GUID (legacy)
+///   $DISTRO_ID - distribution GUID on WSL >= 2.4.4, falls back to name on older WSL (legacy)
 ///   $DISTRO_NAME - distribution name (legacy)
 fn expand_template(template: &str, distro: &str, id: Option<&str>, wsl_path: &str) -> String {
     let result = template.replace("$WSL", wsl_path);
 
     // $DISTRO_ARGS expands to the full distribution identification args
-    let distro_args = match id {
-        Some(guid) => format!("--distribution-id {} --cd ~", guid),
+    let distro_args = match id.filter(|_| supports_distribution_id()) {
+        Some(guid) => format!("--distribution-id {} --cd ~", strip_guid_braces(guid)),
         None => format!("-d {} --cd ~", distro),
     };
     let result = result.replace("$DISTRO_ARGS", &distro_args);
 
     // Legacy placeholders for backwards compatibility
     let result = result.replace("$DISTRO_NAME", distro);
-    let distro_id = id.unwrap_or(distro);
-    result.replace("$DISTRO_ID", distro_id)
+    let distro_id = id.filter(|_| supports_distribution_id())
+        .map(|g| strip_guid_braces(g))
+        .unwrap_or_else(|| distro.to_string());
+    result.replace("$DISTRO_ID", &distro_id)
 }
 
 /// Expand template placeholders for system terminal
@@ -998,4 +1009,33 @@ fn open_terminal_with_command_cmd(distro: &str, id: Option<&str>, command: &str)
         .spawn()
         .map_err(|e| WslError::CommandFailed(e.to_string()))?;
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_strip_guid_braces_with_braces() {
+        assert_eq!(
+            strip_guid_braces("{3c002dba-d670-4eed-b0c2-97e6eb929d06}"),
+            "3c002dba-d670-4eed-b0c2-97e6eb929d06"
+        );
+    }
+
+    #[test]
+    fn test_strip_guid_braces_without_braces() {
+        assert_eq!(
+            strip_guid_braces("3c002dba-d670-4eed-b0c2-97e6eb929d06"),
+            "3c002dba-d670-4eed-b0c2-97e6eb929d06"
+        );
+    }
+
+    #[test]
+    fn test_strip_guid_braces_uppercase() {
+        assert_eq!(
+            strip_guid_braces("{3C002DBA-D670-4EED-B0C2-97E6EB929D06}"),
+            "3C002DBA-D670-4EED-B0C2-97E6EB929D06"
+        );
+    }
 }
