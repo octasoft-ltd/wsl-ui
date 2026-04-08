@@ -17,6 +17,9 @@ use crate::wsl::types::{WslError, WslPreflightStatus};
 /// Kernel version: 5.15.167.4-1
 /// ...
 fn extract_wsl_version(output: &str) -> Option<String> {
+    // Strip BOM that appears when decoding UTF-16 LE WSL output on non-English locales.
+    // Without this, the first line starts with '\u{FEFF}' and starts_with("wsl") fails.
+    let output = output.trim_start_matches('\u{FEFF}');
     for line in output.lines() {
         let line = line.trim();
         // Handle both "WSL version:" and "WSL バージョン:" (Japanese) etc.
@@ -75,39 +78,42 @@ impl RealWslExecutor {
                 WslError::CommandFailed(e.to_string())
             })?;
 
+        // Drain stdout and stderr in background threads to prevent pipe buffer
+        // deadlock: if the child writes more than the OS pipe buffer (~4 KB) and
+        // the parent is not reading, the child blocks indefinitely and never exits.
+        let mut stdout_pipe = child.stdout.take();
+        let mut stderr_pipe = child.stderr.take();
+
+        let stdout_thread = std::thread::spawn(move || {
+            let mut buf = Vec::new();
+            if let Some(ref mut pipe) = stdout_pipe {
+                use std::io::Read;
+                let _ = pipe.read_to_end(&mut buf);
+            }
+            buf
+        });
+
+        let stderr_thread = std::thread::spawn(move || {
+            let mut buf = Vec::new();
+            if let Some(ref mut pipe) = stderr_pipe {
+                use std::io::Read;
+                let _ = pipe.read_to_end(&mut buf);
+            }
+            buf
+        });
+
         let start = std::time::Instant::now();
 
-        loop {
+        let status = loop {
             match child.try_wait() {
-                Ok(Some(status)) => {
-                    let mut stdout_bytes = Vec::new();
-                    let mut stderr_bytes = Vec::new();
-
-                    if let Some(mut stdout) = child.stdout.take() {
-                        use std::io::Read;
-                        let _ = stdout.read_to_end(&mut stdout_bytes);
-                    }
-                    if let Some(mut stderr) = child.stderr.take() {
-                        use std::io::Read;
-                        let _ = stderr.read_to_end(&mut stderr_bytes);
-                    }
-
-                    let stdout = decode_wsl_output(&stdout_bytes);
-                    let stderr = decode_wsl_output(&stderr_bytes);
-
-                    if !status.success() {
-                        debug!("WSL command returned non-zero: {}", stderr);
-                    }
-
-                    return Ok(CommandOutput {
-                        stdout,
-                        stderr,
-                        success: status.success(),
-                    });
-                }
+                Ok(Some(status)) => break status,
                 Ok(None) => {
                     if start.elapsed() > timeout {
                         let _ = child.kill();
+                        // Join reader threads so they clean up; they should exit
+                        // quickly now that the child process has been killed.
+                        let _ = stdout_thread.join();
+                        let _ = stderr_thread.join();
                         error!("WSL command timed out after {} seconds", timeout.as_secs());
                         return Err(WslError::Timeout(
                             "WSL is not responding. Try 'Force Restart WSL' to recover.".into()
@@ -116,11 +122,29 @@ impl RealWslExecutor {
                     std::thread::sleep(Duration::from_millis(50));
                 }
                 Err(e) => {
+                    let _ = stdout_thread.join();
+                    let _ = stderr_thread.join();
                     error!("Error waiting for WSL command: {}", e);
                     return Err(WslError::CommandFailed(e.to_string()));
                 }
             }
+        };
+
+        let stdout_bytes = stdout_thread.join().unwrap_or_default();
+        let stderr_bytes = stderr_thread.join().unwrap_or_default();
+
+        let stdout = decode_wsl_output(&stdout_bytes);
+        let stderr = decode_wsl_output(&stderr_bytes);
+
+        if !status.success() {
+            debug!("WSL command returned non-zero: {}", stderr);
         }
+
+        Ok(CommandOutput {
+            stdout,
+            stderr,
+            success: status.success(),
+        })
     }
 
     /// Execute a long-running command (like install, export) with extended timeout
