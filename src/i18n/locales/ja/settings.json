@@ -302,7 +302,11 @@
     "memoryPlaceholder": "例：8GB",
     "processorsPlaceholder": "例：4",
     "swapPlaceholder": "例：4GB",
-    "errorLabel": "エラー："
+    "errorLabel": "エラー：",
+    "gpu": "GPU Support",
+    "gpuDesc": "GPU acceleration for WSL2 distributions",
+    "gpuNote": "WSL2 provides automatic GPU acceleration via DirectX 12 (DXCore) when a compatible GPU and driver are present. CUDA, OpenCL, DirectML, and other GPU compute APIs are supported without additional configuration.",
+    "gpuGuiNote": "Enable GUI Applications (above) to use GPU acceleration for Linux GUI apps via WSLg."
   },
   "wslDistro": {
     "title": "ディストリビューション別設定",
@@ -359,7 +363,18 @@
     "errorLabel": "エラー：",
     "defaultUserPlaceholder": "例：ubuntu",
     "loadError": "wsl.conf の読み込みに失敗しました",
-    "saveError": "wsl.conf の保存に失敗しました"
+    "saveError": "wsl.conf の保存に失敗しました",
+    "gpu": "GPU Status",
+    "gpuDesc": "Check GPU availability in this distribution",
+    "gpuCheck": "Check GPU",
+    "gpuChecking": "Checking...",
+    "gpuRecheck": "Check again",
+    "gpuDirectX": "DirectX GPU (DXCore)",
+    "gpuNvidia": "NVIDIA GPU",
+    "gpuAvailableLabel": "Available",
+    "gpuNotAvailableLabel": "Not Available",
+    "gpuCheckError": "Unable to check — start the distribution first",
+    "gpuNote": "GPU access in WSL2 requires a DirectX 12-compatible GPU and driver. Start the distribution before checking."
   },
   "distributionSources": {
     "title": "ディストリビューションソース",

@@ -302,7 +302,11 @@
     "memoryPlaceholder": "örn., 8GB",
     "processorsPlaceholder": "örn., 4",
     "swapPlaceholder": "örn., 4GB",
-    "errorLabel": "Hata:"
+    "errorLabel": "Hata:",
+    "gpu": "GPU Support",
+    "gpuDesc": "GPU acceleration for WSL2 distributions",
+    "gpuNote": "WSL2 provides automatic GPU acceleration via DirectX 12 (DXCore) when a compatible GPU and driver are present. CUDA, OpenCL, DirectML, and other GPU compute APIs are supported without additional configuration.",
+    "gpuGuiNote": "Enable GUI Applications (above) to use GPU acceleration for Linux GUI apps via WSLg."
   },
   "wslDistro": {
     "title": "Dağıtım Bazında Yapılandırma",
@@ -359,7 +363,18 @@
     "errorLabel": "Hata:",
     "defaultUserPlaceholder": "örn., ubuntu",
     "loadError": "wsl.conf yüklenemedi",
-    "saveError": "wsl.conf kaydedilemedi"
+    "saveError": "wsl.conf kaydedilemedi",
+    "gpu": "GPU Status",
+    "gpuDesc": "Check GPU availability in this distribution",
+    "gpuCheck": "Check GPU",
+    "gpuChecking": "Checking...",
+    "gpuRecheck": "Check again",
+    "gpuDirectX": "DirectX GPU (DXCore)",
+    "gpuNvidia": "NVIDIA GPU",
+    "gpuAvailableLabel": "Available",
+    "gpuNotAvailableLabel": "Not Available",
+    "gpuCheckError": "Unable to check — start the distribution first",
+    "gpuNote": "GPU access in WSL2 requires a DirectX 12-compatible GPU and driver. Start the distribution before checking."
   },
   "distributionSources": {
     "title": "Dağıtım Kaynakları",
