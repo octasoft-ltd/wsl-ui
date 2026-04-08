@@ -379,12 +379,7 @@
     "cdiSpecs": "CDI Specs (/etc/cdi/nvidia.yaml)",
     "toolkitChecking": "Checking container toolkit...",
     "toolkitCheckError": "Failed to check container toolkit status",
-    "toolkitSetupHint": "NVIDIA is available but container toolkit or CDI specs are not configured. Set up now to enable GPU passthrough in Podman/Docker containers.",
-    "toolkitSetup": "Set up for GPU containers",
-    "toolkitInstalling": "Installing NVIDIA Container Toolkit (this may take a few minutes)...",
-    "cdiGenerating": "Generating CDI specs...",
-    "toolkitSetupDone": "Setup complete!",
-    "toolkitSetupError": "Setup failed — check the output for details"
+    "toolkitTroubleshootingLink": "→ Руководство по настройке контейнеров GPU"
   },
   "distributionSources": {
     "title": "Источники дистрибутивов",

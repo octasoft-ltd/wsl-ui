@@ -4,6 +4,86 @@ This guide documents known issues and their solutions encountered during develop
 
 ---
 
+## GPU Containers — NVIDIA CUDA passthrough setup {#gpu-containers}
+
+WSL-UI detects whether NVIDIA CUDA is available in a distro and whether the NVIDIA Container Toolkit and CDI spec are configured. This section explains what each status means and how to fix common problems.
+
+### Understanding the status rows
+
+| Status | Meaning |
+|---|---|
+| **NVIDIA CUDA** | `/usr/lib/wsl/lib/libcuda.so.1` is present — your Windows NVIDIA driver injects CUDA into WSL2 |
+| **NVIDIA Container Toolkit** | `nvidia-ctk` is installed in the distro |
+| **CDI Specs** | `/etc/cdi/nvidia.yaml` exists and `nvidia-ctk cdi list` returns devices |
+
+### Setup for different configurations
+
+#### Podman via Podman machine (most common on Windows)
+
+If your WSL2 distro uses Podman machine as a backend (check with `podman system connection list`), containers run inside `podman-machine-default`, not your distro. The CDI spec must be configured there.
+
+Inside `podman-machine-default`:
+
+```bash
+# Install nvidia-ctk if not present (Fedora/RHEL)
+sudo dnf install -y nvidia-container-toolkit
+
+# Generate CDI spec
+sudo nvidia-ctk cdi generate --output=/etc/cdi/nvidia.yaml
+
+# Verify
+nvidia-ctk cdi list
+podman run --rm --device nvidia.com/gpu=all ubuntu:22.04 nvidia-smi
+```
+
+> **Note:** WSL-UI's toolkit status reflects the selected distro, but if that distro uses Podman machine, you must run the above commands in `podman-machine-default` directly.
+
+#### Podman or Docker running directly in your WSL2 distro
+
+If containers run directly in your distro (no Podman machine), install and configure in that distro:
+
+**Ubuntu / Debian:**
+```bash
+curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey \
+  | sudo gpg --dearmor -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg
+curl -s -L https://nvidia.github.io/libnvidia-container/stable/deb/nvidia-container-toolkit.list \
+  | sed 's#deb https://#deb [signed-by=/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg] https://#g' \
+  | sudo tee /etc/apt/sources.list.d/nvidia-container-toolkit.list
+sudo apt-get update && sudo apt-get install -y nvidia-container-toolkit
+sudo nvidia-ctk cdi generate --output=/etc/cdi/nvidia.yaml
+```
+
+**Fedora / RHEL:**
+```bash
+curl -s -L https://nvidia.github.io/libnvidia-container/stable/rpm/nvidia-container-toolkit.repo \
+  | sudo tee /etc/yum.repos.d/nvidia-container-toolkit.repo
+sudo dnf install -y nvidia-container-toolkit
+sudo nvidia-ctk cdi generate --output=/etc/cdi/nvidia.yaml
+```
+
+Then test:
+```bash
+podman run --rm --device nvidia.com/gpu=all ubuntu:22.04 nvidia-smi
+```
+
+### CDI spec shows "Not Available" after Windows NVIDIA driver update
+
+When Windows NVIDIA drivers update, a new driver store directory appears at `/usr/lib/wsl/drivers/nvmdi.inf_amd64_<newhash>/`. Any existing CDI spec pointing to the old hash becomes stale and causes:
+
+```
+crun: cannot stat '/usr/lib/wsl/drivers/nvmdi.inf_amd64_<oldhash>/libcuda.so.1.1': No such file or directory
+```
+
+**Fix:** regenerate the CDI spec in the distro where containers run:
+
+```bash
+sudo nvidia-ctk cdi generate --output=/etc/cdi/nvidia.yaml
+```
+
+This picks up the current active driver hash automatically.
+
+---
+
 ## Issue #1: Quick Install completes but distro doesn't appear in WSL list
 
 ### Symptoms

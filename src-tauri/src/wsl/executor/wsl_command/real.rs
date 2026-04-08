@@ -425,14 +425,6 @@ impl WslCommandExecutor for RealWslExecutor {
         }
     }
 
-    fn exec_as_root_with_timeout(&self, distro: &str, id: Option<&str>, command: &str, timeout_secs: u64) -> Result<CommandOutput, WslError> {
-        let timeout = Duration::from_secs(timeout_secs);
-        match id.filter(|_| supports_distribution_id()) {
-            Some(guid) => self.execute_with_timeout(&["--distribution-id", guid, "-u", "root", "--", "sh", "-c", command], timeout),
-            None => self.execute_with_timeout(&["-d", distro, "-u", "root", "--", "sh", "-c", command], timeout),
-        }
-    }
-
     fn exec_with_timeout(&self, distro: &str, id: Option<&str>, command: &str, timeout_secs: u64) -> Result<CommandOutput, WslError> {
         let timeout = Duration::from_secs(timeout_secs);
         // Use --distribution-id if available and supported for more reliable identification
