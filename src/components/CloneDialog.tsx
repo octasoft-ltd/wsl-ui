@@ -181,7 +181,7 @@ export function CloneDialog({ isOpen, sourceName, onClose }: CloneDialogProps) {
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && !isCloning && newName.trim() && !validationError && !pathError && !isValidatingPath) {
+    if (e.key === "Enter" && !e.nativeEvent.isComposing && !isCloning && newName.trim() && !validationError && !pathError && !isValidatingPath) {
       handleClone();
     } else if (e.key === "Escape") {
       handleClose();
