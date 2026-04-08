@@ -370,11 +370,11 @@
     "gpuChecking": "Wird geprüft...",
     "gpuRecheck": "Erneut prüfen",
     "gpuDirectX": "DirectX GPU (DXCore)",
-    "gpuNvidia": "NVIDIA GPU",
+    "gpuNvidia": "NVIDIA CUDA (WSL2)",
     "gpuAvailableLabel": "Verfügbar",
     "gpuNotAvailableLabel": "Nicht verfügbar",
     "gpuCheckError": "Prüfung nicht möglich — starten Sie zuerst die Distribution",
-    "gpuNote": "GPU-Zugriff in WSL2 erfordert eine DirectX 12-kompatible GPU und Treiber. Starten Sie die Distribution vor der Prüfung."
+    "gpuNote": "DirectX GPU ist der primäre WSL2-GPU-Pfad. NVIDIA CUDA erkennt /usr/lib/wsl/lib/libcuda.so.1, welches von Windows-NVIDIA-Treibern in WSL2 injiziert wird — erforderlich für CUDA-Arbeitslasten wie Ollama."
   },
   "distributionSources": {
     "title": "Distributionsquellen",

@@ -370,11 +370,11 @@
     "gpuChecking": "جارٍ الفحص...",
     "gpuRecheck": "إعادة الفحص",
     "gpuDirectX": "GPU بواجهة DirectX (DXCore)",
-    "gpuNvidia": "GPU من NVIDIA",
+    "gpuNvidia": "NVIDIA CUDA (WSL2)",
     "gpuAvailableLabel": "متوفر",
     "gpuNotAvailableLabel": "غير متوفر",
     "gpuCheckError": "تعذّر الفحص — قم بتشغيل التوزيع أولاً",
-    "gpuNote": "يتطلب الوصول إلى GPU في WSL2 وحدة معالجة رسومات وبرامج تشغيل متوافقة مع DirectX 12. قم بتشغيل التوزيع قبل الفحص."
+    "gpuNote": "هو مسار GPU الأساسي في WSL2. يكتشف NVIDIA CUDA الملف /usr/lib/wsl/lib/libcuda.so.1، الذي تُحقنه برامج تشغيل NVIDIA لـWindows في WSL2 — ضروري لأعباء عمل CUDA مثل Ollama."
   },
   "distributionSources": {
     "title": "مصادر التوزيعات",

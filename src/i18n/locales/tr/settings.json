@@ -370,11 +370,11 @@
     "gpuChecking": "Kontrol ediliyor...",
     "gpuRecheck": "Tekrar kontrol et",
     "gpuDirectX": "DirectX GPU (DXCore)",
-    "gpuNvidia": "NVIDIA GPU",
+    "gpuNvidia": "NVIDIA CUDA (WSL2)",
     "gpuAvailableLabel": "Kullanılabilir",
     "gpuNotAvailableLabel": "Kullanılamaz",
     "gpuCheckError": "Kontrol edilemiyor — önce dağıtımı başlatın",
-    "gpuNote": "WSL2'de GPU erişimi için DirectX 12 uyumlu bir GPU ve sürücü gereklidir. Kontrol etmeden önce dağıtımı başlatın."
+    "gpuNote": "DirectX GPU, WSL2'nin birincil GPU yoludur. NVIDIA CUDA, /usr/lib/wsl/lib/libcuda.so.1 dosyasını algılar; bu dosya, Windows NVIDIA sürücleri tarafından WSL2'ye enjekte edilir ve Ollama gibi CUDA iş yükleri için gereklidir."
   },
   "distributionSources": {
     "title": "Dağıtım Kaynakları",

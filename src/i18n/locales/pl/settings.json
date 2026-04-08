@@ -370,11 +370,11 @@
     "gpuChecking": "Sprawdzanie...",
     "gpuRecheck": "Sprawdź ponownie",
     "gpuDirectX": "GPU DirectX (DXCore)",
-    "gpuNvidia": "GPU NVIDIA",
+    "gpuNvidia": "NVIDIA CUDA (WSL2)",
     "gpuAvailableLabel": "Dostępny",
     "gpuNotAvailableLabel": "Niedostępny",
     "gpuCheckError": "Nie można sprawdzić — najpierw uruchom dystrybucję",
-    "gpuNote": "Dostęp do GPU w WSL2 wymaga karty graficznej i sterowników zgodnych z DirectX 12. Uruchom dystrybucję przed sprawdzeniem."
+    "gpuNote": "DirectX GPU jest główną ścieżką GPU w WSL2. NVIDIA CUDA wykrywa /usr/lib/wsl/lib/libcuda.so.1, które sterowniki NVIDIA dla Windows wstrzykują do WSL2 — wymagane dla obciążeń CUDA takich jak Ollama."
   },
   "distributionSources": {
     "title": "Źródła dystrybucji",

@@ -370,11 +370,11 @@
     "gpuChecking": "检查中...",
     "gpuRecheck": "重新检查",
     "gpuDirectX": "DirectX GPU (DXCore)",
-    "gpuNvidia": "NVIDIA GPU",
+    "gpuNvidia": "NVIDIA CUDA (WSL2)",
     "gpuAvailableLabel": "可用",
     "gpuNotAvailableLabel": "不可用",
     "gpuCheckError": "无法检查 — 请先启动发行版",
-    "gpuNote": "WSL2 中的 GPU 访问需要兼容 DirectX 12 的 GPU 和驱动程序。检查前请先启动发行版。"
+    "gpuNote": "DirectX GPU 是 WSL2 的主要 GPU 路径。NVIDIA CUDA 检测 /usr/lib/wsl/lib/libcuda.so.1，该文件由 Windows NVIDIA 驱动程序注入 WSL2 — 是 Ollama 等 CUDA 工作负载所必需的。"
   },
   "distributionSources": {
     "title": "发行版来源",

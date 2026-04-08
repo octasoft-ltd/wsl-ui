@@ -370,11 +370,11 @@
     "gpuChecking": "確認中...",
     "gpuRecheck": "再確認",
     "gpuDirectX": "DirectX GPU (DXCore)",
-    "gpuNvidia": "NVIDIA GPU",
+    "gpuNvidia": "NVIDIA CUDA (WSL2)",
     "gpuAvailableLabel": "利用可能",
     "gpuNotAvailableLabel": "利用不可",
     "gpuCheckError": "確認できません — 先にディストリビューションを起動してください",
-    "gpuNote": "WSL2でのGPUアクセスには、DirectX 12対応のGPUとドライバーが必要です。確認前にディストリビューションを起動してください。"
+    "gpuNote": "DirectX GPUはWSL2の主要GPUパスです。NVIDIA CUDAは/usr/lib/wsl/lib/libcuda.so.1を検出します。これはWindows NVIDIAドライバーがWSL2に注入するファイルで、OllamaなどのCUDAワークロードに必要です。"
   },
   "distributionSources": {
     "title": "ディストリビューションソース",

@@ -401,13 +401,15 @@ fn check_xrdp_port_conflict(name: &str, id: Option<&str>) -> Result<Option<u16>,
 pub struct GpuStatus {
     /// Whether DirectX GPU device (/dev/dxg) is available
     pub directx_available: bool,
-    /// Whether NVIDIA GPU (/dev/nvidia0) is available
+    /// Whether NVIDIA CUDA libraries (/usr/lib/wsl/lib/libcuda.so.1) are available
     pub nvidia_available: bool,
     /// Whether any GPU is available
     pub has_gpu: bool,
 }
 
-/// Check GPU availability in a distribution by probing /dev/dxg and /dev/nvidia0
+/// Check GPU availability in a distribution.
+/// In WSL2, NVIDIA GPU is indicated by /usr/lib/wsl/lib/libcuda.so.1 (injected by
+/// the Windows NVIDIA driver), NOT by /dev/nvidia0 which is native Linux only.
 #[tauri::command]
 pub async fn get_distro_gpu_status(name: String, id: Option<String>) -> Result<GpuStatus, String> {
     validate_distro_name(&name).map_err(|e| e.to_string())?;
@@ -425,7 +427,7 @@ pub async fn get_distro_gpu_status(name: String, id: Option<String>) -> Result<G
             .exec(
                 &name,
                 id.as_deref(),
-                r#"echo "dxg:$(test -e /dev/dxg && echo 1 || echo 0),nvidia:$(test -e /dev/nvidia0 && echo 1 || echo 0)""#,
+                r#"echo "dxg:$(test -e /dev/dxg && echo 1 || echo 0),nvidia:$(test -e /usr/lib/wsl/lib/libcuda.so.1 && echo 1 || echo 0)""#,
             )
             .map_err(|e| format!("Failed to check GPU status: {}", e))?;
 
