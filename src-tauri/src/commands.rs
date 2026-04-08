@@ -597,12 +597,8 @@ pub async fn install_nvidia_container_toolkit(name: String, id: Option<String>) 
 }
 
 /// Generate CDI specs for NVIDIA GPUs using nvidia-ctk.
-///
-/// Uses `--library-search-paths=/usr/lib/wsl/lib` to restrict library discovery to the
-/// WSL2-injected CUDA libraries. Without this, nvidia-ctk scans system paths and may find
-/// raw Windows driver files under /usr/lib/wsl/drivers/ — those paths cannot be bind-mounted
-/// by crun inside containers, causing "cannot stat" errors at container startup.
-///
+/// Writes the spec to /etc/cdi/nvidia.yaml so containers can request the GPU
+/// via `--device nvidia.com/gpu=all`.
 /// Returns the command output.
 #[tauri::command]
 pub async fn generate_cdi_specs(name: String, id: Option<String>) -> Result<String, String> {
@@ -622,14 +618,11 @@ pub async fn generate_cdi_specs(name: String, id: Option<String>) -> Result<Stri
             return Err(format!("Failed to create /etc/cdi directory: {}", mkdir_output.stderr.trim()));
         }
 
-        // --library-search-paths restricts nvidia-ctk to the WSL2 CUDA symlinks at
-        // /usr/lib/wsl/lib/libcuda.so.1 rather than the raw Windows driver files at
-        // /usr/lib/wsl/drivers/nvXXX.inf_amd64_*/libcuda.so.1.1 which crun cannot mount.
         let output = wsl_executor()
             .exec_as_root(
                 &name,
                 id.as_deref(),
-                "nvidia-ctk cdi generate --output=/etc/cdi/nvidia.yaml --library-search-paths=/usr/lib/wsl/lib 2>&1",
+                "nvidia-ctk cdi generate --output=/etc/cdi/nvidia.yaml 2>&1",
             )
             .map_err(|e| format!("Failed to generate CDI specs: {}", e))?;
 
