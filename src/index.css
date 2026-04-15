@@ -44,8 +44,8 @@
   --color-cyber-red: #ff3366;
   --color-cyber-purple: #a855f7;
 
-  --font-mono: 'JetBrains Mono', 'Consolas', monospace;
-  --font-ui: 'Outfit', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Consolas', system-ui;
+  --font-ui: 'Outfit', system-ui;
 }
 
 @layer base {
@@ -59,7 +59,7 @@
 }
 
 :root {
-  font-family: 'Outfit', system-ui, -apple-system, sans-serif;
+  font-family: var(--font-ui);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -149,7 +149,7 @@ body::before {
 
 /* Monospace utility class */
 .font-mono {
-  font-family: 'JetBrains Mono', 'Consolas', monospace;
+  font-family: var(--font-mono);
 }
 
 /* Glow effects - theme aware */
@@ -341,7 +341,7 @@ body::before {
 
 /* Data display styling */
 .data-label {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-mono);
   font-size: 0.65rem;
   text-transform: uppercase;
   letter-spacing: 0.1em;
@@ -349,7 +349,7 @@ body::before {
 }
 
 .data-value {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-mono);
   font-weight: 500;
 }
 
@@ -363,7 +363,7 @@ body::before {
   color: var(--status-running);
   border: 1px solid rgba(var(--status-running-rgb), 0.3);
   font-size: 0.625rem;
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-mono);
   font-weight: 600;
   padding: 0.375rem 0.75rem;
   border-radius: 0.25rem;
@@ -376,7 +376,7 @@ body::before {
   color: var(--text-muted);
   border: 1px solid var(--border-secondary);
   font-size: 0.625rem;
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-mono);
   font-weight: 600;
   padding: 0.375rem 0.75rem;
   border-radius: 0.25rem;
@@ -389,7 +389,7 @@ body::before {
   color: var(--accent-primary);
   border: 1px solid rgba(var(--accent-primary-rgb), 0.3);
   font-size: 0.625rem;
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-mono);
   padding: 0.125rem 0.5rem;
   border-radius: 0.25rem;
   text-transform: uppercase;
