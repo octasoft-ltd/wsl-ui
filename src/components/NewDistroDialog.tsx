@@ -574,7 +574,7 @@ export function NewDistroDialog({ isOpen, onClose }: NewDistroDialogProps) {
 
   return (
     <Portal>
-      <div className="fixed inset-0 z-[100] flex items-center justify-center">
+      <div className="fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto py-4">
         {/* Backdrop */}
         <div
           className="absolute inset-0 bg-theme-bg-primary/85 backdrop-blur-sm transition-opacity"
@@ -586,7 +586,7 @@ export function NewDistroDialog({ isOpen, onClose }: NewDistroDialogProps) {
           role="dialog"
           aria-modal="true"
           data-testid="new-distro-dialog"
-          className="relative bg-theme-bg-secondary border border-theme-border-secondary rounded-2xl shadow-2xl shadow-black/50 max-w-4xl w-full mx-4 h-[95vh] min-h-[500px] flex flex-col overflow-hidden animate-fade-slide-in"
+          className="relative bg-theme-bg-secondary border border-theme-border-secondary rounded-2xl shadow-2xl shadow-black/50 max-w-4xl w-full mx-4 max-h-[calc(100vh-2rem)] flex flex-col overflow-hidden animate-fade-slide-in"
         >
           {/* Top accent line */}
           <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-theme-accent-primary/50 to-transparent" />
