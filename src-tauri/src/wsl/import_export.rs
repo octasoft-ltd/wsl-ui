@@ -8,6 +8,29 @@ use super::types::WslError;
 use crate::metadata::{self, DistroMetadata};
 use log::{info, warn};
 
+/// Create the install location directory (and any missing parents) before
+/// invoking `wsl --import`. Without this, importing into a fresh path under
+/// e.g. `%LOCALAPPDATA%\wsl\...` fails with `Wsl/ERROR_PATH_NOT_FOUND`
+/// because WSL does not create parent directories itself.
+fn ensure_install_location_exists(install_location: &str) -> Result<(), WslError> {
+    if crate::utils::is_mock_mode() {
+        return Ok(());
+    }
+    create_install_dir(install_location)
+}
+
+/// Mock-agnostic directory creator. Extracted so it can be unit-tested without
+/// touching the `WSL_MOCK` env var (which is process-global and would race with
+/// other parallel tests).
+fn create_install_dir(install_location: &str) -> Result<(), WslError> {
+    std::fs::create_dir_all(install_location).map_err(|e| {
+        WslError::CommandFailed(format!(
+            "Failed to create install directory '{}': {}",
+            install_location, e
+        ))
+    })
+}
+
 /// Export a distribution to a tar file
 pub fn export_distribution(name: &str, path: &str) -> Result<(), WslError> {
     let output = wsl_executor().export(name, path, None)?;
@@ -29,6 +52,7 @@ pub fn export_distribution(name: &str, path: &str) -> Result<(), WslError> {
 
 /// Import a distribution from a tar file
 pub fn import_distribution(name: &str, install_location: &str, tar_path: &str) -> Result<(), WslError> {
+    ensure_install_location_exists(install_location)?;
     let output = wsl_executor().import(name, install_location, tar_path, None)?;
 
     if !output.success {
@@ -53,6 +77,7 @@ pub fn import_distribution_with_version(
     tar_path: &str,
     wsl_version: Option<u8>,
 ) -> Result<(), WslError> {
+    ensure_install_location_exists(install_location)?;
     let output = wsl_executor().import(name, install_location, tar_path, wsl_version)?;
 
     if !output.success {
@@ -267,6 +292,48 @@ mod tests {
         let path_str = temp_file.to_string_lossy();
         assert!(path_str.contains("wsl-clone-"));
         assert!(path_str.ends_with(".tar"));
+    }
+
+    /// Regression test for OCT-799 / GitHub #86: importing into a nested
+    /// path whose parent directory does not yet exist must succeed. Before
+    /// the fix, `wsl --import` failed with `Wsl/ERROR_PATH_NOT_FOUND`
+    /// because WSL does not create intermediate directories.
+    #[test]
+    fn test_create_install_dir_creates_missing_parents() {
+        use std::time::{SystemTime, UNIX_EPOCH};
+        let unique = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .map(|d| d.as_nanos())
+            .unwrap_or(0);
+        let root = std::env::temp_dir().join(format!("oct799-{}-{}", std::process::id(), unique));
+        let nested = root.join("wsl").join("arch-linux-current");
+
+        assert!(!root.exists(), "precondition: root must not exist");
+        assert!(!nested.parent().unwrap().exists(), "precondition: parent must not exist");
+
+        let result = create_install_dir(nested.to_str().unwrap());
+        assert!(result.is_ok(), "create_install_dir returned error: {:?}", result);
+        assert!(nested.exists(), "nested install path should exist after call");
+
+        let _ = std::fs::remove_dir_all(&root);
+    }
+
+    /// Calling on an existing path is a no-op (idempotent).
+    #[test]
+    fn test_create_install_dir_is_idempotent() {
+        use std::time::{SystemTime, UNIX_EPOCH};
+        let unique = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .map(|d| d.as_nanos())
+            .unwrap_or(0);
+        let dir = std::env::temp_dir().join(format!("oct799-idem-{}-{}", std::process::id(), unique));
+        std::fs::create_dir_all(&dir).unwrap();
+
+        let result = create_install_dir(dir.to_str().unwrap());
+        assert!(result.is_ok());
+        assert!(dir.exists());
+
+        let _ = std::fs::remove_dir_all(&dir);
     }
 
     #[test]
