@@ -57,6 +57,12 @@ interface DistroStore {
 // Request ID counter to track and invalidate stale requests
 let currentFetchId = 0;
 
+// Refresh diskSize values older than this. Disk usage drifts over time
+// (compaction, writes inside the distro) but doesn't need polling at the
+// 10s list cadence — a periodic refresh keeps the UI honest without
+// spamming WSL.
+export const DISK_SIZE_REFRESH_INTERVAL_MS = 5 * 60 * 1000;
+
 // Helper to detect timeout errors from backend
 const isTimeoutErrorMessage = (error: string): boolean => {
   return error.toLowerCase().includes("timed out") ||
@@ -98,6 +104,7 @@ export const useDistroStore = create<DistroStore>((set, get) => ({
           return {
             ...newDistro,
             diskSize: existing.diskSize,
+            diskSizeLastFetched: existing.diskSizeLastFetched,
             osInfo: existing.osInfo,
             metadata: existing.metadata,
           };
@@ -111,7 +118,14 @@ export const useDistroStore = create<DistroStore>((set, get) => ({
       // Fetch disk sizes and OS info in background (don't block the UI).
       // Only fetch details that are not already cached to avoid flooding WSL
       // with commands on every 10-second poll cycle.
-      const distrosMissingDiskSize = distributions.filter((d) => d.diskSize === undefined);
+      // diskSize is refreshed if older than DISK_SIZE_REFRESH_INTERVAL_MS so
+      // the displayed value stays accurate as the VHDX grows or is compacted.
+      const now = Date.now();
+      const distrosMissingDiskSize = distributions.filter((d) => {
+        if (d.diskSize === undefined) return true;
+        if (d.diskSizeLastFetched === undefined) return true;
+        return now - d.diskSizeLastFetched >= DISK_SIZE_REFRESH_INTERVAL_MS;
+      });
       const distrosMissingOsInfo = distributions.filter(
         (d) => d.state === "Running" && !d.osInfo
       );
@@ -138,6 +152,7 @@ export const useDistroStore = create<DistroStore>((set, get) => ({
           // Zero IS stored — it means "VHDX not found" and caching it prevents an
           // infinite refetch loop for distros with non-standard install paths.
           if (fetchId === currentFetchId && diskSize >= 0) {
+            const fetchedAt = Date.now();
             set((state) => {
               const distroExists = state.distributions.some((d) => d.name === distro.name);
               if (!distroExists) {
@@ -146,7 +161,9 @@ export const useDistroStore = create<DistroStore>((set, get) => ({
 
               return {
                 distributions: state.distributions.map((d) =>
-                  d.name === distro.name ? { ...d, diskSize } : d
+                  d.name === distro.name
+                    ? { ...d, diskSize, diskSizeLastFetched: fetchedAt }
+                    : d
                 ),
               };
             });
