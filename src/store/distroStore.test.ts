@@ -842,6 +842,107 @@ describe("distroStore", () => {
       // Alpine returns a real size
       expect(alpine?.diskSize).toBe(1024 * 1024);
     });
+
+    it("does not refetch diskSize on subsequent fetches when cache is fresh", async () => {
+      vi.mocked(wslService.listDistributions).mockResolvedValue(
+        mockDistributions
+      );
+      vi.mocked(wslService.getDistributionDiskSize).mockResolvedValue(
+        1024 * 1024 * 1024
+      );
+
+      await useDistroStore.getState().fetchDistros();
+      await new Promise((resolve) => setTimeout(resolve, 50));
+
+      // Cleared on the first fetch — all three distros queried once.
+      expect(wslService.getDistributionDiskSize).toHaveBeenCalledTimes(3);
+      vi.mocked(wslService.getDistributionDiskSize).mockClear();
+
+      // Second fetch immediately after — cache is fresh, no refetch.
+      await useDistroStore.getState().fetchDistros();
+      await new Promise((resolve) => setTimeout(resolve, 50));
+
+      expect(wslService.getDistributionDiskSize).not.toHaveBeenCalled();
+    });
+
+    it("refetches diskSize when cache is older than the refresh interval", async () => {
+      vi.mocked(wslService.listDistributions).mockResolvedValue(
+        mockDistributions
+      );
+      vi.mocked(wslService.getDistributionDiskSize).mockResolvedValue(
+        1024 * 1024 * 1024
+      );
+
+      await useDistroStore.getState().fetchDistros();
+      await new Promise((resolve) => setTimeout(resolve, 50));
+
+      // Backdate diskSizeLastFetched past the refresh interval.
+      const stale = Date.now() - (5 * 60 * 1000 + 1000);
+      useDistroStore.setState({
+        distributions: useDistroStore
+          .getState()
+          .distributions.map((d) => ({ ...d, diskSizeLastFetched: stale })),
+      });
+
+      vi.mocked(wslService.getDistributionDiskSize).mockClear();
+      vi.mocked(wslService.getDistributionDiskSize).mockResolvedValue(
+        2 * 1024 * 1024 * 1024
+      );
+
+      await useDistroStore.getState().fetchDistros();
+      await new Promise((resolve) => setTimeout(resolve, 50));
+
+      // All three distros refetched.
+      expect(wslService.getDistributionDiskSize).toHaveBeenCalledTimes(3);
+
+      // New value should be reflected in the store.
+      const ubuntu = useDistroStore
+        .getState()
+        .distributions.find((d) => d.name === "Ubuntu");
+      expect(ubuntu?.diskSize).toBe(2 * 1024 * 1024 * 1024);
+    });
+
+    it("refetches diskSize when diskSizeLastFetched is missing even if diskSize is set", async () => {
+      // Distribution data hydrated from somewhere without a timestamp
+      // (e.g. older persisted state, or test seeding) should still refetch.
+      vi.mocked(wslService.listDistributions).mockResolvedValue(
+        mockDistributions
+      );
+      vi.mocked(wslService.getDistributionDiskSize).mockResolvedValue(
+        1024 * 1024
+      );
+
+      useDistroStore.setState({
+        distributions: mockDistributions.map((d) => ({
+          ...d,
+          diskSize: 999,
+          // diskSizeLastFetched intentionally omitted
+        })),
+      });
+
+      await useDistroStore.getState().fetchDistros();
+      await new Promise((resolve) => setTimeout(resolve, 50));
+
+      expect(wslService.getDistributionDiskSize).toHaveBeenCalledTimes(3);
+    });
+
+    it("records diskSizeLastFetched alongside diskSize on successful fetch", async () => {
+      vi.mocked(wslService.listDistributions).mockResolvedValue(
+        mockDistributions
+      );
+      vi.mocked(wslService.getDistributionDiskSize).mockResolvedValue(2048);
+
+      const before = Date.now();
+      await useDistroStore.getState().fetchDistros();
+      await new Promise((resolve) => setTimeout(resolve, 50));
+      const after = Date.now();
+
+      for (const d of useDistroStore.getState().distributions) {
+        expect(d.diskSize).toBe(2048);
+        expect(d.diskSizeLastFetched).toBeGreaterThanOrEqual(before);
+        expect(d.diskSizeLastFetched).toBeLessThanOrEqual(after);
+      }
+    });
   });
 
   describe("race condition handling", () => {
