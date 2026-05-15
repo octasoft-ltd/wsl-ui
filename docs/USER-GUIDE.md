@@ -5,6 +5,7 @@ A complete guide to managing your WSL distributions with WSL UI.
 ## Table of Contents
 
 - [Dashboard Overview](#dashboard-overview)
+- [Toolbar](#toolbar)
 - [Managing Distributions](#managing-distributions)
 - [Quick Actions](#quick-actions)
 - [Installing New Distributions](#installing-new-distributions)
@@ -50,6 +51,20 @@ The status bar at the bottom of the dashboard shows:
 - Distribution count (instances/active)
 - Total memory usage
 - Default distribution name
+
+---
+
+## Toolbar
+
+The header toolbar at the top of the window provides the primary actions:
+
+- **New** - Open the dialog to install a new distribution (Microsoft Store, container image, LXC catalog, or custom source).
+- **Import** - Restore a distribution from a `.tar` backup file.
+- **Sync** - Manually refresh the dashboard from WSL. This re-reads the list of installed distributions and updates their state, disk size, OS info, and metadata. The app already polls in the background on a configurable interval (see [Settings](#settings)), but **Sync** triggers an immediate, visible refresh. It is useful after you make changes outside the app — for example, running `wsl --import`, `wsl --unregister`, or `wsl --set-default` from a terminal — when you want the dashboard to reflect those changes right away rather than waiting for the next poll.
+- **Shutdown** - Shut down all running WSL distributions (asks for confirmation). Equivalent to `wsl --shutdown`.
+- **Open WSL System Shell** - Launch a terminal in the WSL system (admin) context.
+- **Help** - Open the in-app help.
+- **Settings** - Open the [Settings](#settings) page.
 
 ---
 
