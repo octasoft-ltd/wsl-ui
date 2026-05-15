@@ -774,6 +774,26 @@ memory=4GB
         assert!(config.processors.is_none());
     }
 
+    #[test]
+    fn test_networking_mode_roundtrip_all_values() {
+        // Ensure every documented networkingMode value round-trips through
+        // parse -> serialize without alteration. Mirrors the dropdown options
+        // exposed in the UI.
+        for mode in ["NAT", "mirrored", "virtioproxy", "none", "bridged"] {
+            let input = format!("[wsl2]\nnetworkingMode={}\n", mode);
+            let parsed = parse_wsl_config(&input).unwrap();
+            assert_eq!(parsed.networking_mode.as_deref(), Some(mode));
+
+            let serialized = serialize_wsl_config(&parsed);
+            assert!(
+                serialized.contains(&format!("networkingMode={}", mode)),
+                "serialized output missing networkingMode={}: {}",
+                mode,
+                serialized
+            );
+        }
+    }
+
     // ==================== WSL Conf Parsing Tests ====================
 
     #[test]

@@ -255,6 +255,46 @@ describe("WSL Global Settings", () => {
       const value = await select.getValue();
       expect(value).toBe("mirrored");
     });
+
+    it("should expose virtioproxy, none, and bridged options", async () => {
+      const select = await $(wslGlobalSelectors.networkingModeSelect);
+      const optionValues = await select.$$("option").map(async (opt) => opt.getValue());
+      expect(optionValues).toEqual(
+        expect.arrayContaining(["NAT", "mirrored", "virtioproxy", "none", "bridged"])
+      );
+    });
+
+    it("should allow changing networking mode to virtioproxy", async () => {
+      const select = await $(wslGlobalSelectors.networkingModeSelect);
+      await select.selectByAttribute("value", "virtioproxy");
+
+      await browser.waitUntil(
+        async () => {
+          const value = await select.getValue();
+          return value === "virtioproxy";
+        },
+        { timeout: 3000, timeoutMsg: "Networking mode did not change to virtioproxy" }
+      );
+
+      const value = await select.getValue();
+      expect(value).toBe("virtioproxy");
+    });
+
+    it("should show deprecation warning when bridged is selected", async () => {
+      const select = await $(wslGlobalSelectors.networkingModeSelect);
+      await select.selectByAttribute("value", "bridged");
+
+      await browser.waitUntil(
+        async () => {
+          const value = await select.getValue();
+          return value === "bridged";
+        },
+        { timeout: 3000, timeoutMsg: "Networking mode did not change to bridged" }
+      );
+
+      const warning = await $('[data-testid="wsl-networking-mode-bridged-warning"]');
+      await expect(warning).toBeDisplayed();
+    });
   });
 
   describe("Save Changes", () => {
