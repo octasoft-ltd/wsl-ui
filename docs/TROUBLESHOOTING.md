@@ -1069,6 +1069,38 @@ The following language codes are supported:
 
 ---
 
+## Issue #14: New distribution dialog clips off-screen on small displays
+
+### Symptoms
+- User clicks the "New" button (or any control opening the install dialog) on a display shorter than ~525px of available height
+- Dialog opens centered, but the close button at the top and/or the Cancel/Install action buttons at the bottom are clipped off-screen
+- Page does not scroll, so there is no way to reach the clipped controls
+- User reported "opens a new unscrollable window that makes it impossible to do anything"
+
+### Root Cause
+`src/components/NewDistroDialog.tsx` set the dialog container to `h-[95vh] min-h-[500px]`. The `min-h-[500px]` floor forced the dialog taller than the viewport on short displays. Because the outer overlay used `flex items-center justify-center` with no `overflow-y-auto`, the over-sized dialog was centered and clipped equally at top and bottom, with no scrollable scrollbar to recover the hidden parts.
+
+Other dialogs in the codebase (`HelpDialog`, `DistroInfoDialog`, `QuickActionsMenu`, etc.) use `max-h-[NNvh]` only and so scaled correctly with the viewport. NewDistroDialog was the outlier.
+
+### Diagnosis
+1. Resize the app window so its content area is below ~525 px tall.
+2. Open the install dialog.
+3. Observe missing close button and missing footer action buttons.
+
+### Solution
+**Fix applied in code (`src/components/NewDistroDialog.tsx:577-589`):**
+- Removed `h-[95vh]` (forced height) and `min-h-[500px]` (overflow floor).
+- Replaced with `max-h-[calc(100vh-2rem)]` so the dialog grows with content but never exceeds the viewport (minus 2rem of breathing room matching the new outer padding).
+- Added `overflow-y-auto py-4` to the outer `fixed inset-0` overlay as a safety net so that on extreme small heights (e.g. 200 px) the user can still scroll to reach the footer.
+
+### Files Changed
+- `src/components/NewDistroDialog.tsx`: Outer overlay made scrollable with vertical padding; dialog uses `max-h-[calc(100vh-2rem)]` instead of `h-[95vh] min-h-[500px]`.
+
+### Related
+- Original report: Paperclip issue OCT-941
+
+---
+
 ## Template for New Issues
 
 ```markdown
