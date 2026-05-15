@@ -10,6 +10,7 @@ export { PollingSettings } from './PollingSettings';
 export { TimeoutSettings } from './TimeoutSettings';
 export { ExecutablePathsSettings } from './ExecutablePathsSettings';
 export { DistributionSourcesSettings } from './DistributionSourcesSettings';
+export { WslDistroSourcesSettings } from './WslDistroSourcesSettings';
 export { ContainerRuntimeSettings } from './ContainerRuntimeSettings';
 export { PrivacySettings } from './PrivacySettings';
 export { LanguageSettings } from './LanguageSettings';

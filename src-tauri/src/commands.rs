@@ -1978,6 +1978,66 @@ pub fn open_store_review() -> Result<(), String> {
     Ok(())
 }
 
+// ===========================================================================
+// WSL Distribution Sources commands (DistributionListUrl / Append)
+// ===========================================================================
+
+use crate::wsl::distro_sources::{
+    self, DistroSource, ManifestPreview,
+};
+
+/// Read the currently registered WSL distribution source from HKLM.
+#[tauri::command]
+pub async fn get_distro_source() -> Result<Option<DistroSource>, String> {
+    tokio::task::spawn_blocking(|| {
+        distro_sources::read_current_source()
+            .map_err(AppError::from)
+            .map_err(String::from)
+    })
+    .await
+    .map_err(|e| format!("Task failed: {}", e))?
+}
+
+/// Fetch and parse a remote manifest URL into a preview the UI can render
+/// before the user applies anything.
+#[tauri::command]
+pub async fn preview_distro_manifest(url: String) -> Result<ManifestPreview, String> {
+    tokio::task::spawn_blocking(move || {
+        distro_sources::fetch_and_preview(&url)
+            .map_err(AppError::from)
+            .map_err(String::from)
+    })
+    .await
+    .map_err(|e| format!("Task failed: {}", e))?
+}
+
+/// Write a distribution source to HKLM (will prompt for elevation).
+/// The same call clears the opposite registry value, so we never leave both
+/// `DistributionListUrl` and `DistributionListUrlAppend` set at once.
+#[tauri::command]
+pub async fn apply_distro_source(source: DistroSource) -> Result<(), String> {
+    tokio::task::spawn_blocking(move || {
+        distro_sources::apply_source(&source)
+            .map_err(AppError::from)
+            .map_err(String::from)
+    })
+    .await
+    .map_err(|e| format!("Task failed: {}", e))?
+}
+
+/// Clear both `DistributionListUrl` and `DistributionListUrlAppend` from
+/// HKLM (will prompt for elevation).
+#[tauri::command]
+pub async fn clear_distro_source() -> Result<(), String> {
+    tokio::task::spawn_blocking(|| {
+        distro_sources::clear_source()
+            .map_err(AppError::from)
+            .map_err(String::from)
+    })
+    .await
+    .map_err(|e| format!("Task failed: {}", e))?
+}
+
 #[cfg(test)]
 mod store_review_tests {
     use super::*;

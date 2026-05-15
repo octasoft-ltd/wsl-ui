@@ -11,6 +11,7 @@
 //! - Version information
 
 mod core;
+pub mod distro_sources;
 pub mod executor;
 mod import_export;
 mod info;
