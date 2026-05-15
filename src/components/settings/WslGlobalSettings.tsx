@@ -233,7 +233,15 @@ export function WslGlobalSettings() {
               >
                 <option value="NAT">{t('wslGlobal.natDefault')}</option>
                 <option value="mirrored">{t('wslGlobal.mirrored')}</option>
+                <option value="virtioproxy">{t('wslGlobal.virtioproxy')}</option>
+                <option value="none">{t('wslGlobal.networkingModeNone')}</option>
+                <option value="bridged">{t('wslGlobal.bridgedDeprecated')}</option>
               </select>
+              {config.networkingMode === "bridged" && (
+                <p className="text-xs text-amber-400 mt-2" data-testid="wsl-networking-mode-bridged-warning">
+                  {t('wslGlobal.bridgedDeprecatedWarning')}
+                </p>
+              )}
             </div>
             <Toggle
               label={t('wslGlobal.dnsTunneling')}
