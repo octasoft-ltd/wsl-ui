@@ -799,6 +799,49 @@ Users may intentionally disable GUI applications to:
 
 ---
 
+## Issue #12: Installation fails with `Wsl/ERROR_PATH_NOT_FOUND` when parent directory is missing
+
+### Symptoms
+- Installing or importing a distribution to a path under
+  `%LOCALAPPDATA%\wsl\...` (e.g. `C:\Users\<User>\AppData\Local\wsl\arch-linux-current`)
+  fails when the intermediate `wsl` directory does not already exist.
+- Error message: `Failed to execute WSL command: ... Wsl/ERROR_PATH_NOT_FOUND`.
+
+### Root Cause
+`wsl --import` does not create intermediate parent directories. When the
+install location's parent does not exist, the call fails immediately with
+`Wsl/ERROR_PATH_NOT_FOUND` before the import begins.
+
+### Diagnosis
+1. Look at the install location reported in the failed install dialog.
+2. Confirm the parent directory does not exist, e.g.:
+   ```powershell
+   Test-Path "$env:LOCALAPPDATA\wsl"
+   ```
+3. If it returns `False`, this is the bug.
+
+### Solution
+**Fix applied in code:** `import_distribution` /
+`import_distribution_with_version` now call `std::fs::create_dir_all` on the
+install location before invoking `wsl --import`, so any missing parent
+directories are created automatically.
+
+**Manual workaround (if running an older build):**
+Create the parent directory yourself, then retry the install:
+```powershell
+New-Item -ItemType Directory -Force "$env:LOCALAPPDATA\wsl" | Out-Null
+```
+
+### Files Changed
+- `src-tauri/src/wsl/import_export.rs`: Added `ensure_install_location_exists()`
+  helper and call it from both import wrappers; added regression tests.
+
+### Related
+- GitHub issue: https://github.com/octasoft-ltd/wsl-ui/issues/86
+- Internal: OCT-799
+
+---
+
 ## Template for New Issues
 
 ```markdown
