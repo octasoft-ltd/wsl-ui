@@ -180,7 +180,7 @@ export interface WslConfig {
   pageReporting?: boolean;
   safeMode?: boolean;
   autoMemoryReclaim?: string; // "disabled" | "dropcache" | "gradual"
-  networkingMode?: string;    // "NAT" | "mirrored"
+  networkingMode?: string;    // "NAT" | "mirrored" | "virtioproxy" | "none" | "bridged" (bridged is deprecated)
 }
 
 export const DEFAULT_WSL_CONFIG: WslConfig = {
