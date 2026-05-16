@@ -1,0 +1,21 @@
+{
+  "boundary": {
+    "title": "Qualcosa è andato storto",
+    "message": "L'applicazione ha riscontrato un errore imprevisto. Riprova.",
+    "tryAgain": "Riprova"
+  },
+  "system": {
+    "title": "Errore di sistema",
+    "timeoutTip": "Suggerimento: Se hai installato di recente una nuova distribuzione, chiudi le finestre del terminale aperte automaticamente durante l'installazione.",
+    "forceShutdown": "Forza arresto WSL",
+    "forceShutdownTitle": "Forza arresto WSL",
+    "forceShutdownMessage": "Questo terminerà forzatamente tutti i processi WSL usando 'wsl --shutdown --force'. Qualsiasi lavoro non salvato nelle distribuzioni Linux potrebbe andare perso. Questa azione non può essere annullata.",
+    "forceShutdownConfirm": "Forza arresto"
+  },
+  "wslUpdate": {
+    "title": "Aggiornamento WSL",
+    "success": "Aggiornamento completato con successo",
+    "cancelled": "Aggiornamento WSL",
+    "failedTitle": "Aggiornamento WSL fallito"
+  }
+}

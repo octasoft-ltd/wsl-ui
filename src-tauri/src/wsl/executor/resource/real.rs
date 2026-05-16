@@ -347,34 +347,53 @@ impl ResourceMonitor for RealResourceMonitor {
         // Timeout for resource monitoring commands (5 seconds)
         let cmd_timeout = Duration::from_secs(5);
 
-        // Helper to run a command with timeout
+        // Helper to run a command with timeout.
+        // Reads stdout/stderr in background threads to prevent pipe buffer deadlock:
+        // if the child writes more than the OS pipe buffer (~4 KB) and the parent is
+        // not reading, the child blocks indefinitely and never exits.
         let run_with_timeout = |mut child: std::process::Child| -> Option<std::process::Output> {
+            let mut stdout_pipe = child.stdout.take();
+            let mut stderr_pipe = child.stderr.take();
+
+            let stdout_thread = std::thread::spawn(move || {
+                let mut buf = Vec::new();
+                if let Some(ref mut pipe) = stdout_pipe {
+                    std::io::Read::read_to_end(pipe, &mut buf).ok();
+                }
+                buf
+            });
+            let stderr_thread = std::thread::spawn(move || {
+                let mut buf = Vec::new();
+                if let Some(ref mut pipe) = stderr_pipe {
+                    std::io::Read::read_to_end(pipe, &mut buf).ok();
+                }
+                buf
+            });
+
             let start = Instant::now();
-            loop {
+            let status = loop {
                 match child.try_wait() {
-                    Ok(Some(status)) => {
-                        let stdout = child.stdout.take().map(|mut s| {
-                            let mut buf = Vec::new();
-                            std::io::Read::read_to_end(&mut s, &mut buf).ok();
-                            buf
-                        }).unwrap_or_default();
-                        let stderr = child.stderr.take().map(|mut s| {
-                            let mut buf = Vec::new();
-                            std::io::Read::read_to_end(&mut s, &mut buf).ok();
-                            buf
-                        }).unwrap_or_default();
-                        return Some(std::process::Output { status, stdout, stderr });
-                    }
+                    Ok(Some(status)) => break status,
                     Ok(None) => {
                         if start.elapsed() > cmd_timeout {
                             let _ = child.kill();
+                            let _ = stdout_thread.join();
+                            let _ = stderr_thread.join();
                             return None;
                         }
                         std::thread::sleep(Duration::from_millis(50));
                     }
-                    Err(_) => return None,
+                    Err(_) => {
+                        let _ = stdout_thread.join();
+                        let _ = stderr_thread.join();
+                        return None;
+                    }
                 }
-            }
+            };
+
+            let stdout = stdout_thread.join().unwrap_or_default();
+            let stderr = stderr_thread.join().unwrap_or_default();
+            Some(std::process::Output { status, stdout, stderr })
         };
 
         // Get number of CPU cores for normalization (with timeout)

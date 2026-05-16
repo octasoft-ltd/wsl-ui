@@ -163,7 +163,9 @@ describe("distroStore", () => {
 
       await useDistroStore.getState().fetchDistros();
 
-      expect(useDistroStore.getState().distributions).toEqual(
+      // Use toMatchObject because fetchDistros also enriches distributions with
+      // diskSize (0 when VHDX not found) and osInfo for running distros.
+      expect(useDistroStore.getState().distributions).toMatchObject(
         mockDistributions
       );
     });
@@ -209,7 +211,8 @@ describe("distroStore", () => {
 
       // isLoading should be cleared even for silent fetch
       expect(useDistroStore.getState().isLoading).toBe(false);
-      expect(useDistroStore.getState().distributions).toEqual(mockDistributions);
+      // Use toMatchObject because fetchDistros enriches distributions with diskSize/osInfo
+      expect(useDistroStore.getState().distributions).toMatchObject(mockDistributions);
     });
 
     it("should clear isLoading on failed silent fetch", async () => {
@@ -807,7 +810,9 @@ describe("distroStore", () => {
       expect(alpine?.osInfo).toBe("Alpine OS Info");
     });
 
-    it("does not update disk size if result is 0 or negative", async () => {
+    it("stores 0 disk size but does not store negative disk size", async () => {
+      // 0 = "VHDX not found" — cached to prevent infinite refetch loop
+      // Negative = error sentinel (not possible from real Rust u64 return value)
       vi.mocked(wslService.listDistributions).mockResolvedValue(
         mockDistributions
       );
@@ -830,12 +835,141 @@ describe("distroStore", () => {
       const debian = state.distributions.find((d) => d.name === "Debian");
       const alpine = state.distributions.find((d) => d.name === "Alpine");
 
-      // Ubuntu and Debian should not have disk sizes
-      expect(ubuntu?.diskSize).toBeUndefined();
+      // Ubuntu returns 0 — stored to prevent infinite refetch for non-standard install paths
+      expect(ubuntu?.diskSize).toBe(0);
+      // Debian returns -1 (error sentinel) — not stored, allows retry next poll
       expect(debian?.diskSize).toBeUndefined();
-
-      // Alpine should have disk size
+      // Alpine returns a real size
       expect(alpine?.diskSize).toBe(1024 * 1024);
+    });
+
+    it("does not refetch diskSize on subsequent fetches when cache is fresh", async () => {
+      vi.mocked(wslService.listDistributions).mockResolvedValue(
+        mockDistributions
+      );
+      vi.mocked(wslService.getDistributionDiskSize).mockResolvedValue(
+        1024 * 1024 * 1024
+      );
+
+      await useDistroStore.getState().fetchDistros();
+      await new Promise((resolve) => setTimeout(resolve, 50));
+
+      // Cleared on the first fetch — all three distros queried once.
+      expect(wslService.getDistributionDiskSize).toHaveBeenCalledTimes(3);
+      vi.mocked(wslService.getDistributionDiskSize).mockClear();
+
+      // Second fetch immediately after — cache is fresh, no refetch.
+      await useDistroStore.getState().fetchDistros();
+      await new Promise((resolve) => setTimeout(resolve, 50));
+
+      expect(wslService.getDistributionDiskSize).not.toHaveBeenCalled();
+    });
+
+    it("refetches diskSize when cache is older than the refresh interval", async () => {
+      vi.mocked(wslService.listDistributions).mockResolvedValue(
+        mockDistributions
+      );
+      vi.mocked(wslService.getDistributionDiskSize).mockResolvedValue(
+        1024 * 1024 * 1024
+      );
+
+      await useDistroStore.getState().fetchDistros();
+      await new Promise((resolve) => setTimeout(resolve, 50));
+
+      // Backdate diskSizeLastFetched past the refresh interval.
+      const stale = Date.now() - (5 * 60 * 1000 + 1000);
+      useDistroStore.setState({
+        distributions: useDistroStore
+          .getState()
+          .distributions.map((d) => ({ ...d, diskSizeLastFetched: stale })),
+      });
+
+      vi.mocked(wslService.getDistributionDiskSize).mockClear();
+      vi.mocked(wslService.getDistributionDiskSize).mockResolvedValue(
+        2 * 1024 * 1024 * 1024
+      );
+
+      await useDistroStore.getState().fetchDistros();
+      await new Promise((resolve) => setTimeout(resolve, 50));
+
+      // All three distros refetched.
+      expect(wslService.getDistributionDiskSize).toHaveBeenCalledTimes(3);
+
+      // New value should be reflected in the store.
+      const ubuntu = useDistroStore
+        .getState()
+        .distributions.find((d) => d.name === "Ubuntu");
+      expect(ubuntu?.diskSize).toBe(2 * 1024 * 1024 * 1024);
+    });
+
+    it("refetches diskSize when diskSizeLastFetched is missing even if diskSize is set", async () => {
+      // Distribution data hydrated from somewhere without a timestamp
+      // (e.g. older persisted state, or test seeding) should still refetch.
+      vi.mocked(wslService.listDistributions).mockResolvedValue(
+        mockDistributions
+      );
+      vi.mocked(wslService.getDistributionDiskSize).mockResolvedValue(
+        1024 * 1024
+      );
+
+      useDistroStore.setState({
+        distributions: mockDistributions.map((d) => ({
+          ...d,
+          diskSize: 999,
+          // diskSizeLastFetched intentionally omitted
+        })),
+      });
+
+      await useDistroStore.getState().fetchDistros();
+      await new Promise((resolve) => setTimeout(resolve, 50));
+
+      expect(wslService.getDistributionDiskSize).toHaveBeenCalledTimes(3);
+    });
+
+    it("refetches diskSize when force=true even if cache is fresh", async () => {
+      vi.mocked(wslService.listDistributions).mockResolvedValue(
+        mockDistributions
+      );
+      vi.mocked(wslService.getDistributionDiskSize).mockResolvedValue(
+        1024 * 1024
+      );
+
+      await useDistroStore.getState().fetchDistros();
+      await new Promise((resolve) => setTimeout(resolve, 50));
+
+      // Cache is fresh — a normal fetch would skip the disk size calls.
+      vi.mocked(wslService.getDistributionDiskSize).mockClear();
+      vi.mocked(wslService.getDistributionDiskSize).mockResolvedValue(
+        9 * 1024 * 1024
+      );
+
+      // Force refresh (silent=false, force=true) — should refetch all distros.
+      await useDistroStore.getState().fetchDistros(false, true);
+      await new Promise((resolve) => setTimeout(resolve, 50));
+
+      expect(wslService.getDistributionDiskSize).toHaveBeenCalledTimes(3);
+      const ubuntu = useDistroStore
+        .getState()
+        .distributions.find((d) => d.name === "Ubuntu");
+      expect(ubuntu?.diskSize).toBe(9 * 1024 * 1024);
+    });
+
+    it("records diskSizeLastFetched alongside diskSize on successful fetch", async () => {
+      vi.mocked(wslService.listDistributions).mockResolvedValue(
+        mockDistributions
+      );
+      vi.mocked(wslService.getDistributionDiskSize).mockResolvedValue(2048);
+
+      const before = Date.now();
+      await useDistroStore.getState().fetchDistros();
+      await new Promise((resolve) => setTimeout(resolve, 50));
+      const after = Date.now();
+
+      for (const d of useDistroStore.getState().distributions) {
+        expect(d.diskSize).toBe(2048);
+        expect(d.diskSizeLastFetched).toBeGreaterThanOrEqual(before);
+        expect(d.diskSizeLastFetched).toBeLessThanOrEqual(after);
+      }
     });
   });
 

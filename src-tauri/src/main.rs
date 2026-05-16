@@ -44,6 +44,8 @@ use commands::{
     open_store_review,
     // RDP commands
     detect_rdp, check_wsl_config_timeouts, check_wsl_config_pending, open_rdp, open_terminal_with_message,
+    // GPU commands
+    get_distro_gpu_status, check_nvidia_container_toolkit,
 };
 use std::sync::Mutex;
 use tauri::{
@@ -555,6 +557,9 @@ fn main() {
             check_wsl_config_pending,
             open_rdp,
             open_terminal_with_message,
+            // GPU commands
+            get_distro_gpu_status,
+            check_nvidia_container_toolkit,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

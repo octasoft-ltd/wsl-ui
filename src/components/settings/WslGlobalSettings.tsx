@@ -11,7 +11,7 @@ import { useSettingsStore } from "../../store/settingsStore";
 import type { WslConfig } from "../../types/settings";
 import { DEFAULT_WSL_CONFIG } from "../../types/settings";
 import { Toggle, SettingInput } from "./FormControls";
-import { CPUIcon, SettingsIcon, NetworkIcon, DownloadIcon, ExternalLinkIcon } from "../icons";
+import { CPUIcon, SettingsIcon, NetworkIcon, DownloadIcon, ExternalLinkIcon, GpuIcon } from "../icons";
 import { logger } from "../../utils/logger";
 
 export function WslGlobalSettings() {
@@ -188,6 +188,27 @@ export function WslGlobalSettings() {
         </div>
       </section>
 
+      <section className="relative overflow-hidden bg-linear-to-br from-violet-900/20 via-theme-bg-secondary/50 to-theme-bg-secondary/50 border border-violet-800/30 rounded-xl p-6">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,_var(--tw-gradient-stops))] from-violet-500/10 via-transparent to-transparent" />
+        <div className="relative">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 rounded-lg bg-linear-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-lg shadow-violet-900/30">
+              <GpuIcon className="text-white" size="md" />
+            </div>
+            <div>
+              <h3 className="text-lg font-medium text-theme-text-primary">{t('wslGlobal.gpu')}</h3>
+              <p className="text-sm text-theme-text-muted">{t('wslGlobal.gpuDesc')}</p>
+            </div>
+          </div>
+          <p className="text-sm text-theme-text-secondary leading-relaxed">
+            {t('wslGlobal.gpuNote')}
+          </p>
+          <p className="mt-2 text-xs text-theme-text-muted">
+            {t('wslGlobal.gpuGuiNote')}
+          </p>
+        </div>
+      </section>
+
       <section className="relative overflow-hidden bg-linear-to-br from-purple-900/20 via-theme-bg-secondary/50 to-theme-bg-secondary/50 border border-purple-800/30 rounded-xl p-6">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-purple-500/10 via-transparent to-transparent" />
         <div className="relative">
@@ -212,7 +233,15 @@ export function WslGlobalSettings() {
               >
                 <option value="NAT">{t('wslGlobal.natDefault')}</option>
                 <option value="mirrored">{t('wslGlobal.mirrored')}</option>
+                <option value="virtioproxy">{t('wslGlobal.virtioproxy')}</option>
+                <option value="none">{t('wslGlobal.networkingModeNone')}</option>
+                <option value="bridged">{t('wslGlobal.bridgedDeprecated')}</option>
               </select>
+              {config.networkingMode === "bridged" && (
+                <p className="text-xs text-amber-400 mt-2" data-testid="wsl-networking-mode-bridged-warning">
+                  {t('wslGlobal.bridgedDeprecatedWarning')}
+                </p>
+              )}
             </div>
           </div>
         </div>

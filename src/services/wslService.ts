@@ -4,7 +4,7 @@ import { save, open } from "@tauri-apps/plugin-dialog";
 import type { DistroCatalog, DownloadDistro, ContainerImage, MsStoreDistroInfo } from "../types/catalog";
 import type { Distribution, DistroMetadata } from "../types/distribution";
 import type { RdpDetectionResult, WslConfigStatus, WslConfigPendingStatus } from "../types/rdp";
-import type { WslConfig, WslConf, InstalledTerminal } from "../types/settings";
+import type { WslConfig, WslConf, GpuStatus, NvidiaContainerToolkitStatus, InstalledTerminal } from "../types/settings";
 import { debug, info } from "../utils/logger";
 
 /**
@@ -387,6 +387,24 @@ export const wslService = {
   async saveWslConf(distroName: string, config: WslConf): Promise<void> {
     info(`[wslService] Saving wsl.conf for: ${distroName}`);
     await invoke("save_wsl_conf", { distroName, config });
+  },
+
+  /**
+   * Check GPU availability in a distribution by probing /dev/dxg and /dev/nvidia0
+   * Requires the distribution to be running
+   */
+  async getDistroGpuStatus(distroName: string, id?: string): Promise<GpuStatus> {
+    debug(`[wslService] Checking GPU status for: ${distroName}`);
+    return await invoke<GpuStatus>("get_distro_gpu_status", { name: distroName, id });
+  },
+
+  /**
+   * Check NVIDIA Container Toolkit and CDI spec status in a distribution.
+   * Only meaningful when nvidiaAvailable is true from getDistroGpuStatus.
+   */
+  async checkNvidiaContainerToolkit(distroName: string, id?: string): Promise<NvidiaContainerToolkitStatus> {
+    debug(`[wslService] Checking NVIDIA Container Toolkit for: ${distroName}`);
+    return await invoke<NvidiaContainerToolkitStatus>("check_nvidia_container_toolkit", { name: distroName, id });
   },
 
   // Distro Catalog functions
