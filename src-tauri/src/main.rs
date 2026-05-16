@@ -268,6 +268,15 @@ fn main() {
     let log_dir = utils::get_config_dir().join("logs");
 
     tauri::Builder::default()
+        // Enforce a single running instance. When a user re-launches the app
+        // (e.g. via desktop shortcut or Start menu) while it is already running
+        // and hidden in the tray, this callback fires on the primary instance
+        // and brings its existing window back instead of spawning a new one.
+        // Without this, every re-launch creates a new process with its own
+        // tray icon and window — see OCT-940.
+        .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
+            show_main_window(app);
+        }))
         .plugin(
             tauri_plugin_log::Builder::new()
                 .clear_targets()

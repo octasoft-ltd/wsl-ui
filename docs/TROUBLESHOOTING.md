@@ -1144,6 +1144,40 @@ New-Item -ItemType Directory -Force "$env:LOCALAPPDATA\wsl" | Out-Null
 
 ---
 
+## Issue #16: Re-launching the app spawns a new window while one is already minimised to the tray
+
+### Symptoms
+- User has "Minimize to tray" enabled (or chose "Minimize" from the close-action dialog).
+- Closing the window hides it; tray icon remains as expected.
+- User then re-opens the app from a desktop shortcut, the Start menu, or a pinned taskbar icon (anything other than clicking the tray icon).
+- A *second* window appears, and a *second* tray icon is added next to the first.
+- Closing that new window minimises it too, so the user can end up with multiple "minimised" instances and multiple tray icons.
+
+### Root Cause
+The app did not enforce single-instance behaviour. Each time the `wsl-ui.exe` binary is launched, Windows spawns a new process. Each process independently:
+- creates its own `main` webview window (`visible: true` in `tauri.conf.json`),
+- builds and registers its own system tray icon.
+
+Clicking the tray icon correctly calls `show_main_window` on whichever process owns that icon, but it does not deduplicate processes. Tauri does not enforce single-instance by default — it has to be opted into via `tauri-plugin-single-instance`.
+
+### Diagnosis
+1. Reproduce: enable "Minimize to tray", close the window, then double-click the desktop / Start menu shortcut.
+2. Open Task Manager → Details. You will see multiple `wsl-ui.exe` processes — one per launch.
+3. The notification area shows one tray icon per process.
+
+### Solution
+Added the official `tauri-plugin-single-instance` plugin. When a second `wsl-ui.exe` launches, the secondary process's call to `tauri::Builder::default().plugin(...)` triggers the callback in the primary process and the secondary exits. The callback reuses the existing `show_main_window` helper, which on Windows performs `show()` → `unminimize()` → `set_focus()`, restoring the hidden/minimised primary window instead of creating a new one.
+
+### Files Changed
+- `src-tauri/Cargo.toml`: added `tauri-plugin-single-instance = "2"` dependency.
+- `src-tauri/src/main.rs`: registered the plugin before any other plugin in `tauri::Builder::default()`; callback calls `show_main_window(app)`.
+
+### Related
+- Tauri v2 single-instance docs: https://v2.tauri.app/plugin/single-instance/
+- Paperclip issue: OCT-940
+
+---
+
 ## Template for New Issues
 
 ```markdown
