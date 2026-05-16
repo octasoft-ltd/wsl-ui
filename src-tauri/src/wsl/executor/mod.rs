@@ -141,6 +141,7 @@ pub fn reset_mock_state() {
     if let Some(mock) = mock_wsl_executor() {
         mock.reset();
     }
+    crate::wsl::distro_sources::reset_mock_distro_source();
 }
 
 /// Set the mock update result (for E2E testing)

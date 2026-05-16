@@ -181,6 +181,8 @@ export interface WslConfig {
   safeMode?: boolean;
   autoMemoryReclaim?: string; // "disabled" | "dropcache" | "gradual"
   networkingMode?: string;    // "NAT" | "mirrored" | "virtioproxy" | "none" | "bridged" (bridged is deprecated)
+  dnsTunneling?: boolean;     // Requires Windows 11 22H2+
+  firewall?: boolean;         // Requires Windows 11 22H2+
 }
 
 export const DEFAULT_WSL_CONFIG: WslConfig = {
