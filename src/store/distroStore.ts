@@ -24,7 +24,7 @@ interface DistroStore {
   compactingDistro: string | null;
 
   // Actions
-  fetchDistros: (silent?: boolean) => Promise<void>;
+  fetchDistros: (silent?: boolean, force?: boolean) => Promise<void>;
   startDistro: (name: string, id?: string) => Promise<void>;
   stopDistro: (name: string) => Promise<void>;
   deleteDistro: (name: string) => Promise<void>;
@@ -78,7 +78,7 @@ export const useDistroStore = create<DistroStore>((set, get) => ({
   actionInProgress: null,
   compactingDistro: null,
 
-  fetchDistros: async (silent?: boolean) => {
+  fetchDistros: async (silent?: boolean, force?: boolean) => {
     // Increment fetch ID to invalidate any pending background requests
     const fetchId = ++currentFetchId;
 
@@ -120,8 +120,11 @@ export const useDistroStore = create<DistroStore>((set, get) => ({
       // with commands on every 10-second poll cycle.
       // diskSize is refreshed if older than DISK_SIZE_REFRESH_INTERVAL_MS so
       // the displayed value stays accurate as the VHDX grows or is compacted.
+      // When force=true (manual refresh button), bypass the staleness check
+      // and refetch diskSize for all distros immediately.
       const now = Date.now();
       const distrosMissingDiskSize = distributions.filter((d) => {
+        if (force) return true;
         if (d.diskSize === undefined) return true;
         if (d.diskSizeLastFetched === undefined) return true;
         return now - d.diskSizeLastFetched >= DISK_SIZE_REFRESH_INTERVAL_MS;
