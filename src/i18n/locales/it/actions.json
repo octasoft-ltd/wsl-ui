@@ -1,0 +1,96 @@
+{
+  "quickActions": {
+    "title": "Azioni rapide",
+    "info": "Informazioni distribuzione",
+    "explorer": "Apri Esplora file",
+    "ide": "Apri nell'IDE",
+    "restart": "Riavvia",
+    "export": "Esporta su file...",
+    "clone": "Clona...",
+    "setDefault": "Imposta come predefinita",
+    "alreadyDefault": "Distribuzione predefinita"
+  },
+  "manage": {
+    "title": "Gestisci",
+    "move": "Sposta distribuzione...",
+    "resize": "Ridimensiona disco...",
+    "compact": "Comprimi disco...",
+    "user": "Imposta utente predefinito...",
+    "rename": "Rinomina...",
+    "sparse": "Modalità sparse",
+    "version": "Imposta versione WSL"
+  },
+  "customActions": {
+    "title": "Azioni personalizzate",
+    "requiresStop": "Richiede l'arresto della distribuzione",
+    "requiresShutdown": "Richiede l'arresto di WSL"
+  },
+  "sparseConfirm": {
+    "title": "Abilitare la modalità sparse?",
+    "message": "Attenzione: Microsoft ha segnalato che il supporto VHD sparse può causare corruzione dei dati. Sebbene possa aiutare a recuperare automaticamente spazio su disco, esiste un rischio di perdita di dati. Assicurati di avere dei backup prima di abilitare questa funzionalità.",
+    "confirm": "Abilita comunque"
+  },
+  "outputDialog": {
+    "titleSuffix": "- Output",
+    "noOutput": "Nessun output."
+  },
+  "editor": {
+    "iconLabel": "Icona",
+    "availableVars": "Variabili disponibili:"
+  },
+  "exportTitle": "Esporta azioni personalizzate",
+  "importTitle": "Importa azioni personalizzate",
+  "badge": {
+    "startup": "Avvio"
+  },
+  "scope": {
+    "all": "Tutte le distribuzioni",
+    "pattern": "Pattern: {{pattern}}",
+    "count_one": "{{count}} distribuzione",
+    "count_other": "{{count}} distribuzioni"
+  },
+  "sparseChanged": "Modalità sparse modificata",
+  "sparseChangedMessage": "Modalità sparse {{state}} per {{name}}",
+  "sparseToggleFailed": "Attivazione/disattivazione modalità sparse fallita",
+  "sparseToggle": "Attiva/disattiva modalità sparse",
+  "actionFailed": "Azione fallita",
+  "actionFailedMessage": "Esecuzione dell'azione fallita",
+  "distroIdUnavailable": "ID distribuzione non disponibile",
+  "requiresSudo": "Richiede password sudo",
+  "confirmRunTitle": "Eseguire \"{{action}}\"?",
+  "confirmRunMessage": "Sei sicuro di voler eseguire questa azione su {{name}}?",
+  "customActionsSettings": {
+    "title": "Azioni personalizzate",
+    "description": "Definisci comandi shell che appaiono nel menu delle azioni rapide della distribuzione",
+    "addAction": "Aggiungi azione",
+    "editAction": "Modifica azione",
+    "noActions": "Nessuna azione personalizzata configurata",
+    "noActionsHint": "Aggiungi la tua prima azione personalizzata per iniziare",
+    "name": "Nome",
+    "namePlaceholder": "es., Aggiorna sistema",
+    "command": "Comando",
+    "commandPlaceholder": "es., sudo apt update && sudo apt upgrade -y",
+    "sudo": "Esegui con sudo",
+    "sudoDesc": "Esegui il comando con privilegi elevati",
+    "runOnStartup": "Esegui all'avvio",
+    "runOnStartupDesc": "Esegui quando una distribuzione corrispondente si avvia",
+    "confirmBeforeRun": "Conferma prima di eseguire",
+    "showOutput": "Mostra output",
+    "showOutputDesc": "Visualizza l'output del comando in una finestra di dialogo",
+    "runInTerminal": "Esegui nel terminale",
+    "runInTerminalDesc": "Esegui il comando in una finestra del terminale visibile",
+    "target": "Distribuzioni target",
+    "targetAll": "Tutte le distribuzioni",
+    "targetSpecific": "Distribuzioni specifiche",
+    "targetRegex": "Pattern regex",
+    "targetPlaceholder": "es., Ubuntu.*",
+    "save": "Salva",
+    "delete": "Elimina",
+    "deleteConfirm": "Sei sicuro di voler eliminare questa azione?",
+    "importExport": "Importa/Esporta",
+    "importActions": "Importa",
+    "exportActions": "Esporta",
+    "importSuccess": "Azioni importate con successo",
+    "exportSuccess": "Azioni esportate con successo"
+  }
+}

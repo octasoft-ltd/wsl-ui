@@ -169,7 +169,7 @@ export function Header({ onOpenSettings }: HeaderProps) {
             size="sm"
             className="btn-cyber"
             icon={<RefreshIcon size="sm" className={isLoading ? "animate-spin" : ""} />}
-            onClick={() => fetchDistros()}
+            onClick={() => fetchDistros(false, true)}
             disabled={isLoading || !!actionInProgress}
             data-testid="refresh-button"
           >

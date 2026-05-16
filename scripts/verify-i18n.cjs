@@ -32,7 +32,7 @@ const FILES = [
   'statusbar.json',
 ];
 
-const NON_EN_LOCALES = ['ar', 'de', 'es', 'fr', 'hi', 'ja', 'ko', 'pt-BR', 'zh-CN', 'zh-TW'];
+const NON_EN_LOCALES = ['ar', 'de', 'es', 'fr', 'hi', 'it', 'ja', 'ko', 'pl', 'pt-BR', 'ru', 'tr', 'zh-CN', 'zh-TW'];
 
 const MAX_ISSUES_TO_SHOW = 20;
 
@@ -89,7 +89,9 @@ const TECHNICAL_TERMS = new Set([
   'VS Code', 'Cursor', 'Alacritty', 'Kitty', 'WezTerm', 'IntelliJ',
   'Visual Studio Code', 'Windows Terminal', 'Windows Terminal Preview',
   'PowerShell', 'Windows Subsystem for Linux', 'Command Prompt',
-  'Apache License 2.0', 'Business Source License 1.1',
+  'Apache License 2.0', 'Business Source License 1.1', 'GNU General Public License v3.0',
+  'Output', 'Password', 'Runtime', 'Privacy', 'Mirrored', 'STANDBY',
+  '- Output',
   'N/A', 'Linux Containers', 'Octasoft Ltd',
   'Status', 'Online', 'Offline', 'Escape', 'Promise',
   // Words identical in many European languages
@@ -117,8 +119,9 @@ const LOCALE_SPECIFIC_IDENTICAL = {
   'Version': new Set(['de', 'fr']),
   'Partition': new Set(['de', 'fr']),
   'Partition (optional)': new Set(['de', 'fr']),
-  'Online ({{count}})': new Set(['de', 'pt-BR']),
-  'Offline ({{count}})': new Set(['de', 'pt-BR']),
+  'Online ({{count}})': new Set(['de', 'it', 'pl', 'pt-BR']),
+  'Offline ({{count}})': new Set(['de', 'it', 'pl', 'pt-BR']),
+  'Pattern: {{pattern}}': new Set(['it']),
   'in {{hours}}h': new Set(['de']),
 };
 

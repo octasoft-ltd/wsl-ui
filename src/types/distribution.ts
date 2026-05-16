@@ -6,6 +6,7 @@ export interface Distribution {
   isDefault: boolean;
   location?: string; // Installation path (from Windows Registry)
   diskSize?: number; // Size in bytes
+  diskSizeLastFetched?: number; // Unix ms timestamp of last successful diskSize fetch
   osInfo?: string; // e.g., "Ubuntu 22.04.3 LTS"
   metadata?: DistroMetadata; // Installation source info (if tracked)
 }

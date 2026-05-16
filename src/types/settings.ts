@@ -180,7 +180,7 @@ export interface WslConfig {
   pageReporting?: boolean;
   safeMode?: boolean;
   autoMemoryReclaim?: string; // "disabled" | "dropcache" | "gradual"
-  networkingMode?: string;    // "NAT" | "mirrored"
+  networkingMode?: string;    // "NAT" | "mirrored" | "virtioproxy" | "none" | "bridged" (bridged is deprecated)
 }
 
 export const DEFAULT_WSL_CONFIG: WslConfig = {
@@ -215,6 +215,26 @@ export interface WslConf {
   // [boot]
   bootSystemd?: boolean;
   bootCommand?: string;
+}
+
+// GPU availability status for a distribution
+export interface GpuStatus {
+  /** Whether DirectX GPU device (/dev/dxg) is available */
+  directxAvailable: boolean;
+  /** Whether NVIDIA GPU (/dev/nvidia0) is available */
+  nvidiaAvailable: boolean;
+  /** Whether any GPU is available */
+  hasGpu: boolean;
+}
+
+// NVIDIA Container Toolkit and CDI status
+export interface NvidiaContainerToolkitStatus {
+  /** Whether nvidia-ctk is installed */
+  toolkitInstalled: boolean;
+  /** Whether /etc/cdi/nvidia.yaml exists */
+  cdiSpecsExist: boolean;
+  /** CDI device names (e.g. "nvidia.com/gpu=0") */
+  cdiDevices: string[];
 }
 
 export const DEFAULT_WSL_CONF: WslConf = {

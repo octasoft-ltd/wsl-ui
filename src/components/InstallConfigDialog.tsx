@@ -172,7 +172,7 @@ export function InstallConfigDialog({
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && distroName.trim() && !nameValidationError && !pathError && !isValidatingPath) {
+    if (e.key === "Enter" && !e.nativeEvent.isComposing && distroName.trim() && !nameValidationError && !pathError && !isValidatingPath) {
       handleInstall();
     } else if (e.key === "Escape") {
       handleClose();
