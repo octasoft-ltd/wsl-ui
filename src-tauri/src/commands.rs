@@ -12,7 +12,7 @@ use crate::validation::{
 };
 use crate::wsl::resources::parse_memory_string;
 use crate::wsl::{reset_mock_state, set_mock_error, clear_mock_errors, set_stubborn_shutdown, was_force_shutdown_used, MockErrorType, CompactResult, Distribution, DistroResourceUsage, VhdSizeInfo, WslResourceUsage, WslService, WslVersionInfo, WslPreflightStatus, MountedDisk, MountDiskOptions, PhysicalDisk, InstalledTerminal};
-use crate::wsl::executor::{terminal_executor, wsl_executor};
+use crate::wsl::executor::{terminal_executor, wsl_executor, supports_distribution_id};
 use crate::{build_tray_menu, TrayState};
 use tauri::{AppHandle, Emitter, Manager};
 
@@ -395,6 +395,141 @@ fn check_xrdp_port_conflict(name: &str, id: Option<&str>) -> Result<Option<u16>,
 }
 
 
+/// GPU availability status for a distribution
+#[derive(Debug, Clone, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct GpuStatus {
+    /// Whether DirectX GPU device (/dev/dxg) is available
+    pub directx_available: bool,
+    /// Whether NVIDIA CUDA libraries (/usr/lib/wsl/lib/libcuda.so.1) are available
+    pub nvidia_available: bool,
+    /// Whether any GPU is available
+    pub has_gpu: bool,
+}
+
+/// Check GPU availability in a distribution.
+/// In WSL2, NVIDIA GPU is indicated by /usr/lib/wsl/lib/libcuda.so.1 (injected by
+/// the Windows NVIDIA driver), NOT by /dev/nvidia0 which is native Linux only.
+#[tauri::command]
+pub async fn get_distro_gpu_status(name: String, id: Option<String>) -> Result<GpuStatus, String> {
+    validate_distro_name(&name).map_err(|e| e.to_string())?;
+
+    if is_mock_mode() {
+        return Ok(GpuStatus {
+            directx_available: true,
+            nvidia_available: false,
+            has_gpu: true,
+        });
+    }
+
+    tokio::task::spawn_blocking(move || {
+        let output = wsl_executor()
+            .exec(
+                &name,
+                id.as_deref(),
+                r#"echo "dxg:$(test -e /dev/dxg && echo 1 || echo 0),nvidia:$(test -e /usr/lib/wsl/lib/libcuda.so.1 && echo 1 || echo 0)""#,
+            )
+            .map_err(|e| format!("Failed to check GPU status: {}", e))?;
+
+        if !output.success {
+            return Err(format!(
+                "Failed to check GPU status: {}",
+                output.stderr.trim()
+            ));
+        }
+
+        let stdout = output.stdout.trim().to_string();
+        let directx = stdout.contains("dxg:1");
+        let nvidia = stdout.contains("nvidia:1");
+
+        Ok(GpuStatus {
+            directx_available: directx,
+            nvidia_available: nvidia,
+            has_gpu: directx || nvidia,
+        })
+    })
+    .await
+    .map_err(|e| format!("Task failed: {}", e))?
+}
+
+/// NVIDIA Container Toolkit and CDI status for a distribution
+#[derive(Debug, Clone, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct NvidiaContainerToolkitStatus {
+    /// Whether nvidia-ctk is installed
+    pub toolkit_installed: bool,
+    /// Whether /etc/cdi/nvidia.yaml exists
+    pub cdi_specs_exist: bool,
+    /// List of CDI device names (e.g. "nvidia.com/gpu=0")
+    pub cdi_devices: Vec<String>,
+}
+
+/// Check whether NVIDIA Container Toolkit and CDI specs are configured in a distribution.
+/// Only meaningful when nvidia_available is true from get_distro_gpu_status.
+#[tauri::command]
+pub async fn check_nvidia_container_toolkit(name: String, id: Option<String>) -> Result<NvidiaContainerToolkitStatus, String> {
+    validate_distro_name(&name).map_err(|e| e.to_string())?;
+
+    if is_mock_mode() {
+        return Ok(NvidiaContainerToolkitStatus {
+            toolkit_installed: false,
+            cdi_specs_exist: false,
+            cdi_devices: vec![],
+        });
+    }
+
+    tokio::task::spawn_blocking(move || {
+        // Check if nvidia-ctk is installed
+        let toolkit_output = wsl_executor()
+            .exec(
+                &name,
+                id.as_deref(),
+                r#"which nvidia-ctk 2>/dev/null && echo "toolkit_ok" || echo "toolkit_missing""#,
+            )
+            .map_err(|e| format!("Failed to check toolkit: {}", e))?;
+
+        let toolkit_installed = toolkit_output.stdout.contains("toolkit_ok");
+
+        // Check CDI spec exists
+        let cdi_output = wsl_executor()
+            .exec(
+                &name,
+                id.as_deref(),
+                r#"test -f /etc/cdi/nvidia.yaml && echo "cdi_ok" || echo "cdi_missing""#,
+            )
+            .map_err(|e| format!("Failed to check CDI specs: {}", e))?;
+
+        let cdi_specs_exist = cdi_output.stdout.contains("cdi_ok");
+
+        // List CDI devices if toolkit installed and CDI spec exists
+        let cdi_devices = if toolkit_installed && cdi_specs_exist {
+            let devices_output = wsl_executor()
+                .exec(
+                    &name,
+                    id.as_deref(),
+                    r#"nvidia-ctk cdi list 2>/dev/null | grep "nvidia.com/gpu" || true"#,
+                )
+                .map_err(|e| format!("Failed to list CDI devices: {}", e))?;
+
+            devices_output.stdout
+                .lines()
+                .map(|l| l.trim().to_string())
+                .filter(|l| !l.is_empty())
+                .collect()
+        } else {
+            vec![]
+        };
+
+        Ok(NvidiaContainerToolkitStatus {
+            toolkit_installed,
+            cdi_specs_exist,
+            cdi_devices,
+        })
+    })
+    .await
+    .map_err(|e| format!("Task failed: {}", e))?
+}
+
 /// Parse .wslconfig content to check if timeout settings are configured for RDP use
 /// This is extracted for testability
 fn parse_wsl_config_timeouts(content: &str) -> WslConfigStatus {
@@ -551,9 +686,13 @@ pub async fn open_terminal_with_message(name: String, id: Option<String>, messag
 
         let paths = settings::get_executable_paths();
 
-        // Build distro args
-        let distro_args = match &id {
-            Some(guid) => format!("--distribution-id {}", guid),
+        // Build distro args (only use --distribution-id when WSL version supports it)
+        // Strip curly braces from GUID to avoid PowerShell/WT argument parsing issues
+        let distro_args = match id.as_deref().filter(|_| supports_distribution_id()) {
+            Some(guid) => {
+                let bare_guid = guid.trim_start_matches('{').trim_end_matches('}');
+                format!("--distribution-id {}", bare_guid)
+            }
             None => format!("-d {}", name),
         };
 
