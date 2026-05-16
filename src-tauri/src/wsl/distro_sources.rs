@@ -490,13 +490,22 @@ fn mock_preview(url: &str) -> ManifestPreview {
     }
 }
 
+// Cap manifest fetches at 10 MB so a malicious or misconfigured server
+// cannot exhaust process memory with a multi-gigabyte body.
+const MAX_MANIFEST_BYTES: usize = 10 * 1024 * 1024;
+
 fn fetch_url_body(url: &str) -> Result<String, WslError> {
-    // file:// is supported by reqwest only via a custom implementation.
-    // For local testing convenience we read the file directly.
     if let Some(path) = url.strip_prefix("file://") {
-        // On Windows file URLs look like "file:///C:/path/to/file.json".
-        // Strip the leading slash so std::fs::read_to_string accepts the path.
         let p = path.trim_start_matches('/');
+        let meta = std::fs::metadata(p)
+            .map_err(|e| WslError::CommandFailed(format!("Failed to stat manifest file: {}", e)))?;
+        if meta.len() as usize > MAX_MANIFEST_BYTES {
+            return Err(WslError::CommandFailed(format!(
+                "Manifest file is {} bytes, exceeds {} byte limit",
+                meta.len(),
+                MAX_MANIFEST_BYTES
+            )));
+        }
         return std::fs::read_to_string(p)
             .map_err(|e| WslError::CommandFailed(format!("Failed to read manifest file: {}", e)));
     }
@@ -518,8 +527,29 @@ fn fetch_url_body(url: &str) -> Result<String, WslError> {
         )));
     }
 
-    resp.text()
-        .map_err(|e| WslError::CommandFailed(format!("Failed to read manifest body: {}", e)))
+    if let Some(len) = resp.content_length() {
+        if len as usize > MAX_MANIFEST_BYTES {
+            return Err(WslError::CommandFailed(format!(
+                "Manifest is {} bytes, exceeds {} byte limit",
+                len, MAX_MANIFEST_BYTES
+            )));
+        }
+    }
+
+    use std::io::Read;
+    let mut reader = resp.take(MAX_MANIFEST_BYTES as u64 + 1);
+    let mut buf = Vec::with_capacity(64 * 1024);
+    reader
+        .read_to_end(&mut buf)
+        .map_err(|e| WslError::CommandFailed(format!("Failed to read manifest body: {}", e)))?;
+    if buf.len() > MAX_MANIFEST_BYTES {
+        return Err(WslError::CommandFailed(format!(
+            "Manifest body exceeds {} byte limit",
+            MAX_MANIFEST_BYTES
+        )));
+    }
+    String::from_utf8(buf)
+        .map_err(|e| WslError::CommandFailed(format!("Manifest body is not valid UTF-8: {}", e)))
 }
 
 // ---------------------------------------------------------------------------

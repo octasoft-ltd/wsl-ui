@@ -44,28 +44,44 @@ export function WslDistroSourcesSettings() {
   const [isClearing, setIsClearing] = useState(false);
   const [banner, setBanner] = useState<Banner | null>(null);
 
+  // Refresh the registered source from the registry. Does not touch the
+  // user's typed URL — seeding only happens once on initial mount via the
+  // separate effect below. This prevents an in-flight apply from clobbering
+  // text the user has edited while the UAC prompt is open.
   const refreshCurrent = useCallback(async () => {
     setIsLoading(true);
     setLoadError(null);
     try {
       const src = await wslService.getDistroSource();
       setCurrentSource(src);
-      if (src && !urlInput) {
-        setUrlInput(src.url);
-        setMode(src.mode);
-      }
     } catch (e) {
       setLoadError(String(e));
     } finally {
       setIsLoading(false);
     }
-    // urlInput intentionally excluded: we only seed on initial load
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
-    void refreshCurrent();
-  }, [refreshCurrent]);
+    let cancelled = false;
+    (async () => {
+      try {
+        const src = await wslService.getDistroSource();
+        if (cancelled) return;
+        setCurrentSource(src);
+        if (src) {
+          setUrlInput(src.url);
+          setMode(src.mode);
+        }
+      } catch (e) {
+        if (!cancelled) setLoadError(String(e));
+      } finally {
+        if (!cancelled) setIsLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const handlePreview = async (urlToPreview?: string) => {
     const url = (urlToPreview ?? urlInput).trim();
@@ -261,7 +277,11 @@ export function WslDistroSourcesSettings() {
             <input
               type="text"
               value={urlInput}
-              onChange={(e) => setUrlInput(e.target.value)}
+              onChange={(e) => {
+                setUrlInput(e.target.value);
+                setPreview(null);
+                setPreviewError(null);
+              }}
               placeholder="https://example.com/distributions.json"
               className="flex-1 px-3 py-2 bg-theme-bg-secondary border border-theme-border-secondary rounded-lg text-theme-text-primary text-sm font-mono focus:outline-none focus:border-emerald-500"
             />
