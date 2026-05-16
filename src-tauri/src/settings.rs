@@ -180,6 +180,8 @@ pub struct WslConfig {
     pub safe_mode: Option<bool>,
     pub auto_memory_reclaim: Option<String>,
     pub networking_mode: Option<String>,
+    pub dns_tunneling: Option<bool>,
+    pub firewall: Option<bool>,
 }
 
 /// Per-distribution configuration (wsl.conf)
@@ -409,6 +411,10 @@ fn parse_wsl_config(content: &str) -> Result<WslConfig, String> {
             .or_else(|| ini.get("wsl2", "automemoryreclaim")),
         networking_mode: ini.get("wsl2", "networkingMode")
             .or_else(|| ini.get("wsl2", "networkingmode")),
+        dns_tunneling: ini.getbool("wsl2", "dnsTunneling")
+            .ok().flatten()
+            .or_else(|| ini.getbool("wsl2", "dnstunneling").ok().flatten()),
+        firewall: ini.getbool("wsl2", "firewall").ok().flatten(),
     })
 }
 
@@ -469,6 +475,12 @@ fn serialize_wsl_config(config: &WslConfig) -> String {
     }
     if let Some(ref v) = config.networking_mode {
         lines.push(format!("networkingMode={}", v));
+    }
+    if let Some(v) = config.dns_tunneling {
+        lines.push(format!("dnsTunneling={}", v));
+    }
+    if let Some(v) = config.firewall {
+        lines.push(format!("firewall={}", v));
     }
 
     lines.join("\n") + "\n"
@@ -714,6 +726,8 @@ pageReporting=true
 safeMode=false
 autoMemoryReclaim=gradual
 networkingMode=mirrored
+dnsTunneling=true
+firewall=false
 "#;
         let config = parse_wsl_config(content).unwrap();
 
@@ -730,6 +744,27 @@ networkingMode=mirrored
         assert_eq!(config.safe_mode, Some(false));
         assert_eq!(config.auto_memory_reclaim, Some("gradual".to_string()));
         assert_eq!(config.networking_mode, Some("mirrored".to_string()));
+        assert_eq!(config.dns_tunneling, Some(true));
+        assert_eq!(config.firewall, Some(false));
+    }
+
+    #[test]
+    fn test_wsl_config_dns_tunneling_firewall_roundtrip() {
+        let original = WslConfig {
+            networking_mode: Some("mirrored".to_string()),
+            dns_tunneling: Some(true),
+            firewall: Some(false),
+            ..Default::default()
+        };
+
+        let serialized = serialize_wsl_config(&original);
+        assert!(serialized.contains("dnsTunneling=true"));
+        assert!(serialized.contains("firewall=false"));
+
+        let parsed = parse_wsl_config(&serialized).unwrap();
+        assert_eq!(parsed.dns_tunneling, Some(true));
+        assert_eq!(parsed.firewall, Some(false));
+        assert_eq!(parsed.networking_mode, Some("mirrored".to_string()));
     }
 
     #[test]
