@@ -468,7 +468,7 @@ This document provides a comprehensive list of all features in WSL UI.
 
 ## 20. Internationalization (i18n)
 
-### Supported Languages (15)
+### Supported Languages
 - English (`en`)
 - Chinese — Simplified (`zh-CN`) and Traditional (`zh-TW`)
 - Japanese (`ja`)

@@ -284,7 +284,7 @@ Use these variables in your commands:
 
 ## Language
 
-WSL UI ships with **15 languages** and automatically detects your system language on first launch.
+WSL UI ships with translations for a range of languages and automatically detects your system language on first launch.
 
 ### Supported languages
 
