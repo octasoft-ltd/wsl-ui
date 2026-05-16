@@ -336,7 +336,28 @@ Edit `.wslconfig` settings that apply to all distributions:
 - Memory and CPU limits
 - Swap size and location
 - GUI applications (WSLg)
-- Networking mode
+- Networking mode and DNS/firewall options (see below)
+
+#### Networking modes
+
+The **Networking Mode** dropdown exposes every mode WSL supports:
+
+| Mode | When to use |
+|---|---|
+| **NAT (default)** | Standard WSL2 networking — distros share an internal NAT, with port-forwarding for localhost |
+| **Mirrored** | WSL adopts the Windows host network interfaces — best for VPNs and host-discovery scenarios |
+| **virtioproxy** | High-performance virtio-based proxy networking (WSL 2.x) |
+| **None** | Disables WSL networking entirely |
+| **Bridged (deprecated)** | Microsoft has deprecated bridged mode — use virtioproxy or mirrored instead. Selecting it shows a warning. |
+
+#### DNS Tunneling and Windows Firewall
+
+Two toggles below the networking mode (require **Windows 11 22H2 or later**):
+
+- **DNS Tunneling** — Proxies DNS requests from WSL to Windows through a virtual device instead of TCP/UDP. Improves reliability on networks where DNS-over-UDP is blocked or where VPNs intercept queries.
+- **Windows Firewall** — Lets Windows Firewall rules filter WSL network traffic. Useful for environments that require firewall enforcement.
+
+> Changes to networking settings only take effect after `wsl --shutdown`. See [Pending Configuration Changes](#pending-configuration-changes).
 
 ### Per-Distribution Settings
 
@@ -357,6 +378,26 @@ Manage distribution catalogs:
 - Custom download URLs
 - Container image references
 - LXC catalog settings
+
+### WSL Distribution Sources (custom `wsl --install` manifests)
+
+A separate panel — **WSL Distribution Sources** — lets you point WSL's native `wsl --list --online` and `wsl --install <name>` commands at a third-party manifest URL by writing the `HKLM\…\Lxss\DistributionListUrl` (or `DistributionListUrlAppend`) registry value.
+
+This is different from the LXC/download/container catalogs above, which only affect WSL UI's own install dialog. Custom distribution sources apply **machine-wide** to every WSL CLI command.
+
+**How to use it:**
+
+1. Open **Settings → WSL Distribution Sources**.
+2. Choose a **Mode**:
+   - **Append to default list** *(recommended)* — adds the manifest's distros alongside Microsoft's defaults.
+   - **Replace default list** — hides Microsoft's defaults from `wsl --list --online`.
+3. Enter the **Manifest URL** (`http://`, `https://`, or `file://`; `file://` requires WSL 2.4.4 or later).
+4. Click **Preview** to see which distributions the manifest exposes before committing.
+5. Click **Apply** — Windows will prompt for administrator approval (UAC) because the change is written to `HKLM`.
+
+The panel also offers one-click **Suggested sources** for common community manifests, and a **Reset to defaults** button to remove any custom registration.
+
+> Only add manifests you trust — `wsl --install` will download and execute distro images from whatever URL you register.
 
 ### Disk Mounting
 

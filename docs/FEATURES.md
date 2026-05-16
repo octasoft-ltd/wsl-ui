@@ -242,8 +242,12 @@ This document provides a comprehensive list of all features in WSL UI.
 - **GUI Applications** - Enable WSLg for Linux GUI apps
 - **Localhost Forwarding** - Forward localhost ports to Windows
 - **Nested Virtualization** - Run VMs inside WSL
-- **Networking Mode** - NAT or mirrored networking
 - **Pre-Release Updates** - Get early WSL features
+
+### Networking
+- **Networking Mode** - NAT (default), Mirrored, virtioproxy, None, or Bridged (deprecated, shows a warning)
+- **DNS Tunneling** - Proxy DNS requests from WSL to Windows through a virtual device instead of TCP/UDP (requires Windows 11 22H2+)
+- **Windows Firewall** - Allow Windows Firewall rules to filter WSL network traffic (requires Windows 11 22H2+)
 
 ### Advanced
 - Kernel command line parameters
@@ -407,6 +411,15 @@ This document provides a comprehensive list of all features in WSL UI.
 - Configure server URL
 - Set cache duration
 - Show/hide unstable releases
+
+### WSL Distribution Sources (HKLM)
+- Register a third-party manifest URL with WSL's native `wsl --list --online` / `wsl --install <name>` flow
+- Writes to `HKLM\...\Lxss\DistributionListUrl` / `DistributionListUrlAppend` (requires UAC)
+- **Mode** - *Append* (alongside Microsoft's defaults, recommended) or *Replace* (hides Microsoft's defaults)
+- Supports `http://`, `https://`, and `file://` URLs (file:// requires WSL 2.4.4+)
+- **Preview** distributions in a manifest before applying
+- One-click load of suggested community sources
+- Reset to defaults to remove any custom registration
 
 ---
 
