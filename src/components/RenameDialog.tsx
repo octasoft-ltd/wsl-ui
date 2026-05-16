@@ -146,7 +146,7 @@ export function RenameDialog({
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && !isRenaming && newName.trim()) {
+    if (e.key === "Enter" && !e.nativeEvent.isComposing && !isRenaming && newName.trim()) {
       handleRename();
     } else if (e.key === "Escape") {
       handleClose();

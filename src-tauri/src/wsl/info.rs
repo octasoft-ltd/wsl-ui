@@ -50,29 +50,50 @@ pub fn get_wsl_version() -> Result<WslVersionInfo, WslError> {
 }
 
 /// Parse the output of `wsl --version`
+///
+/// Uses position-based parsing rather than key-name matching so it works
+/// regardless of the Windows display language (English, Chinese, etc.).
+/// The output always has 7 fields in a fixed order:
+///   1. WSL version
+///   2. Kernel version
+///   3. WSLg version
+///   4. MSRDC version
+///   5. Direct3D version
+///   6. DXCore version
+///   7. Windows version
 fn parse_wsl_version_output(output: &str) -> WslVersionInfo {
     let mut info = WslVersionInfo::default();
 
+    // Strip leading BOM character that appears in some UTF-16 decoded outputs
+    let output = output.trim_start_matches('\u{FEFF}');
+
+    let mut field_index = 0;
     for line in output.lines() {
         let line = line.trim();
         if line.is_empty() {
             continue;
         }
 
-        // Parse lines like "WSL version: 2.6.2.0"
-        if let Some((key, value)) = line.split_once(':') {
-            let key = key.trim().to_lowercase();
-            let value = value.trim().to_string();
-
-            match key.as_str() {
-                "wsl version" => info.wsl_version = value,
-                "kernel version" => info.kernel_version = value,
-                "wslg version" => info.wslg_version = value,
-                "msrdc version" => info.msrdc_version = value,
-                "direct3d version" => info.direct3d_version = value,
-                "dxcore version" => info.dxcore_version = value,
-                "windows version" => info.windows_version = value,
-                _ => {}
+        // Extract the value after the last colon on the line.
+        // Using rfind handles both English ("WSL version: 2.6") and localized
+        // keys ("WSL 版本: 2.6") correctly since the value is always ASCII.
+        if let Some(colon_pos) = line.rfind(':') {
+            let value = line[colon_pos + 1..].trim().to_string();
+            // Always advance field_index so subsequent fields stay aligned even
+            // when a field is absent (e.g. WSLg missing on older WSL versions).
+            let idx = field_index;
+            field_index += 1;
+            if !value.is_empty() {
+                match idx {
+                    0 => info.wsl_version = value,
+                    1 => info.kernel_version = value,
+                    2 => info.wslg_version = value,
+                    3 => info.msrdc_version = value,
+                    4 => info.direct3d_version = value,
+                    5 => info.dxcore_version = value,
+                    6 => info.windows_version = value,
+                    _ => {}
+                }
             }
         }
     }
@@ -419,8 +440,61 @@ fn parse_system_distro_info(output: &str) -> SystemDistroInfo {
 
 #[cfg(test)]
 mod tests {
+    use super::parse_wsl_version_output;
     use crate::wsl::executor::resource::MockResourceMonitor;
     use crate::wsl::executor::ResourceMonitor;
+
+    #[test]
+    fn test_parse_wsl_version_english() {
+        let output = "WSL version: 2.6.3.0\r\nKernel version: 6.6.87.2-1\r\nWSLg version: 1.0.71\r\nMSRDC version: 1.2.6353\r\nDirect3D version: 1.611.1-81528511\r\nDXCore version: 10.0.26100.1-240331-1435.ge-release\r\nWindows version: 10.0.26200.8037\r\n";
+        let info = parse_wsl_version_output(output);
+        assert_eq!(info.wsl_version, "2.6.3.0");
+        assert_eq!(info.kernel_version, "6.6.87.2-1");
+        assert_eq!(info.wslg_version, "1.0.71");
+        assert_eq!(info.msrdc_version, "1.2.6353");
+        assert_eq!(info.direct3d_version, "1.611.1-81528511");
+        assert_eq!(info.windows_version, "10.0.26200.8037");
+    }
+
+    #[test]
+    fn test_parse_wsl_version_chinese() {
+        // Simulated Chinese-locale wsl --version output
+        let output = "WSL 版本: 2.6.3.0\r\n内核版本: 6.6.87.2-1\r\nWSLg 版本: 1.0.71\r\nMSRDC 版本: 1.2.6353\r\nDirect3D 版本: 1.611.1-81528511\r\nDXCore 版本: 10.0.26100.1-240331-1435.ge-release\r\nWindows 版本: 10.0.26200.8037\r\n";
+        let info = parse_wsl_version_output(output);
+        assert_eq!(info.wsl_version, "2.6.3.0");
+        assert_eq!(info.kernel_version, "6.6.87.2-1");
+        assert_eq!(info.wslg_version, "1.0.71");
+        assert_eq!(info.windows_version, "10.0.26200.8037");
+    }
+
+    #[test]
+    fn test_parse_wsl_version_with_bom() {
+        // UTF-16 LE decoded output may have a leading BOM character
+        let output = "\u{FEFF}WSL version: 2.6.3.0\r\nKernel version: 6.6.87.2-1\r\nWSLg version: 1.0.71\r\nMSRDC version: 1.2.6353\r\nDirect3D version: 1.611.1-81528511\r\nDXCore version: 10.0.26100.1-240331-1435.ge-release\r\nWindows version: 10.0.26200.8037\r\n";
+        let info = parse_wsl_version_output(output);
+        assert_eq!(info.wsl_version, "2.6.3.0", "BOM should be stripped before parsing");
+        assert_eq!(info.kernel_version, "6.6.87.2-1");
+    }
+
+    #[test]
+    fn test_parse_wsl_version_empty() {
+        let info = parse_wsl_version_output("");
+        assert_eq!(info.wsl_version, "Unknown");
+        assert_eq!(info.kernel_version, "Unknown");
+    }
+
+    #[test]
+    fn test_parse_wsl_version_missing_wslg() {
+        // Older WSL without WSLg: field 2 (WSLg) is absent; subsequent fields must
+        // still map to the correct positions (MSRDC→3, Direct3D→4, etc.).
+        let output = "WSL version: 2.1.0.0\r\nKernel version: 5.15.0\r\nWSLg version:\r\nMSRDC version: 1.2.6000\r\nDirect3D version: 1.600.0\r\nDXCore version: 10.0.25000.0\r\nWindows version: 10.0.22000.0\r\n";
+        let info = parse_wsl_version_output(output);
+        assert_eq!(info.wsl_version, "2.1.0.0");
+        assert_eq!(info.kernel_version, "5.15.0");
+        assert_eq!(info.wslg_version, "Unknown", "Empty WSLg should remain Unknown");
+        assert_eq!(info.msrdc_version, "1.2.6000", "MSRDC must not shift into WSLg slot");
+        assert_eq!(info.windows_version, "10.0.22000.0");
+    }
 
     #[test]
     fn test_get_vhdx_size_handles_none_gracefully() {
