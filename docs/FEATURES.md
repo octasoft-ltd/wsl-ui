@@ -92,6 +92,7 @@ This document provides a comprehensive list of all features in WSL UI.
 ### Instant Access
 - **Distribution Info** - View detailed information dialog
 - **Open Terminal** - Launch terminal in the distribution
+- **Open Remote Desktop** - Connect to xrdp running in the distribution (auto-detects port from `/etc/xrdp/xrdp.ini`; opens a keep-alive terminal when WSL idle timeouts are not configured)
 - **Open File Explorer** - Browse files in Windows Explorer
 - **Open in IDE** - Open in VS Code or configured IDE
 - **Restart** - Quick restart with one click
@@ -102,6 +103,7 @@ This document provides a comprehensive list of all features in WSL UI.
 ### Manage Submenu
 - **Move Distribution** - Relocate to new location
 - **Resize Disk** - Expand virtual disk size
+- **Compact Disk** - Reclaim unused VHDX space (`fstrim` + `wsl --shutdown` + VHDX compact, requires UAC)
 - **Set Default User** - Configure default login user
 - **Rename** - Change distribution name
 - **Sparse Mode** - Toggle disk space reclamation
@@ -277,6 +279,14 @@ This document provides a comprehensive list of all features in WSL UI.
 ### User
 - **Default User** - Which user logs in by default
 
+### GPU Status
+- **DirectX GPU (DXCore)** - Detects WSL2's primary GPU path used by CUDA/OpenCL/DirectML
+- **NVIDIA CUDA (WSL2)** - Detects `/usr/lib/wsl/lib/libcuda.so.1` injected by the Windows NVIDIA driver
+- **NVIDIA Container Toolkit** - Detects whether `nvidia-ctk` is installed in the distribution
+- **CDI Specs** - Detects `/etc/cdi/nvidia.yaml` for container GPU passthrough
+- **Check / Re-check** button to refresh status (requires distribution running)
+- Link to the [GPU container setup guide](TROUBLESHOOTING.md#gpu-containers) when the toolkit is missing or misconfigured
+
 ---
 
 ## 11. Polling & Auto-Refresh
@@ -358,6 +368,11 @@ This document provides a comprehensive list of all features in WSL UI.
 - Kernel update detection
 - Detailed error messages with help links
 
+### Pending Configuration Detection
+- Polls every 60s for `.wslconfig` changes that have not yet taken effect
+- Shows a warning notification when a `wsl --shutdown` is required to apply pending changes
+- Notification auto-clears once the running WSL state matches the saved config
+
 ### WSL Version Info
 - WSL version
 - Kernel version
@@ -428,6 +443,7 @@ This document provides a comprehensive list of all features in WSL UI.
 - Enable verbose logging
 - Access log folder
 - Real-time log level changes
+- Direct link to the [Troubleshooting Guide](TROUBLESHOOTING.md) from Settings → Application
 
 ### E2E Testing Support
 - Mock mode for testing without WSL
@@ -437,7 +453,35 @@ This document provides a comprehensive list of all features in WSL UI.
 
 ---
 
-## 20. Distribution Information Dialog
+## 20. Internationalization (i18n)
+
+### Supported Languages (15)
+- English (`en`)
+- Chinese — Simplified (`zh-CN`) and Traditional (`zh-TW`)
+- Japanese (`ja`)
+- Korean (`ko`)
+- Spanish (`es`)
+- Hindi (`hi`)
+- French (`fr`)
+- German (`de`)
+- Portuguese — Brazil (`pt-BR`)
+- Arabic (`ar`) — with RTL layout
+- Russian (`ru`)
+- Polish (`pl`)
+- Turkish (`tr`)
+- Italian (`it`)
+
+### Language Behavior
+- Auto-detects Windows display language on first launch (regional variants fall back to base language, e.g. `fr-CA` → French, `zh-TW` → Traditional Chinese)
+- Live language switch in Settings → Application → Language (no restart required)
+- Persisted in `settings.json` (`locale` field) and mirrored to WebView2 `localStorage`
+- IME composition safe — Enter key does not trigger actions while composing CJK input
+- CJK fonts: Windows-native CJK fonts are preferred before non-bundled fallbacks for clean rendering
+- "Request a language" link points to GitHub for community translation contributions
+
+---
+
+## 21. Distribution Information Dialog
 
 ### Details Displayed
 - Distribution ID (GUID)
@@ -467,6 +511,7 @@ This document provides a comprehensive list of all features in WSL UI.
 ### Operations Requiring WSL Shutdown
 - Move distribution
 - Resize disk
+- Compact disk (also requires UAC elevation)
 - Set WSL Version (convert)
 - Toggle sparse mode
 
@@ -477,4 +522,4 @@ This document provides a comprehensive list of all features in WSL UI.
 
 ---
 
-*This document is auto-generated from codebase analysis. Last updated: 2026-01-11*
+*This document is auto-generated from codebase analysis. Last updated: 2026-05-16*
