@@ -39,6 +39,7 @@ import {
   TimeoutSettings,
   ExecutablePathsSettings,
   DistributionSourcesSettings,
+  WslDistroSourcesSettings,
   ContainerRuntimeSettings,
   PrivacySettings,
   LanguageSettings,
@@ -433,6 +434,7 @@ export function SettingsPage({ onBack }: SettingsPageProps) {
 
             {activeTab === "sources" && (
               <div className="space-y-6">
+                <WslDistroSourcesSettings />
                 <ContainerRuntimeSettings />
                 <DistributionSourcesSettings />
               </div>
