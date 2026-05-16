@@ -5,6 +5,26 @@ All notable changes to WSL UI will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.20.0](https://github.com/octasoft-ltd/wsl-ui/compare/v0.19.0...v0.20.0) (2026-05-16)
+
+
+### Features
+
+* expose dnsTunneling and firewall .wslconfig settings ([#91](https://github.com/octasoft-ltd/wsl-ui/issues/91)) ([188045a](https://github.com/octasoft-ltd/wsl-ui/commit/188045a47aeec3553a0ed09e03c2269901d2dafc))
+* manage custom WSL distribution sources from Settings ([#83](https://github.com/octasoft-ltd/wsl-ui/issues/83)) ([#92](https://github.com/octasoft-ltd/wsl-ui/issues/92)) ([67e70c8](https://github.com/octasoft-ltd/wsl-ui/commit/67e70c8291598f76b4844124bfc6a2790d578ec4))
+* **OCT-445:** manual refresh button bypasses diskSize cache ([#96](https://github.com/octasoft-ltd/wsl-ui/issues/96)) ([b62a9e0](https://github.com/octasoft-ltd/wsl-ui/commit/b62a9e0533c222becd8a103ee9895cc5b6cf1a4e))
+* **OCT-445:** periodically refresh distro diskSize ([69fdccd](https://github.com/octasoft-ltd/wsl-ui/commit/69fdccdc13b53b54dbff49189050aeb16f8c085f))
+* **OCT-445:** periodically refresh distro diskSize ([4e6fb1e](https://github.com/octasoft-ltd/wsl-ui/commit/4e6fb1e8c899e0e096a9e7df3ee530637276be02))
+* **settings:** add virtioproxy, none, and deprecated bridged to networking mode dropdown ([#93](https://github.com/octasoft-ltd/wsl-ui/issues/93)) ([54fd4c0](https://github.com/octasoft-ltd/wsl-ui/commit/54fd4c07976aea874341b591cf769c0389b665a4)), closes [#80](https://github.com/octasoft-ltd/wsl-ui/issues/80)
+
+
+### Bug Fixes
+
+* Create parent directories before wsl --import (OCT-799, GH [#86](https://github.com/octasoft-ltd/wsl-ui/issues/86)) ([#90](https://github.com/octasoft-ltd/wsl-ui/issues/90)) ([749bc5a](https://github.com/octasoft-ltd/wsl-ui/commit/749bc5a70741ed0f337ee308a5f45d1ab70accda))
+* enforce single app instance so re-launches focus existing tray window (OCT-940) ([#98](https://github.com/octasoft-ltd/wsl-ui/issues/98)) ([3368d73](https://github.com/octasoft-ltd/wsl-ui/commit/3368d739edf19546ff7aba4dd6fa80d5c3c60e74))
+* **fonts:** consolidate font families into CSS variables and improve non-English fallback ([#89](https://github.com/octasoft-ltd/wsl-ui/issues/89)) ([185995a](https://github.com/octasoft-ltd/wsl-ui/commit/185995a74944ab145f85010f92b195a8c8afcbaa))
+* prevent install dialog from clipping off-screen on small displays ([#88](https://github.com/octasoft-ltd/wsl-ui/issues/88)) ([83f241e](https://github.com/octasoft-ltd/wsl-ui/commit/83f241e8c17f245c57dc1f873a659ff049ce2037))
+
 ## [0.19.0](https://github.com/octasoft-ltd/wsl-ui/compare/v0.18.1...v0.19.0) (2026-04-08)
 
 
