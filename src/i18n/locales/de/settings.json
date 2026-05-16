@@ -302,7 +302,11 @@
     "memoryPlaceholder": "z.B. 8GB",
     "processorsPlaceholder": "z.B. 4",
     "swapPlaceholder": "z.B. 4GB",
-    "errorLabel": "Fehler:"
+    "errorLabel": "Fehler:",
+    "gpu": "GPU-Unterstützung",
+    "gpuDesc": "GPU-Beschleunigung für WSL2-Distributionen",
+    "gpuNote": "WSL2 bietet automatische GPU-Beschleunigung über DirectX 12 (DXCore), wenn ein kompatibles GPU und Treiber vorhanden sind. CUDA, OpenCL, DirectML und andere GPU-Compute-APIs werden ohne zusätzliche Konfiguration unterstützt.",
+    "gpuGuiNote": "Aktivieren Sie GUI-Anwendungen (oben), um GPU-Beschleunigung für Linux-GUI-Apps über WSLg zu nutzen."
   },
   "wslDistro": {
     "title": "Konfiguration pro Distribution",
@@ -359,7 +363,23 @@
     "errorLabel": "Fehler:",
     "defaultUserPlaceholder": "z.B. ubuntu",
     "loadError": "wsl.conf konnte nicht geladen werden",
-    "saveError": "wsl.conf konnte nicht gespeichert werden"
+    "saveError": "wsl.conf konnte nicht gespeichert werden",
+    "gpu": "GPU-Status",
+    "gpuDesc": "GPU-Verfügbarkeit in dieser Distribution prüfen",
+    "gpuCheck": "GPU prüfen",
+    "gpuChecking": "Wird geprüft...",
+    "gpuRecheck": "Erneut prüfen",
+    "gpuDirectX": "DirectX GPU (DXCore)",
+    "gpuNvidia": "NVIDIA CUDA (WSL2)",
+    "gpuAvailableLabel": "Verfügbar",
+    "gpuNotAvailableLabel": "Nicht verfügbar",
+    "gpuCheckError": "Prüfung nicht möglich — starten Sie zuerst die Distribution",
+    "gpuNote": "DirectX GPU ist der primäre WSL2-GPU-Pfad. NVIDIA CUDA erkennt /usr/lib/wsl/lib/libcuda.so.1, welches von Windows-NVIDIA-Treibern in WSL2 injiziert wird — erforderlich für CUDA-Arbeitslasten wie Ollama.",
+    "toolkitInstalled": "NVIDIA Container Toolkit",
+    "cdiSpecs": "CDI Specs (/etc/cdi/nvidia.yaml)",
+    "toolkitChecking": "Checking container toolkit...",
+    "toolkitCheckError": "Failed to check container toolkit status",
+    "toolkitTroubleshootingLink": "→ Leitfaden zur GPU-Container-Einrichtung"
   },
   "distributionSources": {
     "title": "Distributionsquellen",

@@ -302,7 +302,11 @@
     "memoryPlaceholder": "e.g., 8GB",
     "processorsPlaceholder": "e.g., 4",
     "swapPlaceholder": "e.g., 4GB",
-    "errorLabel": "Error:"
+    "errorLabel": "Error:",
+    "gpu": "GPU Support",
+    "gpuDesc": "GPU acceleration for WSL2 distributions",
+    "gpuNote": "WSL2 provides automatic GPU acceleration via DirectX 12 (DXCore) when a compatible GPU and driver are present. CUDA, OpenCL, DirectML, and other GPU compute APIs are supported without additional configuration.",
+    "gpuGuiNote": "Enable GUI Applications (above) to use GPU acceleration for Linux GUI apps via WSLg."
   },
   "wslDistro": {
     "title": "Per-Distribution Configuration",
@@ -359,7 +363,23 @@
     "errorLabel": "Error:",
     "defaultUserPlaceholder": "e.g., ubuntu",
     "loadError": "Failed to load wsl.conf",
-    "saveError": "Failed to save wsl.conf"
+    "saveError": "Failed to save wsl.conf",
+    "gpu": "GPU Status",
+    "gpuDesc": "Check GPU availability in this distribution",
+    "gpuCheck": "Check GPU",
+    "gpuChecking": "Checking...",
+    "gpuRecheck": "Check again",
+    "gpuDirectX": "DirectX GPU (DXCore)",
+    "gpuNvidia": "NVIDIA CUDA (WSL2)",
+    "gpuAvailableLabel": "Available",
+    "gpuNotAvailableLabel": "Not Available",
+    "gpuCheckError": "Unable to check — start the distribution first",
+    "gpuNote": "DirectX GPU is the primary WSL2 GPU path. NVIDIA CUDA detects /usr/lib/wsl/lib/libcuda.so.1, which Windows NVIDIA drivers inject into WSL2 — required for CUDA workloads like Ollama.",
+    "toolkitInstalled": "NVIDIA Container Toolkit",
+    "cdiSpecs": "CDI Specs (/etc/cdi/nvidia.yaml)",
+    "toolkitChecking": "Checking container toolkit...",
+    "toolkitCheckError": "Failed to check container toolkit status",
+    "toolkitTroubleshootingLink": "→ GPU container setup guide"
   },
   "distributionSources": {
     "title": "Distribution Sources",

@@ -302,7 +302,11 @@
     "memoryPlaceholder": "जैसे, 8GB",
     "processorsPlaceholder": "जैसे, 4",
     "swapPlaceholder": "जैसे, 4GB",
-    "errorLabel": "त्रुटि:"
+    "errorLabel": "त्रुटि:",
+    "gpu": "GPU समर्थन",
+    "gpuDesc": "WSL2 डिस्ट्रिब्यूशन के लिए GPU त्वरण",
+    "gpuNote": "जब एक संगत GPU और ड्राइवर मौजूद हों, WSL2 DirectX 12 (DXCore) के माध्यम से स्वचालित GPU त्वरण प्रदान करता है। CUDA, OpenCL, DirectML और अन्य GPU कंप्यूट API बिना किसी अतिरिक्त कॉन्फ़िगरेशन के समर्थित हैं।",
+    "gpuGuiNote": "WSLg के माध्यम से Linux GUI एप्स के लिए GPU त्वरण उपयोग करने के लिए ऊपर GUI अनुप्रयोगों को सक्षम करें।"
   },
   "wslDistro": {
     "title": "प्रति-डिस्ट्रिब्यूशन कॉन्फ़िगरेशन",
@@ -359,7 +363,23 @@
     "errorLabel": "त्रुटि:",
     "defaultUserPlaceholder": "जैसे, ubuntu",
     "loadError": "wsl.conf लोड करने में विफल",
-    "saveError": "wsl.conf सहेजने में विफल"
+    "saveError": "wsl.conf सहेजने में विफल",
+    "gpu": "GPU स्थिति",
+    "gpuDesc": "इस डिस्ट्रिब्यूशन में GPU उपलब्धता जाँचें",
+    "gpuCheck": "GPU जाँचें",
+    "gpuChecking": "जाँच हो रही है...",
+    "gpuRecheck": "फिर जाँचें",
+    "gpuDirectX": "DirectX GPU (DXCore)",
+    "gpuNvidia": "NVIDIA CUDA (WSL2)",
+    "gpuAvailableLabel": "उपलब्ध",
+    "gpuNotAvailableLabel": "अनुपलब्ध",
+    "gpuCheckError": "जाँच संभव नहीं — पहले डिस्ट्रिब्यूशन शुरू करें",
+    "gpuNote": "DirectX GPU WSL2 का प्राथमिक GPU मार्ग है। NVIDIA CUDA /usr/lib/wsl/lib/libcuda.so.1 का पता लगाता है, जिसे Windows NVIDIA ड्राइवर WSL2 में इंजेक्ट करते हैं — Ollama जैसे CUDA कार्यभार के लिए आवश्यक।",
+    "toolkitInstalled": "NVIDIA Container Toolkit",
+    "cdiSpecs": "CDI Specs (/etc/cdi/nvidia.yaml)",
+    "toolkitChecking": "Checking container toolkit...",
+    "toolkitCheckError": "Failed to check container toolkit status",
+    "toolkitTroubleshootingLink": "→ GPU कंटेनर सेटअप गाइड"
   },
   "distributionSources": {
     "title": "डिस्ट्रिब्यूशन स्रोत",

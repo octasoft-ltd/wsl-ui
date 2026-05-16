@@ -302,7 +302,11 @@
     "memoryPlaceholder": "مثال، 8GB",
     "processorsPlaceholder": "مثال، 4",
     "swapPlaceholder": "مثال، 4GB",
-    "errorLabel": "خطأ:"
+    "errorLabel": "خطأ:",
+    "gpu": "دعم وحدة معالجة الرسومات",
+    "gpuDesc": "تسريع GPU لتوزيعات WSL2",
+    "gpuNote": "يوفر WSL2 تسريعاً تلقائياً لوحدة معالجة الرسومات عبر DirectX 12 (DXCore) عند توفر GPU متوافق وبرامج تشغيل. يتم دعم CUDA وOpenCL وDirectML وواجهات برمجة تطبيقات GPU الأخرى دون الحاجة إلى تكوين إضافي.",
+    "gpuGuiNote": "قم بتمكين تطبيقات GUI (أعلاه) لاستخدام تسريع GPU لتطبيقات Linux GUI عبر WSLg."
   },
   "wslDistro": {
     "title": "تكوين لكل توزيعة",
@@ -359,7 +363,23 @@
     "errorLabel": "خطأ:",
     "defaultUserPlaceholder": "مثال، ubuntu",
     "loadError": "فشل تحميل wsl.conf",
-    "saveError": "فشل حفظ wsl.conf"
+    "saveError": "فشل حفظ wsl.conf",
+    "gpu": "حالة GPU",
+    "gpuDesc": "التحقق من توفر GPU في هذا التوزيع",
+    "gpuCheck": "فحص GPU",
+    "gpuChecking": "جارٍ الفحص...",
+    "gpuRecheck": "إعادة الفحص",
+    "gpuDirectX": "GPU بواجهة DirectX (DXCore)",
+    "gpuNvidia": "NVIDIA CUDA (WSL2)",
+    "gpuAvailableLabel": "متوفر",
+    "gpuNotAvailableLabel": "غير متوفر",
+    "gpuCheckError": "تعذّر الفحص — قم بتشغيل التوزيع أولاً",
+    "gpuNote": "هو مسار GPU الأساسي في WSL2. يكتشف NVIDIA CUDA الملف /usr/lib/wsl/lib/libcuda.so.1، الذي تُحقنه برامج تشغيل NVIDIA لـWindows في WSL2 — ضروري لأعباء عمل CUDA مثل Ollama.",
+    "toolkitInstalled": "NVIDIA Container Toolkit",
+    "cdiSpecs": "CDI Specs (/etc/cdi/nvidia.yaml)",
+    "toolkitChecking": "Checking container toolkit...",
+    "toolkitCheckError": "Failed to check container toolkit status",
+    "toolkitTroubleshootingLink": "→ دليل إعداد حاويات GPU"
   },
   "distributionSources": {
     "title": "مصادر التوزيعات",

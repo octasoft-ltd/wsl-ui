@@ -302,7 +302,11 @@
     "memoryPlaceholder": "örn., 8GB",
     "processorsPlaceholder": "örn., 4",
     "swapPlaceholder": "örn., 4GB",
-    "errorLabel": "Hata:"
+    "errorLabel": "Hata:",
+    "gpu": "GPU Desteği",
+    "gpuDesc": "WSL2 dağıtımları için GPU hızlandırma",
+    "gpuNote": "WSL2, uyumlu bir GPU ve sürüCü bulunduğunda DirectX 12 (DXCore) aracılığıyla otomatik GPU hızlandırması sağlar. CUDA, OpenCL, DirectML ve diğer GPU hesaplama API'leri ek yapılandırma gerektirmeden desteklenir.",
+    "gpuGuiNote": "WSLg aracılığıyla Linux GUI uygulamaları için GPU hızlandırmasını kullanmak üzere yukarıdaki GUI Uygulamalarını etkinleştirin."
   },
   "wslDistro": {
     "title": "Dağıtım Bazında Yapılandırma",
@@ -359,7 +363,23 @@
     "errorLabel": "Hata:",
     "defaultUserPlaceholder": "örn., ubuntu",
     "loadError": "wsl.conf yüklenemedi",
-    "saveError": "wsl.conf kaydedilemedi"
+    "saveError": "wsl.conf kaydedilemedi",
+    "gpu": "GPU Durumu",
+    "gpuDesc": "Bu dağıtımda GPU kullanılabilirliğini kontrol et",
+    "gpuCheck": "GPU'yu Kontrol Et",
+    "gpuChecking": "Kontrol ediliyor...",
+    "gpuRecheck": "Tekrar kontrol et",
+    "gpuDirectX": "DirectX GPU (DXCore)",
+    "gpuNvidia": "NVIDIA CUDA (WSL2)",
+    "gpuAvailableLabel": "Kullanılabilir",
+    "gpuNotAvailableLabel": "Kullanılamaz",
+    "gpuCheckError": "Kontrol edilemiyor — önce dağıtımı başlatın",
+    "gpuNote": "DirectX GPU, WSL2'nin birincil GPU yoludur. NVIDIA CUDA, /usr/lib/wsl/lib/libcuda.so.1 dosyasını algılar; bu dosya, Windows NVIDIA sürücleri tarafından WSL2'ye enjekte edilir ve Ollama gibi CUDA iş yükleri için gereklidir.",
+    "toolkitInstalled": "NVIDIA Container Toolkit",
+    "cdiSpecs": "CDI Specs (/etc/cdi/nvidia.yaml)",
+    "toolkitChecking": "Checking container toolkit...",
+    "toolkitCheckError": "Failed to check container toolkit status",
+    "toolkitTroubleshootingLink": "→ GPU kapsayıcı kurulum kılavuzu"
   },
   "distributionSources": {
     "title": "Dağıtım Kaynakları",

@@ -1,0 +1,45 @@
+{
+  "ignorePatterns": [
+    "CHANGELOG.md",
+    "package-lock.json",
+    "*.lock",
+    "dist/**",
+    "target/**",
+    "node_modules/**",
+    "src-tauri/target/**",
+    "public/**",
+    "*.gen.ts",
+    "*.generated.*"
+  ],
+  "excludeBranches": [
+    "release-please--*"
+  ],
+  "excludeAuthors": [
+    "github-actions[bot]"
+  ],
+  "commentTypes": ["logic", "syntax"],
+  "strictness": 2,
+  "fixWithAI": true,
+  "summarySection": {
+    "enabled": true,
+    "collapsible": false
+  },
+  "issuesTableSection": {
+    "enabled": true,
+    "collapsible": true
+  },
+  "sequenceDiagramSection": {
+    "enabled": false
+  },
+  "instructions": "This is WSL UI - a Tauri desktop app (Rust + React/TypeScript) for managing WSL distros on Windows. Focus on: correctness of Tauri/IPC command usage, Rust memory safety in the wsl-core crate, TypeScript type safety, React hook correctness, and security issues. The app uses Zustand for state management and Tailwind for styling. Do not flag stylistic preferences or suggest adding comments/documentation.",
+  "customContext": [
+    {
+      "filePatterns": ["src-tauri/**", "crates/**"],
+      "instructions": "Rust code: focus on error handling (using anyhow/thiserror), Windows API usage correctness, and IPC command safety."
+    },
+    {
+      "filePatterns": ["src/**/*.tsx", "src/**/*.ts"],
+      "instructions": "TypeScript/React code: focus on hook dependencies, state management correctness, and Tauri invoke type safety."
+    }
+  ]
+}

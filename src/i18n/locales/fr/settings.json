@@ -302,7 +302,11 @@
     "memoryPlaceholder": "ex., 8 Go",
     "processorsPlaceholder": "ex., 4",
     "swapPlaceholder": "ex., 4 Go",
-    "errorLabel": "Erreur :"
+    "errorLabel": "Erreur :",
+    "gpu": "Prise en charge GPU",
+    "gpuDesc": "Accélération GPU pour les distributions WSL2",
+    "gpuNote": "WSL2 fournit une accélération GPU automatique via DirectX 12 (DXCore) lorsqu'un GPU et des pilotes compatibles sont présents. CUDA, OpenCL, DirectML et d'autres API de calcul GPU sont pris en charge sans configuration supplémentaire.",
+    "gpuGuiNote": "Activez les applications GUI (ci-dessus) pour utiliser l'accélération GPU pour les applications Linux GUI via WSLg."
   },
   "wslDistro": {
     "title": "Configuration par distribution",
@@ -359,7 +363,23 @@
     "errorLabel": "Erreur :",
     "defaultUserPlaceholder": "ex., ubuntu",
     "loadError": "Échec du chargement de wsl.conf",
-    "saveError": "Échec de l'enregistrement de wsl.conf"
+    "saveError": "Échec de l'enregistrement de wsl.conf",
+    "gpu": "État GPU",
+    "gpuDesc": "Vérifier la disponibilité du GPU dans cette distribution",
+    "gpuCheck": "Vérifier le GPU",
+    "gpuChecking": "Vérification...",
+    "gpuRecheck": "Revérifier",
+    "gpuDirectX": "GPU DirectX (DXCore)",
+    "gpuNvidia": "NVIDIA CUDA (WSL2)",
+    "gpuAvailableLabel": "Disponible",
+    "gpuNotAvailableLabel": "Non disponible",
+    "gpuCheckError": "Impossible de vérifier — démarrez d'abord la distribution",
+    "gpuNote": "DirectX GPU est le chemin GPU principal de WSL2. NVIDIA CUDA détecte /usr/lib/wsl/lib/libcuda.so.1, que les pilotes NVIDIA Windows injectent dans WSL2 — nécessaire pour les charges de travail CUDA comme Ollama.",
+    "toolkitInstalled": "NVIDIA Container Toolkit",
+    "cdiSpecs": "CDI Specs (/etc/cdi/nvidia.yaml)",
+    "toolkitChecking": "Checking container toolkit...",
+    "toolkitCheckError": "Failed to check container toolkit status",
+    "toolkitTroubleshootingLink": "→ Guide de configuration des conteneurs GPU"
   },
   "distributionSources": {
     "title": "Sources de distributions",

@@ -141,11 +141,7 @@ pub fn clone_distribution(source: &str, new_name: &str, install_location: Option
         _ => get_default_distro_path(new_name),
     };
 
-    // Create the directory if it doesn't exist
-    std::fs::create_dir_all(&final_location)
-        .map_err(|e| WslError::CommandFailed(format!("Failed to create install directory: {}", e)))?;
-
-    // Import with new name
+    // Import with new name (install dir is created inside import_distribution)
     let result = import_distribution(new_name, &final_location, &temp_path);
 
     // Clean up temp file (ignore errors)

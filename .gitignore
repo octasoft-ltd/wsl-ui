@@ -1,6 +1,9 @@
 # Claude
 .claude/
 
+# Paperclip
+.paperclip/
+
 # Dependencies
 node_modules/
 
