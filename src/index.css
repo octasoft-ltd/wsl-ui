@@ -44,8 +44,8 @@
   --color-cyber-red: #ff3366;
   --color-cyber-purple: #a855f7;
 
-  --font-mono: 'JetBrains Mono', 'Consolas', 'Noto Sans Mono CJK SC', 'Source Han Mono', monospace;
-  --font-ui: 'Outfit', system-ui, 'Noto Sans CJK SC', 'Source Han Sans', sans-serif;
+  --font-mono: 'JetBrains Mono', 'Consolas', 'NSimSun', 'MS Gothic', 'Noto Sans Mono CJK SC', 'Source Han Mono', monospace;
+  --font-ui: 'Outfit', system-ui, 'Microsoft YaHei', 'Meiryo', 'Noto Sans CJK SC', 'Source Han Sans', sans-serif;
 }
 
 @layer base {
