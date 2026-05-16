@@ -221,7 +221,7 @@ export function WslGlobalSettings() {
               <p className="text-sm text-theme-text-muted">{t('wslGlobal.networkingDesc')}</p>
             </div>
           </div>
-          <div className="space-y-1">
+          <div className="space-y-1 divide-y divide-theme-border-primary/50">
             <div className="py-3">
               <label className="block text-sm font-medium text-theme-text-primary mb-1">{t('wslGlobal.networkingMode')}</label>
               <p className="text-xs text-theme-text-muted mb-2">{t('wslGlobal.networkingModeDesc')}</p>
@@ -243,6 +243,21 @@ export function WslGlobalSettings() {
                 </p>
               )}
             </div>
+            <Toggle
+              label={t('wslGlobal.dnsTunneling')}
+              description={t('wslGlobal.dnsTunnelingDesc')}
+              checked={config.dnsTunneling ?? true}
+              onChange={(v) => updateConfig("dnsTunneling", v)}
+              testId="wsl-dns-tunneling"
+            />
+            <Toggle
+              label={t('wslGlobal.firewall')}
+              description={t('wslGlobal.firewallDesc')}
+              checked={config.firewall ?? true}
+              onChange={(v) => updateConfig("firewall", v)}
+              testId="wsl-firewall"
+            />
+            <p className="pt-3 text-xs text-theme-text-muted italic">{t('wslGlobal.networkingRequiresWin11')}</p>
           </div>
         </div>
       </section>

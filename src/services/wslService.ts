@@ -5,6 +5,10 @@ import type { DistroCatalog, DownloadDistro, ContainerImage, MsStoreDistroInfo }
 import type { Distribution, DistroMetadata } from "../types/distribution";
 import type { RdpDetectionResult, WslConfigStatus, WslConfigPendingStatus } from "../types/rdp";
 import type { WslConfig, WslConf, GpuStatus, NvidiaContainerToolkitStatus, InstalledTerminal } from "../types/settings";
+import type {
+  DistroSource,
+  ManifestPreview,
+} from "../types/distroSources";
 import { debug, info } from "../utils/logger";
 
 /**
@@ -809,6 +813,47 @@ export const wslService = {
   async getLogPath(): Promise<string> {
     debug("[wslService] Getting log path");
     return invoke<string>("get_log_path");
+  },
+
+  // ==================== Distribution Sources (HKLM) ====================
+
+  /**
+   * Read the currently registered WSL distribution source (HKLM).
+   * Returns null when neither DistributionListUrl nor
+   * DistributionListUrlAppend is set.
+   */
+  async getDistroSource(): Promise<DistroSource | null> {
+    debug("[wslService] Getting distro source");
+    const result = await invoke<DistroSource | null>("get_distro_source");
+    return result ?? null;
+  },
+
+  /**
+   * Fetch and parse a remote manifest URL into a preview. Does not require
+   * elevation. Throws if the URL is unreachable or the JSON is invalid.
+   */
+  async previewDistroManifest(url: string): Promise<ManifestPreview> {
+    info(`[wslService] Previewing distro manifest: ${url}`);
+    return invoke<ManifestPreview>("preview_distro_manifest", { url });
+  },
+
+  /**
+   * Apply a distribution source. Triggers UAC. Clears the opposite registry
+   * value so we never end up with both DistributionListUrl and
+   * DistributionListUrlAppend set.
+   */
+  async applyDistroSource(source: DistroSource): Promise<void> {
+    info(`[wslService] Applying distro source: ${source.mode} ${source.url}`);
+    await invoke("apply_distro_source", { source });
+  },
+
+  /**
+   * Remove both DistributionListUrl and DistributionListUrlAppend from HKLM.
+   * Triggers UAC.
+   */
+  async clearDistroSource(): Promise<void> {
+    info("[wslService] Clearing distro source");
+    await invoke("clear_distro_source");
   },
 };
 
