@@ -8,12 +8,15 @@ A complete guide to managing your WSL distributions with WSL UI.
 - [Toolbar](#toolbar)
 - [Managing Distributions](#managing-distributions)
 - [Quick Actions](#quick-actions)
+- [Remote Desktop (xrdp)](#remote-desktop-xrdp)
+- [GPU Status & NVIDIA Containers](#gpu-status--nvidia-containers)
 - [Installing New Distributions](#installing-new-distributions)
 - [Linux Desktop Setup Scripts](#linux-desktop-setup-scripts)
 - [Backup and Restore](#backup-and-restore)
 - [Custom Actions](#custom-actions)
 - [Language](#language)
 - [Settings](#settings)
+- [Pending Configuration Changes](#pending-configuration-changes)
 - [Themes](#themes)
 - [Keyboard Shortcuts & Accessibility](#keyboard-shortcuts--accessibility)
 
@@ -77,6 +80,7 @@ Right-click any distribution or use the menu button to access quick actions:
 ![Quick Actions Menu](screenshots/menu-quick-actions.png)
 
 - **Open Terminal** - Launch a terminal session
+- **Open Remote Desktop** - Connect via xrdp (only shown when xrdp is detected — see [Remote Desktop](#remote-desktop-xrdp))
 - **Open File Explorer** - Browse files in Windows Explorer
 - **Open in IDE** - Open in VS Code or your configured IDE
 - **Restart** - Stop and start the distribution
@@ -124,6 +128,54 @@ View detailed information about any distribution:
 ![Distribution Info](screenshots/dialog-distro-info.png)
 
 Shows installation location, creation date, disk size, and more.
+
+---
+
+## Remote Desktop (xrdp)
+
+If a distribution is running `xrdp`, WSL UI exposes a **Remote Desktop** button on the distro card (next to **Open Terminal**) that launches a Windows RDP session straight into the distro's desktop.
+
+### How it works
+
+- The app reads `/etc/xrdp/xrdp.ini` inside each distribution to discover the listening port (defaults to 3390 in the bundled setup scripts).
+- The Remote Desktop button is only enabled when xrdp is detected — distros without xrdp don't show the button.
+- Clicking it launches Windows' `mstsc.exe` against `localhost:<port>`.
+- If WSL idle timeouts are not configured in `.wslconfig`, the app also opens a small keep-alive terminal in the distro so the RDP session does not disconnect after WSL's default 15s idle shutdown. You can close that terminal once you're done with RDP.
+
+### No xrdp detected
+
+If you click Remote Desktop on a distro where xrdp can't be found, you'll see a dialog pointing to the [WSL2 Linux Desktop blog series](https://wsl-ui.octasoft.co.uk/blog/series/wsl2-linux-desktop) and a reminder to use the bundled setup scripts (see [Linux Desktop Setup Scripts](#linux-desktop-setup-scripts)).
+
+### Multi-distro port conflicts
+
+All WSL2 distributions share localhost, so each distro that runs xrdp needs its own port. The bundled setup scripts auto-shift to the next free port (3391, 3392, …) when 3390 is already in use. See [Issue #10](TROUBLESHOOTING.md) in the troubleshooting guide for how to assign per-distro ports manually.
+
+---
+
+## GPU Status & NVIDIA Containers
+
+WSL UI surfaces GPU support for each distribution under **Settings → Per-Distribution → GPU Status**.
+
+### Status rows
+
+| Row | What it checks |
+|---|---|
+| **DirectX GPU (DXCore)** | The primary WSL2 GPU path used by CUDA, OpenCL, DirectML, and other compute APIs |
+| **NVIDIA CUDA (WSL2)** | `/usr/lib/wsl/lib/libcuda.so.1` — injected by the Windows NVIDIA driver |
+| **NVIDIA Container Toolkit** | Whether `nvidia-ctk` is installed in the distro |
+| **CDI Specs** | Whether `/etc/cdi/nvidia.yaml` exists for container GPU passthrough |
+
+Each row shows **Available** (green) or **Not Available**. Use **Check GPU** / **Check again** to refresh — the distribution must be running.
+
+### When the toolkit shows "Not Available"
+
+The panel includes a **GPU container setup guide** link that jumps to the [GPU Containers section](TROUBLESHOOTING.md#gpu-containers) of the troubleshooting guide. That guide covers:
+
+- Installing `nvidia-container-toolkit` on Ubuntu/Debian and Fedora/RHEL
+- Generating the CDI spec with `nvidia-ctk cdi generate`
+- The `--network=host` workaround for the nftables error on rootful Podman in WSL2
+- What to do when a Windows NVIDIA driver update breaks an existing CDI spec
+- Special handling when containers run inside `podman-machine-default` rather than the selected distro
 
 ---
 
@@ -232,12 +284,16 @@ Use these variables in your commands:
 
 ## Language
 
-WSL UI supports multiple languages and automatically detects your system language on first launch.
+WSL UI ships with translations for a range of languages and automatically detects your system language on first launch.
+
+### Supported languages
+
+English, Simplified Chinese (简体中文), Traditional Chinese (繁體中文), Japanese (日本語), Korean (한국어), Spanish (Español), Hindi (हिन्दी), French (Français), German (Deutsch), Portuguese — Brazil (Português), Arabic (العربية, RTL), Russian (Русский), Polish (Polski), Turkish (Türkçe), Italian (Italiano).
 
 ### Changing Language
 
 1. Open **Settings** from the gear icon in the header
-2. Select the **Language** tab
+2. Select the **Language** section under **Application**
 3. Choose your preferred language from the list
 
 The change takes effect immediately - no restart required.
@@ -248,9 +304,17 @@ On first launch, WSL UI matches your Windows display language to the closest sup
 
 If your language isn't detected correctly, you can always switch manually in settings.
 
+### CJK input (IME)
+
+Composing CJK input with an IME no longer triggers default-button actions when you press Enter to confirm composition — the Enter key only fires the underlying action once composition is complete. CJK glyphs also prefer Windows-native fonts before any non-bundled fallback for clean rendering.
+
 ### Requesting a New Language
 
-Don't see your language? [Open an issue](https://github.com/octasoft-ltd/wsl-ui/issues) to request it.
+Don't see your language? Click **Request it on GitHub** under the language picker, or [open an issue](https://github.com/octasoft-ltd/wsl-ui/issues) directly. Community-contributed translations are welcome — see the [contribution workflow](https://github.com/octasoft-ltd/wsl-ui) in the repository.
+
+### Garbled text after reinstall?
+
+If text appears garbled or in the wrong language after reinstalling (or switching between Store and EXE installs), see [Issue #13](TROUBLESHOOTING.md) — typically resolved by clearing `%LOCALAPPDATA%\wsl-ui` before reinstalling.
 
 ---
 
@@ -272,7 +336,28 @@ Edit `.wslconfig` settings that apply to all distributions:
 - Memory and CPU limits
 - Swap size and location
 - GUI applications (WSLg)
-- Networking mode
+- Networking mode and DNS/firewall options (see below)
+
+#### Networking modes
+
+The **Networking Mode** dropdown exposes every mode WSL supports:
+
+| Mode | When to use |
+|---|---|
+| **NAT (default)** | Standard WSL2 networking — distros share an internal NAT, with port-forwarding for localhost |
+| **Mirrored** | WSL adopts the Windows host network interfaces — best for VPNs and host-discovery scenarios |
+| **virtioproxy** | High-performance virtio-based proxy networking (WSL 2.x) |
+| **None** | Disables WSL networking entirely |
+| **Bridged (deprecated)** | Microsoft has deprecated bridged mode — use virtioproxy or mirrored instead. Selecting it shows a warning. |
+
+#### DNS Tunneling and Windows Firewall
+
+Two toggles below the networking mode (require **Windows 11 22H2 or later**):
+
+- **DNS Tunneling** — Proxies DNS requests from WSL to Windows through a virtual device instead of TCP/UDP. Improves reliability on networks where DNS-over-UDP is blocked or where VPNs intercept queries.
+- **Windows Firewall** — Lets Windows Firewall rules filter WSL network traffic. Useful for environments that require firewall enforcement.
+
+> Changes to networking settings only take effect after `wsl --shutdown`. See [Pending Configuration Changes](#pending-configuration-changes).
 
 ### Per-Distribution Settings
 
@@ -294,11 +379,46 @@ Manage distribution catalogs:
 - Container image references
 - LXC catalog settings
 
+### WSL Distribution Sources (custom `wsl --install` manifests)
+
+A separate panel — **WSL Distribution Sources** — lets you point WSL's native `wsl --list --online` and `wsl --install <name>` commands at a third-party manifest URL by writing the `HKLM\…\Lxss\DistributionListUrl` (or `DistributionListUrlAppend`) registry value.
+
+This is different from the LXC/download/container catalogs above, which only affect WSL UI's own install dialog. Custom distribution sources apply **machine-wide** to every WSL CLI command.
+
+**How to use it:**
+
+1. Open **Settings → WSL Distribution Sources**.
+2. Choose a **Mode**:
+   - **Append to default list** *(recommended)* — adds the manifest's distros alongside Microsoft's defaults.
+   - **Replace default list** — hides Microsoft's defaults from `wsl --list --online`.
+3. Enter the **Manifest URL** (`http://`, `https://`, or `file://`; `file://` requires WSL 2.4.4 or later).
+4. Click **Preview** to see which distributions the manifest exposes before committing.
+5. Click **Apply** — Windows will prompt for administrator approval (UAC) because the change is written to `HKLM`.
+
+The panel also offers one-click **Suggested sources** for common community manifests, and a **Reset to defaults** button to remove any custom registration.
+
+> Only add manifests you trust — `wsl --install` will download and execute distro images from whatever URL you register.
+
 ### Disk Mounting
 
 ![Disk Mount Panel](screenshots/panel-disk-mount.png)
 
 Mount VHD files or physical disks into WSL.
+
+---
+
+## Pending Configuration Changes
+
+Some `.wslconfig` changes (memory, processors, networking mode, GUI applications, etc.) only take effect after a full WSL restart (`wsl --shutdown`). WSL UI polls the running WSL state against your saved config every 60 seconds and surfaces a **warning notification** when they don't match:
+
+> **WSL Config Pending Restart** — Your .wslconfig has changes that require WSL restart to take effect. Run `wsl --shutdown` to apply.
+
+The notification stays visible until the changes are applied. You can:
+
+- Run `wsl --shutdown` from PowerShell or Command Prompt, or
+- Use **Force Shutdown WSL** from the status bar's WSL menu
+
+Once the running state matches the saved config, the notification clears automatically. If you dismiss it manually, it will reappear on the next poll if changes are still pending.
 
 ---
 
