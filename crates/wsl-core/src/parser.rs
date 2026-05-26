@@ -77,20 +77,41 @@ fn parse_distro_line(line: &str) -> Option<Distribution> {
     })
 }
 
-/// Decode WSL command output which is often UTF-16 LE on Windows
+/// Decode WSL command output which is often UTF-16 LE on Windows.
+///
+/// `wsl.exe` emits UTF-16 LE. On English locales the payload is ASCII, so the
+/// high byte of each code unit is NUL; on non-English locales (e.g. zh-CN) the
+/// localized text contains CJK characters whose high bytes are non-NUL. We must
+/// detect and decode both cases — see OCT-1066 / GitHub #99, where localized
+/// output was misread as UTF-8 and rendered as mojibake.
 pub fn decode_wsl_output(bytes: &[u8]) -> String {
-    // Check if this looks like UTF-16 LE
-    // UTF-16 LE typically has null bytes interleaved with ASCII
-    // e.g., "Ubuntu" would be: 'U' 0x00 'b' 0x00 'u' 0x00 ...
+    if bytes.is_empty() {
+        return String::new();
+    }
+
+    // Honor an explicit UTF-16 LE BOM (0xFF 0xFE), stripping it from the output.
+    if bytes.len() >= 2 && bytes[0] == 0xFF && bytes[1] == 0xFE {
+        return decode_utf16le(&bytes[2..]);
+    }
+
+    // Honor an explicit UTF-8 BOM (0xEF 0xBB 0xBF).
+    if bytes.len() >= 3 && bytes[0] == 0xEF && bytes[1] == 0xBB && bytes[2] == 0xBF {
+        return String::from_utf8_lossy(&bytes[3..]).to_string();
+    }
+
     if looks_like_utf16le(bytes) {
-        let u16_iter = bytes
-            .chunks_exact(2)
-            .map(|chunk| u16::from_le_bytes([chunk[0], chunk[1]]));
+        let decoded = decode_utf16le(bytes);
+        if !decoded.is_empty() {
+            return decoded;
+        }
+    }
 
-        let decoded: String = char::decode_utf16(u16_iter)
-            .filter_map(|r| r.ok())
-            .collect();
-
+    // If the buffer isn't valid UTF-8 but has an even length, it is far more
+    // likely truncated/edge-case UTF-16 LE than UTF-8 — decoding lossily as
+    // UTF-8 would only produce replacement characters. This is a safety net for
+    // localized output whose leading characters carry few NUL bytes.
+    if bytes.len().is_multiple_of(2) && std::str::from_utf8(bytes).is_err() {
+        let decoded = decode_utf16le(bytes);
         if !decoded.is_empty() {
             return decoded;
         }
@@ -100,30 +121,53 @@ pub fn decode_wsl_output(bytes: &[u8]) -> String {
     String::from_utf8_lossy(bytes).to_string()
 }
 
-/// Check if bytes look like UTF-16 LE encoded text
-/// UTF-16 LE for ASCII text has null bytes in alternating positions
+/// Decode a UTF-16 LE byte buffer, dropping incomplete/invalid code units.
+fn decode_utf16le(bytes: &[u8]) -> String {
+    let u16_iter = bytes
+        .chunks_exact(2)
+        .map(|chunk| u16::from_le_bytes([chunk[0], chunk[1]]));
+
+    char::decode_utf16(u16_iter)
+        .filter_map(|r| r.ok())
+        .collect()
+}
+
+/// Check if bytes look like UTF-16 LE encoded text.
+///
+/// Unlike the original heuristic (which only inspected the first few pairs for
+/// the ASCII NUL pattern and therefore failed on localized CJK output), this
+/// scans the whole buffer. UTF-8 text effectively never contains NUL bytes,
+/// whereas any UTF-16 LE text produced by `wsl.exe` contains a NUL high byte for
+/// every ASCII/control character — spaces, digits, newlines, punctuation, and
+/// the ASCII fallback lines that accompany even localized error messages. For
+/// little-endian BMP code units those NULs land in odd byte positions, so a run
+/// of NULs concentrated in odd positions is a reliable UTF-16 LE signal
+/// regardless of locale.
 fn looks_like_utf16le(bytes: &[u8]) -> bool {
     if bytes.len() < 4 {
         return false;
     }
 
-    // Check for UTF-16 LE BOM (0xFF 0xFE)
-    if bytes.len() >= 2 && bytes[0] == 0xFF && bytes[1] == 0xFE {
+    // UTF-16 LE BOM (0xFF 0xFE).
+    if bytes[0] == 0xFF && bytes[1] == 0xFE {
         return true;
     }
 
-    // Check if every other byte is null (common for ASCII encoded as UTF-16 LE)
-    let null_in_odd_positions = bytes
+    let total_nulls = bytes.iter().filter(|&&b| b == 0).count();
+    if total_nulls == 0 {
+        // Valid UTF-8 (including localized UTF-8) contains no NUL bytes.
+        return false;
+    }
+
+    let nulls_in_odd = bytes
         .iter()
         .enumerate()
-        .filter(|(i, _)| i % 2 == 1)
-        .take(10) // Check first 10 pairs
-        .filter(|(_, &b)| b == 0)
+        .filter(|(i, &b)| i % 2 == 1 && b == 0)
         .count();
 
-    // If most odd positions are null, it's likely UTF-16 LE
-    let checked = std::cmp::min(bytes.len() / 2, 10);
-    checked > 0 && null_in_odd_positions > checked / 2
+    // Require the overwhelming majority of NUL bytes to sit in odd positions so
+    // we don't misclassify UTF-8 that merely contains a stray NUL.
+    nulls_in_odd * 10 >= total_nulls * 9
 }
 
 #[cfg(test)]
@@ -342,8 +386,9 @@ mod tests {
         // Invalid UTF-16 (unpaired surrogate)
         let bytes = vec![0x00, 0xD8, 0x00, 0x00]; // High surrogate without low
         let decoded = decode_wsl_output(&bytes);
-        // Should not crash, invalid chars filtered out
-        assert!(decoded.len() < 4 || decoded.chars().all(|c| c != '\u{FFFD}' || true));
+        // Should not crash; unpaired surrogates are dropped (never substituted
+        // with the U+FFFD replacement character) by decode_utf16's ok-filter.
+        assert!(!decoded.contains('\u{FFFD}'));
     }
 
     #[test]
@@ -368,6 +413,56 @@ mod tests {
     fn test_looks_like_utf16le_without_nulls() {
         // Plain ASCII doesn't look like UTF-16
         assert!(!looks_like_utf16le(b"Hello World!"));
+    }
+
+    // === Localized (non-ASCII) UTF-16 LE regression tests (OCT-1066 / GH #99) ===
+
+    #[test]
+    fn test_decode_utf16le_localized_cjk() {
+        // Simulates wsl.exe output on a zh-CN locale: localized CJK text whose
+        // UTF-16 LE high bytes are non-NUL, followed by the ASCII fallback line
+        // seen in the bug report. The old ASCII-only heuristic misread this as
+        // UTF-8 and produced mojibake.
+        let sample = "适用于 Linux 的 Windows 子系统没有已安装的分发版本。\n\
+                      Try running 'wsl --status' in PowerShell to diagnose.";
+        let utf16le: Vec<u8> = sample.encode_utf16().flat_map(|c| c.to_le_bytes()).collect();
+        let decoded = decode_wsl_output(&utf16le);
+        assert_eq!(decoded, sample);
+    }
+
+    #[test]
+    fn test_decode_utf16le_leading_cjk() {
+        // Regression: the leading characters are CJK (non-NUL high bytes), which
+        // the old "first 10 pairs must be NUL" heuristic misclassified as UTF-8.
+        let sample = "适用于 Linux 子系统未安装任何分发版本";
+        let utf16le: Vec<u8> = sample.encode_utf16().flat_map(|c| c.to_le_bytes()).collect();
+        let decoded = decode_wsl_output(&utf16le);
+        assert_eq!(decoded, sample);
+    }
+
+    #[test]
+    fn test_looks_like_utf16le_localized() {
+        let sample = "適用于 Linux 的子系統\nTry running 'wsl --status'.";
+        let utf16le: Vec<u8> = sample.encode_utf16().flat_map(|c| c.to_le_bytes()).collect();
+        assert!(looks_like_utf16le(&utf16le));
+    }
+
+    #[test]
+    fn test_decode_localized_utf8_is_not_misread_as_utf16() {
+        // Genuine UTF-8 localized output must stay intact (no NUL bytes present).
+        let sample = "适用于 Linux 的 Windows 子系统";
+        let decoded = decode_wsl_output(sample.as_bytes());
+        assert_eq!(decoded, sample);
+    }
+
+    #[test]
+    fn test_decode_utf16le_localized_with_bom() {
+        // BOM-prefixed localized UTF-16 LE should decode cleanly without the BOM.
+        let sample = "子系统未安装";
+        let mut bytes = vec![0xFF, 0xFE];
+        bytes.extend(sample.encode_utf16().flat_map(|c| c.to_le_bytes()));
+        let decoded = decode_wsl_output(&bytes);
+        assert_eq!(decoded, sample);
     }
 }
 

@@ -1217,6 +1217,35 @@ This is a safety feature: importing an unverified layer could silently produce a
 
 ---
 
+## Issue #18: Garbled characters (mojibake) in WSL errors on non-English locales
+
+### Symptoms
+- The "WSL UNAVAILABLE" panel (or other WSL command output) renders as mojibake on a non-English Windows locale (e.g. Chinese zh-CN).
+- Example: `WSL check failed: *❍✚¡ABⵙⓤ❍N BLⵙBBnBuⵙB ...` followed by a readable English line such as `Try running 'wsl --status' in PowerShell to diagnose.`
+- English (en-US) locales are unaffected.
+
+### Root Cause
+`wsl.exe` emits its output as UTF-16 LE. `decode_wsl_output` (`crates/wsl-core/src/parser.rs`) detected UTF-16 LE with a heuristic that only inspected the first few byte pairs for the ASCII NUL pattern (high byte = `0x00`). That pattern only holds when the payload is ASCII. On non-English locales the localized text is CJK, whose UTF-16 LE code units have non-NUL high bytes, so detection failed, the bytes fell through to `String::from_utf8_lossy`, and the UTF-16 LE buffer was misread as UTF-8 → mojibake.
+
+### Diagnosis
+- Reproduces only on non-English Windows display locales.
+- Confirmed by feeding localized CJK text encoded as UTF-16 LE through `decode_wsl_output` and observing garbled output before the fix.
+
+### Solution
+Made `decode_wsl_output` locale-robust:
+- Honor an explicit UTF-16 LE BOM (`0xFF 0xFE`) and UTF-8 BOM (`0xEF 0xBB 0xBF`), stripping them.
+- Replaced the leading-bytes heuristic with a whole-buffer scan: UTF-8 text effectively never contains NUL bytes, whereas UTF-16 LE `wsl.exe` output always contains NUL high bytes for ASCII/control characters (spaces, digits, newlines, the ASCII fallback lines present even in localized errors). When NUL bytes are concentrated in odd positions, it is treated as UTF-16 LE regardless of locale.
+- Added an invalid-UTF-8 + even-length safety net that decodes as UTF-16 LE.
+
+### Files Changed
+- `crates/wsl-core/src/parser.rs`: rewrote `decode_wsl_output` / `looks_like_utf16le`, added `decode_utf16le` helper, and added localized (CJK) UTF-16 LE regression tests.
+
+### Related
+- GitHub issue: https://github.com/octasoft-ltd/wsl-ui/issues/99
+- Internal: OCT-1066. Prior encoding work (OCT-412, OCT-436) covered only the ASCII path; this is the non-ASCII-locale recurrence.
+
+---
+
 ## Template for New Issues
 
 ```markdown
