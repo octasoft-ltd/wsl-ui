@@ -141,8 +141,14 @@ pub fn clone_distribution(source: &str, new_name: &str, install_location: Option
         _ => get_default_distro_path(new_name),
     };
 
-    // Import with new name (install dir is created inside import_distribution)
-    let result = import_distribution(new_name, &final_location, &temp_path);
+    // Get source distro's WSL version before cloning
+    let source_version = {
+        let distros = crate::wsl::service::WslService::list_distributions()?;
+        distros.iter().find(|d| d.name == source).map(|d| d.version)
+    };
+
+    // Import with new name, preserving the source's WSL version
+    let result = import_distribution_with_version(new_name, &final_location, &temp_path, source_version);
 
     // Clean up temp file (ignore errors)
     let _ = std::fs::remove_file(&temp_file);
