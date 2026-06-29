@@ -496,6 +496,7 @@ export function NewDistroDialog({ isOpen, onClose }: NewDistroDialogProps) {
       const urlObj = new URL(customUrl.trim());
       const filename = urlObj.pathname.split('/').pop() || 'custom';
       const suggestedName = filename.replace(/\.(tar\.gz|tar\.xz|tar|rootfs)$/i, '').replace(/[^a-zA-Z0-9]/g, '-');
+      setError(null);
       setUseCustomUrl(true);
       setSelectedDistro(null);
       setPendingInstallItem({
