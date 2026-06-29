@@ -492,17 +492,21 @@ export function NewDistroDialog({ isOpen, onClose }: NewDistroDialogProps) {
   // Open config dialog for custom URL
   const handleSelectCustomUrl = () => {
     if (!customUrl.trim()) return;
-    setUseCustomUrl(true);
-    setSelectedDistro(null);
-    const urlObj = new URL(customUrl.trim());
-    const filename = urlObj.pathname.split('/').pop() || 'custom';
-    const suggestedName = filename.replace(/\.(tar\.gz|tar\.xz|tar|rootfs)$/i, '').replace(/[^a-zA-Z0-9]/g, '-');
-    setPendingInstallItem({
-      name: t('customUrlName'),
-      suggestedName: suggestedName || "custom-distro",
-      description: customUrl.trim(),
-    });
-    setShowInstallConfig(true);
+    try {
+      const urlObj = new URL(customUrl.trim());
+      const filename = urlObj.pathname.split('/').pop() || 'custom';
+      const suggestedName = filename.replace(/\.(tar\.gz|tar\.xz|tar|rootfs)$/i, '').replace(/[^a-zA-Z0-9]/g, '-');
+      setUseCustomUrl(true);
+      setSelectedDistro(null);
+      setPendingInstallItem({
+        name: t('customUrlName'),
+        suggestedName: suggestedName || "custom-distro",
+        description: customUrl.trim(),
+      });
+      setShowInstallConfig(true);
+    } catch {
+      setError("Invalid URL. Please enter a valid rootfs URL.");
+    }
   };
 
   // Open config dialog for container mode

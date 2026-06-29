@@ -615,16 +615,13 @@ fn open_terminal_custom(distro: &str, id: Option<&str>, terminal_cmd: &str) -> R
 
         // Split the expanded command into program and args
         // Use shell-words style splitting to handle quoted arguments
-        let parts: Vec<&str> = expanded.split_whitespace().collect();
-        if parts.is_empty() {
+        let (program, args) = parse_command_with_quotes(&expanded);
+        if program.is_empty() {
             return Err(WslError::CommandFailed("Empty terminal command".to_string()));
         }
 
-        let program = parts[0];
-        let args: Vec<&str> = parts[1..].to_vec();
-
         log::debug!("Custom terminal expanded: {} {:?}", program, args);
-        return hidden_command(program)
+        return hidden_command(&program)
             .args(&args)
             .spawn()
             .map(|_| ())
@@ -763,16 +760,13 @@ fn open_system_terminal_custom(terminal_cmd: &str) -> Result<(), WslError> {
     if has_template_placeholders(terminal_cmd) {
         let expanded = expand_template_system(terminal_cmd, &paths.wsl);
 
-        let parts: Vec<&str> = expanded.split_whitespace().collect();
-        if parts.is_empty() {
+        let (program, args) = parse_command_with_quotes(&expanded);
+        if program.is_empty() {
             return Err(WslError::CommandFailed("Empty terminal command".to_string()));
         }
 
-        let program = parts[0];
-        let args: Vec<&str> = parts[1..].to_vec();
-
         log::debug!("Custom system terminal expanded: {} {:?}", program, args);
-        return hidden_command(program)
+        return hidden_command(&program)
             .args(&args)
             .spawn()
             .map(|_| ())
