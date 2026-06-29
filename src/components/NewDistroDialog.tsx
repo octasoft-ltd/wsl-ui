@@ -492,12 +492,12 @@ export function NewDistroDialog({ isOpen, onClose }: NewDistroDialogProps) {
   // Open config dialog for custom URL
   const handleSelectCustomUrl = () => {
     if (!customUrl.trim()) return;
-    setUseCustomUrl(true);
-    setSelectedDistro(null);
     try {
       const urlObj = new URL(customUrl.trim());
       const filename = urlObj.pathname.split('/').pop() || 'custom';
-      const suggestedName = filename.replace(/\\.(tar\\.gz|tar\\.xz|tar|rootfs)$/i, '').replace(/[^a-zA-Z0-9]/g, '-');
+      const suggestedName = filename.replace(/\.(tar\.gz|tar\.xz|tar|rootfs)$/i, '').replace(/[^a-zA-Z0-9]/g, '-');
+      setUseCustomUrl(true);
+      setSelectedDistro(null);
       setPendingInstallItem({
         name: t('customUrlName'),
         suggestedName: suggestedName || "custom-distro",
