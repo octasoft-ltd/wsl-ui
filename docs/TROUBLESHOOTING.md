@@ -1178,6 +1178,45 @@ Added the official `tauri-plugin-single-instance` plugin. When a second `wsl-ui.
 
 ---
 
+## Issue #17: Pulling a container image fails with "Blob digest mismatch" or "Blob size mismatch"
+
+### Symptoms
+- Creating a distro from an OCI/container image (`docker.io`, `ghcr.io`, a custom registry, etc.) fails part-way through with an error such as:
+  - `Registry error: Blob digest mismatch for sha256:...: computed sha256:...`
+  - `Registry error: Blob size mismatch for sha256:...: expected N bytes, got M bytes`
+  - `Registry error: Unsupported digest algorithm '...': only sha256 is supported`
+- The import stops and no distribution is created.
+
+### Root Cause
+Each OCI layer is content-addressable: the manifest declares an exact `sha256` digest and byte size for every layer. WSL-UI now verifies the bytes it downloads against those values before merging layers and handing them to `wsl --import`. An error means the layer that arrived on disk did **not** match what the manifest promised. Common causes:
+- A **truncated or corrupted download** (dropped connection, flaky network, a proxy that mangled the stream) — usually a size mismatch.
+- A registry served over insecure **`http://`** where a MITM or a poisoned cache substituted layer content — a digest mismatch.
+- A registry/mirror bug returning the wrong blob for a digest.
+- A digest that isn't SHA-256 (unsupported): the app rejects it rather than importing unverified bytes.
+
+This is a safety feature: importing an unverified layer could silently produce a broken distro or run tampered content as a "real" distribution.
+
+### Diagnosis
+- Retry the pull. If a **size mismatch** disappears on retry, it was a transient/corrupt download.
+- If a **digest mismatch** persists — especially against an `http://` registry — treat the source as untrusted. Pull the same image over `https://` from the authoritative registry.
+- Verify the image reference is correct and the registry/mirror is healthy.
+
+### Solution
+- Retry over a stable network; transient truncations resolve on a clean re-download (the partial file is deleted automatically, so nothing broken is left behind).
+- Prefer `https://` registries so content can't be tampered with in transit.
+- If the mismatch is reproducible from a trusted `https://` source, the image or registry itself is serving corrupt data — report it upstream.
+
+### Files Changed
+- `src-tauri/src/oci/registry.rs`: `download_blob` streams the layer through a SHA-256 hasher, verifies the computed digest and byte count against the manifest, deletes the partial file and errors on mismatch; added `verify_digest` helper and manifest-digest verification in `get_manifest`.
+- `src-tauri/src/oci/image.rs`: passes the manifest layer `size` into `download_blob`.
+
+### Related
+- GitHub issue: https://github.com/octasoft-ltd/wsl-ui/issues/106
+- Paperclip issue: OCT-1144
+- OCI content-addressable storage / digest spec
+
+---
+
 ## Template for New Issues
 
 ```markdown
