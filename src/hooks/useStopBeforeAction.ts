@@ -12,6 +12,7 @@
 import { useState, useCallback } from "react";
 import type { Distribution } from "../types/distribution";
 import { useDistroStore } from "../store/distroStore";
+import { useNotificationStore } from "../store/notificationStore";
 
 interface StopBeforeActionState {
   /** Whether the stop dialog is currently shown */
@@ -124,26 +125,55 @@ export function useStopBeforeAction(): UseStopBeforeActionReturn {
    * Either stops the distribution or shuts down all WSL, then executes the pending action.
    */
   const handleStopAndContinue = useCallback(async () => {
-    const { distro, pendingAction, requiresShutdown } = state;
+    const { distro, pendingAction, requiresShutdown, actionName } = state;
 
     if (!distro || !pendingAction) {
       setState(initialState);
       return;
     }
 
-    // Either shutdown all WSL or just stop the specific distribution
-    if (requiresShutdown) {
-      await shutdownAll();
-    } else {
-      await stopDistro(distro.name);
-    }
+    // Either shutdown all WSL or just stop the specific distribution.
+    // These now report success: they resolve to false (and set the store's
+    // error state) when the stop/shutdown fails, instead of silently
+    // swallowing the error. We must NOT run the destructive VHDX operation
+    // against a VM that is still running (its VHDX would still be locked).
+    const stopped = requiresShutdown
+      ? await shutdownAll()
+      : await stopDistro(distro.name);
 
-    // Wait for state to update
+    // Re-fetch so we can confirm the VM is actually stopped before proceeding.
     await fetchDistros();
 
-    // Close dialog and execute the pending action
+    // Double-check nothing is still running. A stop can report success while
+    // WSL is slow to release the VHDX lock, so verify against fresh store
+    // state (not the possibly-stale render closure).
+    const latest = useDistroStore.getState().distributions;
+    const stillRunning = requiresShutdown
+      ? latest.some((d) => d.state === "Running")
+      : latest.find((d) => d.name === distro.name)?.state === "Running";
+
+    // Always close the dialog.
     setState(initialState);
-    pendingAction();
+
+    if (stopped && !stillRunning) {
+      // Safe to proceed: the VHDX is no longer locked.
+      pendingAction();
+      return;
+    }
+
+    // Abort the destructive action. If the stop itself failed, the store
+    // already set an error message. If it reported success but something is
+    // still running, surface an explicit notification so this isn't a silent
+    // no-op that leaves the user wondering why nothing happened.
+    if (stopped && stillRunning) {
+      useNotificationStore.getState().addNotification({
+        type: "error",
+        title: `Cannot ${actionName}`,
+        message: `WSL is still running after the ${
+          requiresShutdown ? "shutdown" : "stop"
+        } request, so ${distro.name}'s disk is still in use. Please shut WSL down manually and try again.`,
+      });
+    }
   }, [state, stopDistro, shutdownAll, fetchDistros]);
 
   /**
