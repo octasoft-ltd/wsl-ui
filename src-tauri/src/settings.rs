@@ -173,7 +173,9 @@ pub struct WslConfig {
     pub localhost_forwarding: Option<bool>,
     pub kernel_command_line: Option<String>,
     pub nested_virtualization: Option<bool>,
-    pub vm_idle_timeout: Option<u32>,
+    // Signed: `-1` is the documented WSL "never idle-shutdown" sentinel
+    // (used by the RDP keep-alive feature), so this must not be unsigned.
+    pub vm_idle_timeout: Option<i64>,
     pub gui_applications: Option<bool>,
     pub debug_console: Option<bool>,
     pub page_reporting: Option<bool>,
@@ -392,9 +394,9 @@ fn parse_wsl_config(content: &str) -> Result<WslConfig, String> {
         nested_virtualization: ini.getbool("wsl2", "nestedVirtualization")
             .ok().flatten()
             .or_else(|| ini.getbool("wsl2", "nestedvirtualization").ok().flatten()),
-        vm_idle_timeout: ini.getuint("wsl2", "vmIdleTimeout").ok().flatten()
-            .or_else(|| ini.getuint("wsl2", "vmidletimeout").ok().flatten())
-            .map(|v| v as u32),
+        // Signed parse so the documented `-1` sentinel survives (getuint drops it).
+        vm_idle_timeout: ini.getint("wsl2", "vmIdleTimeout").ok().flatten()
+            .or_else(|| ini.getint("wsl2", "vmidletimeout").ok().flatten()),
         gui_applications: ini.getbool("wsl2", "guiApplications")
             .ok().flatten()
             .or_else(|| ini.getbool("wsl2", "guiapplications").ok().flatten()),
@@ -765,6 +767,25 @@ firewall=false
         assert_eq!(parsed.dns_tunneling, Some(true));
         assert_eq!(parsed.firewall, Some(false));
         assert_eq!(parsed.networking_mode, Some("mirrored".to_string()));
+    }
+
+    #[test]
+    fn test_wsl_config_vm_idle_timeout_negative_one_roundtrip() {
+        // Regression for OCT-1258 / GH #129: `-1` is the documented WSL
+        // "never idle-shutdown" sentinel and the app's RDP keep-alive relies on
+        // it. It must survive a parse -> serialize round-trip (previously the
+        // Option<u32> field + unsigned parse dropped it silently on save).
+        let content = "[wsl2]\nvmIdleTimeout=-1\n";
+        let config = parse_wsl_config(content).unwrap();
+
+        assert_eq!(config.vm_idle_timeout, Some(-1));
+
+        let serialized = serialize_wsl_config(&config);
+        assert!(
+            serialized.contains("vmIdleTimeout=-1"),
+            "vmIdleTimeout=-1 must be preserved on save, got:\n{}",
+            serialized
+        );
     }
 
     #[test]
