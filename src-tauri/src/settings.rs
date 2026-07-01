@@ -588,6 +588,11 @@ fn parse_wsl_conf(content: &str) -> Result<WslConf, String> {
 /// Write wsl.conf to a distribution
 /// Uses wsl -u root to write with root privileges since /etc/wsl.conf is typically owned by root
 pub fn write_wsl_conf(distro_name: &str, config: WslConf) -> Result<(), String> {
+    // Reject any value that could escape the root heredoc below (embedded newlines /
+    // control chars). This is the single chokepoint every wsl.conf write flows through,
+    // so validating here protects all callers regardless of the Tauri boundary check.
+    validate_wsl_conf(&config).map_err(|e| e.to_string())?;
+
     if is_mock_mode() {
         return Ok(());
     }
@@ -610,6 +615,33 @@ pub fn write_wsl_conf(distro_name: &str, config: WslConf) -> Result<(), String> 
             "Failed to write wsl.conf: {}",
             output.stderr.trim()
         ));
+    }
+
+    Ok(())
+}
+
+/// Validate every user-supplied string value in a [`WslConf`] before it is written.
+///
+/// `write_wsl_conf` serializes these values into an INI file that is written to the
+/// distro as **root** via a shell heredoc. Any embedded newline can inject extra INI
+/// lines/sections, and a line equal to the heredoc delimiter can escape the heredoc and
+/// run trailing lines as root. Rejecting control characters in each value closes both
+/// vectors. See [`crate::validation::validate_wsl_conf_value`].
+pub fn validate_wsl_conf(config: &WslConf) -> Result<(), crate::validation::ValidationError> {
+    use crate::validation::validate_wsl_conf_value;
+
+    let string_fields: [(&str, &Option<String>); 5] = [
+        ("automount.root", &config.automount_root),
+        ("automount.options", &config.automount_options),
+        ("network.hostname", &config.network_hostname),
+        ("user.default", &config.user_default),
+        ("boot.command", &config.boot_command),
+    ];
+
+    for (field, value) in string_fields {
+        if let Some(value) = value {
+            validate_wsl_conf_value(field, value)?;
+        }
     }
 
     Ok(())
@@ -938,6 +970,73 @@ command=/etc/init.d/start.sh
         assert!(serialized.contains("root=/mnt/"));
         assert!(serialized.contains("[boot]"));
         assert!(serialized.contains("systemd=true"));
+    }
+
+    // ==================== wsl.conf Injection Validation Tests ====================
+
+    #[test]
+    fn test_validate_wsl_conf_accepts_clean_config() {
+        let config = WslConf {
+            automount_root: Some("/mnt/".to_string()),
+            automount_options: Some("metadata,uid=1000".to_string()),
+            network_hostname: Some("my-host".to_string()),
+            user_default: Some("ian".to_string()),
+            boot_command: Some("service docker start; echo ready".to_string()),
+            ..Default::default()
+        };
+        assert!(validate_wsl_conf(&config).is_ok());
+    }
+
+    #[test]
+    fn test_validate_wsl_conf_default_is_ok() {
+        assert!(validate_wsl_conf(&WslConf::default()).is_ok());
+    }
+
+    #[test]
+    fn test_validate_wsl_conf_rejects_newline_in_boot_command() {
+        // The classic root-command-execution carrier: a newline lets the value break out
+        // of the heredoc / inject a new INI line.
+        let config = WslConf {
+            boot_command: Some("echo hi\nWSLCONFEOF\ntouch /tmp/pwned".to_string()),
+            ..Default::default()
+        };
+        assert!(validate_wsl_conf(&config).is_err());
+    }
+
+    #[test]
+    fn test_validate_wsl_conf_rejects_newline_in_hostname() {
+        let config = WslConf {
+            network_hostname: Some("host\n[boot]\ncommand=malicious".to_string()),
+            ..Default::default()
+        };
+        assert!(validate_wsl_conf(&config).is_err());
+    }
+
+    #[test]
+    fn test_validate_wsl_conf_rejects_newline_in_automount_options() {
+        let config = WslConf {
+            automount_options: Some("metadata\nuid=0".to_string()),
+            ..Default::default()
+        };
+        assert!(validate_wsl_conf(&config).is_err());
+    }
+
+    #[test]
+    fn test_validate_wsl_conf_rejects_newline_in_automount_root() {
+        let config = WslConf {
+            automount_root: Some("/mnt/\ninjected".to_string()),
+            ..Default::default()
+        };
+        assert!(validate_wsl_conf(&config).is_err());
+    }
+
+    #[test]
+    fn test_validate_wsl_conf_rejects_newline_in_user_default() {
+        let config = WslConf {
+            user_default: Some("root\ninjected".to_string()),
+            ..Default::default()
+        };
+        assert!(validate_wsl_conf(&config).is_err());
     }
 
     // ==================== Round-trip Tests ====================
