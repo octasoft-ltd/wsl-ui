@@ -8,6 +8,12 @@
     "shell:default",
     "dialog:default",
     "fs:default",
-    "log:default"
+    "log:default",
+    "core:webview:allow-create-webview-window",
+    "core:window:allow-hide",
+    "core:window:allow-set-focus",
+    "core:window:allow-set-position",
+    "core:window:allow-set-size",
+    "core:window:allow-show"
   ]
 }

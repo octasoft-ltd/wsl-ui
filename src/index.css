@@ -147,6 +147,18 @@ body::before {
   min-height: 100vh;
 }
 
+/* Popup windows opt out of the application shell's background and grid. */
+body.popup-window-transparent-surface,
+body.popup-window-transparent-surface::before,
+body.popup-window-transparent-surface #popup-root {
+  background: transparent !important;
+  background-image: none !important;
+}
+
+body.popup-window-transparent-surface #popup-root {
+  min-height: 100%;
+}
+
 /* Monospace utility class */
 .font-mono {
   font-family: var(--font-mono);
