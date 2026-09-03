@@ -259,6 +259,10 @@ impl RegistryClient {
         }
 
         file.flush()?;
+        // Close the handle before any remove_file below: Windows refuses to
+        // delete a file that is still open, which would leave the corrupt or
+        // tampered blob on disk.
+        drop(file);
 
         // Verify declared size first (cheap; catches truncation early).
         if expected_size != 0 && downloaded != expected_size {

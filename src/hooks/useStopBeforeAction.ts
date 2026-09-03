@@ -141,8 +141,10 @@ export function useStopBeforeAction(): UseStopBeforeActionReturn {
       ? await shutdownAll()
       : await stopDistro(distro.name);
 
-    // Re-fetch so we can confirm the VM is actually stopped before proceeding.
-    await fetchDistros();
+    // Re-fetch (silently) so we can confirm the VM is actually stopped before
+    // proceeding. A non-silent fetch would reset the store's error state,
+    // erasing the "Stop failed" message before the UI could render it.
+    await fetchDistros(true);
 
     // Double-check nothing is still running. A stop can report success while
     // WSL is slow to release the VHDX lock, so verify against fresh store
@@ -161,10 +163,16 @@ export function useStopBeforeAction(): UseStopBeforeActionReturn {
       return;
     }
 
-    // Abort the destructive action. If the stop itself failed, the store
-    // already set an error message. If it reported success but something is
-    // still running, surface an explicit notification so this isn't a silent
-    // no-op that leaves the user wondering why nothing happened.
+    // Abort the destructive action, and tell the user why: the dialog closes
+    // either way, so a silent no-op would leave them wondering why nothing
+    // happened.
+    if (!stopped) {
+      useNotificationStore.getState().addNotification({
+        type: "error",
+        title: `Cannot ${actionName}`,
+        message: `Failed to ${requiresShutdown ? "shut down WSL" : `stop ${distro.name}`}, so the ${actionName} was cancelled.`,
+      });
+    }
     if (stopped && stillRunning) {
       useNotificationStore.getState().addNotification({
         type: "error",
