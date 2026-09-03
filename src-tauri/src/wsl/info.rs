@@ -338,10 +338,39 @@ pub fn get_distribution_location(name: &str) -> Result<Option<String>, WslError>
 /// Get the WSL2 IP address by running configurable command (default: `hostname -I`)
 /// Returns the first IP address (usually the main WSL2 network interface)
 /// All WSL2 distros share the same IP since they run in the same VM
+/// Pick a distribution to target for system-distro queries: the default
+/// distribution if it is running, otherwise any running distribution.
+/// Returns None when nothing is running — system-distro queries must then be
+/// skipped, because a bare/untargeted `wsl --system` boots the default
+/// distribution as a side effect (GH #157).
+fn pick_running_distro(distros: &[super::types::Distribution]) -> Option<&str> {
+    let running: Vec<_> = distros
+        .iter()
+        .filter(|d| d.state == super::types::DistroState::Running)
+        .collect();
+    running
+        .iter()
+        .find(|d| d.is_default)
+        .or_else(|| running.first())
+        .map(|d| d.name.as_str())
+}
+
+fn find_running_distro() -> Result<Option<String>, WslError> {
+    let distros = super::core::list_distributions()?;
+    Ok(pick_running_distro(&distros).map(|s| s.to_string()))
+}
+
 pub fn get_wsl_ip() -> Result<Option<String>, WslError> {
     debug!("Getting WSL IP address");
 
-    let output = wsl_executor().get_ip()?;
+    // Never boot a distribution just to read the VM IP: only query when one is
+    // already running (GH #157).
+    let Some(target) = find_running_distro()? else {
+        debug!("No running distributions; skipping WSL IP query");
+        return Ok(None);
+    };
+
+    let output = wsl_executor().get_ip(&target)?;
 
     if !output.success {
         warn!("Failed to get WSL IP address: {}", output.stderr);
@@ -388,7 +417,14 @@ impl Default for SystemDistroInfo {
 pub fn get_system_distro_info() -> Result<Option<SystemDistroInfo>, WslError> {
     debug!("Getting system distro info");
 
-    let output = wsl_executor().exec_system_with_timeout("cat /etc/os-release", 5)?;
+    // Never boot a distribution just to read system-distro metadata: only query
+    // when one is already running (GH #157).
+    let Some(target) = find_running_distro()? else {
+        debug!("No running distributions; skipping system distro info query");
+        return Ok(None);
+    };
+
+    let output = wsl_executor().exec_system_with_timeout(&target, "cat /etc/os-release", 5)?;
 
     if !output.success {
         // Check for GUI_APPLICATIONS_DISABLED error - this is expected when guiApplications=false
@@ -441,8 +477,51 @@ fn parse_system_distro_info(output: &str) -> SystemDistroInfo {
 #[cfg(test)]
 mod tests {
     use super::parse_wsl_version_output;
+    use super::pick_running_distro;
     use crate::wsl::executor::resource::MockResourceMonitor;
     use crate::wsl::executor::ResourceMonitor;
+    use crate::wsl::types::{Distribution, DistroState};
+
+    fn distro(name: &str, state: DistroState, is_default: bool) -> Distribution {
+        Distribution {
+            id: None,
+            name: name.to_string(),
+            state,
+            version: 2,
+            is_default,
+            location: None,
+        }
+    }
+
+    // GH #157: system-distro queries must never target/boot a distribution
+    // that is not already running.
+    #[test]
+    fn test_pick_running_distro_none_running() {
+        let distros = vec![
+            distro("Ubuntu", DistroState::Stopped, true),
+            distro("Debian", DistroState::Stopped, false),
+        ];
+        assert_eq!(pick_running_distro(&distros), None);
+        assert_eq!(pick_running_distro(&[]), None);
+    }
+
+    #[test]
+    fn test_pick_running_distro_prefers_running_default() {
+        let distros = vec![
+            distro("Debian", DistroState::Running, false),
+            distro("Ubuntu", DistroState::Running, true),
+        ];
+        assert_eq!(pick_running_distro(&distros), Some("Ubuntu"));
+    }
+
+    #[test]
+    fn test_pick_running_distro_skips_stopped_default() {
+        let distros = vec![
+            distro("Ubuntu", DistroState::Stopped, true),
+            distro("Debian", DistroState::Running, false),
+        ];
+        assert_eq!(pick_running_distro(&distros), Some("Debian"));
+    }
 
     #[test]
     fn test_parse_wsl_version_english() {

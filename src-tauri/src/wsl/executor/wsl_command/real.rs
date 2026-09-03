@@ -440,25 +440,27 @@ impl WslCommandExecutor for RealWslExecutor {
         }
     }
 
-    fn get_ip(&self) -> Result<CommandOutput, WslError> {
-        // Use system distro for reliable IP detection
-        // This doesn't require any user distro to be running/starting
-        // Uses 'ip route get 1' to find the source IP for outbound traffic
-        // This works correctly with both NAT and mirrored networking modes
+    fn get_ip(&self, distro: &str) -> Result<CommandOutput, WslError> {
+        // Use the system distro of an already-running distribution for reliable
+        // IP detection. Uses 'ip route get 1' to find the source IP for outbound
+        // traffic, which works with both NAT and mirrored networking modes.
         self.exec_system_with_timeout(
+            distro,
             "ip route get 1 2>/dev/null | head -1 | sed 's/.*src \\([0-9.]*\\).*/\\1/'",
             self.quick_timeout().as_secs(),
         )
     }
 
-    fn exec_system(&self, command: &str) -> Result<CommandOutput, WslError> {
-        self.exec_system_with_timeout(command, self.default_timeout().as_secs())
+    fn exec_system(&self, distro: &str, command: &str) -> Result<CommandOutput, WslError> {
+        self.exec_system_with_timeout(distro, command, self.default_timeout().as_secs())
     }
 
-    fn exec_system_with_timeout(&self, command: &str, timeout_secs: u64) -> Result<CommandOutput, WslError> {
+    fn exec_system_with_timeout(&self, distro: &str, command: &str, timeout_secs: u64) -> Result<CommandOutput, WslError> {
         let timeout = std::time::Duration::from_secs(timeout_secs);
-        // Use --system flag to run in the WSL2 system distro (CBL-Mariner/Azure Linux)
-        self.execute_with_timeout(&["--system", "--", "sh", "-c", command], timeout)
+        // Run in the WSL2 system distro (CBL-Mariner/Azure Linux) scoped to the
+        // given distribution. A bare `wsl --system` would target the default
+        // distribution and boot it as a side effect (GH #157).
+        self.execute_with_timeout(&["--system", "-d", distro, "--", "sh", "-c", command], timeout)
     }
 
     fn check_preflight(&self) -> WslPreflightStatus {
