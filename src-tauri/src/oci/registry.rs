@@ -4,6 +4,7 @@
 
 use reqwest::blocking::Client;
 use reqwest::header::{ACCEPT, AUTHORIZATION, WWW_AUTHENTICATE};
+use sha2::{Digest, Sha256};
 use std::io::Write;
 use std::path::Path;
 
@@ -160,6 +161,14 @@ impl RegistryClient {
         let body = response.text()
             .map_err(|e| OciError::NetworkError(e.to_string()))?;
 
+        // When the manifest was requested by digest (pinned reference or the
+        // amd64 child of a manifest list), verify the returned bytes match it.
+        // A poisoned manifest would otherwise dictate which layers we pull.
+        if let Some(ref requested_digest) = image.digest {
+            let actual_hex = format!("{:x}", Sha256::digest(body.as_bytes()));
+            verify_digest(requested_digest, &actual_hex)?;
+        }
+
         // Check if it's a manifest list (multi-arch)
         if content_type.contains("manifest.list") || content_type.contains("image.index") {
             let list: ManifestList = serde_json::from_str(&body)
@@ -190,10 +199,17 @@ impl RegistryClient {
     }
 
     /// Download a blob (layer) to a file
+    ///
+    /// The streamed bytes are verified against the content-addressable `digest`
+    /// (`sha256:<hex>`) and, when `expected_size` is non-zero, against the size
+    /// declared in the manifest. On any mismatch the partial file is deleted and
+    /// an error is returned so the import fails loudly rather than silently
+    /// producing a broken distro from a truncated or tampered layer.
     pub fn download_blob(
         &self,
         image: &ImageReference,
         digest: &str,
+        expected_size: u64,
         output_path: &Path,
         progress: Option<&ProgressCallback>,
     ) -> Result<(), OciError> {
@@ -221,6 +237,9 @@ impl RegistryClient {
         let mut file = std::fs::File::create(output_path)?;
         let mut reader = response;
 
+        // Hash the bytes as they stream so we never buffer the whole layer.
+        let mut hasher = Sha256::new();
+
         let mut buffer = [0u8; 8192];
         loop {
             let bytes_read = std::io::Read::read(&mut reader, &mut buffer)
@@ -231,6 +250,7 @@ impl RegistryClient {
             }
 
             file.write_all(&buffer[..bytes_read])?;
+            hasher.update(&buffer[..bytes_read]);
             downloaded += bytes_read as u64;
 
             if let Some(ref cb) = progress {
@@ -238,8 +258,59 @@ impl RegistryClient {
             }
         }
 
+        file.flush()?;
+
+        // Verify declared size first (cheap; catches truncation early).
+        if expected_size != 0 && downloaded != expected_size {
+            let _ = std::fs::remove_file(output_path);
+            return Err(OciError::RegistryError(format!(
+                "Blob size mismatch for {}: expected {} bytes, got {} bytes",
+                digest, expected_size, downloaded
+            )));
+        }
+
+        // Verify content-addressable digest.
+        let actual_hex = format!("{:x}", hasher.finalize());
+        if let Err(e) = verify_digest(digest, &actual_hex) {
+            let _ = std::fs::remove_file(output_path);
+            return Err(e);
+        }
+
         Ok(())
     }
+}
+
+/// Verify that a computed SHA-256 hex string matches an OCI digest reference.
+///
+/// `expected` must be of the form `sha256:<hex>`. Only SHA-256 is supported;
+/// any other algorithm is rejected rather than silently accepted, so a
+/// tampered or malformed digest can never bypass verification.
+fn verify_digest(expected: &str, actual_sha256_hex: &str) -> Result<(), OciError> {
+    let expected = expected.trim();
+    let hex = match expected.split_once(':') {
+        Some(("sha256", hex)) => hex,
+        Some((algo, _)) => {
+            return Err(OciError::RegistryError(format!(
+                "Unsupported digest algorithm '{}': only sha256 is supported",
+                algo
+            )));
+        }
+        None => {
+            return Err(OciError::RegistryError(format!(
+                "Malformed digest '{}': expected 'sha256:<hex>'",
+                expected
+            )));
+        }
+    };
+
+    if !actual_sha256_hex.eq_ignore_ascii_case(hex) {
+        return Err(OciError::RegistryError(format!(
+            "Digest mismatch: expected sha256:{}, computed sha256:{}",
+            hex, actual_sha256_hex
+        )));
+    }
+
+    Ok(())
 }
 
 /// Parse WWW-Authenticate Bearer header into parameters (extracted for testing)
@@ -400,5 +471,153 @@ mod tests {
         assert_eq!(client.registry_url("docker.io"), "https://registry-1.docker.io");
         assert_eq!(client.registry_url("ghcr.io"), "https://ghcr.io");
         assert_eq!(client.registry_url("http://localhost:5000"), "http://localhost:5000");
+    }
+
+    // Tests for verify_digest (content-integrity verification).
+    // `Sha256`/`Digest` are already in scope via `use super::*`.
+    fn sha256_hex(data: &[u8]) -> String {
+        format!("{:x}", Sha256::digest(data))
+    }
+
+    #[test]
+    fn test_verify_digest_matches() {
+        let hex = sha256_hex(b"payload");
+        assert!(verify_digest(&format!("sha256:{}", hex), &hex).is_ok());
+    }
+
+    #[test]
+    fn test_verify_digest_case_insensitive() {
+        let hex = sha256_hex(b"payload");
+        // Registry may present the digest in upper case
+        assert!(verify_digest(&format!("sha256:{}", hex.to_uppercase()), &hex).is_ok());
+    }
+
+    #[test]
+    fn test_verify_digest_mismatch() {
+        let hex = sha256_hex(b"honest bytes");
+        assert!(verify_digest("sha256:0000000000000000000000000000000000000000000000000000000000000000", &hex).is_err());
+    }
+
+    #[test]
+    fn test_verify_digest_rejects_unsupported_algorithm() {
+        // A non-sha256 algorithm must be rejected, never silently accepted
+        let hex = sha256_hex(b"payload");
+        assert!(verify_digest(&format!("sha512:{}", hex), &hex).is_err());
+    }
+
+    #[test]
+    fn test_verify_digest_rejects_malformed() {
+        let hex = sha256_hex(b"payload");
+        assert!(verify_digest("not-a-digest", &hex).is_err());
+    }
+
+    // Integration tests for download_blob content verification.
+    //
+    // download_blob uses a blocking reqwest client, so it must run off the tokio
+    // worker thread (spawn_blocking) while wiremock serves the mock registry.
+    fn mock_image(registry_uri: String) -> ImageReference {
+        ImageReference {
+            registry: registry_uri, // includes the http:// scheme from wiremock
+            repository: "library/test".to_string(),
+            tag: "latest".to_string(),
+            digest: None,
+        }
+    }
+
+    #[tokio::test]
+    async fn test_download_blob_accepts_matching_digest() {
+        use wiremock::matchers::method;
+        use wiremock::{Mock, MockServer, ResponseTemplate};
+
+        let body = b"a genuine oci layer".to_vec();
+        let digest = format!("sha256:{}", sha256_hex(&body));
+        let size = body.len() as u64;
+
+        let server = MockServer::start().await;
+        Mock::given(method("GET"))
+            .respond_with(ResponseTemplate::new(200).set_body_bytes(body.clone()))
+            .mount(&server)
+            .await;
+
+        let uri = server.uri();
+        let out = std::env::temp_dir().join(format!("oci-blob-ok-{}.bin", std::process::id()));
+        let out_thread = out.clone();
+
+        let result = tokio::task::spawn_blocking(move || {
+            let client = RegistryClient::new();
+            let image = mock_image(uri);
+            client.download_blob(&image, &digest, size, &out_thread, None)
+        })
+        .await
+        .unwrap();
+
+        assert!(result.is_ok(), "expected Ok, got {:?}", result);
+        assert_eq!(std::fs::read(&out).unwrap(), body);
+        let _ = std::fs::remove_file(&out);
+    }
+
+    #[tokio::test]
+    async fn test_download_blob_rejects_digest_mismatch() {
+        use wiremock::matchers::method;
+        use wiremock::{Mock, MockServer, ResponseTemplate};
+
+        // Registry serves tampered bytes but the manifest promised a different digest.
+        let served = b"tampered / MITM'd layer bytes".to_vec();
+        let expected_digest = format!("sha256:{}", sha256_hex(b"the honest layer the manifest points at"));
+        let size = served.len() as u64; // size matches so the digest check is what fires
+
+        let server = MockServer::start().await;
+        Mock::given(method("GET"))
+            .respond_with(ResponseTemplate::new(200).set_body_bytes(served))
+            .mount(&server)
+            .await;
+
+        let uri = server.uri();
+        let out = std::env::temp_dir().join(format!("oci-blob-digest-mismatch-{}.bin", std::process::id()));
+        let out_thread = out.clone();
+
+        let result = tokio::task::spawn_blocking(move || {
+            let client = RegistryClient::new();
+            let image = mock_image(uri);
+            client.download_blob(&image, &expected_digest, size, &out_thread, None)
+        })
+        .await
+        .unwrap();
+
+        assert!(result.is_err(), "digest mismatch must be rejected");
+        // Partial/tampered file must be deleted so a broken layer is never imported
+        assert!(!out.exists(), "partial file should be removed on digest mismatch");
+    }
+
+    #[tokio::test]
+    async fn test_download_blob_rejects_size_mismatch() {
+        use wiremock::matchers::method;
+        use wiremock::{Mock, MockServer, ResponseTemplate};
+
+        // Truncated download: bytes hash fine but fall short of the declared size.
+        let body = b"short layer".to_vec();
+        let digest = format!("sha256:{}", sha256_hex(&body));
+        let declared_size = body.len() as u64 + 100; // manifest promised more bytes
+
+        let server = MockServer::start().await;
+        Mock::given(method("GET"))
+            .respond_with(ResponseTemplate::new(200).set_body_bytes(body))
+            .mount(&server)
+            .await;
+
+        let uri = server.uri();
+        let out = std::env::temp_dir().join(format!("oci-blob-size-mismatch-{}.bin", std::process::id()));
+        let out_thread = out.clone();
+
+        let result = tokio::task::spawn_blocking(move || {
+            let client = RegistryClient::new();
+            let image = mock_image(uri);
+            client.download_blob(&image, &digest, declared_size, &out_thread, None)
+        })
+        .await
+        .unwrap();
+
+        assert!(result.is_err(), "size mismatch must be rejected");
+        assert!(!out.exists(), "partial file should be removed on size mismatch");
     }
 }
