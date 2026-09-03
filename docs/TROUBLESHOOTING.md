@@ -1397,7 +1397,118 @@ WebView and inspect the first logged transport or window error.
 
 ---
 
-## Issue #24: Leftover temp tar files and dangling containers after a failed container-image install
+## Issue #24: Fixed drives no longer appear under /mnt after enabling virtiofs
+
+### Symptoms
+- After adding `virtiofs=true` to the `[wsl2]` section of `.wslconfig`, fixed Windows drives
+  (e.g. `/mnt/c`, `/mnt/d`) are no longer automounted inside distributions.
+- No error is shown — the mounts are silently absent.
+- Mounted disks may also not appear in WSL UI's mounted-disk list.
+
+### Root Cause
+`virtiofs=true` is an opt-in WSL feature (2026) that replaces the default Plan 9 file sharing
+transport. In current WSL builds it silently skips automounting fixed drives (upstream bug),
+and virtiofs mounts do not appear as `/dev/sd*` devices, which is what WSL UI's mounted-disk
+discovery currently matches.
+
+### Diagnosis
+1. Check `%USERPROFILE%\.wslconfig` for `virtiofs=true` under `[wsl2]`.
+2. Run `mount` inside the distro — with virtiofs the Windows drive mounts are missing or use a
+   `virtiofs` filesystem type instead of `9p`.
+
+### Solution
+Remove `virtiofs=true` (or set it to `false`) in `.wslconfig` and run `wsl --shutdown`, then
+restart the distribution. Track the upstream fix before re-enabling.
+
+### Related
+- https://github.com/microsoft/WSL/issues/40773 (automount silently skipped)
+- https://github.com/microsoft/WSL/issues/40719 (file ownership anomalies on Windows bind mounts)
+- `docs/plans/2026-09-03-wsl-developments-review.md` (WSL 2026 developments review)
+
+---
+
+## Issue #25: "WSL command failed" error on non-English Windows with no installed distributions
+
+### Symptoms
+- On a non-English Windows locale (e.g. Chinese zh-CN), WSL is installed but no distributions are registered, and the app shows an error banner `WSL command failed:` instead of the normal empty state.
+- Logs show repeated failures:
+  ```
+  [wsl_ui::wsl::core][WARN] WSL list command failed:
+  [ERROR] [distroStore.fetchDistros] Error: {"code":"UNKNOWN","message":"WSL command failed: "}
+  ```
+- The same zero-distro state works correctly on English Windows.
+
+### Root Cause
+`wsl.exe --list --verbose` reports "no installed distributions" in the system language and exits with code 1. The app detected this valid empty state by matching the English phrase `no installed distributions` only, so localized output (e.g. zh-CN `适用于 Linux 的 Windows 子系统没有已安装的分发。`) fell through to the generic command-failure path.
+
+Same locale-fragility family as Issue #18 (UTF-16 LE mojibake), but a different code path: this one is English-only string matching for the empty-list case.
+
+### Diagnosis
+1. Run `wsl.exe --list --verbose` in a terminal; on an affected system it prints the localized no-distro message and exits with code 1.
+2. Check `HKCU\Software\Microsoft\Windows\CurrentVersion\Lxss` — no GUID subkeys confirms zero registered distributions.
+
+### Solution
+Empty-state detection is now locale-independent: when the list command fails, the app consults the Lxss registry and treats "no registered distributions" as the valid empty state. The registry check is strict — if the Lxss key cannot be read (as opposed to being absent or having no distro entries), the original command error is surfaced instead of an empty list, so a transient registry failure never silently clears the distribution inventory. The phrase match was also extended with the confirmed zh-CN message as a fast path.
+
+### Files Changed
+- `src-tauri/src/wsl/core.rs`: added `is_no_distros_output` (English + zh-CN phrases) and a registry-based empty-distro fallback in `list_distributions`, with regression tests.
+- `src-tauri/src/wsl/executor/resource/{mod,real,mock}.rs`: new `registry_confirms_no_distros` ResourceMonitor method that distinguishes "no registered distros" from "registry unreadable".
+
+### Related
+- GitHub issue: https://github.com/octasoft-ltd/wsl-ui/issues/101
+- Internal: OCT-1132. Related locale work: OCT-1066 (Issue #18, UTF-16 LE decoding).
+
+---
+
+## Issue #26: Wrong or missing error detection on non-English Windows (localized CLI output)
+
+### Symptoms
+- On localized Windows (e.g. Chinese, German, Japanese):
+  - A missing `wsl.exe` shows a generic "Unknown" preflight error instead of the
+    "WSL is not installed" guidance screen.
+  - Compacting a distro VHDX via diskpart could report success even though diskpart
+    failed (or vice versa, failures carried no useful detail).
+  - A missing Hyper-V `Optimize-VHD` cmdlet surfaced as a raw localized PowerShell
+    error instead of the friendly "Hyper-V feature may not be installed" message.
+
+### Root Cause
+Several code paths classified `wsl.exe`, diskpart, and PowerShell output by matching
+English-only substrings ("not found", "successfully compacted", "not recognized").
+Windows localizes that text (FormatMessageW, localized diskpart/PowerShell messages),
+so the checks silently misfired on non-English systems. Same family as Issues about
+UTF-16 LE decoding (#99) and localized parsing (#101), but in paths those fixes did
+not cover.
+
+### Diagnosis
+1. Set Windows display language to a non-English locale (e.g. zh-CN).
+2. Rename/remove `wsl.exe` from PATH and launch the app: preflight showed a generic
+   error rather than the install guidance.
+3. Run a VHDX compact where diskpart fails (e.g. distro still running): the app
+   reported success because the localized failure text matched no pattern.
+
+### Solution
+Classification now uses locale-independent signals first:
+- Preflight: WSL hex error codes (`0x8007019e`, `0x80370102`), the stable
+  `(os error 2/3)` suffix Rust appends to spawn failures, and an on-disk existence
+  check of the configured `wsl` executable (resolved against PATH). English phrases
+  remain only as a fallback.
+- Diskpart compact: the elevated wrapper appends `WSLUI_DISKPART_EXIT=<code>` to the
+  captured output so diskpart's real exit code decides success, regardless of locale.
+- Optimize-VHD: the elevated wrapper writes the .NET exception type name (e.g.
+  `System.Management.Automation.CommandNotFoundException`), which is locale-invariant.
+
+### Files Changed
+- `src-tauri/src/wsl/executor/wsl_command/real.rs`: locale-independent preflight
+  failure classification + regression tests with zh-CN/de-DE messages.
+- `src-tauri/src/wsl/executor/resource/real.rs`: diskpart exit-code marker,
+  exception-type-based Optimize-VHD detection + localized regression tests.
+
+### Related
+- GitHub issue #102 (OCT-1136); related #99 (OCT-1066), #101 (OCT-1132)
+
+---
+
+## Issue #27: Leftover temp tar files and dangling containers after a failed container-image install
 
 ### Symptoms
 - Installing a distribution from a container image fails with "Failed to create install directory"

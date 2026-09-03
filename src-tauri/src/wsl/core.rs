@@ -41,6 +41,20 @@ fn parse_fstrim_bytes(output: &str) -> Option<u64> {
     None
 }
 
+/// Detect wsl.exe's "no installed distributions" message.
+///
+/// wsl.exe emits this message in the system language and exits with code 1,
+/// so an English-only match misses it on localized Windows (GH #101).
+/// This list only covers locales we have confirmed output for; the registry
+/// check in `list_distributions` handles all other locales.
+fn is_no_distros_output(combined_output: &str) -> bool {
+    combined_output
+        .to_lowercase()
+        .contains("no installed distributions")
+        // zh-CN: "适用于 Linux 的 Windows 子系统没有已安装的分发。"
+        || combined_output.contains("没有已安装的分发")
+}
+
 /// List all WSL distributions with their status
 pub fn list_distributions() -> Result<Vec<Distribution>, WslError> {
     debug!("Listing WSL distributions");
@@ -48,13 +62,24 @@ pub fn list_distributions() -> Result<Vec<Distribution>, WslError> {
     let output = wsl_executor().list_verbose()?;
 
     // Check for "no installed distributions" - this is a valid state, not an error
-    let combined_output = format!("{}\n{}", output.stdout, output.stderr).to_lowercase();
-    if combined_output.contains("no installed distributions") {
+    let combined_output = format!("{}\n{}", output.stdout, output.stderr);
+    if is_no_distros_output(&combined_output) {
         debug!("No WSL distributions installed");
         return Ok(Vec::new());
     }
 
     if !output.success {
+        // The "no installed distributions" message is localized, so the phrase
+        // match above can miss it on locales we don't know about. The Lxss
+        // registry is locale-independent: no registered distro entries means
+        // this is the valid empty state, not a failure (GH #101). The check
+        // returns false when the registry is unreadable, so a transient
+        // registry failure surfaces the command error instead of silently
+        // clearing the inventory.
+        if resource_monitor().registry_confirms_no_distros() {
+            debug!("WSL list failed but registry has no distros - treating as empty state");
+            return Ok(Vec::new());
+        }
         warn!("WSL list command failed: {}", output.stderr);
         return Err(WslError::CommandFailed(output.stderr));
     }
@@ -1090,7 +1115,43 @@ pub fn update_wsl(pre_release: bool, current_version: Option<&str>) -> Result<St
 
 #[cfg(test)]
 mod tests {
-    use super::classify_mounted_disk;
+    use super::{classify_mounted_disk, is_no_distros_output};
+
+    // GH #101: on localized Windows, wsl.exe emits the no-distro message in
+    // the system language; treating it as an error showed a failure banner.
+    #[test]
+    fn test_no_distros_english() {
+        let output = "Windows Subsystem for Linux has no installed distributions.\n\
+                      Distributions can be installed by visiting the Microsoft Store:\n";
+        assert!(is_no_distros_output(output));
+    }
+
+    #[test]
+    fn test_no_distros_english_case_insensitive() {
+        assert!(is_no_distros_output("...HAS NO INSTALLED DISTRIBUTIONS..."));
+    }
+
+    #[test]
+    fn test_no_distros_chinese_simplified() {
+        // Verbatim zh-CN output reported in GH #101
+        let output = "适用于 Linux 的 Windows 子系统没有已安装的分发。\n\
+                      可通过安装包含以下说明的分发来解决此问题\n";
+        assert!(is_no_distros_output(output));
+    }
+
+    #[test]
+    fn test_normal_list_output_is_not_no_distros() {
+        let output = "  NAME      STATE           VERSION\n\
+                      * Ubuntu    Running         2\n";
+        assert!(!is_no_distros_output(output));
+    }
+
+    #[test]
+    fn test_unrelated_error_is_not_no_distros() {
+        assert!(!is_no_distros_output(
+            "The Windows Subsystem for Linux instance has terminated."
+        ));
+    }
 
     // GH #113: VHD mounts were reported as physical disks (is_vhd always false).
     #[test]

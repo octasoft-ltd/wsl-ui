@@ -79,6 +79,15 @@ pub trait ResourceMonitor: Send + Sync {
     /// Returns a HashMap keyed by distribution name (case-insensitive lookup recommended)
     fn get_all_distro_registry_info(&self) -> std::collections::HashMap<String, DistroRegistryInfo>;
 
+    /// Locale-independent check that the Lxss registry key positively confirms
+    /// zero registered distributions (GH #101).
+    ///
+    /// Must return `false` when the registry cannot be read, so a transient
+    /// registry failure is never mistaken for the valid empty state. This is
+    /// deliberately stricter than `get_all_distro_registry_info`, which
+    /// returns an empty map both for "no distros" and "read failed".
+    fn registry_confirms_no_distros(&self) -> bool;
+
     /// Get the base path for a distribution from Windows registry
     fn get_distro_base_path(&self, name: &str) -> Option<String>;
 
