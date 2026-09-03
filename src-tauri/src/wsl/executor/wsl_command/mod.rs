@@ -123,18 +123,21 @@ pub trait WslCommandExecutor: Send + Sync {
     fn exec_as_root(&self, distro: &str, id: Option<&str>, command: &str) -> Result<CommandOutput, WslError>;
 
     /// Get WSL2 network IP address
-    /// Uses system distro with `ip route` for reliable IP detection
-    fn get_ip(&self) -> Result<CommandOutput, WslError>;
+    /// Uses the system distro of the given (already running) distribution with
+    /// `ip route` for reliable IP detection
+    fn get_ip(&self, distro: &str) -> Result<CommandOutput, WslError>;
 
     // === System Distro Operations ===
 
-    /// Execute a command in the WSL2 system distro (CBL-Mariner/Azure Linux)
-    /// Uses `wsl --system -- <command>` to run in the always-available system distro.
-    /// This is useful for VM-wide operations that don't depend on user distros.
-    fn exec_system(&self, command: &str) -> Result<CommandOutput, WslError>;
+    /// Execute a command in the WSL2 system distro (CBL-Mariner/Azure Linux).
+    /// Uses `wsl --system -d <distro> -- <command>` so the query is scoped to an
+    /// already-running distribution. A bare `wsl --system` targets the *default*
+    /// distribution and boots it as a side effect (GH #157), so callers must pass
+    /// a distribution that is already running.
+    fn exec_system(&self, distro: &str, command: &str) -> Result<CommandOutput, WslError>;
 
     /// Execute a command in the system distro with custom timeout
-    fn exec_system_with_timeout(&self, command: &str, timeout_secs: u64) -> Result<CommandOutput, WslError>;
+    fn exec_system_with_timeout(&self, distro: &str, command: &str, timeout_secs: u64) -> Result<CommandOutput, WslError>;
 
     // === Preflight Check ===
 

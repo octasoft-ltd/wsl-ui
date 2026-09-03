@@ -1268,7 +1268,71 @@ Made `decode_wsl_output` locale-robust:
 
 ---
 
-## Issue #19: Tauri build reports mismatched JavaScript and Rust package versions
+## Issue #19: Mounting a physical disk fails with "Invalid path"
+
+### Symptoms
+- Status-bar "Mount disk" → physical disk tab → any physical drive fails with `Invalid path` before anything happens.
+- The same disk mounts fine from an elevated terminal with `wsl --mount \\.\PHYSICALDRIVE1`.
+
+### Root Cause
+Physical drives are addressed via the Windows device namespace (`\\.\PHYSICALDRIVEn`). The app's file-path validation treated the `.` in `\\.\` as a path component ending in a dot (a Windows-reserved pattern) and rejected the path before running `wsl --mount`.
+
+### Solution
+**Fix applied in code:** `mount_disk` now validates disk paths with `validate_disk_path`, which strictly accepts `\\.\PHYSICALDRIVE<digits>` device paths and applies the normal file-path validation to VHD/VHDX paths.
+
+**Workaround (older builds):** mount from an elevated terminal: `wsl --mount \\.\PHYSICALDRIVEn [--bare|--partition N ...]`.
+
+### Files Changed
+- `src-tauri/src/validation.rs`: added `validate_disk_path` / `is_physical_drive_path` with tests.
+- `src-tauri/src/commands.rs`: `mount_disk` uses `validate_disk_path`.
+
+### Related
+- GitHub issue: https://github.com/octasoft-ltd/wsl-ui/issues/112
+
+---
+
+## Issue #20: Default distribution starts by itself when the app opens or regains focus
+
+### Symptoms
+- Opening WSL UI, navigating from Settings back to the dashboard, or focusing the window starts the *default* WSL distribution even though you never clicked Start.
+
+### Root Cause
+The dashboard queried the WSL VM IP address and system-distro info via `wsl --system` **without a target distribution**. An untargeted `wsl --system` runs against the default distribution and boots it as a side effect. These queries fire when the header/distro list mounts, i.e. on app open and on every navigation back to the dashboard.
+
+### Solution
+**Fix applied in code:** system-distro queries (`get_wsl_ip`, `get_system_distro_info`) now run only when a distribution is already running, and explicitly target it with `wsl --system -d <name>`. When nothing is running they return "unknown" without executing `wsl.exe`, so a status query can never boot a distribution.
+
+### Files Changed
+- `src-tauri/src/wsl/info.rs`: gate on a running distribution (default preferred).
+- `src-tauri/src/wsl/executor/wsl_command/{mod,real,mock}.rs`: `--system` calls take a target distribution.
+
+### Related
+- GitHub issue: https://github.com/octasoft-ltd/wsl-ui/issues/157
+
+---
+
+## Issue #21: Black screen for ~20 seconds on startup (regions where Google is unreachable)
+
+### Symptoms
+- The window opens immediately but stays black for ~20–25 seconds before the UI renders.
+- Only happens on networks where `fonts.googleapis.com` is blocked or unreachable (e.g. mainland China); startup is ~1s elsewhere.
+
+### Root Cause
+The UI fonts (JetBrains Mono, Outfit) were imported from Google Fonts via a render-blocking CSS `@import`. When the host is unreachable, first render blocks until the request times out.
+
+### Solution
+**Fix applied in code:** the woff2 font subsets (~113 KB) are bundled with the app (`public/fonts/` + `src/fonts.css`) and loaded with `font-display: swap`. Startup performs no network font request at all.
+
+### Files Changed
+- `src/index.css`: local `@import './fonts.css'` replaces the Google Fonts URL.
+- `src/fonts.css`, `public/fonts/*.woff2`: self-hosted fonts.
+
+### Related
+- GitHub issue: https://github.com/octasoft-ltd/wsl-ui/issues/158
+
+---
+
+## Issue #22: Tauri build reports mismatched JavaScript and Rust package versions
 
 ### Symptoms
 - `npm run tauri:build:debug` stops before compiling the application.
@@ -1301,7 +1365,7 @@ running E2E tests.
 
 ---
 
-## Issue #20: Quick Actions menu does not appear
+## Issue #23: Quick Actions menu does not appear
 
 ### Symptoms
 - Clicking the Quick Actions button does not display the menu.

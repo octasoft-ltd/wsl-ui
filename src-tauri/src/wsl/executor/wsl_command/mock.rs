@@ -791,11 +791,11 @@ Default Version: 2
         self.exec(distro, id, command)
     }
 
-    fn get_ip(&self) -> Result<CommandOutput, WslError> {
+    fn get_ip(&self, distro: &str) -> Result<CommandOutput, WslError> {
         if let Some(err) = self.check_error("get_ip") {
             return Err(err);
         }
-        debug!("Mock: get_ip (via system distro)");
+        debug!("Mock: get_ip (via system distro of '{}')", distro);
         Ok(CommandOutput {
             stdout: "172.25.160.1\n".to_string(),
             stderr: String::new(),
@@ -803,11 +803,11 @@ Default Version: 2
         })
     }
 
-    fn exec_system(&self, command: &str) -> Result<CommandOutput, WslError> {
-        self.exec_system_with_timeout(command, 30)
+    fn exec_system(&self, distro: &str, command: &str) -> Result<CommandOutput, WslError> {
+        self.exec_system_with_timeout(distro, command, 30)
     }
 
-    fn exec_system_with_timeout(&self, command: &str, _timeout_secs: u64) -> Result<CommandOutput, WslError> {
+    fn exec_system_with_timeout(&self, _distro: &str, command: &str, _timeout_secs: u64) -> Result<CommandOutput, WslError> {
         if let Some(err) = self.check_error("exec_system") {
             return Err(err);
         }

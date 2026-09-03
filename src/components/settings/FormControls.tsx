@@ -97,6 +97,8 @@ export function SettingInput({
   onChange,
   placeholder,
   type = "text",
+  min,
+  step,
   className = "",
   testId,
 }: {
@@ -106,6 +108,8 @@ export function SettingInput({
   onChange: (value: string) => void;
   placeholder?: string;
   type?: "text" | "number";
+  min?: number;
+  step?: number;
   className?: string;
   testId?: string;
 }) {
@@ -118,6 +122,8 @@ export function SettingInput({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
+        min={min}
+        step={step}
         data-testid={testId ? `${testId}-input` : undefined}
         className={`w-full px-3 py-2 bg-theme-bg-secondary border border-theme-border-secondary rounded-lg text-theme-text-primary placeholder-theme-text-muted focus:outline-hidden focus:border-theme-accent-primary ${className}`}
       />

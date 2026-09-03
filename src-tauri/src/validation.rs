@@ -270,6 +270,32 @@ fn is_valid_colon_usage(path: &str) -> bool {
     !path.contains(':')
 }
 
+/// Validate a disk path for `wsl --mount`/`--unmount`.
+///
+/// Accepts either a physical-drive device path (`\\.\PHYSICALDRIVEn`) or a
+/// regular file path (VHD/VHDX). `validate_file_path` alone rejects device
+/// paths because the `.` in `\\.\` looks like a trailing-dot component
+/// (GH #112: every physical-disk mount failed with "Invalid path").
+pub fn validate_disk_path(path: &str) -> Result<(), ValidationError> {
+    if is_physical_drive_path(path) {
+        return Ok(());
+    }
+    validate_file_path(path)
+}
+
+/// Strictly match `\\.\PHYSICALDRIVE<digits>` (case-insensitive, `/` or `\`)
+fn is_physical_drive_path(path: &str) -> bool {
+    let normalized = path.replace('/', "\\");
+    let Some(rest) = normalized.strip_prefix(r"\\.\") else {
+        return false;
+    };
+    let upper = rest.to_ascii_uppercase();
+    match upper.strip_prefix("PHYSICALDRIVE") {
+        Some(n) => !n.is_empty() && n.chars().all(|c| c.is_ascii_digit()),
+        None => false,
+    }
+}
+
 /// Validate WSL version (1 or 2)
 pub fn validate_wsl_version(version: u8) -> Result<(), ValidationError> {
     if version != 1 && version != 2 {
@@ -717,6 +743,32 @@ mod tests {
                 path
             );
         }
+    }
+
+    // ==================== Disk Path Tests ====================
+
+    // GH #112: physical-drive device paths were rejected as "Invalid path"
+    // because the '.' in \\.\ tripped the trailing-dot component check.
+    #[test]
+    fn test_validate_disk_path_accepts_physical_drives() {
+        assert!(validate_disk_path(r"\\.\PHYSICALDRIVE0").is_ok());
+        assert!(validate_disk_path(r"\\.\PHYSICALDRIVE12").is_ok());
+        assert!(validate_disk_path(r"\\.\physicaldrive1").is_ok());
+    }
+
+    #[test]
+    fn test_validate_disk_path_accepts_vhd_file_paths() {
+        assert!(validate_disk_path(r"C:\disks\data.vhdx").is_ok());
+    }
+
+    #[test]
+    fn test_validate_disk_path_rejects_other_device_paths_and_traversal() {
+        assert!(validate_disk_path(r"\\.\PHYSICALDRIVE").is_err());
+        assert!(validate_disk_path(r"\\.\PHYSICALDRIVE1x").is_err());
+        assert!(validate_disk_path(r"\\.\C:").is_err());
+        assert!(validate_disk_path(r"\\.\pipe\evil").is_err());
+        assert!(validate_disk_path(r"C:\disks\..\secret.vhdx").is_err());
+        assert!(validate_disk_path("").is_err());
     }
 
     // ==================== WSL Version Tests ====================

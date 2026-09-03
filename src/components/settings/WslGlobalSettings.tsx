@@ -133,9 +133,16 @@ export function WslGlobalSettings() {
               label={t('wslGlobal.processors')}
               description={t('wslGlobal.processorsDesc')}
               value={config.processors?.toString() || ""}
-              onChange={(v) => updateConfig("processors", v ? parseInt(v) : undefined)}
+              onChange={(v) => {
+                // Backend field is u32: negative/decimal input would fail the
+                // whole save with an opaque serde error (GH #118)
+                const n = parseInt(v, 10);
+                updateConfig("processors", v && !isNaN(n) && n >= 1 ? n : undefined);
+              }}
               placeholder={t('wslGlobal.processorsPlaceholder')}
               type="number"
+              min={1}
+              step={1}
               testId="wsl-processors"
             />
             <SettingInput

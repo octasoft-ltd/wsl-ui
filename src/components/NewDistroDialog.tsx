@@ -492,9 +492,19 @@ export function NewDistroDialog({ isOpen, onClose }: NewDistroDialogProps) {
   // Open config dialog for custom URL
   const handleSelectCustomUrl = () => {
     if (!customUrl.trim()) return;
+    // Parse before mutating any state: an uncaught throw in an event handler
+    // is not caught by the render ErrorBoundary and left the dialog in an
+    // inconsistent half-selected state (GH #136)
+    let urlObj: URL;
+    try {
+      urlObj = new URL(customUrl.trim());
+    } catch {
+      setError(t('customUrl.invalid', { url: customUrl.trim() }));
+      return;
+    }
+    setError(null);
     setUseCustomUrl(true);
     setSelectedDistro(null);
-    const urlObj = new URL(customUrl.trim());
     const filename = urlObj.pathname.split('/').pop() || 'custom';
     const suggestedName = filename.replace(/\.(tar\.gz|tar\.xz|tar|rootfs)$/i, '').replace(/[^a-zA-Z0-9]/g, '-');
     setPendingInstallItem({

@@ -19,6 +19,7 @@ vi.mock("../services/wslService", () => ({
     importDistribution: vi.fn(),
     getDistributionDiskSize: vi.fn(),
     getDistributionOsInfo: vi.fn(),
+    getAllDistroMetadata: vi.fn(),
     // RDP-related methods
     detectRdp: vi.fn(),
     checkWslConfigTimeouts: vi.fn(),
@@ -190,6 +191,33 @@ describe("distroStore", () => {
 
       // Error is now parsed through parseError utility
       expect(useDistroStore.getState().error).toBe("Connection failed");
+    });
+  });
+
+  // GH #115: a stale error/isTimeoutError latched the polling backoff at max
+  // interval because silent successes never cleared them
+  describe("fetchDistros - error recovery", () => {
+    it("clears a previous error and timeout flag on silent success", async () => {
+      vi.mocked(wslService.listDistributions).mockRejectedValue(
+        new Error("WSL timeout")
+      );
+      await useDistroStore.getState().fetchDistros(true);
+      expect(useDistroStore.getState().error).not.toBeNull();
+
+      vi.mocked(wslService.listDistributions).mockResolvedValue(
+        mockDistributions
+      );
+      vi.mocked(wslService.getDistributionDiskSize).mockResolvedValue(0);
+      vi.mocked(wslService.getDistributionOsInfo).mockResolvedValue("");
+      vi.mocked(wslService.getAllDistroMetadata).mockResolvedValue({});
+      await useDistroStore.getState().fetchDistros(true);
+
+      expect(useDistroStore.getState().error).toBeNull();
+      expect(useDistroStore.getState().isTimeoutError).toBe(false);
+
+      // Let the unawaited background detail fetches settle so they cannot
+      // leak into later tests
+      await new Promise((resolve) => setTimeout(resolve, 10));
     });
   });
 

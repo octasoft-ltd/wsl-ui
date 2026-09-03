@@ -100,6 +100,33 @@ function parseProduct(
 /**
  * Group distributions by OS for display
  */
+/**
+ * Compare two release versions, newest first. Compares dotted versions
+ * component-wise as integers so e.g. Alpine 3.10 sorts above 3.9 (parseFloat
+ * would order 3.10 as 3.1 — GH #122). Non-numeric versions ("current",
+ * "tumbleweed") fall back to string comparison.
+ */
+export function compareVersionsDesc(a: string, b: string): number {
+  const partsA = a.split(".");
+  const partsB = b.split(".");
+  const numeric = /^\d+$/;
+  const len = Math.max(partsA.length, partsB.length);
+  for (let i = 0; i < len; i++) {
+    const pa = partsA[i];
+    const pb = partsB[i];
+    if (pa === undefined) return 1;
+    if (pb === undefined) return -1;
+    if (numeric.test(pa) && numeric.test(pb)) {
+      const diff = parseInt(pb, 10) - parseInt(pa, 10);
+      if (diff !== 0) return diff;
+    } else {
+      const diff = pb.localeCompare(pa);
+      if (diff !== 0) return diff;
+    }
+  }
+  return 0;
+}
+
 function groupDistributions(distributions: LxcDistribution[]): LxcDistributionGroup[] {
   const grouped = new Map<string, LxcDistribution[]>();
 
@@ -128,16 +155,7 @@ function groupDistributions(distributions: LxcDistribution[]): LxcDistributionGr
 
     // Sort versions (newest first)
     const releases: LxcDistributionRelease[] = Array.from(versionMap.entries())
-      .sort((a, b) => {
-        // Try numeric comparison first
-        const numA = parseFloat(a[0]);
-        const numB = parseFloat(b[0]);
-        if (!isNaN(numA) && !isNaN(numB)) {
-          return numB - numA;
-        }
-        // Fall back to string comparison
-        return b[0].localeCompare(a[0]);
-      })
+      .sort((a, b) => compareVersionsDesc(a[0], b[0]))
       .map(([version, variants]) => ({
         version,
         releaseTitle: variants[0].releaseTitle,
