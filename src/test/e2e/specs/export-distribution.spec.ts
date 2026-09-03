@@ -16,6 +16,8 @@ import {
   clearMockErrors,
   selectors,
   mockDistributions,
+  switchToMainWindow,
+  switchToQuickActionsPopup,
   captureDistroStates,
   verifyStatesUnchanged,
 } from "../utils";
@@ -108,26 +110,7 @@ describe("Export Distribution", () => {
           { timeout: 3000, interval: 100 }
         ).catch(() => {}); // Ignore if no overlay found
 
-        const card = await $(selectors.distroCardByName(distro.name));
-        const quickActionsButton = await card.$(selectors.quickActionsButton);
-
-        // Wait for button to be enabled (not disabled)
-        await browser.waitUntil(
-          async () => {
-            const disabled = await quickActionsButton.getAttribute("disabled");
-            return disabled === null;
-          },
-          { timeout: 5000 }
-        ).catch(() => {});
-
-        await quickActionsButton.waitForClickable({ timeout: 5000 });
-        await quickActionsButton.click();
-
-        // Wait for quick actions menu to appear
-        await browser.waitUntil(
-          async () => isElementDisplayed(selectors.quickActionsMenu),
-          { timeout: 5000, timeoutMsg: `Quick actions menu did not appear for ${distro.name}` }
-        );
+        await actions.openQuickActionsMenu(distro.name);
 
         const exportAction = await $(selectors.quickAction("export"));
         await exportAction.waitForDisplayed({ timeout: 3000 });
@@ -155,7 +138,9 @@ describe("Export Distribution", () => {
       await expect(menu).toBeDisplayed();
 
       // Click outside
+      await switchToMainWindow();
       await $("main").click();
+      await switchToQuickActionsPopup();
 
       // Wait for menu to close
       await browser.waitUntil(

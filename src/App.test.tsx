@@ -111,6 +111,18 @@ describe('App', () => {
     vi.clearAllMocks();
     vi.useFakeTimers();
 
+    // Node's optional localStorage implementation may not expose the complete
+    // browser Storage API in the Vitest environment.
+    const localStorageValues = new Map<string, string>();
+    vi.stubGlobal('localStorage', {
+      clear: vi.fn(() => localStorageValues.clear()),
+      getItem: vi.fn((key: string) => localStorageValues.get(key) ?? null),
+      key: vi.fn(),
+      length: 0,
+      removeItem: vi.fn((key: string) => localStorageValues.delete(key)),
+      setItem: vi.fn((key: string, value: string) => localStorageValues.set(key, value)),
+    });
+
     // Mock scrollTo for JSDOM environment
     Element.prototype.scrollTo = vi.fn();
 

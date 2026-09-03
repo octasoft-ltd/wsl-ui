@@ -13,10 +13,11 @@
 
 import {
   selectors,
+  switchToMainWindow,
   waitForDialog,
   waitForResourceStats,
 } from "../utils";
-import { standardSetup } from "../base";
+import { actions, standardSetup } from "../base";
 
 // Timing constants for smooth video presentation (in milliseconds)
 const PAUSE_SHORT = 800;       // Brief transition
@@ -73,9 +74,7 @@ async function switchToTab(tabId: string): Promise<void> {
  * Helper to open quick actions menu for a distro
  */
 async function openQuickActions(distroName: string): Promise<void> {
-  const card = await $(selectors.distroCardByName(distroName));
-  const quickActionsButton = await card.$('[data-testid="quick-actions-button"]');
-  await quickActionsButton.click();
+  await actions.openQuickActionsMenu(distroName);
   await videoPause(PAUSE_SHORT);
 }
 
@@ -83,6 +82,7 @@ async function openQuickActions(distroName: string): Promise<void> {
  * Helper to close any open menu by clicking outside
  */
 async function closeMenu(): Promise<void> {
+  await switchToMainWindow();
   const main = await $("main");
   await main.click();
   await videoPause(PAUSE_SHORT);

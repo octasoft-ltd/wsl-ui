@@ -26,6 +26,8 @@ import {
   waitForDialog,
   waitForDialogToDisappear,
   waitForDistroState,
+  switchToMainWindow,
+  switchToQuickActionsPopup,
 } from "./utils";
 
 // ============================================================================
@@ -83,6 +85,7 @@ async function dismissBlockingDialogs(): Promise<void> {
  * - Dismisses any blocking dialogs (telemetry, etc.)
  */
 export async function standardSetup(): Promise<void> {
+  await switchToMainWindow();
   // Reset mock FIRST while page is loaded, THEN refresh to get clean state
   await resetMockState();
   await safeRefresh();
@@ -177,11 +180,25 @@ export const actions = {
    * @returns The menu element
    */
   openQuickActionsMenu: async (distroName: string): Promise<WebdriverIO.Element> => {
+    await switchToMainWindow();
     const card = await $(selectors.distroCardByName(distroName));
     await card.waitForDisplayed({ timeout: 5000 });
     const quickActionsButton = await card.$(selectors.quickActionsButton);
     await quickActionsButton.waitForClickable({ timeout: 5000 });
     await quickActionsButton.click();
+
+    await browser.waitUntil(
+      async () => {
+        try {
+          await switchToQuickActionsPopup();
+          return true;
+        } catch {
+          await switchToMainWindow();
+          return false;
+        }
+      },
+      { timeout: 5000, timeoutMsg: "Quick Actions popup WebView did not appear" }
+    );
 
     // Wait for menu to appear
     await browser.waitUntil(
@@ -260,6 +277,7 @@ export const actions = {
     const compactAction = await $(selectors.compactAction);
     await compactAction.waitForClickable({ timeout: 5000 });
     await compactAction.click();
+    await switchToMainWindow();
 
     // Wait for compact dialog (it opens directly, no stop dialog)
     await browser.waitUntil(
@@ -282,6 +300,7 @@ export const actions = {
    */
   handleStopDialogIfPresent: async (shouldContinue: boolean = true): Promise<boolean> => {
     try {
+      await switchToMainWindow();
       // Give the dialog a moment to appear
       await browser.waitUntil(
         async () => isElementDisplayed(selectors.stopAndActionDialog),
@@ -355,13 +374,23 @@ export const actions = {
    * Close any open quick actions menu by pressing Escape
    */
   closeQuickActionsMenu: async (): Promise<void> => {
+    try {
+      await switchToQuickActionsPopup();
+    } catch {
+      await switchToMainWindow();
+      return;
+    }
     if (await isElementDisplayed(selectors.quickActionsMenu)) {
       await browser.keys("Escape");
-      await browser.waitUntil(
-        async () => !(await isElementDisplayed(selectors.quickActionsMenu)),
-        { timeout: 3000, timeoutMsg: "Quick actions menu did not close" }
-      );
     }
+    await switchToMainWindow();
+    await browser.waitUntil(
+      async () => {
+        const expandedButtons = await $$(`${selectors.quickActionsButton}[aria-expanded="true"]`);
+        return expandedButtons.length === 0;
+      },
+      { timeout: 3000, timeoutMsg: "Quick actions menu did not close" }
+    );
   },
 
   /**

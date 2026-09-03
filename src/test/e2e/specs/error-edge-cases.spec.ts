@@ -18,6 +18,7 @@ import {
   waitForDistroState,
   waitForElementClickable,
   waitForDialog,
+  switchToMainWindow,
   waitForDialogToDisappear,
   verifyDistroCardState,
   mockDistributions,
@@ -27,7 +28,7 @@ import {
   captureDistroStates,
   verifyStatesUnchanged,
 } from "../utils";
-import { setupHooks, isElementDisplayed } from "../base";
+import { actions, setupHooks, isElementDisplayed } from "../base";
 
 const errorSelectors = {
   // Clone Dialog
@@ -77,17 +78,7 @@ const errorSelectors = {
 const TEST_DISTRO = "Debian"; // Use stopped distro for most tests
 
 async function openQuickActionsForDistro(distroName: string): Promise<void> {
-  const card = await $(selectors.distroCardByName(distroName));
-  await card.waitForDisplayed({ timeout: 5000 });
-  const quickActionsButton = await card.$(errorSelectors.quickActionsButton);
-  await quickActionsButton.waitForClickable({ timeout: 5000 });
-  await quickActionsButton.click();
-
-  // Wait for quick actions menu to appear
-  await browser.waitUntil(
-    async () => isElementDisplayed(errorSelectors.quickActionsMenu),
-    { timeout: 5000, timeoutMsg: "Quick actions menu did not appear" }
-  );
+  await actions.openQuickActionsMenu(distroName);
 }
 
 async function openCloneDialog(): Promise<void> {
@@ -95,6 +86,7 @@ async function openCloneDialog(): Promise<void> {
   const cloneAction = await $(errorSelectors.cloneAction);
   await cloneAction.waitForClickable({ timeout: 5000 });
   await cloneAction.click();
+  await switchToMainWindow();
 
   // Check if stop dialog appeared (for running distros)
   const stopDialogDisplayed = await isElementDisplayed(selectors.stopAndActionDialog);

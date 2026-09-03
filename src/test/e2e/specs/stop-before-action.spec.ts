@@ -8,13 +8,14 @@
  * - Should work directly when distro is already stopped
  */
 
-import { selectors, waitForDialogToDisappear } from "../utils";
+import { selectors, switchToMainWindow, waitForDialogToDisappear } from "../utils";
 import { setupHooks, actions, isElementDisplayed } from "../base";
 
 /**
  * Helper to wait for the stop-and-action dialog
  */
 async function waitForStopDialog(): Promise<WebdriverIO.Element> {
+  await switchToMainWindow();
   await browser.waitUntil(
     async () => {
       const dialog = await $(selectors.stopAndActionDialog);

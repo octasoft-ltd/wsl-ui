@@ -19,9 +19,10 @@ import {
   clearConfigPendingState,
   waitForButtonEnabled,
   resetMockState,
+  switchToMainWindow,
   waitForAppReady,
 } from "../utils";
-import { setupHooks } from "../base";
+import { actions, setupHooks } from "../base";
 
 /**
  * Find open dialog using role attribute
@@ -36,6 +37,7 @@ async function findDialog(): Promise<WebdriverIO.Element> {
  * This clicks "Shutdown & Continue" to proceed past the dialog.
  */
 async function handleShutdownDialogIfPresent(): Promise<void> {
+  await switchToMainWindow();
   // Wait for potential dialog to appear
   try {
     await browser.waitUntil(
@@ -167,13 +169,9 @@ describe("Error Handling and Failure Scenarios", () => {
   describe("Validation Errors", () => {
     describe("Set Default User Dialog", () => {
       async function openSetUserDialog(): Promise<WebdriverIO.Element> {
-        const ubuntuCard = await $(selectors.distroCardByName("Ubuntu"));
-        const quickActionsButton = await ubuntuCard.$('[data-testid="quick-actions-button"]');
-        await quickActionsButton.click();
-
+        await actions.openManageSubmenu("Ubuntu");
         const manageButton = await $('[data-testid="quick-action-manage"]');
         await manageButton.waitForDisplayed({ timeout: 3000 });
-        await manageButton.click();
 
         const userAction = await $('[data-testid="manage-action-user"]');
         await userAction.waitForDisplayed({ timeout: 3000 });
@@ -225,13 +223,7 @@ describe("Error Handling and Failure Scenarios", () => {
 
     describe("Resize Dialog Validation", () => {
       async function openResizeDialog(): Promise<WebdriverIO.Element> {
-        const debianCard = await $(selectors.distroCardByName("Debian"));
-        const quickActionsButton = await debianCard.$('[data-testid="quick-actions-button"]');
-        await quickActionsButton.click();
-
-        const manageButton = await $('[data-testid="quick-action-manage"]');
-        await manageButton.waitForDisplayed({ timeout: 3000 });
-        await manageButton.click();
+        await actions.openManageSubmenu("Debian");
 
         const resizeAction = await $('[data-testid="manage-action-resize"]');
         await resizeAction.waitForDisplayed({ timeout: 3000 });
@@ -276,13 +268,7 @@ describe("Error Handling and Failure Scenarios", () => {
 
     describe("Move Dialog Validation", () => {
       it("should disable Move button when no path entered", async () => {
-        const debianCard = await $(selectors.distroCardByName("Debian"));
-        const quickActionsButton = await debianCard.$('[data-testid="quick-actions-button"]');
-        await quickActionsButton.click();
-
-        const manageButton = await $('[data-testid="quick-action-manage"]');
-        await manageButton.waitForDisplayed({ timeout: 3000 });
-        await manageButton.click();
+        await actions.openManageSubmenu("Debian");
 
         const moveAction = await $('[data-testid="manage-action-move"]');
         await moveAction.waitForDisplayed({ timeout: 3000 });
@@ -303,13 +289,7 @@ describe("Error Handling and Failure Scenarios", () => {
   describe("Running Distribution Dialogs", () => {
     it("should open move dialog for running distribution (handles shutdown internally)", async () => {
       // Ubuntu is running - Move dialog now opens directly and handles shutdown internally
-      const ubuntuCard = await $(selectors.distroCardByName("Ubuntu"));
-      const quickActionsButton = await ubuntuCard.$('[data-testid="quick-actions-button"]');
-      await quickActionsButton.click();
-
-      const manageButton = await $('[data-testid="quick-action-manage"]');
-      await manageButton.waitForDisplayed({ timeout: 3000 });
-      await manageButton.click();
+      await actions.openManageSubmenu("Ubuntu");
 
       const moveAction = await $('[data-testid="manage-action-move"]');
       await moveAction.waitForDisplayed({ timeout: 3000 });
@@ -326,13 +306,7 @@ describe("Error Handling and Failure Scenarios", () => {
     });
 
     it("should show shutdown dialog when trying to resize running distribution", async () => {
-      const ubuntuCard = await $(selectors.distroCardByName("Ubuntu"));
-      const quickActionsButton = await ubuntuCard.$('[data-testid="quick-actions-button"]');
-      await quickActionsButton.click();
-
-      const manageButton = await $('[data-testid="quick-action-manage"]');
-      await manageButton.waitForDisplayed({ timeout: 3000 });
-      await manageButton.click();
+      await actions.openManageSubmenu("Ubuntu");
 
       const resizeAction = await $('[data-testid="manage-action-resize"]');
       await resizeAction.waitForDisplayed({ timeout: 3000 });
@@ -346,13 +320,7 @@ describe("Error Handling and Failure Scenarios", () => {
     });
 
     it("should show shutdown dialog when trying to toggle sparse mode on running distribution", async () => {
-      const ubuntuCard = await $(selectors.distroCardByName("Ubuntu"));
-      const quickActionsButton = await ubuntuCard.$('[data-testid="quick-actions-button"]');
-      await quickActionsButton.click();
-
-      const manageButton = await $('[data-testid="quick-action-manage"]');
-      await manageButton.waitForDisplayed({ timeout: 3000 });
-      await manageButton.click();
+      await actions.openManageSubmenu("Ubuntu");
 
       const sparseAction = await $('[data-testid="manage-action-sparse"]');
       await sparseAction.waitForDisplayed({ timeout: 3000 });
@@ -368,13 +336,7 @@ describe("Error Handling and Failure Scenarios", () => {
   describe("Sparse Mode Warning", () => {
     async function openSparseDialog(): Promise<WebdriverIO.Element> {
       // Use stopped distro
-      const debianCard = await $(selectors.distroCardByName("Debian"));
-      const quickActionsButton = await debianCard.$('[data-testid="quick-actions-button"]');
-      await quickActionsButton.click();
-
-      const manageButton = await $('[data-testid="quick-action-manage"]');
-      await manageButton.waitForDisplayed({ timeout: 3000 });
-      await manageButton.click();
+      await actions.openManageSubmenu("Debian");
 
       const sparseAction = await $('[data-testid="manage-action-sparse"]');
       await sparseAction.waitForDisplayed({ timeout: 3000 });
@@ -438,13 +400,7 @@ describe("Error Handling and Failure Scenarios", () => {
       // Wait for Ubuntu to be online
       await waitForDistroState("Ubuntu", "ONLINE", 10000);
 
-      const ubuntuCard = await $(selectors.distroCardByName("Ubuntu"));
-      const quickActionsButton = await ubuntuCard.$('[data-testid="quick-actions-button"]');
-      await quickActionsButton.click();
-
-      const manageButton = await $('[data-testid="quick-action-manage"]');
-      await manageButton.waitForDisplayed({ timeout: 3000 });
-      await manageButton.click();
+      await actions.openManageSubmenu("Ubuntu");
 
       const sparseAction = await $('[data-testid="manage-action-sparse"]');
       await sparseAction.waitForDisplayed({ timeout: 3000 });
@@ -465,13 +421,7 @@ describe("Error Handling and Failure Scenarios", () => {
   describe("Dialog Structure", () => {
     it("should have proper dialog structure with header and footer", async () => {
       // Open a dialog and verify structure
-      const debianCard = await $(selectors.distroCardByName("Debian"));
-      const quickActionsButton = await debianCard.$('[data-testid="quick-actions-button"]');
-      await quickActionsButton.click();
-
-      const manageButton = await $('[data-testid="quick-action-manage"]');
-      await manageButton.waitForDisplayed({ timeout: 3000 });
-      await manageButton.click();
+      await actions.openManageSubmenu("Debian");
 
       const moveAction = await $('[data-testid="manage-action-move"]');
       await moveAction.waitForDisplayed({ timeout: 3000 });
@@ -493,13 +443,7 @@ describe("Error Handling and Failure Scenarios", () => {
 
   describe("Dialog Interaction During Operations", () => {
     async function openSetUserDialogForDebian(): Promise<WebdriverIO.Element> {
-      const debianCard = await $(selectors.distroCardByName("Debian"));
-      const quickActionsButton = await debianCard.$('[data-testid="quick-actions-button"]');
-      await quickActionsButton.click();
-
-      const manageButton = await $('[data-testid="quick-action-manage"]');
-      await manageButton.waitForDisplayed({ timeout: 3000 });
-      await manageButton.click();
+      await actions.openManageSubmenu("Debian");
 
       const userAction = await $('[data-testid="manage-action-user"]');
       await userAction.waitForDisplayed({ timeout: 3000 });

@@ -1,4 +1,5 @@
 /// <reference types="vitest" />
+import { resolve } from "path";
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 
@@ -28,5 +29,14 @@ export default defineConfig(async () => ({
       ignored: ["**/src-tauri/**"],
     },
   },
-}));
 
+  // Multi-page build: main app + popup menu window
+  build: {
+    rollupOptions: {
+      input: {
+        main: resolve(__dirname, "index.html"),
+        popup: resolve(__dirname, "popup.html"),
+      },
+    },
+  },
+}));
