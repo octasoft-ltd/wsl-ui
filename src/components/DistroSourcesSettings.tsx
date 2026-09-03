@@ -202,7 +202,9 @@ export function DistroSourcesSettings() {
         description: downloadForm.description,
         url: downloadForm.url,
         size: downloadForm.size || undefined,
-        enabled: true,
+        // Preserve the enabled state: hardcoding true silently re-enabled a
+        // disabled source on every edit (GH #120)
+        enabled: catalog?.downloadDistros.find((d) => d.id === editingId)?.enabled ?? true,
       };
       const updated = await wslService.updateDownloadDistro(distro);
       setCatalog(updated);
@@ -279,7 +281,9 @@ export function DistroSourcesSettings() {
         name: containerForm.name,
         description: containerForm.description,
         image: containerForm.image,
-        enabled: true,
+        // Preserve the enabled state: hardcoding true silently re-enabled a
+        // disabled image on every edit (GH #120)
+        enabled: catalog?.containerImages.find((i) => i.id === editingId)?.enabled ?? true,
       };
       const updated = await wslService.updateContainerImage(image);
       setCatalog(updated);
