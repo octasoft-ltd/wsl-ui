@@ -48,6 +48,80 @@ fn redact_secrets_for_log(arg: &str) -> String {
     arg.to_string()
 }
 
+/// Locale-independent check that the configured WSL executable exists on disk.
+/// Bare command names (the default setting is just "wsl") are resolved against
+/// PATH the way CreateProcess does; explicit paths are checked directly.
+fn executable_exists_on_disk(configured: &str) -> bool {
+    let path = std::path::Path::new(configured);
+    let has_extension = path.extension().is_some();
+
+    if configured.contains('\\') || configured.contains('/') {
+        return path.is_file() || (!has_extension && path.with_extension("exe").is_file());
+    }
+
+    // Bare command name: search PATH. wsl.exe lives in System32 or the
+    // WindowsApps alias directory, both of which are on PATH.
+    let file_name = if has_extension {
+        configured.to_string()
+    } else {
+        format!("{}.exe", configured)
+    };
+    std::env::var_os("PATH")
+        .map(|dirs| std::env::split_paths(&dirs).any(|dir| dir.join(&file_name).is_file()))
+        .unwrap_or(false)
+}
+
+/// Classify a preflight command failure (spawn/wait error) into a preflight
+/// status. GH #102: the human-readable part of a spawn failure comes from
+/// FormatMessageW and is localized (e.g. "系统找不到指定的文件。" on zh-CN), so
+/// English phrases alone misfire on non-English Windows. Locale-independent
+/// signals are checked first: WSL hex error codes, the stable "(os error N)"
+/// suffix Rust appends to io::Error text (2 = ERROR_FILE_NOT_FOUND,
+/// 3 = ERROR_PATH_NOT_FOUND), and whether the executable exists on disk.
+fn classify_preflight_command_failure(
+    msg: &str,
+    wsl_exists_on_disk: bool,
+    configured_path: &str,
+) -> WslPreflightStatus {
+    let msg_lower = msg.to_lowercase();
+
+    // WSL hex error codes are locale-independent; if present, wsl.exe ran.
+    if msg_lower.contains("0x8007019e") {
+        return WslPreflightStatus::FeatureDisabled {
+            error_code: "0x8007019e".to_string(),
+        };
+    }
+    if msg_lower.contains("0x80370102") {
+        return WslPreflightStatus::VirtualizationDisabled {
+            error_code: "0x80370102".to_string(),
+        };
+    }
+
+    let not_found_by_os_code =
+        msg_lower.contains("(os error 2)") || msg_lower.contains("(os error 3)");
+
+    // English phrases kept as a fallback for messages that did not come from
+    // io::Error (e.g. shell-produced text).
+    let not_found_by_english_text = msg_lower.contains("not found")
+        || msg_lower.contains("not recognized")
+        || msg_lower.contains("cannot find")
+        || msg_lower.contains("no such file")
+        || msg_lower.contains("system cannot find");
+
+    // Final locale-independent net: a spawn failure while the configured
+    // executable is absent from disk means WSL is not installed, whatever the
+    // localized message says.
+    if not_found_by_os_code || not_found_by_english_text || !wsl_exists_on_disk {
+        return WslPreflightStatus::NotInstalled {
+            configured_path: configured_path.to_string(),
+        };
+    }
+
+    WslPreflightStatus::Unknown {
+        message: msg.to_string(),
+    }
+}
+
 /// Real implementation that calls wsl.exe
 pub struct RealWslExecutor;
 
@@ -558,28 +632,11 @@ impl WslCommandExecutor for RealWslExecutor {
             }
             Err(WslError::CommandFailed(msg)) => {
                 debug!("WSL preflight check failed: {}", msg);
-                // Check if it's a "not found" error
-                let msg_lower = msg.to_lowercase();
-                if msg_lower.contains("not found")
-                    || msg_lower.contains("not recognized")
-                    || msg_lower.contains("cannot find")
-                    || msg_lower.contains("no such file")
-                    || msg_lower.contains("system cannot find")
-                {
-                    WslPreflightStatus::NotInstalled {
-                        configured_path: paths.wsl.clone(),
-                    }
-                } else if msg_lower.contains("0x8007019e") {
-                    WslPreflightStatus::FeatureDisabled {
-                        error_code: "0x8007019e".to_string(),
-                    }
-                } else if msg_lower.contains("0x80370102") {
-                    WslPreflightStatus::VirtualizationDisabled {
-                        error_code: "0x80370102".to_string(),
-                    }
-                } else {
-                    WslPreflightStatus::Unknown { message: msg }
-                }
+                classify_preflight_command_failure(
+                    &msg,
+                    executable_exists_on_disk(&paths.wsl),
+                    &paths.wsl,
+                )
             }
             Err(e) => {
                 debug!("WSL preflight check error: {}", e);
@@ -593,7 +650,8 @@ impl WslCommandExecutor for RealWslExecutor {
 
 #[cfg(test)]
 mod tests {
-    use super::redact_secrets_for_log;
+    use super::{classify_preflight_command_failure, redact_secrets_for_log};
+    use crate::wsl::types::WslPreflightStatus;
 
     // GH #150: the sudo password must never appear in the debug log.
     #[test]
@@ -620,5 +678,86 @@ mod tests {
             redact_secrets_for_log("grep sudo -S file"),
             "grep sudo -S file"
         );
+    }
+
+    // GH #102: a missing wsl.exe on zh-CN Windows produces a localized spawn
+    // message; only the "(os error 2)" suffix Rust appends is stable.
+    #[test]
+    fn test_preflight_not_installed_zh_cn_os_error_2() {
+        let status = classify_preflight_command_failure(
+            "系统找不到指定的文件。 (os error 2)",
+            false,
+            "wsl",
+        );
+        assert!(matches!(status, WslPreflightStatus::NotInstalled { .. }));
+    }
+
+    #[test]
+    fn test_preflight_not_installed_german_os_error_3() {
+        let status = classify_preflight_command_failure(
+            "Das System kann den angegebenen Pfad nicht finden. (os error 3)",
+            false,
+            r"C:\missing\wsl.exe",
+        );
+        assert!(matches!(
+            status,
+            WslPreflightStatus::NotInstalled { configured_path } if configured_path == r"C:\missing\wsl.exe"
+        ));
+    }
+
+    // GH #102: even without a recognizable message, a spawn failure while the
+    // configured executable is absent from disk means WSL is not installed.
+    #[test]
+    fn test_preflight_not_installed_by_missing_executable() {
+        let status = classify_preflight_command_failure(
+            "アクセスが拒否されました。",
+            false,
+            "wsl",
+        );
+        assert!(matches!(status, WslPreflightStatus::NotInstalled { .. }));
+    }
+
+    #[test]
+    fn test_preflight_english_not_found_still_detected() {
+        let status = classify_preflight_command_failure(
+            "The system cannot find the file specified. (os error 2)",
+            false,
+            "wsl",
+        );
+        assert!(matches!(status, WslPreflightStatus::NotInstalled { .. }));
+    }
+
+    // Hex error codes are locale-independent and mean wsl.exe actually ran, so
+    // they must win over the not-found heuristics.
+    #[test]
+    fn test_preflight_feature_disabled_wins_on_localized_message() {
+        let status = classify_preflight_command_failure(
+            "适用于 Linux 的 Windows 子系统没有已安装的分发版。错误: 0x8007019e",
+            true,
+            "wsl",
+        );
+        assert!(matches!(status, WslPreflightStatus::FeatureDisabled { .. }));
+    }
+
+    #[test]
+    fn test_preflight_virtualization_disabled_hex_code() {
+        let status = classify_preflight_command_failure(
+            "請啟用虛擬機器平台... 錯誤: 0x80370102",
+            true,
+            "wsl",
+        );
+        assert!(matches!(status, WslPreflightStatus::VirtualizationDisabled { .. }));
+    }
+
+    // An unrelated localized failure with wsl.exe present on disk must stay
+    // Unknown and preserve the original message for diagnosis.
+    #[test]
+    fn test_preflight_unrelated_localized_error_stays_unknown() {
+        let msg = "拒绝访问。 (os error 5)";
+        let status = classify_preflight_command_failure(msg, true, "wsl");
+        assert!(matches!(
+            status,
+            WslPreflightStatus::Unknown { message } if message == msg
+        ));
     }
 }
