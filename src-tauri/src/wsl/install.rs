@@ -13,6 +13,22 @@ use super::executor::terminal::ContainerRuntime;
 use super::import_export::import_distribution_with_version;
 use super::types::WslError;
 
+/// Process-wide counter for temp install artifact names.
+static TEMP_ARTIFACT_SEQ: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+
+/// Unique tag for temp install artifacts: `<pid>-<seq>`.
+///
+/// The PID alone is shared by every install running in this app instance, so
+/// two overlapping installs would use (and delete) the same temp path; the
+/// sequence number makes each install's artifacts unique within the process.
+fn unique_temp_tag() -> String {
+    format!(
+        "{}-{}",
+        std::process::id(),
+        TEMP_ARTIFACT_SEQ.fetch_add(1, std::sync::atomic::Ordering::Relaxed)
+    )
+}
+
 /// Get list of available distributions from Microsoft (for quick install)
 pub fn list_online_distributions() -> Result<Vec<String>, WslError> {
     let output = wsl_executor().list_online()?;
@@ -190,7 +206,7 @@ pub fn create_from_image(
 
     // Create temp file for tar export, cleaned up on all paths (including panic)
     let temp_dir = std::env::temp_dir();
-    let tar_path = temp_dir.join(format!("wsl-image-{}.tar", std::process::id()));
+    let tar_path = temp_dir.join(format!("wsl-image-{}.tar", unique_temp_tag()));
     let tar_path_str = tar_path.to_string_lossy().to_string();
     let _tar_guard = TempFileGuard::new(&tar_path);
 
@@ -262,7 +278,7 @@ pub fn create_from_oci_image(
 
     // Create temp directory for OCI operations, cleaned up on all paths (including panic)
     let temp_dir = std::env::temp_dir();
-    let oci_work_dir = temp_dir.join(format!("wsl-oci-{}", std::process::id()));
+    let oci_work_dir = temp_dir.join(format!("wsl-oci-{}", unique_temp_tag()));
     std::fs::create_dir_all(&oci_work_dir)
         .map_err(|e| WslError::CommandFailed(format!("Failed to create temp directory: {}", e)))?;
     let _work_dir_guard = TempFileGuard::new(&oci_work_dir);
@@ -574,8 +590,7 @@ Debian                                 Debian
     #[test]
     fn test_container_temp_path_format() {
         let temp_dir = std::env::temp_dir();
-        let pid = std::process::id();
-        let tar_path = temp_dir.join(format!("wsl-image-{}.tar", pid));
+        let tar_path = temp_dir.join(format!("wsl-image-{}.tar", super::unique_temp_tag()));
 
         let path_str = tar_path.to_string_lossy();
         assert!(path_str.contains("wsl-image-"));
@@ -585,10 +600,22 @@ Debian                                 Debian
     #[test]
     fn test_oci_work_dir_format() {
         let temp_dir = std::env::temp_dir();
-        let pid = std::process::id();
-        let oci_work_dir = temp_dir.join(format!("wsl-oci-{}", pid));
+        let oci_work_dir = temp_dir.join(format!("wsl-oci-{}", super::unique_temp_tag()));
 
         let path_str = oci_work_dir.to_string_lossy();
         assert!(path_str.contains("wsl-oci-"));
+    }
+
+    // Concurrent installs share the same PID, so temp artifact names must
+    // differ per install or overlapping installs overwrite/delete each
+    // other's tar/work dir (Greptile review on GH #103 fix).
+    #[test]
+    fn test_unique_temp_tag_differs_per_call() {
+        let a = super::unique_temp_tag();
+        let b = super::unique_temp_tag();
+        assert_ne!(a, b);
+        let pid_prefix = format!("{}-", std::process::id());
+        assert!(a.starts_with(&pid_prefix));
+        assert!(b.starts_with(&pid_prefix));
     }
 }
