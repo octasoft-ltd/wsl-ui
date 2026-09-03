@@ -1397,6 +1397,54 @@ WebView and inspect the first logged transport or window error.
 
 ---
 
+## Issue #24: Wrong or missing error detection on non-English Windows (localized CLI output)
+
+### Symptoms
+- On localized Windows (e.g. Chinese, German, Japanese):
+  - A missing `wsl.exe` shows a generic "Unknown" preflight error instead of the
+    "WSL is not installed" guidance screen.
+  - Compacting a distro VHDX via diskpart could report success even though diskpart
+    failed (or vice versa, failures carried no useful detail).
+  - A missing Hyper-V `Optimize-VHD` cmdlet surfaced as a raw localized PowerShell
+    error instead of the friendly "Hyper-V feature may not be installed" message.
+
+### Root Cause
+Several code paths classified `wsl.exe`, diskpart, and PowerShell output by matching
+English-only substrings ("not found", "successfully compacted", "not recognized").
+Windows localizes that text (FormatMessageW, localized diskpart/PowerShell messages),
+so the checks silently misfired on non-English systems. Same family as Issues about
+UTF-16 LE decoding (#99) and localized parsing (#101), but in paths those fixes did
+not cover.
+
+### Diagnosis
+1. Set Windows display language to a non-English locale (e.g. zh-CN).
+2. Rename/remove `wsl.exe` from PATH and launch the app: preflight showed a generic
+   error rather than the install guidance.
+3. Run a VHDX compact where diskpart fails (e.g. distro still running): the app
+   reported success because the localized failure text matched no pattern.
+
+### Solution
+Classification now uses locale-independent signals first:
+- Preflight: WSL hex error codes (`0x8007019e`, `0x80370102`), the stable
+  `(os error 2/3)` suffix Rust appends to spawn failures, and an on-disk existence
+  check of the configured `wsl` executable (resolved against PATH). English phrases
+  remain only as a fallback.
+- Diskpart compact: the elevated wrapper appends `WSLUI_DISKPART_EXIT=<code>` to the
+  captured output so diskpart's real exit code decides success, regardless of locale.
+- Optimize-VHD: the elevated wrapper writes the .NET exception type name (e.g.
+  `System.Management.Automation.CommandNotFoundException`), which is locale-invariant.
+
+### Files Changed
+- `src-tauri/src/wsl/executor/wsl_command/real.rs`: locale-independent preflight
+  failure classification + regression tests with zh-CN/de-DE messages.
+- `src-tauri/src/wsl/executor/resource/real.rs`: diskpart exit-code marker,
+  exception-type-based Optimize-VHD detection + localized regression tests.
+
+### Related
+- GitHub issue #102 (OCT-1136); related #99 (OCT-1066), #101 (OCT-1132)
+
+---
+
 ## Template for New Issues
 
 ```markdown
