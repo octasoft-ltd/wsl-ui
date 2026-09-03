@@ -1200,7 +1200,75 @@ Added the official `tauri-plugin-single-instance` plugin. When a second `wsl-ui.
 
 ---
 
-## Issue #18: Tauri build reports mismatched JavaScript and Rust package versions
+## Issue #17: Pulling a container image fails with "Blob digest mismatch" or "Blob size mismatch"
+
+### Symptoms
+- Creating a distro from an OCI/container image (`docker.io`, `ghcr.io`, a custom registry, etc.) fails part-way through with an error such as:
+  - `Registry error: Blob digest mismatch for sha256:...: computed sha256:...`
+  - `Registry error: Blob size mismatch for sha256:...: expected N bytes, got M bytes`
+  - `Registry error: Unsupported digest algorithm '...': only sha256 is supported`
+- The import stops and no distribution is created.
+
+### Root Cause
+Each OCI layer is content-addressable: the manifest declares an exact `sha256` digest and byte size for every layer. WSL-UI now verifies the bytes it downloads against those values before merging layers and handing them to `wsl --import`. An error means the layer that arrived on disk did **not** match what the manifest promised. Common causes:
+- A **truncated or corrupted download** (dropped connection, flaky network, a proxy that mangled the stream) — usually a size mismatch.
+- A registry served over insecure **`http://`** where a MITM or a poisoned cache substituted layer content — a digest mismatch.
+- A registry/mirror bug returning the wrong blob for a digest.
+- A digest that isn't SHA-256 (unsupported): the app rejects it rather than importing unverified bytes.
+
+This is a safety feature: importing an unverified layer could silently produce a broken distro or run tampered content as a "real" distribution.
+
+### Diagnosis
+- Retry the pull. If a **size mismatch** disappears on retry, it was a transient/corrupt download.
+- If a **digest mismatch** persists — especially against an `http://` registry — treat the source as untrusted. Pull the same image over `https://` from the authoritative registry.
+- Verify the image reference is correct and the registry/mirror is healthy.
+
+### Solution
+- Retry over a stable network; transient truncations resolve on a clean re-download (the partial file is deleted automatically, so nothing broken is left behind).
+- Prefer `https://` registries so content can't be tampered with in transit.
+- If the mismatch is reproducible from a trusted `https://` source, the image or registry itself is serving corrupt data — report it upstream.
+
+### Files Changed
+- `src-tauri/src/oci/registry.rs`: `download_blob` streams the layer through a SHA-256 hasher, verifies the computed digest and byte count against the manifest, deletes the partial file and errors on mismatch; added `verify_digest` helper and manifest-digest verification in `get_manifest`.
+- `src-tauri/src/oci/image.rs`: passes the manifest layer `size` into `download_blob`.
+
+### Related
+- GitHub issue: https://github.com/octasoft-ltd/wsl-ui/issues/106
+- Paperclip issue: OCT-1144
+- OCI content-addressable storage / digest spec
+
+---
+
+## Issue #18: Garbled characters (mojibake) in WSL errors on non-English locales
+
+### Symptoms
+- The "WSL UNAVAILABLE" panel (or other WSL command output) renders as mojibake on a non-English Windows locale (e.g. Chinese zh-CN).
+- Example: `WSL check failed: *❍✚¡ABⵙⓤ❍N BLⵙBBnBuⵙB ...` followed by a readable English line such as `Try running 'wsl --status' in PowerShell to diagnose.`
+- English (en-US) locales are unaffected.
+
+### Root Cause
+`wsl.exe` emits its output as UTF-16 LE. `decode_wsl_output` (`crates/wsl-core/src/parser.rs`) detected UTF-16 LE with a heuristic that only inspected the first few byte pairs for the ASCII NUL pattern (high byte = `0x00`). That pattern only holds when the payload is ASCII. On non-English locales the localized text is CJK, whose UTF-16 LE code units have non-NUL high bytes, so detection failed, the bytes fell through to `String::from_utf8_lossy`, and the UTF-16 LE buffer was misread as UTF-8 → mojibake.
+
+### Diagnosis
+- Reproduces only on non-English Windows display locales.
+- Confirmed by feeding localized CJK text encoded as UTF-16 LE through `decode_wsl_output` and observing garbled output before the fix.
+
+### Solution
+Made `decode_wsl_output` locale-robust:
+- Honor an explicit UTF-16 LE BOM (`0xFF 0xFE`) and UTF-8 BOM (`0xEF 0xBB 0xBF`), stripping them.
+- Replaced the leading-bytes heuristic with a whole-buffer scan: UTF-8 text effectively never contains NUL bytes, whereas UTF-16 LE `wsl.exe` output always contains NUL high bytes for ASCII/control characters (spaces, digits, newlines, the ASCII fallback lines present even in localized errors). When NUL bytes are concentrated in odd positions, it is treated as UTF-16 LE regardless of locale.
+- Added an invalid-UTF-8 + even-length safety net that decodes as UTF-16 LE.
+
+### Files Changed
+- `crates/wsl-core/src/parser.rs`: rewrote `decode_wsl_output` / `looks_like_utf16le`, added `decode_utf16le` helper, and added localized (CJK) UTF-16 LE regression tests.
+
+### Related
+- GitHub issue: https://github.com/octasoft-ltd/wsl-ui/issues/99
+- Internal: OCT-1066. Prior encoding work (OCT-412, OCT-436) covered only the ASCII path; this is the non-ASCII-locale recurrence.
+
+---
+
+## Issue #19: Tauri build reports mismatched JavaScript and Rust package versions
 
 ### Symptoms
 - `npm run tauri:build:debug` stops before compiling the application.
@@ -1233,7 +1301,7 @@ running E2E tests.
 
 ---
 
-## Issue #17: Quick Actions menu does not appear
+## Issue #20: Quick Actions menu does not appear
 
 ### Symptoms
 - Clicking the Quick Actions button does not display the menu.

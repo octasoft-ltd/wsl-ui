@@ -26,9 +26,11 @@ interface DistroStore {
   // Actions
   fetchDistros: (silent?: boolean, force?: boolean) => Promise<void>;
   startDistro: (name: string, id?: string) => Promise<void>;
-  stopDistro: (name: string) => Promise<void>;
+  /** Stop a distro. Resolves true on success, false if the stop failed (error is set on the store). */
+  stopDistro: (name: string) => Promise<boolean>;
   deleteDistro: (name: string) => Promise<void>;
-  shutdownAll: () => Promise<void>;
+  /** Shut down all WSL. Resolves true on success, false if the shutdown failed (error is set on the store). */
+  shutdownAll: () => Promise<boolean>;
   forceKillWsl: () => Promise<void>;
   setDefault: (name: string) => Promise<void>;
   openTerminal: (name: string, id?: string) => Promise<void>;
@@ -299,6 +301,7 @@ export const useDistroStore = create<DistroStore>((set, get) => ({
     try {
       await wslService.stopDistribution(name);
       await get().fetchDistros();
+      return true;
     } catch (error) {
       const appError = parseError(error);
       logError(appError, "distroStore.stopDistro");
@@ -307,6 +310,7 @@ export const useDistroStore = create<DistroStore>((set, get) => ({
         error: errorMessage,
         isTimeoutError: isTimeoutErrorMessage(errorMessage),
       });
+      return false;
     } finally {
       set({ actionInProgress: null });
     }
@@ -332,6 +336,7 @@ export const useDistroStore = create<DistroStore>((set, get) => ({
     try {
       await wslService.shutdownAll();
       await get().fetchDistros();
+      return true;
     } catch (error) {
       const appError = parseError(error);
       logError(appError, "distroStore.shutdownAll");
@@ -340,6 +345,7 @@ export const useDistroStore = create<DistroStore>((set, get) => ({
         error: errorMessage,
         isTimeoutError: isTimeoutErrorMessage(errorMessage),
       });
+      return false;
     } finally {
       set({ actionInProgress: null });
     }

@@ -173,7 +173,9 @@ pub struct WslConfig {
     pub localhost_forwarding: Option<bool>,
     pub kernel_command_line: Option<String>,
     pub nested_virtualization: Option<bool>,
-    pub vm_idle_timeout: Option<u32>,
+    // Signed: `-1` is the documented WSL "never idle-shutdown" sentinel
+    // (used by the RDP keep-alive feature), so this must not be unsigned.
+    pub vm_idle_timeout: Option<i64>,
     pub gui_applications: Option<bool>,
     pub debug_console: Option<bool>,
     pub page_reporting: Option<bool>,
@@ -392,9 +394,9 @@ fn parse_wsl_config(content: &str) -> Result<WslConfig, String> {
         nested_virtualization: ini.getbool("wsl2", "nestedVirtualization")
             .ok().flatten()
             .or_else(|| ini.getbool("wsl2", "nestedvirtualization").ok().flatten()),
-        vm_idle_timeout: ini.getuint("wsl2", "vmIdleTimeout").ok().flatten()
-            .or_else(|| ini.getuint("wsl2", "vmidletimeout").ok().flatten())
-            .map(|v| v as u32),
+        // Signed parse so the documented `-1` sentinel survives (getuint drops it).
+        vm_idle_timeout: ini.getint("wsl2", "vmIdleTimeout").ok().flatten()
+            .or_else(|| ini.getint("wsl2", "vmidletimeout").ok().flatten()),
         gui_applications: ini.getbool("wsl2", "guiApplications")
             .ok().flatten()
             .or_else(|| ini.getbool("wsl2", "guiapplications").ok().flatten()),
@@ -588,6 +590,11 @@ fn parse_wsl_conf(content: &str) -> Result<WslConf, String> {
 /// Write wsl.conf to a distribution
 /// Uses wsl -u root to write with root privileges since /etc/wsl.conf is typically owned by root
 pub fn write_wsl_conf(distro_name: &str, config: WslConf) -> Result<(), String> {
+    // Reject any value that could escape the root heredoc below (embedded newlines /
+    // control chars). This is the single chokepoint every wsl.conf write flows through,
+    // so validating here protects all callers regardless of the Tauri boundary check.
+    validate_wsl_conf(&config).map_err(|e| e.to_string())?;
+
     if is_mock_mode() {
         return Ok(());
     }
@@ -610,6 +617,33 @@ pub fn write_wsl_conf(distro_name: &str, config: WslConf) -> Result<(), String> 
             "Failed to write wsl.conf: {}",
             output.stderr.trim()
         ));
+    }
+
+    Ok(())
+}
+
+/// Validate every user-supplied string value in a [`WslConf`] before it is written.
+///
+/// `write_wsl_conf` serializes these values into an INI file that is written to the
+/// distro as **root** via a shell heredoc. Any embedded newline can inject extra INI
+/// lines/sections, and a line equal to the heredoc delimiter can escape the heredoc and
+/// run trailing lines as root. Rejecting control characters in each value closes both
+/// vectors. See [`crate::validation::validate_wsl_conf_value`].
+pub fn validate_wsl_conf(config: &WslConf) -> Result<(), crate::validation::ValidationError> {
+    use crate::validation::validate_wsl_conf_value;
+
+    let string_fields: [(&str, &Option<String>); 5] = [
+        ("automount.root", &config.automount_root),
+        ("automount.options", &config.automount_options),
+        ("network.hostname", &config.network_hostname),
+        ("user.default", &config.user_default),
+        ("boot.command", &config.boot_command),
+    ];
+
+    for (field, value) in string_fields {
+        if let Some(value) = value {
+            validate_wsl_conf_value(field, value)?;
+        }
     }
 
     Ok(())
@@ -765,6 +799,25 @@ firewall=false
         assert_eq!(parsed.dns_tunneling, Some(true));
         assert_eq!(parsed.firewall, Some(false));
         assert_eq!(parsed.networking_mode, Some("mirrored".to_string()));
+    }
+
+    #[test]
+    fn test_wsl_config_vm_idle_timeout_negative_one_roundtrip() {
+        // Regression for OCT-1258 / GH #129: `-1` is the documented WSL
+        // "never idle-shutdown" sentinel and the app's RDP keep-alive relies on
+        // it. It must survive a parse -> serialize round-trip (previously the
+        // Option<u32> field + unsigned parse dropped it silently on save).
+        let content = "[wsl2]\nvmIdleTimeout=-1\n";
+        let config = parse_wsl_config(content).unwrap();
+
+        assert_eq!(config.vm_idle_timeout, Some(-1));
+
+        let serialized = serialize_wsl_config(&config);
+        assert!(
+            serialized.contains("vmIdleTimeout=-1"),
+            "vmIdleTimeout=-1 must be preserved on save, got:\n{}",
+            serialized
+        );
     }
 
     #[test]
@@ -938,6 +991,73 @@ command=/etc/init.d/start.sh
         assert!(serialized.contains("root=/mnt/"));
         assert!(serialized.contains("[boot]"));
         assert!(serialized.contains("systemd=true"));
+    }
+
+    // ==================== wsl.conf Injection Validation Tests ====================
+
+    #[test]
+    fn test_validate_wsl_conf_accepts_clean_config() {
+        let config = WslConf {
+            automount_root: Some("/mnt/".to_string()),
+            automount_options: Some("metadata,uid=1000".to_string()),
+            network_hostname: Some("my-host".to_string()),
+            user_default: Some("ian".to_string()),
+            boot_command: Some("service docker start; echo ready".to_string()),
+            ..Default::default()
+        };
+        assert!(validate_wsl_conf(&config).is_ok());
+    }
+
+    #[test]
+    fn test_validate_wsl_conf_default_is_ok() {
+        assert!(validate_wsl_conf(&WslConf::default()).is_ok());
+    }
+
+    #[test]
+    fn test_validate_wsl_conf_rejects_newline_in_boot_command() {
+        // The classic root-command-execution carrier: a newline lets the value break out
+        // of the heredoc / inject a new INI line.
+        let config = WslConf {
+            boot_command: Some("echo hi\nWSLCONFEOF\ntouch /tmp/pwned".to_string()),
+            ..Default::default()
+        };
+        assert!(validate_wsl_conf(&config).is_err());
+    }
+
+    #[test]
+    fn test_validate_wsl_conf_rejects_newline_in_hostname() {
+        let config = WslConf {
+            network_hostname: Some("host\n[boot]\ncommand=malicious".to_string()),
+            ..Default::default()
+        };
+        assert!(validate_wsl_conf(&config).is_err());
+    }
+
+    #[test]
+    fn test_validate_wsl_conf_rejects_newline_in_automount_options() {
+        let config = WslConf {
+            automount_options: Some("metadata\nuid=0".to_string()),
+            ..Default::default()
+        };
+        assert!(validate_wsl_conf(&config).is_err());
+    }
+
+    #[test]
+    fn test_validate_wsl_conf_rejects_newline_in_automount_root() {
+        let config = WslConf {
+            automount_root: Some("/mnt/\ninjected".to_string()),
+            ..Default::default()
+        };
+        assert!(validate_wsl_conf(&config).is_err());
+    }
+
+    #[test]
+    fn test_validate_wsl_conf_rejects_newline_in_user_default() {
+        let config = WslConf {
+            user_default: Some("root\ninjected".to_string()),
+            ..Default::default()
+        };
+        assert!(validate_wsl_conf(&config).is_err());
     }
 
     // ==================== Round-trip Tests ====================

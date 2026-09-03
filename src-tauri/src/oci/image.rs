@@ -57,8 +57,8 @@ pub fn pull_and_create_rootfs(
             );
         }
 
-        // Download without per-byte progress (progress reported at layer level)
-        client.download_blob(&image, &layer.digest, &layer_path, None)?;
+        // Download with SHA-256 digest + size verification (progress reported at layer level)
+        client.download_blob(&image, &layer.digest, layer.size, &layer_path, None)?;
         downloaded_total += layer.size;
 
         layer_paths.push(layer_path);

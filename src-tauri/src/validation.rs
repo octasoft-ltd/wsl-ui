@@ -22,6 +22,9 @@ pub enum ValidationError {
 
     #[error("Invalid action ID: {0}")]
     InvalidActionId(String),
+
+    #[error("Invalid value for {field}: {reason}")]
+    InvalidConfigValue { field: String, reason: String },
 }
 
 /// Validate WSL distribution name
@@ -300,6 +303,33 @@ pub fn validate_action_id(id: &str) -> Result<(), ValidationError> {
         return Err(ValidationError::InvalidActionId(
             "ID can only contain letters, numbers, hyphens, and underscores".into(),
         ));
+    }
+
+    Ok(())
+}
+
+/// Validate a single user-supplied `wsl.conf` INI value.
+///
+/// `wsl.conf` values are serialized into an INI file that is written to the distro as
+/// **root** via a shell heredoc (`cat > /etc/wsl.conf << 'WSLCONFEOF'`). A value that
+/// contains a newline can inject arbitrary extra INI lines/sections, and a value whose
+/// line equals the heredoc delimiter terminates the heredoc early — after which the
+/// trailing lines execute as root shell commands. Rejecting all control characters
+/// (which include `\n`, `\r`, and `\0`) closes both vectors: without a newline a value
+/// cannot start a new INI line, break out of the heredoc, or reach the delimiter line.
+///
+/// Every `wsl.conf` value is a single INI line, so no legitimate value needs a control
+/// character. This is intentionally strict for `boot.command` too — the command itself
+/// is a single line and may contain spaces, `;`, `|`, `$`, etc., but never a newline.
+pub fn validate_wsl_conf_value(field: &str, value: &str) -> Result<(), ValidationError> {
+    if let Some(c) = value.chars().find(|c| c.is_control()) {
+        return Err(ValidationError::InvalidConfigValue {
+            field: field.to_string(),
+            reason: format!(
+                "value cannot contain control characters (found U+{:04X})",
+                c as u32
+            ),
+        });
     }
 
     Ok(())
@@ -738,5 +768,73 @@ mod tests {
         assert!(validate_url("file:///etc/passwd").is_err());
         assert!(validate_url("/local/path").is_err());
         assert!(validate_url("example.com/file").is_err());
+    }
+
+    // ==================== wsl.conf Value Tests ====================
+
+    #[test]
+    fn test_valid_wsl_conf_values() {
+        // Legitimate single-line values across the string fields.
+        assert!(validate_wsl_conf_value("automount.root", "/mnt/").is_ok());
+        assert!(validate_wsl_conf_value("automount.options", "metadata,uid=1000,gid=1000,umask=22").is_ok());
+        assert!(validate_wsl_conf_value("network.hostname", "my-host").is_ok());
+        assert!(validate_wsl_conf_value("user.default", "ian").is_ok());
+        // boot.command is a shell command line — spaces and shell metacharacters are fine,
+        // as long as it stays on one line.
+        assert!(validate_wsl_conf_value("boot.command", "service docker start; echo ready | tee /tmp/x").is_ok());
+        // Empty value is allowed.
+        assert!(validate_wsl_conf_value("user.default", "").is_ok());
+    }
+
+    #[test]
+    fn test_wsl_conf_value_rejects_newline() {
+        // A newline lets a value inject arbitrary extra INI lines/sections.
+        let result = validate_wsl_conf_value("boot.command", "echo hi\n[boot]\ncommand=malicious");
+        assert!(matches!(
+            result,
+            Err(ValidationError::InvalidConfigValue { .. })
+        ));
+    }
+
+    #[test]
+    fn test_wsl_conf_value_rejects_carriage_return() {
+        let result = validate_wsl_conf_value("network.hostname", "host\rinjected");
+        assert!(matches!(
+            result,
+            Err(ValidationError::InvalidConfigValue { .. })
+        ));
+    }
+
+    #[test]
+    fn test_wsl_conf_value_rejects_heredoc_delimiter_escape() {
+        // A value carrying the heredoc delimiter on its own line would terminate the
+        // heredoc early and run the trailing lines as root. The embedded newline is
+        // what makes this possible, so it must be rejected.
+        let result = validate_wsl_conf_value(
+            "boot.command",
+            "echo hi\nWSLCONFEOF\ntouch /tmp/pwned",
+        );
+        assert!(matches!(
+            result,
+            Err(ValidationError::InvalidConfigValue { .. })
+        ));
+    }
+
+    #[test]
+    fn test_wsl_conf_value_rejects_null_byte() {
+        let result = validate_wsl_conf_value("user.default", "root\0");
+        assert!(matches!(
+            result,
+            Err(ValidationError::InvalidConfigValue { .. })
+        ));
+    }
+
+    #[test]
+    fn test_wsl_conf_value_rejects_control_char() {
+        let result = validate_wsl_conf_value("automount.options", "metadata\x07uid=0");
+        assert!(matches!(
+            result,
+            Err(ValidationError::InvalidConfigValue { .. })
+        ));
     }
 }
