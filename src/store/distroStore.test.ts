@@ -439,6 +439,26 @@ describe("distroStore", () => {
       expect(useDistroStore.getState().actionInProgress).toBeNull();
     });
 
+    it("returns true on success", async () => {
+      vi.mocked(wslService.stopDistribution).mockResolvedValue(undefined);
+      vi.mocked(wslService.listDistributions).mockResolvedValue([]);
+      vi.mocked(wslService.getDistributionDiskSize).mockResolvedValue(0);
+
+      const result = await useDistroStore.getState().stopDistro("Ubuntu");
+
+      expect(result).toBe(true);
+    });
+
+    it("returns false on failure (does not swallow the error silently)", async () => {
+      vi.mocked(wslService.stopDistribution).mockRejectedValue(
+        new Error("Stop failed")
+      );
+
+      const result = await useDistroStore.getState().stopDistro("Ubuntu");
+
+      expect(result).toBe(false);
+    });
+
     it("sets isTimeoutError true for timeout errors", async () => {
       vi.mocked(wslService.stopDistribution).mockRejectedValue(
         new Error("Operation timed out")
@@ -511,6 +531,27 @@ describe("distroStore", () => {
       );
 
       await shutdownPromise;
+    });
+
+    it("returns true on success", async () => {
+      vi.mocked(wslService.shutdownAll).mockResolvedValue(undefined);
+      vi.mocked(wslService.listDistributions).mockResolvedValue([]);
+      vi.mocked(wslService.getDistributionDiskSize).mockResolvedValue(0);
+
+      const result = await useDistroStore.getState().shutdownAll();
+
+      expect(result).toBe(true);
+    });
+
+    it("returns false on failure (does not swallow the error silently)", async () => {
+      vi.mocked(wslService.shutdownAll).mockRejectedValue(
+        new Error("Shutdown failed")
+      );
+
+      const result = await useDistroStore.getState().shutdownAll();
+
+      expect(result).toBe(false);
+      expect(useDistroStore.getState().error).toBe("Shutdown failed");
     });
   });
 
