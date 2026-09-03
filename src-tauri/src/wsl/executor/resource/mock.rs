@@ -120,6 +120,12 @@ impl ResourceMonitor for MockResourceMonitor {
         result
     }
 
+    fn registry_confirms_no_distros(&self) -> bool {
+        debug!("Mock: registry_confirms_no_distros");
+        // The mock registry is always readable, so empty means confirmed empty
+        self.get_all_distro_registry_info().is_empty()
+    }
+
     fn get_distro_base_path(&self, name: &str) -> Option<String> {
         debug!("Mock: get_distro_base_path for '{}'", name);
 
