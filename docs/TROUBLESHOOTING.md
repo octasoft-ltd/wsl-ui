@@ -1397,7 +1397,37 @@ WebView and inspect the first logged transport or window error.
 
 ---
 
-## Issue #24: Wrong or missing error detection on non-English Windows (localized CLI output)
+## Issue #24: Fixed drives no longer appear under /mnt after enabling virtiofs
+
+### Symptoms
+- After adding `virtiofs=true` to the `[wsl2]` section of `.wslconfig`, fixed Windows drives
+  (e.g. `/mnt/c`, `/mnt/d`) are no longer automounted inside distributions.
+- No error is shown — the mounts are silently absent.
+- Mounted disks may also not appear in WSL UI's mounted-disk list.
+
+### Root Cause
+`virtiofs=true` is an opt-in WSL feature (2026) that replaces the default Plan 9 file sharing
+transport. In current WSL builds it silently skips automounting fixed drives (upstream bug),
+and virtiofs mounts do not appear as `/dev/sd*` devices, which is what WSL UI's mounted-disk
+discovery currently matches.
+
+### Diagnosis
+1. Check `%USERPROFILE%\.wslconfig` for `virtiofs=true` under `[wsl2]`.
+2. Run `mount` inside the distro — with virtiofs the Windows drive mounts are missing or use a
+   `virtiofs` filesystem type instead of `9p`.
+
+### Solution
+Remove `virtiofs=true` (or set it to `false`) in `.wslconfig` and run `wsl --shutdown`, then
+restart the distribution. Track the upstream fix before re-enabling.
+
+### Related
+- https://github.com/microsoft/WSL/issues/40773 (automount silently skipped)
+- https://github.com/microsoft/WSL/issues/40719 (file ownership anomalies on Windows bind mounts)
+- `docs/plans/2026-09-03-wsl-developments-review.md` (WSL 2026 developments review)
+
+---
+
+## Issue #26: Wrong or missing error detection on non-English Windows (localized CLI output)
 
 ### Symptoms
 - On localized Windows (e.g. Chinese, German, Japanese):

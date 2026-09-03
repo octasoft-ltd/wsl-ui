@@ -211,9 +211,14 @@ export function QuickActionsPopup({ distro, actions, onAction }: QuickActionsPop
             </button>
             <button
               onClick={() => onAction("manage:rename")}
+              disabled={!distro.id}
               data-testid="manage-action-rename"
               role="menuitem"
-              className="w-full flex items-center gap-3 px-6 py-2 text-sm text-left text-theme-text-secondary hover:bg-theme-bg-tertiary hover:text-theme-text-primary transition-all"
+              className={`w-full flex items-center gap-3 px-6 py-2 text-sm text-left transition-all ${
+                !distro.id
+                  ? "text-theme-status-stopped cursor-not-allowed"
+                  : "text-theme-text-secondary hover:bg-theme-bg-tertiary hover:text-theme-text-primary"
+              }`}
             >
               <span className="text-theme-text-muted">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

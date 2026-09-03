@@ -135,9 +135,13 @@ export function WslGlobalSettings() {
               value={config.processors?.toString() || ""}
               onChange={(v) => {
                 // Backend field is u32: negative/decimal input would fail the
-                // whole save with an opaque serde error (GH #118)
-                const n = parseInt(v, 10);
-                updateConfig("processors", v && !isNaN(n) && n >= 1 ? n : undefined);
+                // whole save with an opaque serde error (GH #118). Use Number
+                // (not parseInt) so "1.5" is rejected instead of truncated to 1.
+                const n = Number(v);
+                updateConfig(
+                  "processors",
+                  v && Number.isInteger(n) && n >= 1 && n <= 4294967295 ? n : undefined,
+                );
               }}
               placeholder={t('wslGlobal.processorsPlaceholder')}
               type="number"

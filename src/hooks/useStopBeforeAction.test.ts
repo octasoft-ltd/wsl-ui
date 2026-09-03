@@ -80,6 +80,23 @@ describe("useStopBeforeAction", () => {
     await runStopAndContinue(pendingAction);
 
     expect(pendingAction).not.toHaveBeenCalled();
+    // The user must get visible feedback: a notification that survives the
+    // dialog closing (the store error alone was erased by the re-fetch).
+    expect(useNotificationStore.getState().notifications).toHaveLength(1);
+    expect(useNotificationStore.getState().notifications[0].type).toBe("error");
+  });
+
+  it("re-fetches silently so a stop-failure error is not cleared", async () => {
+    const fetchDistros = vi.fn().mockResolvedValue(undefined);
+    useDistroStore.setState({
+      stopDistro: vi.fn().mockResolvedValue(false),
+      shutdownAll: vi.fn().mockResolvedValue(false),
+      fetchDistros,
+    });
+
+    await runStopAndContinue(vi.fn());
+
+    expect(fetchDistros).toHaveBeenCalledWith(true);
   });
 
   it("does NOT run the destructive action when shutdownAll fails (requiresShutdown)", async () => {
