@@ -68,6 +68,19 @@ describe("settingsStore", () => {
       expect(useSettingsStore.getState().settings).toEqual(customSettings);
     });
 
+    // GH #138: backend ships defaultInstallBasePath: null on a fresh install;
+    // it must not override the "" default and reach the controlled input
+    it("coerces null defaultInstallBasePath to empty string", async () => {
+      vi.mocked(invoke).mockResolvedValue({
+        ...DEFAULT_SETTINGS,
+        defaultInstallBasePath: null,
+      });
+
+      await useSettingsStore.getState().loadSettings();
+
+      expect(useSettingsStore.getState().settings.defaultInstallBasePath).toBe("");
+    });
+
     it("calls invoke with correct command", async () => {
       vi.mocked(invoke).mockResolvedValue(DEFAULT_SETTINGS);
 
