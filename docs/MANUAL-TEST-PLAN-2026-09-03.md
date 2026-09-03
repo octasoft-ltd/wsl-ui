@@ -4,8 +4,8 @@ Human verification steps for the fixes landed in the 2026-09-03 backlog pass
 (OCT-1475). Every fix has automated unit coverage; the steps below cover the
 parts that need a real WSL installation, real hardware, or visual judgement.
 
-Build under test: a debug or release build containing the merged PRs
-#146–#149, #100, and the OCT-1475 batch branch.
+Build under test: a debug or release build of `main` containing the merged
+PRs #100, #146–#149, #156, #159, #161, #162, and #167.
 
 For each item: tick when verified, note build + result. Items marked
 **[needs hardware/locale]** cannot be verified on a stock dev machine.
@@ -121,12 +121,64 @@ For each item: tick when verified, note build + result. Items marked
   panels must render readable localized text, no mojibake.
   **[needs locale]**
 
-## 13. Still open, known-not-fixed (do not fail the pass on these)
+## 13. Quick Actions menu no longer clipped (GH #155 / PR 156)
+
+1. On a dashboard with enough distros to scroll, open Quick Actions (⋮) on
+   a distro card near the bottom edge of the list.
+2. The menu must render fully visible (flipped above the button if needed),
+   not cut off by the card list's overflow.
+3. Scroll the list while the menu is open: the menu must close or track the
+   button — it must never remain floating detached from its card.
+
+## 14. Localized zero-distro state (GH #101 / PR 161) **[needs locale]**
+
+1. On a non-English Windows locale (zh-CN is the confirmed reproduction),
+   unregister all WSL distributions (`wsl --unregister <each>`), keep WSL
+   itself installed.
+2. Launch the app: it must show the normal empty state ("no distributions",
+   install prompt) — **not** an error banner `WSL command failed:`.
+3. Regression on any locale: with WSL working and distros present, the list
+   must still populate normally.
+4. Fault case: the empty state must come from the Lxss registry check — if
+   `wsl -l -v` fails for an unrelated reason while distros ARE registered
+   (hard to stage; code-covered by unit tests), an error must surface rather
+   than an empty list silently replacing the inventory.
+
+## 15. Locale-independent CLI failure detection (GH #102 / PR 162) **[needs locale]**
+
+On a non-English Windows locale (zh-CN / de-DE / ja-JP):
+
+1. **Preflight, missing wsl.exe:** temporarily rename `wsl.exe` off PATH
+   (or point the app's configured WSL path at a non-existent file). Launch:
+   the "WSL is not installed" guidance screen must appear, not a generic
+   "Unknown" preflight error.
+2. **diskpart compact:** run VHDX Compact on a distro that is still running
+   (diskpart will fail). The app must report the failure with diskpart's
+   output — **not** success. Then stop the distro and compact again: must
+   succeed. (Success/failure is now decided by diskpart's exit code carried
+   via the `WSLUI_DISKPART_EXIT=<code>` marker, so this must behave the same
+   on every locale.)
+3. **Optimize-VHD missing:** on a machine without Hyper-V, choose the
+   Optimize-VHD compact strategy: the friendly "Hyper-V feature may not be
+   installed" message must appear instead of a raw localized PowerShell
+   error.
+
+## 16. Greptile follow-up spot-checks (PR 167)
+
+1. Settings → WSL Global → Processors: paste an absurdly large number
+   (e.g. `99999999999999`). The field must clamp/reject it and the save must
+   not corrupt `.wslconfig` (value is bounded to u32).
+2. Quick sanity pass over the areas touched by review-comment fixes from
+   PRs #147/#149/#156/#159: resize/compact dialogs, container-image import,
+   Quick Actions menu, and the settings save path — no regressions in the
+   flows from sections 4–13 above.
+
+## 17. Still open, known-not-fixed (do not fail the pass on these)
 
 - GH #130: bare mounts invisible in the mounted list / tracking wiped on
   empty refresh.
 - GH #154: quick-install catalog can be empty when catalog endpoints are
   unreachable (needs reporter follow-up).
-- GH #155/PR 156: Quick Actions clipping — fix under review from an
-  external contributor.
-- Remaining audit-filed backlog (#101–#145 subset) tracked individually.
+- GH #103/PR 163: install/clone temp-file leak — fix under review
+  (OCT-1138).
+- Remaining audit-filed backlog (#104–#166 subset) tracked individually.
