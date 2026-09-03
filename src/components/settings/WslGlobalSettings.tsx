@@ -138,7 +138,10 @@ export function WslGlobalSettings() {
                 // whole save with an opaque serde error (GH #118). Use Number
                 // (not parseInt) so "1.5" is rejected instead of truncated to 1.
                 const n = Number(v);
-                updateConfig("processors", v && Number.isInteger(n) && n >= 1 ? n : undefined);
+                updateConfig(
+                  "processors",
+                  v && Number.isInteger(n) && n >= 1 && n <= 4294967295 ? n : undefined,
+                );
               }}
               placeholder={t('wslGlobal.processorsPlaceholder')}
               type="number"
