@@ -344,9 +344,11 @@ pub fn get_distribution_location(name: &str) -> Result<Option<String>, WslError>
 /// skipped, because a bare/untargeted `wsl --system` boots the default
 /// distribution as a side effect (GH #157).
 fn pick_running_distro(distros: &[super::types::Distribution]) -> Option<&str> {
+    // WSL1 distros can't answer `wsl --system -d` (WSL2-only), so only
+    // consider running WSL2 distributions.
     let running: Vec<_> = distros
         .iter()
-        .filter(|d| d.state == super::types::DistroState::Running)
+        .filter(|d| d.state == super::types::DistroState::Running && d.version == 2)
         .collect();
     running
         .iter()
@@ -521,6 +523,17 @@ mod tests {
             distro("Debian", DistroState::Running, false),
         ];
         assert_eq!(pick_running_distro(&distros), Some("Debian"));
+    }
+
+    // `wsl --system -d` is WSL2-only: a running WSL1 default must be skipped
+    // in favour of a running WSL2 distro, and never targeted at all.
+    #[test]
+    fn test_pick_running_distro_skips_wsl1() {
+        let mut wsl1_default = distro("Legacy", DistroState::Running, true);
+        wsl1_default.version = 1;
+        let distros = vec![wsl1_default.clone(), distro("Debian", DistroState::Running, false)];
+        assert_eq!(pick_running_distro(&distros), Some("Debian"));
+        assert_eq!(pick_running_distro(&[wsl1_default]), None);
     }
 
     #[test]

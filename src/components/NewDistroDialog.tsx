@@ -498,6 +498,11 @@ export function NewDistroDialog({ isOpen, onClose }: NewDistroDialogProps) {
     let urlObj: URL;
     try {
       urlObj = new URL(customUrl.trim());
+      // The backend only downloads over HTTP(S); reject other schemes here
+      // rather than sending the user through the install-config flow first.
+      if (urlObj.protocol !== "http:" && urlObj.protocol !== "https:") {
+        throw new Error("Unsupported URL protocol");
+      }
     } catch {
       setError(t('customUrl.invalid', { url: customUrl.trim() }));
       return;
