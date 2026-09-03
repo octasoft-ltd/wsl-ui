@@ -9,11 +9,13 @@
 
 import {
   selectors,
+  focusMainWindow,
   waitForDistroState,
   waitForDialog,
   waitForDialogToDisappear,
   verifyDistroCardState,
   mockDistributions,
+  switchToMainWindow,
 } from "../utils";
 import { setupHooks, actions } from "../base";
 
@@ -26,18 +28,14 @@ describe("Quick Actions Menu", () => {
    * Note: actions.closeQuickActionsMenu uses Escape key instead.
    */
   async function closeMenuByClickingOutside(): Promise<void> {
+    await focusMainWindow();
     const main = await $("main");
     await main.click();
-    // Wait for menu to disappear
+
+    const quickActionsButton = await $(selectors.distroCardByName("Ubuntu"))
+      .then((card) => card.$(selectors.quickActionsButton));
     await browser.waitUntil(
-      async () => {
-        const menu = await $(selectors.quickActionsMenu);
-        try {
-          return !(await menu.isDisplayed());
-        } catch {
-          return true;
-        }
-      },
+      async () => (await quickActionsButton.getAttribute("aria-expanded")) === "false",
       { timeout: 3000, timeoutMsg: "Menu did not close" }
     );
   }
@@ -63,14 +61,9 @@ describe("Quick Actions Menu", () => {
       // Click outside to close (testing specific click-outside behavior)
       await closeMenuByClickingOutside();
 
-      const menuAfter = await $(selectors.quickActionsMenu);
-      let isDisplayed = false;
-      try {
-        isDisplayed = await menuAfter.isDisplayed();
-      } catch {
-        isDisplayed = false;
-      }
-      expect(isDisplayed).toBe(false);
+      const quickActionsButton = await $(selectors.distroCardByName("Ubuntu"))
+        .then((card) => card.$(selectors.quickActionsButton));
+      expect(await quickActionsButton.getAttribute("aria-expanded")).toBe("false");
     });
   });
 
@@ -181,6 +174,7 @@ describe("Quick Actions Menu", () => {
 
       const defaultAction = await $(selectors.setDefaultAction);
       await defaultAction.click();
+      await switchToMainWindow();
 
       // Wait for Debian to show as primary
       await browser.waitUntil(
@@ -230,29 +224,16 @@ describe("Quick Actions Menu", () => {
       // Click an action that doesn't open a dialog (Set Default)
       const defaultAction = await $(selectors.setDefaultAction);
       await defaultAction.click();
+      await switchToMainWindow();
 
-      // Wait for menu to close after action
+      const quickActionsButton = await $(selectors.distroCardByName("Debian"))
+        .then((card) => card.$(selectors.quickActionsButton));
       await browser.waitUntil(
-        async () => {
-          const menuAfter = await $(selectors.quickActionsMenu);
-          try {
-            return !(await menuAfter.isDisplayed());
-          } catch {
-            return true;
-          }
-        },
+        async () => (await quickActionsButton.getAttribute("aria-expanded")) === "false",
         { timeout: 5000, timeoutMsg: "Menu did not close after action" }
       );
 
-      // Menu should close after action
-      const menuAfter = await $(selectors.quickActionsMenu);
-      let isMenuVisible = false;
-      try {
-        isMenuVisible = await menuAfter.isDisplayed();
-      } catch {
-        isMenuVisible = false;
-      }
-      expect(isMenuVisible).toBe(false);
+      expect(await quickActionsButton.getAttribute("aria-expanded")).toBe("false");
     });
 
     it("should disable actions during operation", async () => {
@@ -403,7 +384,3 @@ describe("Quick Actions Menu", () => {
     });
   });
 });
-
-
-
-

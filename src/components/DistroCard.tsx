@@ -22,7 +22,6 @@ function DistroCardComponent({ distro, index = 0 }: DistroCardProps) {
   const { getDistroResources } = useResourceStore();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showInfoDialog, setShowInfoDialog] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
   const [showNoRdpDialog, setShowNoRdpDialog] = useState(false);
 
   const isRunning = distro.state === "Running";
@@ -68,7 +67,7 @@ function DistroCardComponent({ distro, index = 0 }: DistroCardProps) {
     <>
       <div
         data-testid={`distro-card-${distro.name}`}
-        className={`module-card p-4 animate-fade-slide-in ${staggerClass} ${menuOpen ? 'z-50' : ''} ${isCompacting ? 'opacity-75' : ''}`}
+        className={`module-card p-4 animate-fade-slide-in ${staggerClass} ${isCompacting ? 'opacity-75' : ''}`}
       >
         {/* Badges row: WSL (left) + Primary + State (right) */}
         <div className="flex items-center justify-between mb-3">
@@ -94,7 +93,10 @@ function DistroCardComponent({ distro, index = 0 }: DistroCardProps) {
           {/* Primary + State badges */}
           <div className="flex items-center gap-2">
             {distro.isDefault && (
-              <span className="text-[10px] px-2 py-1 bg-[rgba(var(--accent-primary-rgb),0.1)] text-theme-accent-primary rounded border border-[rgba(var(--accent-primary-rgb),0.3)] font-mono font-semibold uppercase tracking-wider">
+              <span
+                className="text-[10px] px-2 py-1 bg-[rgba(var(--accent-primary-rgb),0.1)] text-theme-accent-primary rounded border border-[rgba(var(--accent-primary-rgb),0.3)] font-mono font-semibold uppercase tracking-wider"
+                data-testid="primary-badge"
+              >
                 {t('common:status.primary')}
               </span>
             )}
@@ -224,7 +226,7 @@ function DistroCardComponent({ distro, index = 0 }: DistroCardProps) {
             data-testid="rdp-button"
           />
 
-          <QuickActionsMenu distro={distro} disabled={isDisabled} onOpenChange={setMenuOpen} />
+          <QuickActionsMenu distro={distro} disabled={isDisabled} />
 
           <IconButton
             icon={<TrashIcon size="sm" />}
@@ -271,4 +273,3 @@ function DistroCardComponent({ distro, index = 0 }: DistroCardProps) {
 // This prevents unnecessary re-renders when the distro prop hasn't changed
 export const DistroCard = memo(DistroCardComponent);
 DistroCard.displayName = 'DistroCard';
-

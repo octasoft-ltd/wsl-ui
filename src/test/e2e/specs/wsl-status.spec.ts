@@ -8,8 +8,8 @@
  * - Resource usage display
  */
 
-import { setupHooks, isElementDisplayed } from "../base";
-import { selectors, waitForDistroState, triggerResourceFetch } from "../utils";
+import { actions, setupHooks, isElementDisplayed } from "../base";
+import { selectors, switchToMainWindow, waitForDistroState, triggerResourceFetch } from "../utils";
 
 describe("WSL Status Features", () => {
   setupHooks.standard();
@@ -270,20 +270,12 @@ describe("WSL Status Features", () => {
 
     it("should update primary display when default is changed", async () => {
       // Change default to Debian
-      const debianCard = await $(selectors.distroCardByName("Debian"));
-      const quickActionsButton = await debianCard.$('[data-testid="quick-actions-button"]');
-      await quickActionsButton.waitForClickable({ timeout: 5000 });
-      await quickActionsButton.click();
-
-      // Wait for quick actions menu to appear
-      await browser.waitUntil(
-        async () => isElementDisplayed(selectors.quickActionsMenu),
-        { timeout: 5000, timeoutMsg: "Quick actions menu did not appear" }
-      );
+      await actions.openQuickActionsMenu("Debian");
 
       const setDefaultAction = await $('[data-testid="quick-action-default"]');
       await setDefaultAction.waitForClickable({ timeout: 5000 });
       await setDefaultAction.click();
+      await switchToMainWindow();
 
       // Wait for status bar to update
       const statusBar = await $(selectors.statusBar);

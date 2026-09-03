@@ -14,7 +14,6 @@ import { SetVersionDialog } from "./SetVersionDialog";
 import { RenameDialog } from "./RenameDialog";
 import { StopAndActionDialog } from "./StopAndActionDialog";
 import { DistroInfoDialog } from "./DistroInfoDialog";
-import { ACTION_ICONS } from "../types/actions";
 import type { CustomAction } from "../types/actions";
 import { ConfirmDialog } from "./ConfirmDialog";
 import { PasswordPromptDialog } from "./PasswordPromptDialog";
@@ -22,52 +21,19 @@ import { Portal } from "./ui/Portal";
 import { IconButton } from "./ui/Button";
 import { logger } from "../utils/logger";
 import { useStopBeforeAction } from "../hooks/useStopBeforeAction";
+import { estimatePopupHeight, usePopupWindow } from "../hooks/usePopupWindow";
 import {
-  FolderIcon,
-  CodeIcon,
-  RefreshIcon,
-  UploadIcon,
-  CopyIcon,
-  StarIcon,
   MenuIcon,
   CloseIcon,
-  SettingsIcon,
-  ChevronRightIcon,
-  UserIcon,
-  ServerIcon,
-  SparklesIcon,
-  PauseIcon,
-  PowerIcon,
-  InfoIcon,
-  CompressIcon,
 } from "./icons";
 
 interface QuickActionsMenuProps {
   distro: Distribution;
   disabled?: boolean;
-  onOpenChange?: (isOpen: boolean) => void;
 }
 
-interface QuickAction {
-  id: string;
-  label: string;
-  icon: React.ReactNode;
-  action: () => void;
-  disabled?: boolean;
-  highlight?: boolean;
-  danger?: boolean;
-  requiresStopped?: boolean;
-}
-
-export function QuickActionsMenu({ distro, disabled, onOpenChange }: QuickActionsMenuProps) {
-  const { t } = useTranslation("actions");
-  const [isOpen, setIsOpenState] = useState(false);
-
-  const setIsOpen = (open: boolean) => {
-    setIsOpenState(open);
-    onOpenChange?.(open);
-  };
-  const [showManageSubmenu, setShowManageSubmenu] = useState(false);
+export function QuickActionsMenu({ distro, disabled }: QuickActionsMenuProps) {
+  const { t, i18n } = useTranslation("actions");
   const [showCloneDialog, setShowCloneDialog] = useState(false);
   const [showMoveDialog, setShowMoveDialog] = useState(false);
   const [showResizeDialog, setShowResizeDialog] = useState(false);
@@ -82,7 +48,7 @@ export function QuickActionsMenu({ distro, disabled, onOpenChange }: QuickAction
   const [showSparseConfirm, setShowSparseConfirm] = useState(false);
   const [showOutputDialog, setShowOutputDialog] = useState<{ title: string; output: string; error?: string } | null>(null);
   const [showPasswordPrompt, setShowPasswordPrompt] = useState<CustomAction | null>(null);
-  const menuRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLDivElement>(null);
   const {
     setDefault,
     openFileExplorer,
@@ -107,8 +73,6 @@ export function QuickActionsMenu({ distro, disabled, onOpenChange }: QuickAction
     // Show warning when enabling sparse mode (not when disabling)
     if (!sparseEnabled && !confirmed) {
       setShowSparseConfirm(true);
-      setIsOpen(false);
-      setShowManageSubmenu(false);
       return;
     }
 
@@ -122,8 +86,6 @@ export function QuickActionsMenu({ distro, disabled, onOpenChange }: QuickAction
         title: t('sparseChanged'),
         message: t('sparseChangedMessage', { name: distro.name, state: newState ? t('common:label.on') : t('common:label.off') }),
       });
-      setIsOpen(false);
-      setShowManageSubmenu(false);
     } catch (err) {
       // Tauri returns string errors, not Error instances
       const errorMessage = typeof err === "string" ? err : err instanceof Error ? err.message : t('common:errors.unknown');
@@ -143,8 +105,101 @@ export function QuickActionsMenu({ distro, disabled, onOpenChange }: QuickAction
     executeWithStopCheck(distro, t('sparseToggle'), () => {
       handleToggleSparse();
     }, { requiresShutdown: true });
-    setIsOpen(false);
-    setShowManageSubmenu(false);
+  };
+
+  // Route action IDs from the popup to existing action handlers
+  const handlePopupAction = (actionId: string) => {
+    // Built-in actions
+    if (actionId === "info") {
+      setShowInfoDialog(true);
+      return;
+    }
+    if (actionId === "explorer") {
+      openFileExplorer(distro.name);
+      return;
+    }
+    if (actionId === "ide") {
+      openIDE(distro.name);
+      return;
+    }
+    if (actionId === "restart") {
+      restartDistro(distro.name, distro.id);
+      return;
+    }
+    if (actionId === "export") {
+      executeWithStopCheck(distro, "Export", () => {
+        exportDistro(distro.name);
+      });
+      return;
+    }
+    if (actionId === "clone") {
+      executeWithStopCheck(distro, "Clone", () => {
+        setShowCloneDialog(true);
+      });
+      return;
+    }
+    if (actionId === "default") {
+      if (!distro.isDefault) {
+        setDefault(distro.name);
+      }
+      return;
+    }
+
+    // Manage actions
+    if (actionId === "manage:move") {
+      executeWithStopCheck(distro, "Move Distribution", () => {
+        setShowMoveDialog(true);
+      }, { requiresShutdown: true });
+      return;
+    }
+    if (actionId === "manage:resize") {
+      executeWithStopCheck(distro, "Resize Disk", () => {
+        setShowResizeDialog(true);
+      }, { requiresShutdown: true });
+      return;
+    }
+    if (actionId === "manage:compact") {
+      setShowCompactDialog(true);
+      return;
+    }
+    if (actionId === "manage:user") {
+      setShowSetUserDialog(true);
+      return;
+    }
+    if (actionId === "manage:rename") {
+      if (!distro.id) return;
+      executeWithStopCheck(distro, "Rename", () => {
+        setShowRenameDialog(true);
+      });
+      return;
+    }
+    if (actionId === "manage:sparse") {
+      handleSparseWithStopCheck();
+      return;
+    }
+    if (actionId === "manage:setVersion") {
+      executeWithStopCheck(distro, "Set WSL Version", () => {
+        setShowSetVersionDialog(true);
+      });
+      return;
+    }
+
+    // Custom actions
+    if (actionId.startsWith("custom:")) {
+      const realActionId = actionId.slice("custom:".length);
+      const customAction = applicableActions.find((action) => action.id === realActionId);
+      if (!customAction) {
+        logger.warn(`Ignored unknown or inapplicable custom action: ${realActionId}`, "QuickActionsMenu");
+        return;
+      }
+      if (customAction.requiresStopped) {
+        executeWithStopCheck(distro, customAction.name, () => {
+          runCustomAction(customAction);
+        });
+      } else {
+        runCustomAction(customAction);
+      }
+    }
   };
 
   // Fetch actions on mount
@@ -174,24 +229,26 @@ export function QuickActionsMenu({ distro, disabled, onOpenChange }: QuickAction
     return false;
   });
 
-  const getActionIcon = (iconId: string) => {
-    return ACTION_ICONS.find((i) => i.id === iconId)?.emoji || "⚡";
-  };
+  const popupWindow = usePopupWindow({
+    anchorRef: buttonRef,
+    height: estimatePopupHeight(8 + applicableActions.length, 1080, 40, applicableActions.length > 0 ? 2 : 1),
+    label: "quick-actions-popup",
+    onAction: handlePopupAction,
+    popupType: "quick-actions",
+    url: "/popup.html",
+    width: 260,
+  });
 
-  const runCustomAction = async (actionId: string, confirm: boolean, showOutput: boolean, actionName: string, requiresSudo: boolean) => {
-    if (confirm) {
-      setShowConfirmDialog({ actionId, actionName });
-      setIsOpen(false);
+  const runCustomAction = async (action: CustomAction) => {
+    if (action.confirmBeforeRun) {
+      setShowConfirmDialog({ actionId: action.id, actionName: action.name });
       return;
     }
 
-    const action = actions.find((a) => a.id === actionId);
-
     // If action runs in terminal, just open terminal and run (user types password there if needed)
-    if (action?.runInTerminal) {
-      setIsOpen(false);
+    if (action.runInTerminal) {
       try {
-        await runActionInTerminal(actionId, distro.name, distro.id);
+        await runActionInTerminal(action.id, distro.name, distro.id);
       } catch (error) {
         addNotification({
           type: "error",
@@ -203,20 +260,18 @@ export function QuickActionsMenu({ distro, disabled, onOpenChange }: QuickAction
     }
 
     // If action requires sudo (and not running in terminal), prompt for password
-    if (requiresSudo && action) {
+    if (action.requiresSudo) {
       setShowPasswordPrompt(action);
-      setIsOpen(false);
       return;
     }
 
-    setIsOpen(false);
-    setActionInProgress(`Running ${actionName}...`);
+    setActionInProgress(`Running ${action.name}...`);
     try {
-      const result = await executeAction(actionId, distro.name, distro.id);
+      const result = await executeAction(action.id, distro.name, distro.id);
 
-      if (showOutput && result) {
+      if (action.showOutput && result) {
         setShowOutputDialog({
-          title: actionName,
+          title: action.name,
           output: result.output,
           error: result.error,
         });
@@ -289,114 +344,31 @@ export function QuickActionsMenu({ distro, disabled, onOpenChange }: QuickAction
     }
   };
 
-  // Close menu when clicking outside or pressing Escape
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
-      }
-    };
-
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        setIsOpen(false);
-        setShowManageSubmenu(false);
-      }
-    };
-
-    if (isOpen) {
-      document.addEventListener("mousedown", handleClickOutside);
-      document.addEventListener("keydown", handleKeyDown);
+  const handleToggleMenu = () => {
+    if (popupWindow.isOpen) {
+      popupWindow.close();
+      return;
     }
 
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-      document.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [isOpen]);
-
-  const builtInActions: QuickAction[] = [
-    {
-      id: "info",
-      label: t('quickActions.info'),
-      icon: <InfoIcon size="sm" />,
-      action: () => {
-        setShowInfoDialog(true);
-        setIsOpen(false);
+    popupWindow.open({
+      locale: i18n.language || "en",
+      payload: {
+        actions: applicableActions,
+        distro,
       },
-    },
-    {
-      id: "explorer",
-      label: t('quickActions.explorer'),
-      icon: <FolderIcon size="sm" />,
-      action: () => {
-        openFileExplorer(distro.name);
-        setIsOpen(false);
-      },
-    },
-    {
-      id: "ide",
-      label: t('quickActions.ide'),
-      icon: <CodeIcon size="sm" />,
-      action: () => {
-        openIDE(distro.name);
-        setIsOpen(false);
-      },
-    },
-    {
-      id: "restart",
-      label: t('quickActions.restart'),
-      icon: <RefreshIcon size="sm" />,
-      action: () => {
-        restartDistro(distro.name, distro.id);
-        setIsOpen(false);
-      },
-    },
-    {
-      id: "export",
-      label: t('quickActions.export'),
-      icon: <UploadIcon size="sm" />,
-      requiresStopped: true,
-      action: () => {
-        executeWithStopCheck(distro, "Export", () => {
-          exportDistro(distro.name);
-        });
-        setIsOpen(false);
-      },
-    },
-    {
-      id: "clone",
-      label: t('quickActions.clone'),
-      icon: <CopyIcon size="sm" />,
-      requiresStopped: true,
-      action: () => {
-        executeWithStopCheck(distro, "Clone", () => {
-          setShowCloneDialog(true);
-        });
-        setIsOpen(false);
-      },
-    },
-    {
-      id: "default",
-      label: distro.isDefault ? t('quickActions.alreadyDefault') : t('quickActions.setDefault'),
-      icon: <StarIcon size="sm" filled={distro.isDefault} />,
-      action: () => {
-        if (!distro.isDefault) {
-          setDefault(distro.name);
-        }
-        setIsOpen(false);
-      },
-      disabled: distro.isDefault,
-      highlight: distro.isDefault,
-    },
-  ];
-
-  const handleToggleMenu = () => {
-    setIsOpen(!isOpen);
+    }).catch((error) => {
+      logger.error("Failed to open Quick Actions popup", "QuickActionsMenu", error);
+      addNotification({
+        type: "error",
+        title: t("actionFailed"),
+        message: `${t("quickActions.title")}: ${error instanceof Error ? error.message : t("common:errors.unknown")}`,
+      });
+    });
   };
 
   return (
-    <div className="relative" ref={menuRef}>
+    <div className="relative">
+      <div ref={buttonRef}>
       <IconButton
         icon={<MenuIcon size="sm" />}
         label={t('quickActions.title')}
@@ -405,295 +377,10 @@ export function QuickActionsMenu({ distro, disabled, onOpenChange }: QuickAction
         onClick={handleToggleMenu}
         disabled={isDisabled}
         aria-haspopup="menu"
-        aria-expanded={isOpen}
+        aria-expanded={popupWindow.isOpen}
         data-testid="quick-actions-button"
       />
-
-      {isOpen && (
-        <div
-          data-testid="quick-actions-menu"
-          role="menu"
-          aria-label={`Actions for ${distro.name}`}
-          className="absolute right-full top-0 mr-2 w-56 bg-theme-bg-secondary border border-theme-border-secondary rounded-xl shadow-xl shadow-black/70 z-[100] overflow-hidden"
-        >
-          {/* Top accent line */}
-          <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-theme-accent-primary/30 to-transparent" />
-
-          <div className="py-1">
-            {builtInActions.map((action) => (
-              <button
-                key={action.id}
-                role="menuitem"
-                onClick={action.action}
-                disabled={action.disabled}
-                data-testid={`quick-action-${action.id}`}
-                className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm text-left transition-all ${
-                  action.disabled
-                    ? "text-theme-status-stopped cursor-not-allowed"
-                    : action.danger
-                    ? "text-theme-status-error hover:bg-[rgba(var(--status-error-rgb),0.15)]"
-                    : action.highlight
-                    ? "text-[#f97316] hover:bg-[#f97316]/10"
-                    : "text-theme-text-secondary hover:bg-theme-bg-tertiary hover:text-theme-text-primary"
-                }`}
-              >
-                <span className={action.danger ? "text-theme-status-error" : action.highlight ? "text-[#f97316]" : "text-theme-text-muted"}>
-                  {action.icon}
-                </span>
-                {action.label}
-                {action.requiresStopped && distro.state === "Running" && (
-                  <span
-                    data-testid="requires-stop-indicator"
-                    className="ml-auto text-theme-status-warning"
-                    title={t('customActions.requiresStop')}
-                  >
-                    <PauseIcon size="sm" />
-                  </span>
-                )}
-              </button>
-            ))}
-
-            {/* Manage Submenu */}
-            <div className="border-t border-theme-border-primary my-1" />
-            <div className="relative">
-              <button
-                onClick={() => setShowManageSubmenu(!showManageSubmenu)}
-                data-testid="quick-action-manage"
-                className="w-full flex items-center justify-between px-4 py-2.5 text-sm text-left text-theme-text-secondary hover:bg-theme-bg-tertiary hover:text-theme-text-primary transition-all"
-              >
-                <span className="flex items-center gap-3">
-                  <span className="text-theme-text-muted"><SettingsIcon size="sm" /></span>
-                  {t('manage.title')}
-                </span>
-                <ChevronRightIcon size="sm" className={`text-theme-text-muted transition-transform ${showManageSubmenu ? "rotate-90" : ""}`} />
-              </button>
-
-              {showManageSubmenu && (
-                <div className="bg-theme-bg-primary/50 border-y border-theme-border-primary">
-                  {/* Move only available for WSL2 (uses VHDX) */}
-                  {distro.version === 2 && (
-                    <button
-                      onClick={() => {
-                        executeWithStopCheck(distro, "Move Distribution", () => {
-                          setShowMoveDialog(true);
-                        }, { requiresShutdown: true });
-                        setIsOpen(false);
-                        setShowManageSubmenu(false);
-                      }}
-                      data-testid="manage-action-move"
-                      className="w-full flex items-center gap-3 px-6 py-2 text-sm text-left text-theme-text-secondary hover:bg-theme-bg-tertiary hover:text-theme-text-primary transition-all"
-                    >
-                      <span className="text-theme-text-muted"><FolderIcon size="sm" /></span>
-                      {t('manage.move')}
-                      {distro.state === "Running" && (
-                        <span
-                          data-testid="requires-shutdown-indicator"
-                          className="ml-auto text-theme-status-error"
-                          title={t('customActions.requiresShutdown')}
-                        >
-                          <PowerIcon size="sm" />
-                        </span>
-                      )}
-                    </button>
-                  )}
-                  {/* Resize Disk only available for WSL2 (uses VHDX) */}
-                  {distro.version === 2 && (
-                    <button
-                      onClick={() => {
-                        executeWithStopCheck(distro, "Resize Disk", () => {
-                          setShowResizeDialog(true);
-                        }, { requiresShutdown: true });
-                        setIsOpen(false);
-                        setShowManageSubmenu(false);
-                      }}
-                      data-testid="manage-action-resize"
-                      className="w-full flex items-center gap-3 px-6 py-2 text-sm text-left text-theme-text-secondary hover:bg-theme-bg-tertiary hover:text-theme-text-primary transition-all"
-                    >
-                      <span className="text-theme-text-muted"><ServerIcon size="sm" /></span>
-                      {t('manage.resize')}
-                      {distro.state === "Running" && (
-                        <span
-                          data-testid="requires-shutdown-indicator"
-                          className="ml-auto text-theme-status-error"
-                          title={t('customActions.requiresShutdown')}
-                        >
-                          <PowerIcon size="sm" />
-                        </span>
-                      )}
-                    </button>
-                  )}
-                  {/* Compact Disk only available for WSL2 (uses VHDX) */}
-                  {distro.version === 2 && (
-                    <button
-                      onClick={() => {
-                        // Compact handles its own start/fstrim/shutdown flow - no pre-check needed
-                        setShowCompactDialog(true);
-                        setIsOpen(false);
-                        setShowManageSubmenu(false);
-                      }}
-                      data-testid="manage-action-compact"
-                      className="w-full flex items-center gap-3 px-6 py-2 text-sm text-left text-theme-text-secondary hover:bg-theme-bg-tertiary hover:text-theme-text-primary transition-all"
-                    >
-                      <span className="text-theme-text-muted"><CompressIcon size="sm" /></span>
-                      {t('manage.compact')}
-                    </button>
-                  )}
-                  <button
-                    onClick={() => {
-                      setShowSetUserDialog(true);
-                      setIsOpen(false);
-                      setShowManageSubmenu(false);
-                    }}
-                    data-testid="manage-action-user"
-                    className="w-full flex items-center gap-3 px-6 py-2 text-sm text-left text-theme-text-secondary hover:bg-theme-bg-tertiary hover:text-theme-text-primary transition-all"
-                  >
-                    <span className="text-theme-text-muted"><UserIcon size="sm" /></span>
-                    {t('manage.user')}
-                  </button>
-                  <button
-                    onClick={() => {
-                      if (!distro.id) return;
-                      executeWithStopCheck(distro, "Rename", () => {
-                        setShowRenameDialog(true);
-                      });
-                      setIsOpen(false);
-                      setShowManageSubmenu(false);
-                    }}
-                    disabled={!distro.id}
-                    title={!distro.id ? t('distroIdUnavailable') : undefined}
-                    data-testid="manage-action-rename"
-                    className="w-full flex items-center gap-3 px-6 py-2 text-sm text-left text-theme-text-secondary hover:bg-theme-bg-tertiary hover:text-theme-text-primary transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-theme-text-secondary"
-                  >
-                    <span className="text-theme-text-muted">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                      </svg>
-                    </span>
-                    {t('manage.rename')}
-                    {distro.state === "Running" && (
-                      <span
-                        data-testid="requires-stop-indicator"
-                        className="ml-auto text-theme-status-warning"
-                        title={t('customActions.requiresStop')}
-                      >
-                        <PauseIcon size="sm" />
-                      </span>
-                    )}
-                  </button>
-                  {/* Sparse Mode only available for WSL2 (uses VHDX) */}
-                  {distro.version === 2 && (
-                    <button
-                      onClick={() => handleSparseWithStopCheck()}
-                      disabled={isTogglingSprase}
-                      data-testid="manage-action-sparse"
-                      className="w-full flex items-center justify-between px-6 py-2 text-sm text-left text-theme-text-secondary hover:bg-theme-bg-tertiary hover:text-theme-text-primary transition-all disabled:opacity-50"
-                    >
-                      <span className="flex items-center gap-3">
-                        <span className="text-theme-text-muted"><SparklesIcon size="sm" /></span>
-                        {t('manage.sparse')}
-                      </span>
-                      <div className="flex items-center gap-2">
-                        {distro.state === "Running" && (
-                          <span
-                            data-testid="requires-shutdown-indicator"
-                            className="text-theme-status-error"
-                            title={t('customActions.requiresShutdown')}
-                          >
-                            <PowerIcon size="sm" />
-                          </span>
-                        )}
-                        <span className={`text-xs px-2 py-0.5 rounded ${sparseEnabled ? "bg-[rgba(var(--status-running-rgb),0.1)] text-theme-status-running border border-[rgba(var(--status-running-rgb),0.3)]" : "bg-theme-bg-tertiary text-theme-text-muted border border-theme-border-secondary"}`}>
-                          {sparseEnabled ? t('common:label.on') : t('common:label.off')}
-                        </span>
-                      </div>
-                    </button>
-                  )}
-                  <button
-                    onClick={() => {
-                      executeWithStopCheck(distro, "Set WSL Version", () => {
-                        setShowSetVersionDialog(true);
-                      });
-                      setIsOpen(false);
-                      setShowManageSubmenu(false);
-                    }}
-                    data-testid="manage-action-set-version"
-                    className="w-full flex items-center justify-between px-6 py-2 text-sm text-left text-theme-text-secondary hover:bg-theme-bg-tertiary hover:text-theme-text-primary transition-all"
-                  >
-                    <span className="flex items-center gap-3">
-                      <span className="text-theme-text-muted">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
-                        </svg>
-                      </span>
-                      {t('manage.version')}
-                    </span>
-                    <div className="flex items-center gap-2">
-                      {distro.state === "Running" && (
-                        <span
-                          data-testid="requires-stop-indicator"
-                          className="text-theme-status-warning"
-                          title={t('customActions.requiresStop')}
-                        >
-                          <PauseIcon size="sm" />
-                        </span>
-                      )}
-                      <span className="text-xs px-2 py-0.5 rounded bg-theme-bg-tertiary text-theme-text-muted border border-theme-border-secondary">
-                        v{distro.version}
-                      </span>
-                    </div>
-                  </button>
-                </div>
-              )}
-            </div>
-
-            {/* Custom Actions */}
-            {applicableActions.length > 0 && (
-              <>
-                <div className="border-t border-theme-border-primary my-1" />
-                <div className="px-4 py-1.5 text-xs text-theme-text-muted uppercase tracking-wider font-mono">
-                  {t('customActions.title')}
-                </div>
-                {applicableActions.map((action) => (
-                  <button
-                    key={action.id}
-                    onClick={() => {
-                      if (action.requiresStopped) {
-                        executeWithStopCheck(distro, action.name, () => {
-                          runCustomAction(action.id, action.confirmBeforeRun, action.showOutput, action.name, action.requiresSudo);
-                        });
-                        setIsOpen(false);
-                      } else {
-                        runCustomAction(action.id, action.confirmBeforeRun, action.showOutput, action.name, action.requiresSudo);
-                      }
-                    }}
-                    disabled={isExecuting}
-                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-left text-theme-text-secondary hover:bg-theme-bg-tertiary hover:text-theme-text-primary transition-all disabled:opacity-50"
-                  >
-                    <span className="text-base">{getActionIcon(action.icon)}</span>
-                    {action.name}
-                    <div className="ml-auto flex items-center gap-1.5">
-                      {action.requiresStopped && distro.state === "Running" && (
-                        <span
-                          data-testid="requires-stop-indicator"
-                          className="text-theme-status-warning"
-                          title={t('customActions.requiresStop')}
-                        >
-                          <PauseIcon size="sm" />
-                        </span>
-                      )}
-                      {action.requiresSudo && (
-                        <span className="text-xs text-theme-text-muted opacity-60" title={t('requiresSudo')}>
-                          🔒
-                        </span>
-                      )}
-                    </div>
-                  </button>
-                ))}
-              </>
-            )}
-          </div>
-        </div>
-      )}
+      </div>
 
       <CloneDialog
         isOpen={showCloneDialog}
@@ -823,6 +510,3 @@ export function QuickActionsMenu({ distro, disabled, onOpenChange }: QuickAction
     </div>
   );
 }
-
-
-

@@ -14,6 +14,8 @@ import {
   resetMockState,
   selectors,
   safeRefresh,
+  switchToMainWindow,
+  switchToQuickActionsPopup,
   waitForDialog,
   waitForResourceStats,
   waitForDialogToDisappear,
@@ -64,13 +66,16 @@ async function switchToTab(tabId: string): Promise<void> {
  * Helper to close any open menu by clicking outside
  */
 async function closeMenu(): Promise<void> {
+  await switchToMainWindow();
   const main = await $("main");
   await main.click();
+  await switchToQuickActionsPopup();
   // Wait for menu to disappear
   await browser.waitUntil(
     async () => !(await isElementDisplayed(selectors.manageSubmenu)),
     { timeout: 3000, timeoutMsg: "Menu did not close" }
   );
+  await switchToMainWindow();
 }
 
 describe("Screenshot Capture", () => {
@@ -84,6 +89,7 @@ describe("Screenshot Capture", () => {
   });
 
   beforeEach(async () => {
+    await switchToMainWindow();
     await safeRefresh();
     await resetMockState();
     await safeRefresh();

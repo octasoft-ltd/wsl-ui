@@ -455,14 +455,18 @@ Under the `containerRuntime` field:
 ### Symptoms
 - E2E tests fail immediately in the `beforeEach` hook
 - Error message: **"WebDriverError: javascript error: Origin header is not a valid URL"**
+- Or WebdriverIO reports `ECONNREFUSED` for `http://localhost:4444/session`
+- Or WebDriver reports **"no such window: target window already closed"** / **"web view not found"** after one or more tests have passed
 - All tests affected, not just specific ones
 - The error occurs when `resetMockState()` tries to invoke Tauri commands via `browser.execute()`
 
 ### Root Cause
 This is a WebDriver/tauri-driver infrastructure issue. The error occurs when:
-1. The tauri-driver or msedgedriver becomes stale or corrupted
-2. There are leftover processes from previous test runs
-3. The WebDriver session has CORS/origin validation issues with the Tauri webview
+1. `tauri-driver` is not installed or is not available on `PATH`
+2. The tauri-driver or msedgedriver becomes stale or corrupted
+3. There are leftover processes from previous test runs
+4. The WebDriver session has CORS/origin validation issues with the Tauri webview
+5. The test runner attached to an older application instance, or the debug binary was not rebuilt after Tauri capability changes
 
 ### Diagnosis
 1. Check for leftover processes:
@@ -470,13 +474,25 @@ This is a WebDriver/tauri-driver infrastructure issue. The error occurs when:
    Get-Process -Name "wsl-ui", "tauri-driver", "msedgedriver" -ErrorAction SilentlyContinue
    ```
 
-2. Check if port 4444 is in use:
+2. Confirm `tauri-driver` is installed:
+   ```powershell
+   Get-Command tauri-driver
+   tauri-driver --version
+   ```
+
+3. Check if port 4444 is in use:
    ```cmd
    netstat -ano | findstr :4444
    ```
 
 ### Solution
 **Kill all related processes and retry:**
+
+If `tauri-driver` is missing, install it first:
+
+```powershell
+cargo install tauri-driver --locked
+```
 
 1. Kill any running app instances:
    ```cmd
@@ -493,6 +509,12 @@ This is a WebDriver/tauri-driver infrastructure issue. The error occurs when:
    ```cmd
    npm run test:e2e:dev -- --spec src/test/e2e/specs/your-test.spec.ts
    ```
+
+4. If the driver reports that the target window closed, rebuild the debug binary before retrying. E2E tests use the debug executable:
+   ```cmd
+   npm run tauri:build:debug
+   ```
+   Confirm that `src-tauri\target\debug\wsl-ui.exe` has a current modified time, then rerun the individual spec.
 
 **If the issue persists:**
 - Update msedgedriver to match your Edge browser version
@@ -1307,6 +1329,101 @@ The UI fonts (JetBrains Mono, Outfit) were imported from Google Fonts via a rend
 
 ### Related
 - GitHub issue: https://github.com/octasoft-ltd/wsl-ui/issues/158
+
+---
+
+## Issue #22: Tauri build reports mismatched JavaScript and Rust package versions
+
+### Symptoms
+- `npm run tauri:build:debug` stops before compiling the application.
+- The error says `Found version mismatched Tauri packages` and lists pairs such as
+  `tauri` versus `@tauri-apps/api`, or Rust plugins versus their JavaScript packages.
+
+### Root Cause
+The installed `node_modules` was resolved by a different package manager or from dependency
+ranges newer than the repository's npm lock file. Tauri requires corresponding JavaScript and
+Rust packages to use compatible major/minor releases.
+
+### Diagnosis
+1. Check whether the error references packages under `node_modules/.pnpm` even though the
+   repository uses `package-lock.json` and npm in CI.
+2. Compare the versions printed by the Tauri error with `src-tauri/Cargo.lock`.
+3. Check for an unintended `pnpm-lock.yaml` or a locally installed dependency tree that does
+   not match `package-lock.json`.
+
+### Solution
+Restore the repository's npm-locked dependency tree:
+
+```powershell
+npm ci
+npm run tauri:build:debug
+```
+
+Do not commit a second package-manager lock file unless the project is intentionally migrating
+package managers. After rebuilding, confirm the debug executable timestamp changed before
+running E2E tests.
+
+---
+
+## Issue #23: Quick Actions menu does not appear
+
+### Symptoms
+- Clicking the Quick Actions button does not display the menu.
+- The application shows an "Action Failed" notification for Quick Actions.
+- Development logs mention a popup creation, permission, or event transport failure.
+
+### Root Cause
+Quick Actions is rendered in a separate Tauri WebView. The menu can fail to open when the
+frontend bundle is stale, the Tauri capability changes have not been included in the native
+build, or popup event/window permissions are unavailable.
+
+### Diagnosis
+1. Confirm that `popup.html` is present in the Vite build output.
+2. Rebuild the native debug executable with `npm run tauri:build:debug` after capability changes.
+3. Confirm the debug executable timestamp changed after the rebuild.
+4. Before E2E runs, terminate lingering Tauri driver and Edge driver processes so the new
+   executable and capability configuration are used.
+5. Check application logs for `usePopupWindow` or `PopupHost` errors.
+
+### Solution
+Use a freshly rebuilt Tauri executable and ensure both the main-window and popup capability
+files are packaged. If the problem persists, restart the application to recreate the popup
+WebView and inspect the first logged transport or window error.
+
+### Files Changed
+- `src-tauri/capabilities/default.json`: grants the main window popup-management permissions.
+- `src-tauri/capabilities/quick-actions-popup.json`: grants the popup only event permissions.
+- `src/hooks/usePopupWindow.ts`: reports popup lifecycle failures.
+
+---
+
+## Issue #24: Fixed drives no longer appear under /mnt after enabling virtiofs
+
+### Symptoms
+- After adding `virtiofs=true` to the `[wsl2]` section of `.wslconfig`, fixed Windows drives
+  (e.g. `/mnt/c`, `/mnt/d`) are no longer automounted inside distributions.
+- No error is shown — the mounts are silently absent.
+- Mounted disks may also not appear in WSL UI's mounted-disk list.
+
+### Root Cause
+`virtiofs=true` is an opt-in WSL feature (2026) that replaces the default Plan 9 file sharing
+transport. In current WSL builds it silently skips automounting fixed drives (upstream bug),
+and virtiofs mounts do not appear as `/dev/sd*` devices, which is what WSL UI's mounted-disk
+discovery currently matches.
+
+### Diagnosis
+1. Check `%USERPROFILE%\.wslconfig` for `virtiofs=true` under `[wsl2]`.
+2. Run `mount` inside the distro — with virtiofs the Windows drive mounts are missing or use a
+   `virtiofs` filesystem type instead of `9p`.
+
+### Solution
+Remove `virtiofs=true` (or set it to `false`) in `.wslconfig` and run `wsl --shutdown`, then
+restart the distribution. Track the upstream fix before re-enabling.
+
+### Related
+- https://github.com/microsoft/WSL/issues/40773 (automount silently skipped)
+- https://github.com/microsoft/WSL/issues/40719 (file ownership anomalies on Windows bind mounts)
+- `docs/plans/2026-09-03-wsl-developments-review.md` (WSL 2026 developments review)
 
 ---
 

@@ -79,6 +79,7 @@ export async function waitForStoreValue(
   predicateCode: string,
   timeout: number = 10000
 ): Promise<void> {
+  await switchToMainWindow();
   await browser.waitUntil(
     async () => {
       return browser.execute(
@@ -156,6 +157,7 @@ export async function waitForNotification(
   titlePattern: string,
   timeout: number = 10000
 ): Promise<void> {
+  await switchToMainWindow();
   const lowerPattern = titlePattern.toLowerCase();
   await browser.waitUntil(
     async () => {
@@ -630,6 +632,7 @@ export async function waitForDistroState(
   expectedState: string,
   timeout: number = 10000
 ): Promise<void> {
+  await switchToMainWindow();
   await browser.waitUntil(
     async () => {
       const card = await $(selectors.distroCardByName(distroName));
@@ -686,6 +689,7 @@ export async function waitForErrorBannerToDisappear(timeout: number = 5000): Pro
  * @param timeout - Maximum time to wait in milliseconds
  */
 export async function waitForDialog(selector: string = '[role="dialog"]', timeout: number = 5000): Promise<WebdriverIO.Element> {
+  await switchToMainWindow();
   await browser.waitUntil(
     async () => {
       const dialog = await $(selector);
@@ -700,12 +704,44 @@ export async function waitForDialog(selector: string = '[role="dialog"]', timeou
   return await $(selector) as unknown as WebdriverIO.Element;
 }
 
+/** Switch to the primary application WebView. */
+export async function switchToMainWindow(): Promise<void> {
+  await switchToWindowByTitle("WSL UI");
+}
+
+/** Focus the native main window so popup blur handlers run in E2E tests. */
+export async function focusMainWindow(): Promise<void> {
+  await switchToMainWindow();
+  await browser.executeAsync((done) => {
+    // @ts-expect-error - Tauri global API is enabled for the desktop application.
+    window.__TAURI__.window.getCurrentWindow().setFocus().then(() => done()).catch(done);
+  });
+}
+
+/** Switch to the persistent Quick Actions popup WebView. */
+export async function switchToQuickActionsPopup(): Promise<void> {
+  await switchToWindowByTitle("WSL UI Popup");
+}
+
+async function switchToWindowByTitle(expectedTitle: string): Promise<void> {
+  const windowHandles = await browser.getWindowHandles();
+  for (const windowHandle of windowHandles) {
+    await browser.switchToWindow(windowHandle);
+    const windowTitle = await browser.getTitle().catch(() => "");
+    if (windowTitle === expectedTitle) {
+      return;
+    }
+  }
+  throw new Error(`Unable to find WebView window titled '${expectedTitle}'`);
+}
+
 /**
  * Wait for a dialog to disappear
  * @param selector - Optional specific dialog selector (defaults to [role="dialog"])
  * @param timeout - Maximum time to wait in milliseconds
  */
 export async function waitForDialogToDisappear(selector: string = '[role="dialog"]', timeout: number = 5000): Promise<void> {
+  await switchToMainWindow();
   await browser.waitUntil(
     async () => {
       const dialog = await $(selector);
@@ -822,6 +858,7 @@ export async function verifyErrorBannerContent(
  * @param expectedState - Expected state (ONLINE/OFFLINE)
  */
 export async function verifyDistroCardState(distroName: string, expectedState: string): Promise<void> {
+  await switchToMainWindow();
   const card = await $(selectors.distroCardByName(distroName));
   await expect(card).toBeDisplayed();
 

@@ -13,9 +13,10 @@ import {
   selectors,
   byText,
   byButtonText,
+  switchToMainWindow,
   waitForDialogToDisappear,
 } from "../utils";
-import { setupHooks, isElementDisplayed } from "../base";
+import { actions, setupHooks, isElementDisplayed } from "../base";
 
 const passwordPromptSelectors = {
   // Password prompt dialog
@@ -132,20 +133,7 @@ async function createSudoAction(): Promise<void> {
 }
 
 async function openQuickActionsForDistro(distroName: string): Promise<void> {
-  // Find the distro card
-  const card = await $(selectors.distroCardByName(distroName));
-  await card.waitForDisplayed({ timeout: 5000 });
-
-  // Find and click the quick actions button within the card
-  const quickActionsButton = await card.$(passwordPromptSelectors.quickActionsButton);
-  await quickActionsButton.waitForClickable({ timeout: 5000 });
-  await quickActionsButton.click();
-
-  // Wait for menu to appear
-  await browser.waitUntil(
-    async () => isElementDisplayed(passwordPromptSelectors.quickActionsMenu),
-    { timeout: 5000, timeoutMsg: "Quick actions menu did not appear" }
-  );
+  await actions.openQuickActionsMenu(distroName);
 }
 
 async function triggerSudoAction(): Promise<void> {
@@ -156,6 +144,7 @@ async function triggerSudoAction(): Promise<void> {
   const actionButton = await $(byText(TEST_ACTION_NAME));
   await actionButton.waitForClickable({ timeout: 5000 });
   await actionButton.click();
+  await switchToMainWindow();
 
   // Wait for password prompt to appear
   await browser.waitUntil(
