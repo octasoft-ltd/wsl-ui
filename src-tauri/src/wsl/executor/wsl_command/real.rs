@@ -35,6 +35,19 @@ fn extract_wsl_version(output: &str) -> Option<String> {
     None
 }
 
+/// Redact secrets from a command argument before it is logged. Sudo custom
+/// actions are built as `echo <password> | sudo -S bash -c <cmd>`; the password
+/// must never reach the log (GH #150) — with Debug Logging enabled the log
+/// persists on disk and users attach it to bug reports.
+fn redact_secrets_for_log(arg: &str) -> String {
+    if let (Some(echo_pos), Some(sudo_pos)) = (arg.find("echo "), arg.find(" | sudo -S")) {
+        if echo_pos + "echo ".len() <= sudo_pos {
+            return format!("{}echo '***'{}", &arg[..echo_pos], &arg[sudo_pos..]);
+        }
+    }
+    arg.to_string()
+}
+
 /// Real implementation that calls wsl.exe
 pub struct RealWslExecutor;
 
@@ -65,7 +78,10 @@ impl RealWslExecutor {
 
     /// Execute a WSL command with custom timeout
     fn execute_with_timeout(&self, args: &[&str], timeout: Duration) -> Result<CommandOutput, WslError> {
-        debug!("Executing WSL command: {:?}", args);
+        debug!(
+            "Executing WSL command: {:?}",
+            args.iter().map(|a| redact_secrets_for_log(a)).collect::<Vec<_>>()
+        );
 
         let paths = get_executable_paths();
         let mut child = hidden_command(&paths.wsl)
@@ -440,25 +456,27 @@ impl WslCommandExecutor for RealWslExecutor {
         }
     }
 
-    fn get_ip(&self) -> Result<CommandOutput, WslError> {
-        // Use system distro for reliable IP detection
-        // This doesn't require any user distro to be running/starting
-        // Uses 'ip route get 1' to find the source IP for outbound traffic
-        // This works correctly with both NAT and mirrored networking modes
+    fn get_ip(&self, distro: &str) -> Result<CommandOutput, WslError> {
+        // Use the system distro of an already-running distribution for reliable
+        // IP detection. Uses 'ip route get 1' to find the source IP for outbound
+        // traffic, which works with both NAT and mirrored networking modes.
         self.exec_system_with_timeout(
+            distro,
             "ip route get 1 2>/dev/null | head -1 | sed 's/.*src \\([0-9.]*\\).*/\\1/'",
             self.quick_timeout().as_secs(),
         )
     }
 
-    fn exec_system(&self, command: &str) -> Result<CommandOutput, WslError> {
-        self.exec_system_with_timeout(command, self.default_timeout().as_secs())
+    fn exec_system(&self, distro: &str, command: &str) -> Result<CommandOutput, WslError> {
+        self.exec_system_with_timeout(distro, command, self.default_timeout().as_secs())
     }
 
-    fn exec_system_with_timeout(&self, command: &str, timeout_secs: u64) -> Result<CommandOutput, WslError> {
+    fn exec_system_with_timeout(&self, distro: &str, command: &str, timeout_secs: u64) -> Result<CommandOutput, WslError> {
         let timeout = std::time::Duration::from_secs(timeout_secs);
-        // Use --system flag to run in the WSL2 system distro (CBL-Mariner/Azure Linux)
-        self.execute_with_timeout(&["--system", "--", "sh", "-c", command], timeout)
+        // Run in the WSL2 system distro (CBL-Mariner/Azure Linux) scoped to the
+        // given distribution. A bare `wsl --system` would target the default
+        // distribution and boot it as a side effect (GH #157).
+        self.execute_with_timeout(&["--system", "-d", distro, "--", "sh", "-c", command], timeout)
     }
 
     fn check_preflight(&self) -> WslPreflightStatus {
@@ -570,5 +588,37 @@ impl WslCommandExecutor for RealWslExecutor {
                 }
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::redact_secrets_for_log;
+
+    // GH #150: the sudo password must never appear in the debug log.
+    #[test]
+    fn test_redact_sudo_password_from_log() {
+        let arg = "echo 'hunter2' | sudo -S bash -c 'apt update'";
+        let redacted = redact_secrets_for_log(arg);
+        assert!(!redacted.contains("hunter2"));
+        assert_eq!(redacted, "echo '***' | sudo -S bash -c 'apt update'");
+    }
+
+    #[test]
+    fn test_redact_handles_shell_wrapped_command() {
+        let arg = "cd ~ 2>/dev/null; echo 'p@ss word' | sudo -S bash -c 'systemctl restart nginx'";
+        let redacted = redact_secrets_for_log(arg);
+        assert!(!redacted.contains("p@ss word"));
+        assert!(redacted.contains("sudo -S bash -c 'systemctl restart nginx'"));
+    }
+
+    #[test]
+    fn test_redact_leaves_ordinary_args_alone() {
+        assert_eq!(redact_secrets_for_log("-d"), "-d");
+        assert_eq!(redact_secrets_for_log("echo hello"), "echo hello");
+        assert_eq!(
+            redact_secrets_for_log("grep sudo -S file"),
+            "grep sudo -S file"
+        );
     }
 }

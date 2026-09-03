@@ -37,7 +37,8 @@
   },
   "customUrl": {
     "label": "Custom URL",
-    "description": "Enter a direct link to a rootfs tarball"
+    "description": "Enter a direct link to a rootfs tarball",
+    "invalid": "\"{{url}}\" is not a valid URL. Enter a full http(s) link to a rootfs tarball."
   },
   "customImage": {
     "label": "Custom Image",

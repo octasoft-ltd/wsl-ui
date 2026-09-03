@@ -7,8 +7,8 @@ use crate::settings::{self, AppSettings, WslConf, WslConfig};
 use crate::temp_file_guard::TempFileGuard;
 use crate::utils::{self, is_mock_mode};
 use crate::validation::{
-    validate_action_id, validate_distro_name, validate_file_path, validate_url,
-    validate_wsl_version,
+    validate_action_id, validate_disk_path, validate_distro_name, validate_file_path,
+    validate_url, validate_wsl_version,
 };
 use crate::wsl::resources::parse_memory_string;
 use crate::wsl::{reset_mock_state, set_mock_error, clear_mock_errors, set_stubborn_shutdown, was_force_shutdown_used, MockErrorType, CompactResult, Distribution, DistroResourceUsage, VhdSizeInfo, WslResourceUsage, WslService, WslVersionInfo, WslPreflightStatus, MountedDisk, MountDiskOptions, PhysicalDisk, InstalledTerminal};
@@ -1733,7 +1733,7 @@ pub async fn rename_distribution(
 
 #[tauri::command]
 pub async fn mount_disk(options: MountDiskOptions) -> Result<(), String> {
-    validate_file_path(&options.disk_path).map_err(|e| e.to_string())?;
+    validate_disk_path(&options.disk_path).map_err(|e| e.to_string())?;
     if let Some(ref name) = options.mount_name {
         // Mount name should be alphanumeric + underscore/dash
         if !name.chars().all(|c| c.is_ascii_alphanumeric() || c == '_' || c == '-') {

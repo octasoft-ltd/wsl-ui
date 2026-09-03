@@ -1,7 +1,10 @@
 @import 'tailwindcss';
 
-/* Import distinctive fonts - JetBrains Mono for terminal feel, Outfit for modern UI */
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700&display=swap');
+/* Distinctive fonts - JetBrains Mono for terminal feel, Outfit for modern UI.
+   Self-hosted (see src/fonts.css + public/fonts/): loading them from
+   fonts.googleapis.com blocked first render for ~20s where Google is
+   unreachable (GH #158). */
+@import './fonts.css';
 
 @theme {
   --color-theme-bg-primary: var(--bg-primary);

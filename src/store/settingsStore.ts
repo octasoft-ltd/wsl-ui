@@ -52,6 +52,11 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
           ...DEFAULT_SETTINGS.distributionSources,
           ...(loaded.distributionSources || {}),
         },
+        // Backend serializes Option<String>=None as null, which the spread
+        // above would let override the "" default and feed a null into the
+        // controlled Settings input (GH #138)
+        defaultInstallBasePath:
+          loaded.defaultInstallBasePath ?? DEFAULT_SETTINGS.defaultInstallBasePath,
       };
       info("[SettingsStore] Settings loaded successfully");
       debug(`[SettingsStore] Loaded locale: ${settings.locale ?? "(undefined, will use auto)"}`);

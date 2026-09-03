@@ -25,7 +25,10 @@ export const useResourceStore = create<ResourceStore>((set, get) => ({
     try {
       const stats = await wslService.getResourceStats();
       logger.info("Fetched stats:", "ResourceStore", stats);
-      set(silent ? { stats } : { stats, isLoading: false });
+      // Clear error on silent success too: the polling backoff reads it after
+      // each silent fetch, and a stale error otherwise latches the backoff at
+      // max interval for the whole session (GH #115)
+      set(silent ? { stats, error: null } : { stats, isLoading: false, error: null });
     } catch (error) {
       logger.error("Failed to fetch resource stats:", "ResourceStore", error);
       set(silent ? { error: String(error) } : { error: String(error), isLoading: false });
