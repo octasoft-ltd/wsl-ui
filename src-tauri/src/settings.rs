@@ -490,7 +490,11 @@ fn serialize_wsl_config(config: &WslConfig) -> String {
 
 /// Read wsl.conf from a distribution
 /// If `id` is provided, uses `--distribution-id` for more reliable identification
-fn ensure_wsl_conf_readable(distro_name: &str, running_names: &[String]) -> Result<(), String> {
+fn ensure_wsl_conf_accessible(
+    distro_name: &str,
+    running_names: &[String],
+    operation: &str,
+) -> Result<(), String> {
     if running_names
         .iter()
         .any(|running| running.eq_ignore_ascii_case(distro_name))
@@ -498,16 +502,23 @@ fn ensure_wsl_conf_readable(distro_name: &str, running_names: &[String]) -> Resu
         Ok(())
     } else {
         Err(format!(
-            "Distribution '{}' is stopped. Start it before reading /etc/wsl.conf.",
-            distro_name
+            "Distribution '{}' is stopped. Start it before {} /etc/wsl.conf.",
+            distro_name, operation
         ))
     }
 }
 
-fn ensure_distribution_running_for_wsl_conf(distro_name: &str) -> Result<(), String> {
-    let running = crate::wsl::list_running_distribution_names()
-        .map_err(|e| format!("Failed to check distribution state: {}", e))?;
-    ensure_wsl_conf_readable(distro_name, &running)
+fn ensure_wsl_conf_readable(distro_name: &str, running_names: &[String]) -> Result<(), String> {
+    ensure_wsl_conf_accessible(distro_name, running_names, "reading")
+}
+
+fn ensure_wsl_conf_writable(distro_name: &str, running_names: &[String]) -> Result<(), String> {
+    ensure_wsl_conf_accessible(distro_name, running_names, "saving")
+}
+
+fn running_distribution_names_for_wsl_conf() -> Result<Vec<String>, String> {
+    crate::wsl::list_running_distribution_names()
+        .map_err(|e| format!("Failed to check distribution state: {}", e))
 }
 
 pub fn read_wsl_conf(distro_name: &str, id: Option<&str>) -> Result<WslConf, String> {
@@ -524,7 +535,8 @@ pub fn read_wsl_conf(distro_name: &str, id: Option<&str>) -> Result<WslConf, Str
         });
     }
 
-    ensure_distribution_running_for_wsl_conf(distro_name)?;
+    let running = running_distribution_names_for_wsl_conf()?;
+    ensure_wsl_conf_readable(distro_name, &running)?;
 
     let output = wsl_executor().exec(distro_name, id, "cat /etc/wsl.conf")
         .map_err(|e| format!("Failed to read wsl.conf: {}", e))?;
@@ -558,7 +570,8 @@ systemd=true
 "#.to_string()));
     }
 
-    ensure_distribution_running_for_wsl_conf(distro_name)?;
+    let running = running_distribution_names_for_wsl_conf()?;
+    ensure_wsl_conf_readable(distro_name, &running)?;
 
     let output = wsl_executor().exec(distro_name, id, "cat /etc/wsl.conf")
         .map_err(|e| format!("Failed to read wsl.conf: {}", e))?;
@@ -622,6 +635,12 @@ pub fn write_wsl_conf(distro_name: &str, config: WslConf) -> Result<(), String> 
     if is_mock_mode() {
         return Ok(());
     }
+
+    // Re-check immediately before the write. The distro may have stopped
+    // after the settings page loaded; invoking wsl.exe in that state would
+    // start it merely by saving the form.
+    let running = running_distribution_names_for_wsl_conf()?;
+    ensure_wsl_conf_writable(distro_name, &running)?;
 
     let content = serialize_wsl_conf(&config);
 
@@ -764,6 +783,16 @@ mod tests {
         let running = vec!["Ubuntu".to_string()];
 
         assert!(ensure_wsl_conf_readable("ubuntu", &running).is_ok());
+    }
+
+    #[test]
+    fn wsl_conf_writes_reject_a_stopped_distribution() {
+        let running = vec!["Ubuntu".to_string()];
+
+        let error = ensure_wsl_conf_writable("Debian", &running).unwrap_err();
+
+        assert!(error.contains("stopped"));
+        assert!(error.contains("saving"));
     }
 
     // ==================== WSL Config Parsing Tests ====================

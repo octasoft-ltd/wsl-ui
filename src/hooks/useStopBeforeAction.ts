@@ -97,13 +97,14 @@ export function useStopBeforeAction(): UseStopBeforeActionReturn {
     (distro: Distribution, actionName: string, action: () => void, options?: ExecuteOptions) => {
       const requiresShutdown = options?.requiresShutdown ?? false;
 
-      // For shutdown-requiring actions, check if ANY distro is running
-      // (VHDX is locked while any WSL distro is active)
-      const anyRunning = requiresShutdown
-        ? distributions.some(d => d.state === "Running")
-        : distro.state === "Running";
+      // Only a positively known Stopped state can bypass verification.
+      // Unknown/transitional state may represent a running distro whose
+      // localized status could not be parsed, so fail closed.
+      const needsVerification = requiresShutdown
+        ? distributions.some(d => d.state !== "Stopped")
+        : distro.state !== "Stopped";
 
-      if (anyRunning) {
+      if (needsVerification) {
         // Show stop dialog
         setState({
           showStopDialog: true,

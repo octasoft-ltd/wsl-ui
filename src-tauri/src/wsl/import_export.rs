@@ -6,7 +6,12 @@
 use super::executor::{resource_monitor, wsl_executor};
 use super::types::WslError;
 use crate::metadata::{self, DistroMetadata};
+use crate::temp_file_guard::TempFileGuard;
 use log::{info, warn};
+
+fn clone_temp_file_path() -> std::path::PathBuf {
+    std::env::temp_dir().join(format!("wsl-clone-{}.tar", super::unique_temp_tag()))
+}
 
 /// Create the install location directory (and any missing parents) before
 /// invoking `wsl --import`. Without this, importing into a fresh path under
@@ -128,8 +133,8 @@ pub fn clone_distribution(source: &str, new_name: &str, install_location: Option
     let source_id = registry_info.get(source).map(|info| info.id.clone());
 
     // Create temp file path
-    let temp_dir = std::env::temp_dir();
-    let temp_file = temp_dir.join(format!("wsl-clone-{}.tar", std::process::id()));
+    let temp_file = clone_temp_file_path();
+    let _temp_guard = TempFileGuard::new(&temp_file);
     let temp_path = temp_file.to_string_lossy().to_string();
 
     // Export to temp file
@@ -143,9 +148,6 @@ pub fn clone_distribution(source: &str, new_name: &str, install_location: Option
 
     // Import with new name (install dir is created inside import_distribution)
     let result = import_distribution(new_name, &final_location, &temp_path);
-
-    // Clean up temp file (ignore errors)
-    let _ = std::fs::remove_file(&temp_file);
 
     // Only create metadata if import succeeded
     if result.is_ok() {
@@ -279,10 +281,8 @@ mod tests {
     }
 
     #[test]
-    fn test_temp_file_path_format() {
-        let temp_dir = std::env::temp_dir();
-        let pid = std::process::id();
-        let temp_file = temp_dir.join(format!("wsl-clone-{}.tar", pid));
+    fn test_clone_temp_file_path_format() {
+        let temp_file = clone_temp_file_path();
 
         // Verify the path ends with expected pattern
         let path_str = temp_file.to_string_lossy();
@@ -333,14 +333,11 @@ mod tests {
     }
 
     #[test]
-    fn test_temp_file_unique_per_process() {
-        let temp_dir = std::env::temp_dir();
-        let pid = std::process::id();
-        let temp_file1 = temp_dir.join(format!("wsl-clone-{}.tar", pid));
-        let temp_file2 = temp_dir.join(format!("wsl-clone-{}.tar", pid));
+    fn test_clone_temp_file_is_unique_per_operation() {
+        let temp_file1 = clone_temp_file_path();
+        let temp_file2 = clone_temp_file_path();
 
-        // Same process should get same path (deterministic)
-        assert_eq!(temp_file1, temp_file2);
+        assert_ne!(temp_file1, temp_file2);
     }
 }
 

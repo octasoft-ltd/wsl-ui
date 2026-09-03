@@ -259,12 +259,17 @@ These checks cover the final code-review fixes made after PR #168.
    `wsl --list --running --quiet`, running and transitional distro detection,
    fail-closed OCI response/body bounds and manifest recursion limits, and
    trimmed custom-manifest URLs. They also verify that overlapping custom-URL
-   installs receive distinct temporary archive paths.
+   installs and clones receive distinct temporary archive paths, and that a
+   stopped distro is rejected if it stops between loading and saving
+   `/etc/wsl.conf`.
 2. Frontend tests verify stale manifest previews are discarded, Apply and
    Reset cannot overlap, stop-before-action trusts the backend's verified
    result rather than stale UI state, and delayed terminal refresh timers do
-   not leak between tests. The popup controller also reattaches to an existing
-   popup WebView after a main-window reload so action sessions remain usable.
+   not leak between tests. Unknown and transitional distro states must enter
+   the stop-verification flow rather than executing immediately. The popup
+   controller also contains recovery handling
+   for an existing popup WebView after a main-window reload so action sessions
+   remain usable.
    Per-distribution Settings tests verify that stopped distros are not queried
    until **Start and load settings** is selected. Native WSL install tests
    verify that a pending download shows elapsed time and that failures preserve
