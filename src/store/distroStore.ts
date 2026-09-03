@@ -114,8 +114,11 @@ export const useDistroStore = create<DistroStore>((set, get) => ({
         return newDistro;
       });
 
-      // Always clear isLoading on success (even for silent fetches to clear initial loading state)
-      set({ distributions, isLoading: false });
+      // Always clear isLoading on success (even for silent fetches to clear initial loading state).
+      // Also clear error/isTimeoutError: the polling backoff reads them after each
+      // silent fetch, and a stale error from one transient timeout otherwise latches
+      // the backoff at max interval for the whole session (GH #115)
+      set({ distributions, isLoading: false, error: null, isTimeoutError: false });
 
       // Fetch disk sizes and OS info in background (don't block the UI).
       // Only fetch details that are not already cached to avoid flooding WSL

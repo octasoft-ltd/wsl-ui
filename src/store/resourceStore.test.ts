@@ -94,6 +94,20 @@ describe("resourceStore", () => {
       expect(useResourceStore.getState().isLoading).toBe(false);
     });
 
+    // GH #115: a stale error latched the polling backoff at max interval
+    // because silent successes never cleared it
+    it("clears a previous error on silent success", async () => {
+      vi.mocked(invoke).mockRejectedValue(new Error("timeout"));
+      await useResourceStore.getState().fetchStats(true);
+      expect(useResourceStore.getState().error).not.toBeNull();
+
+      vi.mocked(invoke).mockResolvedValue(mockStats);
+      await useResourceStore.getState().fetchStats(true);
+
+      expect(useResourceStore.getState().error).toBeNull();
+      expect(useResourceStore.getState().stats).toEqual(mockStats);
+    });
+
     it("sets error when silent on failure", async () => {
       vi.mocked(invoke).mockRejectedValue(new Error("Silent error"));
 
