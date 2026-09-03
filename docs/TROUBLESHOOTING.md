@@ -1427,6 +1427,39 @@ restart the distribution. Track the upstream fix before re-enabling.
 
 ---
 
+## Issue #25: "WSL command failed" error on non-English Windows with no installed distributions
+
+### Symptoms
+- On a non-English Windows locale (e.g. Chinese zh-CN), WSL is installed but no distributions are registered, and the app shows an error banner `WSL command failed:` instead of the normal empty state.
+- Logs show repeated failures:
+  ```
+  [wsl_ui::wsl::core][WARN] WSL list command failed:
+  [ERROR] [distroStore.fetchDistros] Error: {"code":"UNKNOWN","message":"WSL command failed: "}
+  ```
+- The same zero-distro state works correctly on English Windows.
+
+### Root Cause
+`wsl.exe --list --verbose` reports "no installed distributions" in the system language and exits with code 1. The app detected this valid empty state by matching the English phrase `no installed distributions` only, so localized output (e.g. zh-CN `适用于 Linux 的 Windows 子系统没有已安装的分发。`) fell through to the generic command-failure path.
+
+Same locale-fragility family as Issue #18 (UTF-16 LE mojibake), but a different code path: this one is English-only string matching for the empty-list case.
+
+### Diagnosis
+1. Run `wsl.exe --list --verbose` in a terminal; on an affected system it prints the localized no-distro message and exits with code 1.
+2. Check `HKCU\Software\Microsoft\Windows\CurrentVersion\Lxss` — no GUID subkeys confirms zero registered distributions.
+
+### Solution
+Empty-state detection is now locale-independent: when the list command fails, the app consults the Lxss registry and treats "no registered distributions" as the valid empty state. The registry check is strict — if the Lxss key cannot be read (as opposed to being absent or having no distro entries), the original command error is surfaced instead of an empty list, so a transient registry failure never silently clears the distribution inventory. The phrase match was also extended with the confirmed zh-CN message as a fast path.
+
+### Files Changed
+- `src-tauri/src/wsl/core.rs`: added `is_no_distros_output` (English + zh-CN phrases) and a registry-based empty-distro fallback in `list_distributions`, with regression tests.
+- `src-tauri/src/wsl/executor/resource/{mod,real,mock}.rs`: new `registry_confirms_no_distros` ResourceMonitor method that distinguishes "no registered distros" from "registry unreadable".
+
+### Related
+- GitHub issue: https://github.com/octasoft-ltd/wsl-ui/issues/101
+- Internal: OCT-1132. Related locale work: OCT-1066 (Issue #18, UTF-16 LE decoding).
+
+---
+
 ## Template for New Issues
 
 ```markdown
