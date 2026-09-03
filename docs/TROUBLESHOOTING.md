@@ -1508,6 +1508,45 @@ Classification now uses locale-independent signals first:
 
 ---
 
+## Issue #27: Leftover temp tar files and dangling containers after a failed container-image install
+
+### Symptoms
+- Installing a distribution from a container image fails with "Failed to create install directory"
+  (e.g. the chosen install location is on a full disk, a disconnected drive, or a protected path).
+- Large `wsl-image-<pid>.tar` files or `wsl-oci-<pid>` folders accumulate in `%TEMP%`.
+- `docker ps -a` / `podman ps -a` shows unnamed stopped containers left over from failed installs,
+  one per retry.
+
+### Root Cause
+The install flow pulled and exported the container image *before* validating the install location.
+When creating the install directory failed, the function returned early and skipped the cleanup
+calls that remove the exported tar (and the intermediate container in the Docker/Podman path).
+Every retry repeated the expensive work and leaked another set of artifacts.
+
+### Diagnosis
+1. Check `%TEMP%` for `wsl-image-*.tar` files or `wsl-oci-*` directories.
+2. Run `docker ps -a` or `podman ps -a` and look for stopped containers created around the time
+   of the failed installs.
+
+### Solution
+Fixed by creating the install directory *before* the expensive pull/export work (a bad location
+now fails fast, before anything is downloaded), and by guarding the temp tar / OCI work directory
+with an RAII `TempFileGuard` so it is removed on every exit path, including panics. Temp artifact
+names now include a per-install sequence number (`wsl-image-<pid>-<n>.tar`, `wsl-oci-<pid>-<n>`)
+so two installs running at the same time cannot overwrite or delete each other's artifacts.
+
+For artifacts leaked by older versions: delete `wsl-image-*.tar` / `wsl-oci-*` from `%TEMP%` and
+remove leftover containers with `docker rm <id>` / `podman rm <id>`.
+
+### Files Changed
+- `src-tauri/src/wsl/install.rs`: install location created up front; temp artifacts guarded.
+- `src-tauri/src/temp_file_guard.rs`: `TempFileGuard` extended to clean up directories.
+
+### Related
+- GitHub issue #103 (OCT-1138)
+
+---
+
 ## Template for New Issues
 
 ```markdown

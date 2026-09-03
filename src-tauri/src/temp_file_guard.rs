@@ -2,8 +2,8 @@
 
 use std::path::{Path, PathBuf};
 
-/// RAII guard to ensure cleanup of temporary files
-/// This will automatically delete the file when dropped, even on panic
+/// RAII guard to ensure cleanup of temporary files or directories
+/// This will automatically delete the file (or directory tree) when dropped, even on panic
 pub struct TempFileGuard {
     path: PathBuf,
     keep: bool,
@@ -33,8 +33,12 @@ impl TempFileGuard {
 
 impl Drop for TempFileGuard {
     fn drop(&mut self) {
-        if !self.keep && self.path.exists() {
-            let _ = std::fs::remove_file(&self.path);
+        if !self.keep {
+            if self.path.is_dir() {
+                let _ = std::fs::remove_dir_all(&self.path);
+            } else if self.path.exists() {
+                let _ = std::fs::remove_file(&self.path);
+            }
         }
     }
 }
@@ -126,6 +130,39 @@ mod tests {
 
         drop(guard);
         assert!(!temp_path.exists());
+    }
+
+    #[test]
+    fn test_temp_file_guard_removes_directory_on_drop() {
+        let temp_dir = std::env::temp_dir();
+        let dir_path = temp_dir.join("test_guard_dir_cleanup");
+
+        {
+            std::fs::create_dir_all(dir_path.join("nested")).unwrap();
+            std::fs::write(dir_path.join("nested").join("file.dat"), b"test data").unwrap();
+
+            let _guard = TempFileGuard::new(&dir_path);
+            assert!(dir_path.exists(), "Directory should exist while guard is in scope");
+        } // Guard dropped here
+
+        assert!(!dir_path.exists(), "Directory tree should be removed after guard is dropped");
+    }
+
+    #[test]
+    fn test_temp_file_guard_keeps_directory_when_requested() {
+        let temp_dir = std::env::temp_dir();
+        let dir_path = temp_dir.join("test_guard_dir_keep");
+
+        {
+            std::fs::create_dir_all(&dir_path).unwrap();
+            let mut guard = TempFileGuard::new(&dir_path);
+            guard.keep();
+        }
+
+        assert!(dir_path.exists(), "Directory should exist after guard with keep() is dropped");
+
+        // Cleanup
+        let _ = std::fs::remove_dir_all(&dir_path);
     }
 
     #[test]

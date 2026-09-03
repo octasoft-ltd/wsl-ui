@@ -5,12 +5,29 @@
 
 use crate::distro_catalog;
 use crate::metadata::{self, DistroMetadata, InstallSource};
+use crate::temp_file_guard::TempFileGuard;
 use log::{info, warn};
 
 use super::executor::{resource_monitor, terminal_executor, wsl_executor};
 use super::executor::terminal::ContainerRuntime;
 use super::import_export::import_distribution_with_version;
 use super::types::WslError;
+
+/// Process-wide counter for temp install artifact names.
+static TEMP_ARTIFACT_SEQ: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+
+/// Unique tag for temp install artifacts: `<pid>-<seq>`.
+///
+/// The PID alone is shared by every install running in this app instance, so
+/// two overlapping installs would use (and delete) the same temp path; the
+/// sequence number makes each install's artifacts unique within the process.
+fn unique_temp_tag() -> String {
+    format!(
+        "{}-{}",
+        std::process::id(),
+        TEMP_ARTIFACT_SEQ.fetch_add(1, std::sync::atomic::Ordering::Relaxed)
+    )
+}
 
 /// Get list of available distributions from Microsoft (for quick install)
 pub fn list_online_distributions() -> Result<Vec<String>, WslError> {
@@ -177,24 +194,8 @@ pub fn create_from_image(
         }
     };
 
-    // Create temp file for tar export
-    let temp_dir = std::env::temp_dir();
-    let tar_path = temp_dir.join(format!("wsl-image-{}.tar", std::process::id()));
-    let tar_path_str = tar_path.to_string_lossy().to_string();
-
-    // Step 1: Pull the image
-    executor.container_pull(runtime, image)?;
-
-    // Step 2: Create a container from the image
-    let container_id = executor.container_create(runtime, image)?;
-
-    // Step 3: Export the container to a tar file
-    if let Err(e) = executor.container_export(runtime, &container_id, &tar_path_str) {
-        let _ = executor.container_rm(runtime, &container_id);
-        return Err(e);
-    }
-
-    // Step 4: Determine install location (use settings-based default if not specified)
+    // Step 1: Determine install location and create it up front, before the
+    // expensive pull/export work, so a bad location fails fast without leaks
     let location = match install_location {
         Some(loc) if !loc.is_empty() => loc.to_string(),
         _ => crate::settings::get_default_distro_path(distro_name),
@@ -203,13 +204,30 @@ pub fn create_from_image(
     std::fs::create_dir_all(&location)
         .map_err(|e| WslError::CommandFailed(format!("Failed to create install directory: {}", e)))?;
 
+    // Create temp file for tar export, cleaned up on all paths (including panic)
+    let temp_dir = std::env::temp_dir();
+    let tar_path = temp_dir.join(format!("wsl-image-{}.tar", unique_temp_tag()));
+    let tar_path_str = tar_path.to_string_lossy().to_string();
+    let _tar_guard = TempFileGuard::new(&tar_path);
+
+    // Step 2: Pull the image
+    executor.container_pull(runtime, image)?;
+
+    // Step 3: Create a container from the image
+    let container_id = executor.container_create(runtime, image)?;
+
+    // Step 4: Export the container to a tar file
+    if let Err(e) = executor.container_export(runtime, &container_id, &tar_path_str) {
+        let _ = executor.container_rm(runtime, &container_id);
+        return Err(e);
+    }
+
     // Step 5: Import with optional WSL version
     let import_result =
         import_distribution_with_version(distro_name, &location, &tar_path_str, wsl_version);
 
-    // Step 6: Cleanup
+    // Step 6: Cleanup (tar file is removed by _tar_guard on drop)
     let _ = executor.container_rm(runtime, &container_id);
-    let _ = std::fs::remove_file(&tar_path);
 
     // Create metadata if import succeeded
     if import_result.is_ok() {
@@ -248,24 +266,8 @@ pub fn create_from_oci_image(
 ) -> Result<(), WslError> {
     info!("Creating distribution '{}' from OCI image '{}'", distro_name, image);
 
-    // Create temp directory for OCI operations
-    let temp_dir = std::env::temp_dir();
-    let oci_work_dir = temp_dir.join(format!("wsl-oci-{}", std::process::id()));
-    std::fs::create_dir_all(&oci_work_dir)
-        .map_err(|e| WslError::CommandFailed(format!("Failed to create temp directory: {}", e)))?;
-
-    // Pull the image and create rootfs tarball
-    let tar_path = match crate::oci::pull_and_create_rootfs(image, &oci_work_dir, progress) {
-        Ok(path) => path,
-        Err(e) => {
-            let _ = std::fs::remove_dir_all(&oci_work_dir);
-            return Err(WslError::CommandFailed(format!("Failed to pull OCI image: {}", e)));
-        }
-    };
-
-    let tar_path_str = tar_path.to_string_lossy().to_string();
-
-    // Determine install location (use settings-based default if not specified)
+    // Determine install location and create it up front, before the expensive
+    // image download, so a bad location fails fast without leaking the rootfs
     let location = match install_location {
         Some(loc) if !loc.is_empty() => loc.to_string(),
         _ => crate::settings::get_default_distro_path(distro_name),
@@ -274,12 +276,22 @@ pub fn create_from_oci_image(
     std::fs::create_dir_all(&location)
         .map_err(|e| WslError::CommandFailed(format!("Failed to create install directory: {}", e)))?;
 
-    // Import with optional WSL version
+    // Create temp directory for OCI operations, cleaned up on all paths (including panic)
+    let temp_dir = std::env::temp_dir();
+    let oci_work_dir = temp_dir.join(format!("wsl-oci-{}", unique_temp_tag()));
+    std::fs::create_dir_all(&oci_work_dir)
+        .map_err(|e| WslError::CommandFailed(format!("Failed to create temp directory: {}", e)))?;
+    let _work_dir_guard = TempFileGuard::new(&oci_work_dir);
+
+    // Pull the image and create rootfs tarball
+    let tar_path = crate::oci::pull_and_create_rootfs(image, &oci_work_dir, progress)
+        .map_err(|e| WslError::CommandFailed(format!("Failed to pull OCI image: {}", e)))?;
+
+    let tar_path_str = tar_path.to_string_lossy().to_string();
+
+    // Import with optional WSL version (temp directory is removed by _work_dir_guard on drop)
     let import_result =
         import_distribution_with_version(distro_name, &location, &tar_path_str, wsl_version);
-
-    // Cleanup temp directory
-    let _ = std::fs::remove_dir_all(&oci_work_dir);
 
     // Create metadata if import succeeded
     if import_result.is_ok() {
@@ -578,8 +590,7 @@ Debian                                 Debian
     #[test]
     fn test_container_temp_path_format() {
         let temp_dir = std::env::temp_dir();
-        let pid = std::process::id();
-        let tar_path = temp_dir.join(format!("wsl-image-{}.tar", pid));
+        let tar_path = temp_dir.join(format!("wsl-image-{}.tar", super::unique_temp_tag()));
 
         let path_str = tar_path.to_string_lossy();
         assert!(path_str.contains("wsl-image-"));
@@ -589,10 +600,22 @@ Debian                                 Debian
     #[test]
     fn test_oci_work_dir_format() {
         let temp_dir = std::env::temp_dir();
-        let pid = std::process::id();
-        let oci_work_dir = temp_dir.join(format!("wsl-oci-{}", pid));
+        let oci_work_dir = temp_dir.join(format!("wsl-oci-{}", super::unique_temp_tag()));
 
         let path_str = oci_work_dir.to_string_lossy();
         assert!(path_str.contains("wsl-oci-"));
+    }
+
+    // Concurrent installs share the same PID, so temp artifact names must
+    // differ per install or overlapping installs overwrite/delete each
+    // other's tar/work dir (Greptile review on GH #103 fix).
+    #[test]
+    fn test_unique_temp_tag_differs_per_call() {
+        let a = super::unique_temp_tag();
+        let b = super::unique_temp_tag();
+        assert_ne!(a, b);
+        let pid_prefix = format!("{}-", std::process::id());
+        assert!(a.starts_with(&pid_prefix));
+        assert!(b.starts_with(&pid_prefix));
     }
 }
