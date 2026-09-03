@@ -67,9 +67,12 @@ impl RealResourceMonitor {
         let escaped_path = vhdx_path.replace("'", "''").replace("\"", "`\"");
         let stderr_path = stderr_file.to_str().unwrap_or("").replace("'", "''");
 
+        // GH #102: the catch block writes the .NET exception type name alongside
+        // the (localized) message so failures like CommandNotFoundException stay
+        // detectable on non-English Windows.
         let ps_script = format!(
             r#"try {{
-                $proc = Start-Process -FilePath 'powershell' -ArgumentList '-NoProfile','-Command','try {{ Optimize-VHD -Path \"{path}\" -Mode Full 2>&1 | Out-File -FilePath \"{stderr}\" -Encoding UTF8; exit 0 }} catch {{ $_.Exception.Message | Out-File -FilePath \"{stderr}\" -Encoding UTF8; exit 1 }}' -Verb RunAs -Wait -PassThru -WindowStyle Hidden
+                $proc = Start-Process -FilePath 'powershell' -ArgumentList '-NoProfile','-Command','try {{ Optimize-VHD -Path \"{path}\" -Mode Full 2>&1 | Out-File -FilePath \"{stderr}\" -Encoding UTF8; exit 0 }} catch {{ ($_.Exception.GetType().FullName + '': '' + $_.Exception.Message) | Out-File -FilePath \"{stderr}\" -Encoding UTF8; exit 1 }}' -Verb RunAs -Wait -PassThru -WindowStyle Hidden
                 exit $proc.ExitCode
             }} catch {{
                 exit 1223
@@ -108,12 +111,9 @@ impl RealResourceMonitor {
                 }
             };
 
-            // Check if Hyper-V/Optimize-VHD is unavailable
-            if error_text.contains("not recognized")
-                || error_text.contains("Hyper-V")
-                || error_text.contains("CommandNotFoundException")
-                || error_text.contains("is not recognized as")
-            {
+            // Check if Hyper-V/Optimize-VHD is unavailable (GH #102:
+            // locale-independent detection via exception type name)
+            if optimize_vhd_unavailable(&error_text) {
                 return Err(WslError::CommandFailed(
                     "Optimize-VHD not available - Hyper-V feature may not be installed".to_string(),
                 ));
@@ -151,17 +151,21 @@ impl RealResourceMonitor {
 
         // Diskpart requires admin - run via elevated PowerShell that captures output
         // Note: -RedirectStandardOutput doesn't work with -Verb RunAs, so we run
-        // diskpart inside an elevated PowerShell that redirects its own output
+        // diskpart inside an elevated PowerShell that redirects its own output.
+        // GH #102: diskpart's text output is fully localized, so the wrapper also
+        // appends a machine-readable WSLUI_DISKPART_EXIT=<code> marker carrying
+        // diskpart's real exit code across the UAC boundary.
         let ps_script = format!(
             r#"try {{
-                $proc = Start-Process -FilePath 'powershell' -ArgumentList '-NoProfile','-Command','diskpart /s \"{script}\" 2>&1 | Out-File -FilePath \"{output}\" -Encoding UTF8; exit $LASTEXITCODE' -Verb RunAs -Wait -PassThru -WindowStyle Hidden
+                $proc = Start-Process -FilePath 'powershell' -ArgumentList '-NoProfile','-Command','diskpart /s \"{script}\" 2>&1 | Out-File -FilePath \"{output}\" -Encoding UTF8; Add-Content -LiteralPath \"{output}\" -Value (''{marker}'' + $LASTEXITCODE); exit $LASTEXITCODE' -Verb RunAs -Wait -PassThru -WindowStyle Hidden
                 exit $proc.ExitCode
             }} catch {{
                 $_.Exception.Message | Out-File -FilePath '{output}' -Encoding UTF8
                 exit 1223
             }}"#,
             script = script_path,
-            output = output_path
+            output = output_path,
+            marker = DISKPART_EXIT_MARKER
         );
 
         log::info!("Running diskpart with elevation - UAC dialog will appear");
@@ -184,32 +188,87 @@ impl RealResourceMonitor {
             ));
         }
 
-        // Check if compact succeeded - look for the success message
-        let output_lower = captured_output.to_lowercase();
-        let compact_succeeded = output_lower.contains("successfully compacted");
-
-        // Only treat as error if compact didn't succeed AND there are error indicators
-        if !compact_succeeded {
-            if output_lower.contains("error") || output_lower.contains("failed") {
-                return Err(WslError::CommandFailed(format!(
-                    "Diskpart failed: {}",
-                    captured_output.trim()
-                )));
-            }
-
-            if !output.status.success() {
-                let error_text = if !captured_output.trim().is_empty() {
-                    captured_output.trim().to_string()
-                } else {
-                    "Diskpart compact failed with no output".to_string()
-                };
-                return Err(WslError::CommandFailed(error_text));
-            }
-        }
+        // Classify the outcome without relying on localized diskpart text (GH #102)
+        diskpart_compact_outcome(&captured_output, output.status.success())
+            .map_err(WslError::CommandFailed)?;
 
         log::info!("VHDX compacted successfully using diskpart");
         Ok(())
     }
+}
+
+/// Marker the elevated diskpart wrapper appends to its output file so the real
+/// diskpart exit code survives the UAC boundary in a locale-independent form
+/// (GH #102).
+const DISKPART_EXIT_MARKER: &str = "WSLUI_DISKPART_EXIT=";
+
+/// Extract the diskpart exit code from the wrapper's marker line, if present.
+fn parse_diskpart_exit_marker(output: &str) -> Option<i64> {
+    output
+        .lines()
+        .rev()
+        .find_map(|line| line.trim().strip_prefix(DISKPART_EXIT_MARKER))
+        .and_then(|code| code.trim().parse::<i64>().ok())
+}
+
+/// Decide whether an elevated diskpart compact run succeeded.
+///
+/// GH #102: diskpart output is fully localized, so "successfully compacted" /
+/// "error" / "failed" never match on non-English Windows. The primary signal is
+/// therefore diskpart's own exit code carried by the wrapper marker. The
+/// narrow English failure phrases are kept only as a supplementary guard for
+/// the English-locale case where diskpart exits 0 despite reporting an error.
+fn diskpart_compact_outcome(captured_output: &str, launcher_success: bool) -> Result<(), String> {
+    let output_lower = captured_output.to_lowercase();
+    let success_text = output_lower.contains("successfully compacted");
+    // Actual diskpart failure phrases, not the broad "error"/"failed" words —
+    // diskpart echoes script lines, so a path like D:\errors\ext4.vhdx must
+    // not trip the guard.
+    let hard_error_text = output_lower.contains("diskpart has encountered an error")
+        || output_lower.contains("virtual disk service error");
+
+    if let Some(code) = parse_diskpart_exit_marker(captured_output) {
+        if code != 0 {
+            return Err(format!(
+                "Diskpart failed (exit code {}): {}",
+                code,
+                captured_output.trim()
+            ));
+        }
+        if hard_error_text && !success_text {
+            return Err(format!("Diskpart failed: {}", captured_output.trim()));
+        }
+        return Ok(());
+    }
+
+    // No marker: the wrapper never reached diskpart (or an older script ran).
+    // Fall back to the previous heuristics.
+    if success_text {
+        return Ok(());
+    }
+    if output_lower.contains("error") || output_lower.contains("failed") {
+        return Err(format!("Diskpart failed: {}", captured_output.trim()));
+    }
+    if !launcher_success {
+        let trimmed = captured_output.trim();
+        return Err(if trimmed.is_empty() {
+            "Diskpart compact failed with no output".to_string()
+        } else {
+            trimmed.to_string()
+        });
+    }
+    Ok(())
+}
+
+/// Detect that Optimize-VHD is unavailable (Hyper-V module missing) from an
+/// elevated PowerShell error. GH #102: the error message body is localized, so
+/// match locale-invariant signals first — the .NET exception type name written
+/// by the elevated wrapper and the "Hyper-V" module name. The English "not
+/// recognized" phrase is kept for default-formatted English error records.
+fn optimize_vhd_unavailable(error_text: &str) -> bool {
+    error_text.contains("CommandNotFoundException")
+        || error_text.contains("Hyper-V")
+        || error_text.contains("not recognized")
 }
 
 impl Default for RealResourceMonitor {
@@ -857,6 +916,94 @@ mod tests {
                 );
             }
         }
+    }
+
+    // ==================== GH #102: locale-independent diskpart/Optimize-VHD detection ====================
+
+    #[test]
+    fn test_diskpart_marker_parses_exit_code() {
+        assert_eq!(
+            parse_diskpart_exit_marker("some output\nWSLUI_DISKPART_EXIT=0"),
+            Some(0)
+        );
+        assert_eq!(
+            parse_diskpart_exit_marker("output\nWSLUI_DISKPART_EXIT=-2147024891\n"),
+            Some(-2147024891)
+        );
+        assert_eq!(parse_diskpart_exit_marker("no marker here"), None);
+    }
+
+    // GH #102: zh-CN diskpart success prints no English words at all; the
+    // marker exit code must be enough to report success.
+    #[test]
+    fn test_diskpart_zh_cn_success_via_marker() {
+        let output = "Microsoft DiskPart 版本 10.0.26100.1150\n\
+                      已选择虚拟磁盘文件。\n\
+                      DiskPart 已成功压缩虚拟磁盘文件。\n\
+                      WSLUI_DISKPART_EXIT=0";
+        assert!(diskpart_compact_outcome(output, true).is_ok());
+    }
+
+    // GH #102: zh-CN diskpart failure has no "error"/"failed" text; the
+    // non-zero marker exit code must surface it instead of silent success.
+    #[test]
+    fn test_diskpart_zh_cn_failure_via_marker() {
+        let output = "DiskPart 遇到错误: 拒绝访问。\n\
+                      有关详细信息，请参阅系统事件日志。\n\
+                      WSLUI_DISKPART_EXIT=-2147024891";
+        let result = diskpart_compact_outcome(output, true);
+        assert!(result.is_err());
+        assert!(result.unwrap_err().contains("-2147024891"));
+    }
+
+    // Marker exit 0 but genuine English failure phrase: partial-failure guard
+    // must still fire on English Windows.
+    #[test]
+    fn test_diskpart_english_partial_failure_with_exit_zero() {
+        let output = "Virtual Disk Service error:\n\
+                      The requested operation could not be completed.\n\
+                      WSLUI_DISKPART_EXIT=0";
+        assert!(diskpart_compact_outcome(output, true).is_err());
+    }
+
+    // A vhdx path containing "error" is echoed in diskpart's script output and
+    // must not trip the failure guard when the exit code is 0.
+    #[test]
+    fn test_diskpart_path_containing_error_word_not_a_failure() {
+        let output = "DISKPART> select vdisk file=\"D:\\errors\\ext4.vhdx\"\n\
+                      已选择虚拟磁盘文件。\n\
+                      WSLUI_DISKPART_EXIT=0";
+        assert!(diskpart_compact_outcome(output, true).is_ok());
+    }
+
+    // Legacy paths (no marker, e.g. wrapper failed before diskpart ran) keep
+    // the previous heuristics.
+    #[test]
+    fn test_diskpart_no_marker_falls_back_to_heuristics() {
+        assert!(diskpart_compact_outcome(
+            "DiskPart successfully compacted the virtual disk file.",
+            true
+        )
+        .is_ok());
+        assert!(diskpart_compact_outcome("DiskPart has encountered an error: access denied", true).is_err());
+        assert!(diskpart_compact_outcome("", false).is_err());
+        assert!(diskpart_compact_outcome("", true).is_ok());
+    }
+
+    // GH #102: on zh-CN the CommandNotFoundException message body is localized;
+    // the exception type name written by the elevated wrapper is invariant.
+    #[test]
+    fn test_optimize_vhd_unavailable_localized_command_not_found() {
+        assert!(optimize_vhd_unavailable(
+            "System.Management.Automation.CommandNotFoundException: 无法将“Optimize-VHD”项识别为 cmdlet、函数、脚本文件或可运行程序的名称。"
+        ));
+        assert!(optimize_vhd_unavailable(
+            "The term 'Optimize-VHD' is not recognized as the name of a cmdlet"
+        ));
+        // Unrelated localized failure must not be misclassified as missing Hyper-V
+        assert!(!optimize_vhd_unavailable(
+            "System.UnauthorizedAccessException: 拒绝访问。"
+        ));
     }
 
     /// Test performance - winreg should be fast (< 100ms for typical registry)
