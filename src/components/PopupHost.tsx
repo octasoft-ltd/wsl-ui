@@ -64,6 +64,10 @@ export function PopupHost<TPayload>({
       return;
     }
 
+    // Suppress focus-loss close events while the action event is in flight.
+    // Otherwise popup-close can overtake the action when focus returns to the
+    // main window and cause the current session's action to be discarded.
+    closedRef.current = true;
     try {
       // Deliver the action first so the main window can open any follow-up
       // dialog before the local fallback hides the menu.
@@ -75,7 +79,6 @@ export function PopupHost<TPayload>({
       // independently, so a close event can overtake the action event and
       // make the main window discard that action. The action handler already
       // closes the popup; this local fallback only guarantees it is hidden.
-      closedRef.current = true;
       hidePopupWindow();
     }
   };

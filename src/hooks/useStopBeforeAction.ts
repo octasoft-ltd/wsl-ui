@@ -141,23 +141,15 @@ export function useStopBeforeAction(): UseStopBeforeActionReturn {
       ? await shutdownAll()
       : await stopDistro(distro.name);
 
-    // Re-fetch (silently) so we can confirm the VM is actually stopped before
-    // proceeding. A non-silent fetch would reset the store's error state,
-    // erasing the "Stop failed" message before the UI could render it.
+    // The backend only reports success after locale-neutral stop verification.
+    // Refresh is display-only; a stale store snapshot must not overrule that
+    // authoritative result or authorize a failed stop.
     await fetchDistros(true);
-
-    // Double-check nothing is still running. A stop can report success while
-    // WSL is slow to release the VHDX lock, so verify against fresh store
-    // state (not the possibly-stale render closure).
-    const latest = useDistroStore.getState().distributions;
-    const stillRunning = requiresShutdown
-      ? latest.some((d) => d.state === "Running")
-      : latest.find((d) => d.name === distro.name)?.state === "Running";
 
     // Always close the dialog.
     setState(initialState);
 
-    if (stopped && !stillRunning) {
+    if (stopped) {
       // Safe to proceed: the VHDX is no longer locked.
       pendingAction();
       return;
@@ -171,15 +163,6 @@ export function useStopBeforeAction(): UseStopBeforeActionReturn {
         type: "error",
         title: `Cannot ${actionName}`,
         message: `Failed to ${requiresShutdown ? "shut down WSL" : `stop ${distro.name}`}, so the ${actionName} was cancelled.`,
-      });
-    }
-    if (stopped && stillRunning) {
-      useNotificationStore.getState().addNotification({
-        type: "error",
-        title: `Cannot ${actionName}`,
-        message: `WSL is still running after the ${
-          requiresShutdown ? "shutdown" : "stop"
-        } request, so ${distro.name}'s disk is still in use. Please shut WSL down manually and try again.`,
       });
     }
   }, [state, stopDistro, shutdownAll, fetchDistros]);

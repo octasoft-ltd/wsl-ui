@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { useDistroStore } from "./distroStore";
 import type { Distribution } from "../types/distribution";
 
@@ -596,6 +596,15 @@ describe("distroStore", () => {
   });
 
   describe("openTerminal", () => {
+    beforeEach(() => {
+      vi.useFakeTimers();
+    });
+
+    afterEach(() => {
+      vi.clearAllTimers();
+      vi.useRealTimers();
+    });
+
     it("calls wslService.openTerminal with id", async () => {
       vi.mocked(wslService.openTerminal).mockResolvedValue(undefined);
 
@@ -612,12 +621,15 @@ describe("distroStore", () => {
       expect(wslService.openTerminal).toHaveBeenCalledWith("Ubuntu", undefined);
     });
 
-    it("does not refresh distributions after opening terminal", async () => {
+    it("refreshes distributions after the one-second startup delay", async () => {
       vi.mocked(wslService.openTerminal).mockResolvedValue(undefined);
+      vi.mocked(wslService.listDistributions).mockResolvedValue([]);
 
       await useDistroStore.getState().openTerminal("Ubuntu");
 
       expect(wslService.listDistributions).not.toHaveBeenCalled();
+      await vi.advanceTimersByTimeAsync(1000);
+      expect(wslService.listDistributions).toHaveBeenCalledOnce();
     });
   });
 

@@ -17,7 +17,7 @@ import { logger } from "../../utils/logger";
 
 export function WslDistroSettings() {
   const { t } = useTranslation("settings");
-  const { distributions } = useDistroStore();
+  const { distributions, startDistro, actionInProgress } = useDistroStore();
   const [selectedDistro, setSelectedDistro] = useState<string>("");
   const [config, setConfig] = useState<WslConf>(DEFAULT_WSL_CONF);
   const [isLoading, setIsLoading] = useState(false);
@@ -30,6 +30,9 @@ export function WslDistroSettings() {
   const [toolkitStatus, setToolkitStatus] = useState<NvidiaContainerToolkitStatus | null>(null);
   const [toolkitChecking, setToolkitChecking] = useState(false);
   const [toolkitError, setToolkitError] = useState<string | null>(null);
+  const selectedDistroInfo = distributions.find(d => d.name === selectedDistro);
+  const canStartSelectedDistro = selectedDistroInfo?.state === "Stopped"
+    || selectedDistroInfo?.state === "Unknown";
 
   useEffect(() => {
     if (distributions.length > 0 && !selectedDistro) {
@@ -39,13 +42,20 @@ export function WslDistroSettings() {
 
   useEffect(() => {
     if (selectedDistro) {
-      loadConfig(selectedDistro);
       setGpuStatus(null);
       setGpuError(null);
       setToolkitStatus(null);
       setToolkitError(null);
+
+      if (selectedDistroInfo?.state === "Running") {
+        loadConfig(selectedDistro);
+      } else {
+        setConfig(DEFAULT_WSL_CONF);
+        setHasChanges(false);
+        setError(null);
+      }
     }
-  }, [selectedDistro]);
+  }, [selectedDistro, selectedDistroInfo?.state]);
 
   const checkGpuStatus = async () => {
     if (!selectedDistro) return;
@@ -127,6 +137,11 @@ export function WslDistroSettings() {
     }
   };
 
+  const handleStartAndLoad = async () => {
+    if (!selectedDistroInfo || !canStartSelectedDistro) return;
+    await startDistro(selectedDistroInfo.name, selectedDistroInfo.id);
+  };
+
   if (distributions.length === 0) {
     return (
       <div className="text-center py-12 text-theme-text-muted">
@@ -170,7 +185,23 @@ export function WslDistroSettings() {
         </div>
       </div>
 
-      {isLoading ? (
+      {!selectedDistroInfo ? null : selectedDistroInfo.state !== "Running" ? (
+        <div className="p-6 bg-theme-bg-secondary/50 border border-theme-border-secondary rounded-xl text-center">
+          <p className="text-sm text-theme-text-secondary mb-4">
+            {t('wslDistro.requiresRunning')}
+          </p>
+          <button
+            onClick={handleStartAndLoad}
+            disabled={!canStartSelectedDistro || actionInProgress !== null}
+            data-testid="distro-start-and-load-button"
+            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-theme-bg-primary bg-theme-accent-primary hover:opacity-90 rounded-lg transition-opacity disabled:opacity-50"
+          >
+            {actionInProgress === `Starting ${selectedDistroInfo.name}...`
+              ? t('wslDistro.starting')
+              : t('wslDistro.startAndLoad')}
+          </button>
+        </div>
+      ) : isLoading ? (
         <div className="flex items-center justify-center py-12">
           <div className="w-8 h-8 border-2 border-theme-border-secondary border-t-theme-accent-primary rounded-full animate-spin" />
         </div>

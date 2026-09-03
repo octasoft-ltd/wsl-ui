@@ -490,6 +490,26 @@ fn serialize_wsl_config(config: &WslConfig) -> String {
 
 /// Read wsl.conf from a distribution
 /// If `id` is provided, uses `--distribution-id` for more reliable identification
+fn ensure_wsl_conf_readable(distro_name: &str, running_names: &[String]) -> Result<(), String> {
+    if running_names
+        .iter()
+        .any(|running| running.eq_ignore_ascii_case(distro_name))
+    {
+        Ok(())
+    } else {
+        Err(format!(
+            "Distribution '{}' is stopped. Start it before reading /etc/wsl.conf.",
+            distro_name
+        ))
+    }
+}
+
+fn ensure_distribution_running_for_wsl_conf(distro_name: &str) -> Result<(), String> {
+    let running = crate::wsl::list_running_distribution_names()
+        .map_err(|e| format!("Failed to check distribution state: {}", e))?;
+    ensure_wsl_conf_readable(distro_name, &running)
+}
+
 pub fn read_wsl_conf(distro_name: &str, id: Option<&str>) -> Result<WslConf, String> {
     if is_mock_mode() {
         return Ok(WslConf {
@@ -503,6 +523,8 @@ pub fn read_wsl_conf(distro_name: &str, id: Option<&str>) -> Result<WslConf, Str
             ..Default::default()
         });
     }
+
+    ensure_distribution_running_for_wsl_conf(distro_name)?;
 
     let output = wsl_executor().exec(distro_name, id, "cat /etc/wsl.conf")
         .map_err(|e| format!("Failed to read wsl.conf: {}", e))?;
@@ -535,6 +557,8 @@ appendWindowsPath=true
 systemd=true
 "#.to_string()));
     }
+
+    ensure_distribution_running_for_wsl_conf(distro_name)?;
 
     let output = wsl_executor().exec(distro_name, id, "cat /etc/wsl.conf")
         .map_err(|e| format!("Failed to read wsl.conf: {}", e))?;
@@ -725,6 +749,22 @@ fn serialize_wsl_conf(config: &WslConf) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn wsl_conf_reads_reject_a_stopped_distribution() {
+        let running = vec!["Ubuntu".to_string()];
+
+        let error = ensure_wsl_conf_readable("Debian", &running).unwrap_err();
+
+        assert!(error.contains("stopped"));
+    }
+
+    #[test]
+    fn wsl_conf_reads_allow_a_running_distribution_case_insensitively() {
+        let running = vec!["Ubuntu".to_string()];
+
+        assert!(ensure_wsl_conf_readable("ubuntu", &running).is_ok());
+    }
 
     // ==================== WSL Config Parsing Tests ====================
 

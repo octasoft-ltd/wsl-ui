@@ -8,7 +8,7 @@
  * Backend in `src-tauri/src/wsl/distro_sources.rs`. All writes require UAC.
  */
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { wslService } from "../../services/wslService";
 import {
@@ -43,6 +43,9 @@ export function WslDistroSourcesSettings() {
   const [isApplying, setIsApplying] = useState(false);
   const [isClearing, setIsClearing] = useState(false);
   const [banner, setBanner] = useState<Banner | null>(null);
+  const previewRequestId = useRef(0);
+  const mutationInProgress = useRef(false);
+  const isMutating = isApplying || isClearing;
 
   // Refresh the registered source from the registry. Does not touch the
   // user's typed URL — seeding only happens once on initial mount via the
@@ -92,22 +95,31 @@ export function WslDistroSourcesSettings() {
     setPreview(null);
     setPreviewError(null);
     setIsPreviewing(true);
+    const requestId = ++previewRequestId.current;
     try {
       const result = await wslService.previewDistroManifest(url);
-      setPreview(result);
+      if (requestId === previewRequestId.current) {
+        setPreview(result);
+      }
     } catch (e) {
-      setPreviewError(String(e));
+      if (requestId === previewRequestId.current) {
+        setPreviewError(String(e));
+      }
     } finally {
-      setIsPreviewing(false);
+      if (requestId === previewRequestId.current) {
+        setIsPreviewing(false);
+      }
     }
   };
 
   const handleApply = async () => {
+    if (mutationInProgress.current) return;
     const url = urlInput.trim();
     if (!url) {
       setBanner({ kind: "error", message: t("distroSources.errors.emptyUrl") });
       return;
     }
+    mutationInProgress.current = true;
     setIsApplying(true);
     setBanner(null);
     try {
@@ -117,22 +129,28 @@ export function WslDistroSourcesSettings() {
     } catch (e) {
       setBanner({ kind: "error", message: String(e) });
     } finally {
+      mutationInProgress.current = false;
       setIsApplying(false);
     }
   };
 
   const handleClear = async () => {
+    if (mutationInProgress.current) return;
+    mutationInProgress.current = true;
     setIsClearing(true);
     setBanner(null);
     try {
       await wslService.clearDistroSource();
       setBanner({ kind: "success", message: t("distroSources.cleared") });
+      previewRequestId.current += 1;
+      setIsPreviewing(false);
       setPreview(null);
       setUrlInput("");
       await refreshCurrent();
     } catch (e) {
       setBanner({ kind: "error", message: String(e) });
     } finally {
+      mutationInProgress.current = false;
       setIsClearing(false);
     }
   };
@@ -267,7 +285,10 @@ export function WslDistroSourcesSettings() {
 
         {/* URL input */}
         <div className="mb-4">
-          <label className="block text-sm font-medium text-theme-text-primary mb-1">
+          <label
+            htmlFor="distro-source-url"
+            className="block text-sm font-medium text-theme-text-primary mb-1"
+          >
             {t("distroSources.urlLabel")}
           </label>
           <p className="text-xs text-theme-text-muted mb-2">
@@ -275,12 +296,15 @@ export function WslDistroSourcesSettings() {
           </p>
           <div className="flex gap-2">
             <input
+              id="distro-source-url"
               type="text"
               value={urlInput}
               onChange={(e) => {
+                previewRequestId.current += 1;
                 setUrlInput(e.target.value);
                 setPreview(null);
                 setPreviewError(null);
+                setIsPreviewing(false);
               }}
               placeholder="https://example.com/distributions.json"
               className="flex-1 px-3 py-2 bg-theme-bg-secondary border border-theme-border-secondary rounded-lg text-theme-text-primary text-sm font-mono focus:outline-none focus:border-emerald-500"
@@ -339,7 +363,7 @@ export function WslDistroSourcesSettings() {
         <div className="flex flex-wrap gap-2 mb-6">
           <button
             onClick={handleApply}
-            disabled={isApplying || !urlInput.trim()}
+            disabled={isMutating || !urlInput.trim()}
             className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isApplying
@@ -348,7 +372,7 @@ export function WslDistroSourcesSettings() {
           </button>
           <button
             onClick={handleClear}
-            disabled={isClearing || (!currentSource && !urlInput.trim())}
+            disabled={isMutating || (!currentSource && !urlInput.trim())}
             className="px-4 py-2 bg-theme-bg-tertiary hover:bg-theme-bg-secondary border border-theme-border-secondary rounded-lg text-theme-text-secondary text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isClearing

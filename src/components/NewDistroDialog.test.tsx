@@ -94,6 +94,43 @@ describe('NewDistroDialog - Memory Leaks', () => {
   });
 
   describe('quick install mode', () => {
+    it('explains a native WSL download and shows elapsed time while it is pending', async () => {
+      let resolveInstall!: () => void;
+      vi.mocked(wslService.quickInstallDistribution).mockReturnValue(
+        new Promise<void>((resolve) => {
+          resolveInstall = resolve;
+        })
+      );
+
+      const { unmount } = render(
+        <NewDistroDialog isOpen={true} onClose={mockOnClose} />
+      );
+
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(700);
+      });
+
+      fireEvent.click(screen.getByText('Ubuntu'));
+      fireEvent.click(screen.getByText('Install'));
+
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(3100);
+      });
+
+      expect(screen.getByTestId('install-progress-text')).toHaveTextContent(
+        'Downloading and installing with WSL'
+      );
+      expect(screen.getByTestId('native-install-details')).toHaveTextContent(
+        'Elapsed 0:03'
+      );
+      expect(screen.getByTestId('native-install-details')).toHaveTextContent(
+        'may take several minutes'
+      );
+
+      unmount();
+      resolveInstall();
+    });
+
     it('should cancel pending timeout when dialog is closed before timeout fires', async () => {
       vi.mocked(wslService.quickInstallDistribution).mockResolvedValue(undefined);
 

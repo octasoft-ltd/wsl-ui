@@ -30,6 +30,12 @@ pub trait WslCommandExecutor: Send + Sync {
     /// Execute `wsl --list --verbose` and return raw output
     fn list_verbose(&self) -> Result<CommandOutput, WslError>;
 
+    /// Execute `wsl --list --running --quiet` and return running distro names
+    fn list_running(&self) -> Result<CommandOutput, WslError>;
+
+    /// Execute `wsl --list [--all] --quiet` and return distro names
+    fn list_quiet(&self, include_all: bool) -> Result<CommandOutput, WslError>;
+
     /// Execute `wsl --list --online` and return raw output
     fn list_online(&self) -> Result<CommandOutput, WslError>;
 

@@ -29,6 +29,11 @@ function formatBytes(bytes: number): string {
   return `${bytes} B`;
 }
 
+function formatElapsed(seconds: number): string {
+  const minutes = Math.floor(seconds / 60);
+  return `${minutes}:${String(seconds % 60).padStart(2, "0")}`;
+}
+
 interface NewDistroDialogProps {
   isOpen: boolean;
   onClose: () => void;
@@ -87,6 +92,8 @@ export function NewDistroDialog({ isOpen, onClose }: NewDistroDialogProps) {
   const [isCreating, setIsCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [progress, setProgress] = useState<string | null>(null);
+  const [nativeInstallStartedAt, setNativeInstallStartedAt] = useState<number | null>(null);
+  const [nativeInstallElapsedSeconds, setNativeInstallElapsedSeconds] = useState(0);
   const [downloadProgress, setDownloadProgress] = useState<DownloadProgress | null>(null);
   const [familyFilter, setFamilyFilter] = useState<DistroFamily | null>(null);
   // Install config dialog state
@@ -168,6 +175,19 @@ export function NewDistroDialog({ isOpen, onClose }: NewDistroDialogProps) {
     };
   }, []);
 
+  useEffect(() => {
+    if (nativeInstallStartedAt === null) return;
+
+    const updateElapsed = () => {
+      setNativeInstallElapsedSeconds(
+        Math.floor((Date.now() - nativeInstallStartedAt) / 1000)
+      );
+    };
+    updateElapsed();
+    const interval = window.setInterval(updateElapsed, 1000);
+    return () => window.clearInterval(interval);
+  }, [nativeInstallStartedAt]);
+
   // Scroll to top when progress starts to ensure user sees progress indicator
   useEffect(() => {
     if (progress && contentRef.current) {
@@ -177,7 +197,7 @@ export function NewDistroDialog({ isOpen, onClose }: NewDistroDialogProps) {
 
   if (!isOpen) return null;
 
-  // Handle quick install (Microsoft Store) - no config dialog needed
+  // Handle native WSL quick install - no config dialog needed
   const handleQuickInstall = async () => {
     setError(null);
 
@@ -195,7 +215,9 @@ export function NewDistroDialog({ isOpen, onClose }: NewDistroDialogProps) {
     }
 
     setIsCreating(true);
-    setProgress(t('progress.installingStore'));
+    setNativeInstallElapsedSeconds(0);
+    setNativeInstallStartedAt(Date.now());
+    setProgress(t('progress.installingWsl'));
 
     try {
       await wslService.quickInstallDistribution(selectedDistro);
@@ -219,6 +241,7 @@ export function NewDistroDialog({ isOpen, onClose }: NewDistroDialogProps) {
       setError(errorMessage);
       setProgress(null);
     } finally {
+      setNativeInstallStartedAt(null);
       setIsCreating(false);
     }
   };
@@ -567,7 +590,7 @@ export function NewDistroDialog({ isOpen, onClose }: NewDistroDialogProps) {
     setShowInstallConfig(true);
   };
 
-  // Select distro for quick install (MS Store) - no config dialog
+  // Select distro for native WSL quick install - no config dialog
   const handleSelectQuickInstallDistro = (distro: string) => {
     setSelectedDistro(distro);
   };
@@ -768,6 +791,13 @@ export function NewDistroDialog({ isOpen, onClose }: NewDistroDialogProps) {
                   )}
                   <div className="flex-1">
                     <p data-testid="install-progress-text" className="text-sm text-theme-text-primary font-medium">{progress}</p>
+                    {nativeInstallStartedAt !== null && (
+                      <p data-testid="native-install-details" className="mt-1 text-xs text-theme-text-muted">
+                        {t('progress.nativeInstallDetails', {
+                          elapsed: formatElapsed(nativeInstallElapsedSeconds),
+                        })}
+                      </p>
+                    )}
                     {downloadProgress?.stage === "downloading" && downloadProgress.percent != null && (
                       <div className="mt-2">
                         <div className="h-1.5 bg-theme-border-secondary rounded-full overflow-hidden">

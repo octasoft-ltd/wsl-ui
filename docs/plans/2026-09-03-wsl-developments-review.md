@@ -15,7 +15,7 @@
 | Pre-release line | 2.9.x — carries **WSL Containers (wslc)** public preview; requires WSL 2.8+ |
 | WSL Containers (`wslc.exe`) | Separate CLI + SDK; containers do **not** go through `wsl.exe`; virtiofs + consomme networking are default *for containers only* |
 | virtiofs for standard distros | **Opt-in**: `[wsl2] virtiofs=true` in `.wslconfig`; Microsoft "working towards enabling by default in the future" |
-| Kernel | Jumped 6.6 LTS → 6.18 LTS | 
+| Kernel | Jumped 6.6 LTS → 6.18 LTS |
 | Windows 10 | Still supported (build 19041+), incl. wslc — no minimum-OS break |
 | `wsl.exe` output encoding | Still UTF-16LE by default; `WSL_UTF8=1` env var switches it to UTF-8 (supported since WSL 0.64.0) |
 | Machine-readable output | Still none — `--json` request (microsoft/WSL#6235) remains open; registry is still the only structured source |

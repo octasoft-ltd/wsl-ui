@@ -6,7 +6,10 @@
 use super::executor::wsl_executor;
 use super::info::{VhdSizeInfo, WslVersionInfo};
 use super::resources::{self, DistroResourceUsage, WslResourceUsage};
-use super::types::{CompactResult, Distribution, WslError, WslPreflightStatus, MountedDisk, MountDiskOptions, PhysicalDisk};
+use super::types::{
+    CompactResult, Distribution, MountDiskOptions, MountedDisk, PhysicalDisk, WslError,
+    WslPreflightStatus,
+};
 use super::{core, import_export, info, install, terminal};
 
 /// WSL Service - facade for all WSL operations
@@ -71,7 +74,11 @@ impl WslService {
 
     /// Open terminal in a distribution
     /// If `id` is provided, uses `--distribution-id` for more reliable identification
-    pub fn open_terminal(name: &str, id: Option<&str>, terminal_command: &str) -> Result<(), WslError> {
+    pub fn open_terminal(
+        name: &str,
+        id: Option<&str>,
+        terminal_command: &str,
+    ) -> Result<(), WslError> {
         terminal::open_terminal(name, id, terminal_command)
     }
 
@@ -83,7 +90,12 @@ impl WslService {
     /// Open terminal and execute a command in a distribution
     /// The terminal stays open after the command completes so user can see output
     /// If `id` is provided, uses `--distribution-id` for more reliable identification
-    pub fn open_terminal_with_command(name: &str, id: Option<&str>, command: &str, terminal_command: &str) -> Result<(), WslError> {
+    pub fn open_terminal_with_command(
+        name: &str,
+        id: Option<&str>,
+        command: &str,
+        terminal_command: &str,
+    ) -> Result<(), WslError> {
         terminal::open_terminal_with_command(name, id, command, terminal_command)
     }
 
@@ -120,24 +132,33 @@ impl WslService {
         tar_path: &str,
         wsl_version: Option<u8>,
     ) -> Result<(), WslError> {
-        import_export::import_distribution_with_version(name, install_location, tar_path, wsl_version)
+        import_export::import_distribution_with_version(
+            name,
+            install_location,
+            tar_path,
+            wsl_version,
+        )
     }
 
     /// Clone a distribution (export + import with new name)
     ///
     /// If `install_location` is None, defaults to `%LOCALAPPDATA%\wsl\<new_name>`
-    pub fn clone_distribution(source: &str, new_name: &str, install_location: Option<&str>) -> Result<(), WslError> {
+    pub fn clone_distribution(
+        source: &str,
+        new_name: &str,
+        install_location: Option<&str>,
+    ) -> Result<(), WslError> {
         import_export::clone_distribution(source, new_name, install_location)
     }
 
     // ==================== Installation ====================
 
-    /// Get list of available distributions from Microsoft (for quick install)
+    /// Get the distributions exposed by WSL's online catalog (for quick install)
     pub fn list_online_distributions() -> Result<Vec<String>, WslError> {
         install::list_online_distributions()
     }
 
-    /// Quick install from Microsoft (uses wsl --install, fast but fixed name)
+    /// Quick install through WSL's online catalog (fast, but uses a fixed name)
     pub fn quick_install_distribution(distro_id: &str) -> Result<(), WslError> {
         install::quick_install_distribution(distro_id)
     }
@@ -157,7 +178,13 @@ impl WslService {
         wsl_version: Option<u8>,
         runtime_hint: Option<&str>,
     ) -> Result<(), WslError> {
-        install::create_from_image(image, distro_name, install_location, wsl_version, runtime_hint)
+        install::create_from_image(
+            image,
+            distro_name,
+            install_location,
+            wsl_version,
+            runtime_hint,
+        )
     }
 
     /// Create a new distribution from an OCI container image (native - no Docker/Podman required)
@@ -263,7 +290,10 @@ impl WslService {
     /// If pre_release is true, uses `wsl --update --pre-release`
     /// current_version is used for before/after comparison
     /// Returns the update result message on success
-    pub fn update_wsl(pre_release: bool, current_version: Option<&str>) -> Result<String, WslError> {
+    pub fn update_wsl(
+        pre_release: bool,
+        current_version: Option<&str>,
+    ) -> Result<String, WslError> {
         core::update_wsl(pre_release, current_version)
     }
 

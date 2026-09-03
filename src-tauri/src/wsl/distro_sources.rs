@@ -293,20 +293,24 @@ fn read_current_source_windows() -> Result<Option<DistroSource>, WslError> {
 /// Persist a distribution source to HKLM. Requires elevation; prompts the user
 /// via UAC. Clears the opposite registry value so we never leave both set.
 pub fn apply_source(source: &DistroSource) -> Result<(), WslError> {
-    validate_url(&source.url)?;
+    let normalized = DistroSource {
+        url: source.url.trim().to_string(),
+        mode: source.mode,
+    };
+    validate_url(&normalized.url)?;
 
     if effective_mock_mode() {
-        store_mock_source(Some(source.clone()));
+        store_mock_source(Some(normalized));
         return Ok(());
     }
 
     #[cfg(target_os = "windows")]
     {
-        return apply_source_windows(source);
+        return apply_source_windows(&normalized);
     }
     #[cfg(not(target_os = "windows"))]
     {
-        store_mock_source(Some(source.clone()));
+        store_mock_source(Some(normalized));
         Ok(())
     }
 }
@@ -384,8 +388,16 @@ fn run_elevated_powershell(inner_script: &str, op_tag: &str) -> Result<(), WslEr
 
     let paths = get_executable_paths();
 
+    static NEXT_OUTPUT_ID: std::sync::atomic::AtomicU64 =
+        std::sync::atomic::AtomicU64::new(0);
+    let output_id = NEXT_OUTPUT_ID.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
     let temp_dir = std::env::temp_dir();
-    let output_file = temp_dir.join(format!("wsl_distro_sources_{}.txt", op_tag));
+    let output_file = temp_dir.join(format!(
+        "wsl_distro_sources_{}_{}_{}.txt",
+        op_tag,
+        std::process::id(),
+        output_id
+    ));
     let output_path = output_file.to_str().unwrap_or("").replace('\'', "''");
 
     // Inner script gets embedded inside the outer PowerShell single-quoted
@@ -449,6 +461,7 @@ fn run_elevated_powershell(inner_script: &str, op_tag: &str) -> Result<(), WslEr
 /// elevation. In mock mode, returns a canned preview so the UI is testable
 /// without network access.
 pub fn fetch_and_preview(url: &str) -> Result<ManifestPreview, WslError> {
+    let url = url.trim();
     validate_url(url)?;
     if effective_mock_mode() {
         return Ok(mock_preview(url));
@@ -668,6 +681,20 @@ mod tests {
 
         clear_source().unwrap();
         assert!(read_current_source().unwrap().is_none());
+    }
+
+    #[test]
+    fn apply_normalizes_surrounding_url_whitespace() {
+        reset_mock_distro_source();
+        let src = DistroSource {
+            url: "  https://example.test/m.json  ".to_string(),
+            mode: DistroSourceMode::Append,
+        };
+
+        apply_source(&src).unwrap();
+
+        let read = read_current_source().unwrap().expect("should have a source");
+        assert_eq!(read.url, "https://example.test/m.json");
     }
 
     #[test]

@@ -5,7 +5,7 @@
 use reqwest::blocking::Client;
 use reqwest::header::{ACCEPT, AUTHORIZATION, WWW_AUTHENTICATE};
 use sha2::{Digest, Sha256};
-use std::io::Write;
+use std::io::{Read, Write};
 use std::path::Path;
 
 use super::types::*;
@@ -14,6 +14,60 @@ const MANIFEST_V2: &str = "application/vnd.docker.distribution.manifest.v2+json"
 const MANIFEST_LIST: &str = "application/vnd.docker.distribution.manifest.list.v2+json";
 const OCI_MANIFEST: &str = "application/vnd.oci.image.manifest.v1+json";
 const OCI_INDEX: &str = "application/vnd.oci.image.index.v1+json";
+const MAX_TOKEN_BYTES: u64 = 1024 * 1024;
+const MAX_MANIFEST_BYTES: u64 = 10 * 1024 * 1024;
+const MAX_BLOB_BYTES: u64 = 10 * 1024 * 1024 * 1024;
+const MAX_MANIFEST_DEPTH: usize = 8;
+
+fn read_text_limited(
+    response: reqwest::blocking::Response,
+    limit: u64,
+    description: &str,
+) -> Result<String, OciError> {
+    if response.content_length().is_some_and(|size| size > limit) {
+        return Err(OciError::RegistryError(format!(
+            "{} exceeds the {} byte limit",
+            description, limit
+        )));
+    }
+
+    let mut bytes = Vec::new();
+    response
+        .take(limit + 1)
+        .read_to_end(&mut bytes)
+        .map_err(|e| OciError::NetworkError(e.to_string()))?;
+    if bytes.len() as u64 > limit {
+        return Err(OciError::RegistryError(format!(
+            "{} exceeds the {} byte limit",
+            description, limit
+        )));
+    }
+    String::from_utf8(bytes).map_err(|e| {
+        OciError::RegistryError(format!("{} is not valid UTF-8: {}", description, e))
+    })
+}
+
+fn validate_manifest_hop(
+    digest: Option<&str>,
+    depth: usize,
+    seen_digests: &mut std::collections::HashSet<String>,
+) -> Result<(), OciError> {
+    if depth >= MAX_MANIFEST_DEPTH {
+        return Err(OciError::UnsupportedManifest(format!(
+            "Manifest index nesting exceeds {} levels",
+            MAX_MANIFEST_DEPTH
+        )));
+    }
+    if let Some(digest) = digest {
+        let normalized = digest.to_ascii_lowercase();
+        if !seen_digests.insert(normalized) {
+            return Err(OciError::UnsupportedManifest(
+                "Manifest index contains a digest cycle".to_string(),
+            ));
+        }
+    }
+    Ok(())
+}
 
 /// Registry client for pulling images
 pub struct RegistryClient {
@@ -115,7 +169,9 @@ impl RegistryClient {
             access_token: Option<String>,
         }
 
-        let token_resp: TokenResponse = response.json()
+        let body = read_text_limited(response, MAX_TOKEN_BYTES, "Registry token response")
+            .map_err(|e| OciError::AuthRequired(e.to_string()))?;
+        let token_resp: TokenResponse = serde_json::from_str(&body)
             .map_err(|e| OciError::AuthRequired(format!("Failed to parse token: {}", e)))?;
 
         Ok(token_resp.token.or(token_resp.access_token))
@@ -123,6 +179,18 @@ impl RegistryClient {
 
     /// Fetch the image manifest
     pub fn get_manifest(&mut self, image: &ImageReference) -> Result<ImageManifest, OciError> {
+        let mut seen_digests = std::collections::HashSet::new();
+        self.get_manifest_inner(image, 0, &mut seen_digests)
+    }
+
+    fn get_manifest_inner(
+        &mut self,
+        image: &ImageReference,
+        depth: usize,
+        seen_digests: &mut std::collections::HashSet<String>,
+    ) -> Result<ImageManifest, OciError> {
+        validate_manifest_hop(image.digest.as_deref(), depth, seen_digests)?;
+
         // Ensure we're authenticated
         self.authenticate(&image.registry, &image.repository)?;
 
@@ -145,10 +213,12 @@ impl RegistryClient {
         }
 
         if !response.status().is_success() {
+            let status = response.status();
+            let body = read_text_limited(response, MAX_MANIFEST_BYTES, "Registry error response")
+                .unwrap_or_default();
             return Err(OciError::RegistryError(format!(
                 "Failed to get manifest: {} - {}",
-                response.status(),
-                response.text().unwrap_or_default()
+                status, body
             )));
         }
 
@@ -158,8 +228,7 @@ impl RegistryClient {
             .unwrap_or("")
             .to_string();
 
-        let body = response.text()
-            .map_err(|e| OciError::NetworkError(e.to_string()))?;
+        let body = read_text_limited(response, MAX_MANIFEST_BYTES, "Image manifest")?;
 
         // When the manifest was requested by digest (pinned reference or the
         // amd64 child of a manifest list), verify the returned bytes match it.
@@ -188,7 +257,7 @@ impl RegistryClient {
             // Fetch the actual manifest using digest
             let mut child_image = image.clone();
             child_image.digest = Some(amd64_manifest.digest.clone());
-            return self.get_manifest(&child_image);
+            return self.get_manifest_inner(&child_image, depth + 1, seen_digests);
         }
 
         // Parse as regular manifest
@@ -213,6 +282,13 @@ impl RegistryClient {
         output_path: &Path,
         progress: Option<&ProgressCallback>,
     ) -> Result<(), OciError> {
+        if expected_size > MAX_BLOB_BYTES {
+            return Err(OciError::RegistryError(format!(
+                "Blob {} declares {} bytes, exceeding the {} byte limit",
+                digest, expected_size, MAX_BLOB_BYTES
+            )));
+        }
+
         let base_url = self.registry_url(&image.registry);
         let url = format!("{}/v2/{}/blobs/{}", base_url, image.repository, digest);
 
@@ -232,6 +308,17 @@ impl RegistryClient {
         }
 
         let total_size = response.content_length().unwrap_or(0);
+        let download_limit = if expected_size == 0 {
+            MAX_BLOB_BYTES
+        } else {
+            expected_size.min(MAX_BLOB_BYTES)
+        };
+        if total_size > download_limit {
+            return Err(OciError::RegistryError(format!(
+                "Blob {} response is {} bytes, exceeding the {} byte limit",
+                digest, total_size, download_limit
+            )));
+        }
         let mut downloaded: u64 = 0;
 
         let mut file = std::fs::File::create(output_path)?;
@@ -242,14 +329,33 @@ impl RegistryClient {
 
         let mut buffer = [0u8; 8192];
         loop {
-            let bytes_read = std::io::Read::read(&mut reader, &mut buffer)
-                .map_err(|e| OciError::NetworkError(e.to_string()))?;
+            let bytes_read = match reader.read(&mut buffer) {
+                Ok(bytes_read) => bytes_read,
+                Err(error) => {
+                    drop(file);
+                    let _ = std::fs::remove_file(output_path);
+                    return Err(OciError::NetworkError(error.to_string()));
+                }
+            };
 
             if bytes_read == 0 {
                 break;
             }
 
-            file.write_all(&buffer[..bytes_read])?;
+            if downloaded.saturating_add(bytes_read as u64) > download_limit {
+                drop(file);
+                let _ = std::fs::remove_file(output_path);
+                return Err(OciError::RegistryError(format!(
+                    "Blob {} exceeded the {} byte download limit",
+                    digest, download_limit
+                )));
+            }
+
+            if let Err(error) = file.write_all(&buffer[..bytes_read]) {
+                drop(file);
+                let _ = std::fs::remove_file(output_path);
+                return Err(OciError::IoError(error));
+            }
             hasher.update(&buffer[..bytes_read]);
             downloaded += bytes_read as u64;
 
@@ -258,7 +364,11 @@ impl RegistryClient {
             }
         }
 
-        file.flush()?;
+        if let Err(error) = file.flush() {
+            drop(file);
+            let _ = std::fs::remove_file(output_path);
+            return Err(OciError::IoError(error));
+        }
         // Close the handle before any remove_file below: Windows refuses to
         // delete a file that is still open, which would leave the corrupt or
         // tampered blob on disk.
@@ -623,5 +733,55 @@ mod tests {
 
         assert!(result.is_err(), "size mismatch must be rejected");
         assert!(!out.exists(), "partial file should be removed on size mismatch");
+    }
+
+    #[test]
+    fn test_manifest_hops_reject_cycles_and_excessive_depth() {
+        let mut seen = std::collections::HashSet::new();
+        validate_manifest_hop(Some("sha256:abc"), 0, &mut seen).unwrap();
+        assert!(validate_manifest_hop(Some("SHA256:ABC"), 1, &mut seen).is_err());
+
+        let mut fresh = std::collections::HashSet::new();
+        assert!(validate_manifest_hop(None, MAX_MANIFEST_DEPTH, &mut fresh).is_err());
+    }
+
+    #[tokio::test]
+    async fn test_download_blob_stops_streaming_after_declared_size() {
+        use std::sync::atomic::{AtomicU64, Ordering};
+        use std::sync::Arc;
+        use wiremock::matchers::method;
+        use wiremock::{Mock, MockServer, ResponseTemplate};
+
+        let body = vec![b'x'; 32 * 1024];
+        let digest = format!("sha256:{}", sha256_hex(&body));
+        let server = MockServer::start().await;
+        Mock::given(method("GET"))
+            .respond_with(ResponseTemplate::new(200).set_body_bytes(body))
+            .mount(&server)
+            .await;
+
+        let uri = server.uri();
+        let out = std::env::temp_dir().join(format!("oci-blob-overrun-{}.bin", std::process::id()));
+        let out_thread = out.clone();
+        let greatest_progress = Arc::new(AtomicU64::new(0));
+        let progress_value = Arc::clone(&greatest_progress);
+
+        let result = tokio::task::spawn_blocking(move || {
+            let client = RegistryClient::new();
+            let image = mock_image(uri);
+            let progress: ProgressCallback = Box::new(move |downloaded, _, _| {
+                progress_value.store(downloaded, Ordering::Relaxed);
+            });
+            client.download_blob(&image, &digest, 10, &out_thread, Some(&progress))
+        })
+        .await
+        .unwrap();
+
+        assert!(result.is_err());
+        assert!(
+            greatest_progress.load(Ordering::Relaxed) <= 10,
+            "bytes past the declared size must not be written or reported"
+        );
+        assert!(!out.exists(), "oversized partial file should be removed");
     }
 }

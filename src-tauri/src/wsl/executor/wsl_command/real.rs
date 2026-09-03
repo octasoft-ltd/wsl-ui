@@ -2,7 +2,7 @@
 
 use std::process::Stdio;
 use std::time::Duration;
- use log::{debug, error, info};
+use log::{debug, error};
 use wsl_core::decode_wsl_output;
 
 use super::{CommandOutput, WslCommandExecutor};
@@ -46,6 +46,19 @@ fn redact_secrets_for_log(arg: &str) -> String {
         }
     }
     arg.to_string()
+}
+
+fn with_distro_ip_fallback<F>(
+    system_result: Result<CommandOutput, WslError>,
+    fallback: F,
+) -> Result<CommandOutput, WslError>
+where
+    F: FnOnce() -> Result<CommandOutput, WslError>,
+{
+    match system_result {
+        Ok(output) if output.success && !output.stdout.trim().is_empty() => Ok(output),
+        _ => fallback(),
+    }
 }
 
 /// Locale-independent check that the configured WSL executable exists on disk.
@@ -252,6 +265,22 @@ impl Default for RealWslExecutor {
 impl WslCommandExecutor for RealWslExecutor {
     fn list_verbose(&self) -> Result<CommandOutput, WslError> {
         self.execute_with_timeout(&["--list", "--verbose"], self.quick_timeout())
+    }
+
+    fn list_running(&self) -> Result<CommandOutput, WslError> {
+        self.execute_with_timeout(
+            &["--list", "--running", "--quiet"],
+            self.quick_timeout(),
+        )
+    }
+
+    fn list_quiet(&self, include_all: bool) -> Result<CommandOutput, WslError> {
+        let args: &[&str] = if include_all {
+            &["--list", "--all", "--quiet"]
+        } else {
+            &["--list", "--quiet"]
+        };
+        self.execute_with_timeout(args, self.quick_timeout())
     }
 
     fn list_online(&self) -> Result<CommandOutput, WslError> {
@@ -534,11 +563,21 @@ impl WslCommandExecutor for RealWslExecutor {
         // Use the system distro of an already-running distribution for reliable
         // IP detection. Uses 'ip route get 1' to find the source IP for outbound
         // traffic, which works with both NAT and mirrored networking modes.
-        self.exec_system_with_timeout(
+        let command = "ip route get 1 2>/dev/null | head -1 | sed 's/.*src \\([0-9.]*\\).*/\\1/'";
+        let timeout_secs = self.quick_timeout().as_secs();
+        let system_result = self.exec_system_with_timeout(
             distro,
-            "ip route get 1 2>/dev/null | head -1 | sed 's/.*src \\([0-9.]*\\).*/\\1/'",
-            self.quick_timeout().as_secs(),
-        )
+            command,
+            timeout_secs,
+        );
+
+        // WSL's system distro is unavailable when GUI applications are disabled.
+        // The caller only selects an already-running distro, so this fallback does
+        // not boot a stopped/default distribution as a side effect.
+        with_distro_ip_fallback(system_result, || {
+            debug!("System-distro IP probe unavailable for {}; using running distro", distro);
+            self.exec_with_timeout(distro, None, command, timeout_secs)
+        })
     }
 
     fn exec_system(&self, distro: &str, command: &str) -> Result<CommandOutput, WslError> {
@@ -650,8 +689,33 @@ impl WslCommandExecutor for RealWslExecutor {
 
 #[cfg(test)]
 mod tests {
-    use super::{classify_preflight_command_failure, redact_secrets_for_log};
-    use crate::wsl::types::WslPreflightStatus;
+    use super::{
+        classify_preflight_command_failure, redact_secrets_for_log, with_distro_ip_fallback,
+        CommandOutput,
+    };
+    use crate::wsl::types::{WslError, WslPreflightStatus};
+
+    #[test]
+    fn test_get_ip_falls_back_when_system_distro_is_unavailable() {
+        let system_result = Ok(CommandOutput {
+            stdout: String::new(),
+            stderr: "WSL_E_GUI_APPLICATIONS_DISABLED".to_string(),
+            success: false,
+        });
+        let fallback_output = CommandOutput {
+            stdout: "192.168.0.31\n".to_string(),
+            stderr: String::new(),
+            success: true,
+        };
+
+        let result = with_distro_ip_fallback(system_result, || {
+            Ok::<_, WslError>(fallback_output.clone())
+        })
+        .expect("the running distro fallback should supply the IP");
+
+        assert_eq!(result.stdout.trim(), "192.168.0.31");
+        assert!(result.success);
+    }
 
     // GH #150: the sudo password must never appear in the debug log.
     #[test]

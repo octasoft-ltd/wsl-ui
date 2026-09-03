@@ -122,6 +122,49 @@ describe("PopupHost", () => {
     );
   });
 
+  it("does not let focus loss overtake a pending action event", async () => {
+    let resolveAction: (() => void) | undefined;
+    transportMocks.emitTo.mockImplementation((target, eventName) => {
+      if (target === "main" && eventName === "popup-action-selected") {
+        return new Promise<void>((resolve) => {
+          resolveAction = resolve;
+        });
+      }
+      return Promise.resolve();
+    });
+
+    render(
+      <PopupHost<TestPayload> popupType="quick-actions">
+        {(payload, requestAction) => (
+          <button onClick={() => requestAction("clone")}>{payload.name}</button>
+        )}
+      </PopupHost>,
+    );
+    await waitFor(() => expect(transportMocks.listeners.has("popup-init")).toBe(true));
+    await act(async () => {
+      await emitTransportEvent("popup-init", {
+        payload: { name: "Debian" },
+        popupType: "quick-actions",
+        sessionId: "session-1",
+      });
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "Debian" }));
+    fireEvent.blur(window);
+
+    expect(transportMocks.emitTo).not.toHaveBeenCalledWith(
+      "main",
+      "popup-close",
+      expect.anything(),
+    );
+
+    await act(async () => {
+      resolveAction?.();
+      await Promise.resolve();
+    });
+    expect(transportMocks.popupHide).toHaveBeenCalledOnce();
+  });
+
   it("does not allow an older language load to replace the latest popup session", async () => {
     let resolveFirstLanguageLoad: (() => void) | undefined;
     vi.mocked(loadLanguage).mockImplementation((locale) => {

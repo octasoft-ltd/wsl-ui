@@ -1,15 +1,16 @@
 //! Distribution installation operations
 //!
 //! Functions for installing WSL distributions from various sources:
-//! Microsoft Store, direct download, and container images.
+//! WSL's online catalog, direct download, and container images.
 
 use crate::distro_catalog;
 use crate::metadata::{self, DistroMetadata, InstallSource};
 use crate::temp_file_guard::TempFileGuard;
 use log::{info, warn};
 
-use super::executor::{resource_monitor, terminal_executor, wsl_executor};
 use super::executor::terminal::ContainerRuntime;
+use super::executor::wsl_command::CommandOutput;
+use super::executor::{resource_monitor, terminal_executor, wsl_executor};
 use super::import_export::import_distribution_with_version;
 use super::types::WslError;
 
@@ -21,7 +22,7 @@ static TEMP_ARTIFACT_SEQ: std::sync::atomic::AtomicU64 = std::sync::atomic::Atom
 /// The PID alone is shared by every install running in this app instance, so
 /// two overlapping installs would use (and delete) the same temp path; the
 /// sequence number makes each install's artifacts unique within the process.
-fn unique_temp_tag() -> String {
+pub(crate) fn unique_temp_tag() -> String {
     format!(
         "{}-{}",
         std::process::id(),
@@ -29,7 +30,7 @@ fn unique_temp_tag() -> String {
     )
 }
 
-/// Get list of available distributions from Microsoft (for quick install)
+/// Get the distributions exposed by WSL's online catalog (for quick install)
 pub fn list_online_distributions() -> Result<Vec<String>, WslError> {
     let output = wsl_executor().list_online()?;
 
@@ -59,9 +60,61 @@ pub fn list_online_distributions() -> Result<Vec<String>, WslError> {
     Ok(distros)
 }
 
-/// Quick install from Microsoft (uses wsl --install, fast but fixed name)
+/// Quick install through WSL's online catalog (uses wsl --install with a fixed name)
 /// Uses --no-launch to avoid blocking, then spawns a background launch to trigger registration.
 /// Creates metadata for the installed distribution automatically.
+fn summarize_install_output(value: &str) -> String {
+    const MAX_LINES: usize = 8;
+
+    let mut lines: Vec<&str> = value
+        .split(['\r', '\n'])
+        .map(str::trim)
+        .filter(|line| !line.is_empty())
+        .collect();
+    lines.dedup();
+
+    // Native WSL writes many carriage-return progress updates. Prefer its
+    // diagnostic lines so the final error remains readable; if it supplied
+    // only progress output, retain the last few updates as useful context.
+    let diagnostics: Vec<&str> = lines
+        .iter()
+        .copied()
+        .filter(|line| !line.to_ascii_lowercase().starts_with("downloading:"))
+        .collect();
+    let selected = if diagnostics.is_empty() {
+        &lines
+    } else {
+        &diagnostics
+    };
+    let start = selected.len().saturating_sub(MAX_LINES);
+    selected[start..].join("\n")
+}
+
+fn format_install_failure(output: &CommandOutput) -> String {
+    let stdout = summarize_install_output(&output.stdout);
+    let stderr = summarize_install_output(&output.stderr);
+    let details = [stdout, stderr]
+        .into_iter()
+        .filter(|part| !part.is_empty())
+        .collect::<Vec<_>>()
+        .join("\n");
+
+    let mut message = if details.is_empty() {
+        "Install failed: WSL exited without an error message.".to_string()
+    } else {
+        format!("Install failed:\n{}", details)
+    };
+
+    if message.to_ascii_lowercase().contains("override manifest") {
+        message.push_str(
+            "\nThe community manifest may contain an outdated URL or checksum. \
+             Review or reset it under Settings > Remote Sources before retrying.",
+        );
+    }
+
+    message
+}
+
 pub fn quick_install_distribution(distro_id: &str) -> Result<(), WslError> {
     info!("Quick installing distribution '{}'", distro_id);
 
@@ -69,7 +122,9 @@ pub fn quick_install_distribution(distro_id: &str) -> Result<(), WslError> {
     let output = wsl_executor().install(distro_id, None, None, true)?;
 
     if !output.success {
-        return Err(WslError::CommandFailed(format!("Install failed: {}", output.stderr)));
+        let message = format_install_failure(&output);
+        warn!("Quick install of '{}' failed: {}", distro_id, message);
+        return Err(WslError::CommandFailed(message));
     }
 
     // Step 2: Get the distribution GUID from registry (available after install)
@@ -80,7 +135,11 @@ pub fn quick_install_distribution(distro_id: &str) -> Result<(), WslError> {
     // Step 3: Open the distro in user's preferred terminal (triggers WSL registration)
     // This opens a visible terminal for first-time setup without blocking
     let settings = crate::settings::get_settings();
-    let _ = terminal_executor().open_terminal(distro_id, distro_guid.as_deref(), &settings.terminal_command);
+    let _ = terminal_executor().open_terminal(
+        distro_id,
+        distro_guid.as_deref(),
+        &settings.terminal_command,
+    );
 
     // Step 4: Poll for the distro to appear in wsl --list (registration happens on launch)
     verify_distro_installed(distro_id, 30, 2)?;
@@ -95,19 +154,21 @@ pub fn quick_install_distribution(distro_id: &str) -> Result<(), WslError> {
     });
 
     if let Some(guid) = final_guid {
-        let mut metadata = DistroMetadata::new(
-            guid,
-            distro_id.to_string(),
-            InstallSource::Store,
-        );
+        let mut metadata = DistroMetadata::new(guid, distro_id.to_string(), InstallSource::Store);
         metadata.catalog_entry = Some(distro_id.to_string());
         if let Err(e) = metadata::save_metadata(metadata) {
             warn!("Failed to save install metadata: {}", e);
         } else {
-            info!("Created metadata for installed distribution '{}'", distro_id);
+            info!(
+                "Created metadata for installed distribution '{}'",
+                distro_id
+            );
         }
     } else {
-        warn!("Could not find GUID for installed distribution '{}' - metadata not created", distro_id);
+        warn!(
+            "Could not find GUID for installed distribution '{}' - metadata not created",
+            distro_id
+        );
     }
 
     Ok(())
@@ -115,7 +176,11 @@ pub fn quick_install_distribution(distro_id: &str) -> Result<(), WslError> {
 
 /// Verify a distribution is installed by polling wsl --list
 /// Returns Ok if found within timeout, Err if not found
-fn verify_distro_installed(distro_id: &str, max_attempts: u32, delay_secs: u32) -> Result<(), WslError> {
+fn verify_distro_installed(
+    distro_id: &str,
+    max_attempts: u32,
+    delay_secs: u32,
+) -> Result<(), WslError> {
     // Normalize the distro ID: lowercase, keep only alphanumeric and hyphen
     let distro_normalized: String = distro_id
         .to_lowercase()
@@ -149,7 +214,7 @@ fn verify_distro_installed(distro_id: &str, max_attempts: u32, delay_secs: u32) 
 
     Err(WslError::CommandFailed(format!(
         "Installation initiated but '{}' did not appear in WSL list after {} seconds. \
-        The Microsoft Store download may still be in progress - check Windows Store or try again later.",
+        WSL may still be finishing the installation - check `wsl --list --verbose` or try again later.",
         distro_id, max_attempts * delay_secs
     )))
 }
@@ -170,7 +235,10 @@ pub fn create_from_image(
     wsl_version: Option<u8>,
     runtime_hint: Option<&str>,
 ) -> Result<(), WslError> {
-    info!("Creating distribution '{}' from container image '{}'", distro_name, image);
+    info!(
+        "Creating distribution '{}' from container image '{}'",
+        distro_name, image
+    );
 
     let executor = terminal_executor();
 
@@ -201,8 +269,9 @@ pub fn create_from_image(
         _ => crate::settings::get_default_distro_path(distro_name),
     };
 
-    std::fs::create_dir_all(&location)
-        .map_err(|e| WslError::CommandFailed(format!("Failed to create install directory: {}", e)))?;
+    std::fs::create_dir_all(&location).map_err(|e| {
+        WslError::CommandFailed(format!("Failed to create install directory: {}", e))
+    })?;
 
     // Create temp file for tar export, cleaned up on all paths (including panic)
     let temp_dir = std::env::temp_dir();
@@ -242,10 +311,16 @@ pub fn create_from_image(
             if let Err(e) = metadata::save_metadata(distro_metadata) {
                 warn!("Failed to save install metadata: {}", e);
             } else {
-                info!("Created metadata for installed distribution '{}'", distro_name);
+                info!(
+                    "Created metadata for installed distribution '{}'",
+                    distro_name
+                );
             }
         } else {
-            warn!("Could not find GUID for installed distribution '{}' - metadata not created", distro_name);
+            warn!(
+                "Could not find GUID for installed distribution '{}' - metadata not created",
+                distro_name
+            );
         }
     }
 
@@ -264,7 +339,10 @@ pub fn create_from_oci_image(
     wsl_version: Option<u8>,
     progress: Option<crate::oci::ProgressCallback>,
 ) -> Result<(), WslError> {
-    info!("Creating distribution '{}' from OCI image '{}'", distro_name, image);
+    info!(
+        "Creating distribution '{}' from OCI image '{}'",
+        distro_name, image
+    );
 
     // Determine install location and create it up front, before the expensive
     // image download, so a bad location fails fast without leaking the rootfs
@@ -273,8 +351,9 @@ pub fn create_from_oci_image(
         _ => crate::settings::get_default_distro_path(distro_name),
     };
 
-    std::fs::create_dir_all(&location)
-        .map_err(|e| WslError::CommandFailed(format!("Failed to create install directory: {}", e)))?;
+    std::fs::create_dir_all(&location).map_err(|e| {
+        WslError::CommandFailed(format!("Failed to create install directory: {}", e))
+    })?;
 
     // Create temp directory for OCI operations, cleaned up on all paths (including panic)
     let temp_dir = std::env::temp_dir();
@@ -306,10 +385,16 @@ pub fn create_from_oci_image(
             if let Err(e) = metadata::save_metadata(distro_metadata) {
                 warn!("Failed to save install metadata: {}", e);
             } else {
-                info!("Created metadata for installed distribution '{}'", distro_name);
+                info!(
+                    "Created metadata for installed distribution '{}'",
+                    distro_name
+                );
             }
         } else {
-            warn!("Could not find GUID for installed distribution '{}' - metadata not created", distro_name);
+            warn!(
+                "Could not find GUID for installed distribution '{}' - metadata not created",
+                distro_name
+            );
         }
     }
 
@@ -368,6 +453,35 @@ fn line_contains_distro(line: &str, distro_normalized: &str) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_install_failure_includes_both_streams_and_override_hint() {
+        let output = crate::wsl::executor::wsl_command::CommandOutput {
+            stdout: "The downloaded file does not match the expected checksum.\n".to_string(),
+            stderr: "The distribution is provided by an override manifest.\n".to_string(),
+            success: false,
+        };
+
+        let message = format_install_failure(&output);
+
+        assert!(message.contains("does not match the expected checksum"));
+        assert!(message.contains("provided by an override manifest"));
+        assert!(message.contains("community manifest may contain an outdated URL or checksum"));
+    }
+
+    #[test]
+    fn test_install_failure_discards_console_progress_noise() {
+        let output = crate::wsl::executor::wsl_command::CommandOutput {
+            stdout: "Downloading: 10%\rDownloading: 50%\rChecksum mismatch\r".to_string(),
+            stderr: String::new(),
+            success: false,
+        };
+
+        let message = format_install_failure(&output);
+
+        assert!(!message.contains("Downloading: 10%"));
+        assert!(message.contains("Checksum mismatch"));
+    }
 
     // Tests for parse_online_distros_output
     #[test]
@@ -482,7 +596,10 @@ Debian                                 Debian
     #[test]
     fn test_line_contains_distro_case_insensitive() {
         assert!(line_contains_distro("UBUNTU", "ubuntu"));
-        assert!(line_contains_distro("ubuntu", "UBUNTU".to_lowercase().as_str()));
+        assert!(line_contains_distro(
+            "ubuntu",
+            "UBUNTU".to_lowercase().as_str()
+        ));
     }
 
     #[test]
