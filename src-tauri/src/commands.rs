@@ -1320,6 +1320,10 @@ pub async fn get_wsl_conf_raw(distro_name: String, id: Option<String>) -> Result
 #[tauri::command]
 pub async fn save_wsl_conf(distro_name: String, config: WslConf) -> Result<(), String> {
     validate_distro_name(&distro_name).map_err(|e| e.to_string())?;
+    // Reject field values that could inject INI lines or escape the root heredoc used to
+    // write /etc/wsl.conf (newlines / control chars). Fails fast before spawning the
+    // blocking write; write_wsl_conf re-validates as a defense-in-depth chokepoint.
+    settings::validate_wsl_conf(&config).map_err(|e| e.to_string())?;
     tokio::task::spawn_blocking(move || settings::write_wsl_conf(&distro_name, config))
         .await
         .map_err(|e| format!("Task failed: {}", e))?
