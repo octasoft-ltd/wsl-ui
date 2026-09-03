@@ -1,11 +1,12 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "quick-actions-popup",
-  "description": "Minimal event permissions for the Quick Actions popup",
+  "description": "Minimal event and self-hide permissions for the Quick Actions popup",
   "windows": ["quick-actions-popup"],
   "permissions": [
     "core:event:allow-listen",
     "core:event:allow-unlisten",
-    "core:event:allow-emit-to"
+    "core:event:allow-emit-to",
+    "core:window:allow-hide"
   ]
 }
