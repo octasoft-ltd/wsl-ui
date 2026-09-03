@@ -67,6 +67,48 @@ describe("useStopBeforeAction", () => {
     expect(pendingAction).toHaveBeenCalledTimes(1);
   });
 
+  it.each(["Unknown", "Installing"] as const)(
+    "requires verification before acting on a target in %s state",
+    (state) => {
+      const pendingAction = vi.fn();
+      const { result } = renderHook(() => useStopBeforeAction());
+
+      act(() => {
+        result.current.executeWithStopCheck(
+          makeDistro({ state }),
+          "Export",
+          pendingAction
+        );
+      });
+
+      expect(pendingAction).not.toHaveBeenCalled();
+      expect(result.current.state.showStopDialog).toBe(true);
+    }
+  );
+
+  it("requires shutdown verification when another distro state is unknown", () => {
+    const pendingAction = vi.fn();
+    useDistroStore.setState({
+      distributions: [
+        makeDistro({ state: "Stopped" }),
+        makeDistro({ name: "Debian", state: "Unknown", isDefault: false }),
+      ],
+    });
+    const { result } = renderHook(() => useStopBeforeAction());
+
+    act(() => {
+      result.current.executeWithStopCheck(
+        makeDistro({ state: "Stopped" }),
+        "Resize",
+        pendingAction,
+        { requiresShutdown: true }
+      );
+    });
+
+    expect(pendingAction).not.toHaveBeenCalled();
+    expect(result.current.state.showStopDialog).toBe(true);
+  });
+
   it("does NOT run the destructive action when stopDistro fails", async () => {
     const pendingAction = vi.fn();
     useDistroStore.setState({
@@ -112,23 +154,19 @@ describe("useStopBeforeAction", () => {
     expect(pendingAction).not.toHaveBeenCalled();
   });
 
-  it("aborts and notifies when the stop reports success but WSL is still running", async () => {
+  it("trusts backend verification when the display refresh remains stale", async () => {
     const pendingAction = vi.fn();
     useDistroStore.setState({
       stopDistro: vi.fn().mockResolvedValue(true),
       shutdownAll: vi.fn().mockResolvedValue(true),
-      // Re-fetch still shows a running distro: VHDX is still locked.
-      fetchDistros: vi.fn().mockImplementation(async () => {
-        useDistroStore.setState({
-          distributions: [makeDistro({ state: "Running" })],
-        });
-      }),
+      // The backend has already verified shutdown. A failed/stale display
+      // refresh must not contradict that authoritative result.
+      fetchDistros: vi.fn().mockResolvedValue(undefined),
     });
 
     await runStopAndContinue(pendingAction, { requiresShutdown: true });
 
-    expect(pendingAction).not.toHaveBeenCalled();
-    expect(useNotificationStore.getState().notifications).toHaveLength(1);
-    expect(useNotificationStore.getState().notifications[0].type).toBe("error");
+    expect(pendingAction).toHaveBeenCalledTimes(1);
+    expect(useNotificationStore.getState().notifications).toHaveLength(0);
   });
 });

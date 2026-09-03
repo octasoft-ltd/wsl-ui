@@ -4,6 +4,7 @@ import { usePopupWindow } from "./usePopupWindow";
 
 const popupMocks = vi.hoisted(() => ({
   emitTo: vi.fn().mockResolvedValue(undefined),
+  getByLabel: vi.fn().mockResolvedValue(null),
   hide: vi.fn().mockResolvedValue(undefined),
   listeners: new Map<string, (event: { payload: unknown }) => void>(),
   setFocus: vi.fn().mockResolvedValue(undefined),
@@ -45,6 +46,8 @@ vi.mock("@tauri-apps/api/window", () => ({
 
 vi.mock("@tauri-apps/api/webviewWindow", () => ({
   WebviewWindow: class WebviewWindow {
+    static getByLabel = popupMocks.getByLabel;
+
     constructor(_label: string, options: Record<string, unknown>) {
       popupMocks.windowOptions = options;
     }
@@ -76,6 +79,7 @@ function dispatchPopupEvent(eventName: string, payload: unknown) {
 describe("usePopupWindow", () => {
   beforeEach(() => {
     popupMocks.emitTo.mockClear();
+    popupMocks.getByLabel.mockClear();
     popupMocks.hide.mockClear();
     popupMocks.listeners.clear();
     popupMocks.setFocus.mockClear();
@@ -147,5 +151,46 @@ describe("usePopupWindow", () => {
       });
     });
     expect(onAction).toHaveBeenCalledWith("restart");
+  });
+
+  it("hides an open popup when an ancestor scrolls", async () => {
+    const anchorElement = document.createElement("button");
+    document.body.appendChild(anchorElement);
+    const anchorRef = { current: anchorElement };
+    const { result, unmount } = renderHook(() => usePopupWindow({
+      anchorRef,
+      height: 320,
+      label: "quick-actions-popup",
+      popupType: "quick-actions",
+      url: "/popup.html",
+      width: 260,
+    }));
+
+    await act(async () => {
+      await result.current.open();
+      dispatchPopupEvent("popup-ready", { popupType: "quick-actions" });
+      await Promise.resolve();
+    });
+    const initPayload = popupMocks.emitTo.mock.calls.find(
+      (call) => call[1] === "popup-init",
+    )?.[2] as { sessionId: string };
+
+    await act(async () => {
+      dispatchPopupEvent("popup-content-ready", {
+        popupType: "quick-actions",
+        sessionId: initPayload.sessionId,
+      });
+      await Promise.resolve();
+    });
+    expect(result.current.isOpen).toBe(true);
+
+    act(() => {
+      anchorElement.dispatchEvent(new Event("scroll", { bubbles: false }));
+    });
+
+    expect(popupMocks.hide).toHaveBeenCalled();
+    expect(result.current.isOpen).toBe(false);
+    unmount();
+    anchorElement.remove();
   });
 });

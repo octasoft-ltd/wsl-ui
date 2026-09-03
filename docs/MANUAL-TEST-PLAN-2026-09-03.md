@@ -1,25 +1,101 @@
 # Manual Test Plan — issue backlog burn-down (2026-09-03)
 
 Human verification steps for the fixes landed in the 2026-09-03 backlog pass
-(OCT-1475). Every fix has automated unit coverage; the steps below cover the
+(OCT-1475). The fixes have focused automated coverage; the steps below cover the
 parts that need a real WSL installation, real hardware, or visual judgement.
 
 Build under test: a debug or release build of `main` containing the merged
-PRs #100, #146–#149, #156, #159, #161, #162, and #167.
+PRs #100, #146–#149, #156, #159, #161–#163, #167, and #168, plus the
+post-review release hardening changes recorded in section 17.
 
 For each item: tick when verified, note build + result. Items marked
 **[needs hardware/locale]** cannot be verified on a stock dev machine.
+
+## Minimum human release gate
+
+The detailed sections below are the full regression catalogue. After the
+real-machine pass recorded below, the remaining human/environment-only gate is:
+
+1. Complete one Distribution Sources Apply/Reset UAC flow; both buttons must
+   remain disabled until the elevated operation completes.
+2. Run the locale checks in sections 12, 14, 15, and 17 on one non-English
+   Windows VM.
+3. Use a disposable VHDX or spare physical disk for sections 4–5 and the
+   diskpart/Optimize-VHD checks in section 15.
+4. Deliberately stage the service/network failure cases: a true WSL command
+   timeout and recovery (section 6), refusal to stop while `wslservice.exe` is
+   suspended (section 12), and a corrupted/interrupted OCI pull (section 12).
+
+## 2026-09-03 real-machine execution record
+
+Tested the debug build from `ee503cf` plus the release-hardening working-tree
+changes (`src-tauri/target/debug/wsl-ui.exe`, built 2026-09-03 16:05 BST).
+Temporary changes to `.wslconfig`, app settings, custom actions, the distro
+catalog, and `/etc/wsl.conf` were restored byte-for-byte after each check.
+Test distributions were stopped and the temporary OCI distribution was
+unregistered after the pass.
+
+Passed without human assistance:
+
+- Section 1, including repeated Settings navigation, explicit start/load,
+  non-default start, and live IP display with `guiApplications=false`.
+- Section 2's runtime assertions: no Google Fonts resource requests occurred,
+  and the rendered UI/monospace font stacks use the bundled fonts.
+- Section 3: a recognisable wrong sudo password was absent from persisted logs;
+  the command was logged with `echo '***' | sudo -S`.
+- Sections 7–11 and 16, including a real paste event for the oversized
+  processor value, newest-first live LXC data, invalid-then-valid URL recovery,
+  disabled download/container sources, and a fresh settings file.
+- Section 12: `vmIdleTimeout=-1` preservation; successful built-in OCI pull,
+  import, registration, and cleanup; and a quote-bearing `wsl.conf` value that
+  remained valid INI. The browser-expressible text inputs do not accept literal
+  newline characters.
+- Section 13: the native popup rectangle remained on-screen and the popup
+  closed when its nested distro-list container scrolled.
+- Section 14's normal inventory regression and section 15's missing-executable
+  preflight behavior on this English Windows host.
+- Section 17: a real Stop & Continue resize flow did not open the destructive
+  dialog until `wsl --list --running --quiet` was empty; stopped-distro Clone
+  and Rename opened directly without a stop prompt; a delayed stale source
+  preview was discarded.
+
+The pass exposed and fixed three real defects before this record was written:
+
+- Opening per-distribution Settings still started a stopped distro.
+- IP discovery failed when WSL GUI applications were disabled.
+- Quick Actions stayed detached from its card when the nested list scrolled.
+
+Not run here are only the four human/environment groups in the minimum gate
+above, plus the destructive zero-distro case in section 14 (it would require
+unregistering every real distribution on this machine).
+
+For v0.20.0, the maintainer accepted these remaining environment-only checks
+as release exceptions on 2026-09-03. They are not treated as evidence of a
+pass; regressions reported by users will be investigated and fixed normally.
+
+The section 17 native-install UX was also exercised with RockyLinux-9.7 and
+RockyLinux-10.1. Both surfaced WSL's `TRUST_E_BAD_DIGEST` failure instead of
+appearing to hang. A cache-bypassed comparison confirmed that the third-party
+manifest pins the old 9.7/10.1 hashes while using mutable `latest` URLs that
+now serve 9.8/10.2. This is tracked upstream as
+https://github.com/greengorych/wsl-configs/issues/2 and is not an application
+release failure.
 
 ## 1. Default distro no longer auto-starts (GH #157)
 
 1. `wsl --shutdown` from a terminal; confirm all distros Stopped (`wsl -l -v`).
 2. Launch WSL UI. Wait 30 s on the dashboard.
 3. `wsl -l -v` in a terminal: the default distro must still be **Stopped**.
-4. In the app: go to Settings, return to the dashboard, repeat 3×. Alt-Tab
-   away and back. The default distro must still be Stopped.
-5. Start a *non-default* distro from the app, wait ~15 s: the default distro
+4. In the app: go to Settings → WSL Distribution, then return to the dashboard.
+   Repeat 3× and leave WSL Distribution as the remembered Settings tab. Alt-Tab
+   away and back. The default distro must still be Stopped, and the settings
+   page must show **Start and load settings** rather than reading `wsl.conf`.
+5. Click **Start and load settings** once. This is the explicit side-effect:
+   the selected distro should start and its `wsl.conf` fields should load.
+6. Stop that distro. Start a *non-default* distro from the app, wait ~15 s:
+   the default distro
    must remain Stopped (IP/system queries must target the running one).
-6. Regression: with a distro running, the status bar should still show the
+7. Regression: with a distro running, the status bar should still show the
    WSL IP address within one poll cycle (~10 s).
 
 ## 2. Startup with Google Fonts blocked (GH #158) **[needs network block]**
@@ -173,12 +249,73 @@ On a non-English Windows locale (zh-CN / de-DE / ja-JP):
    Quick Actions menu, and the settings save path — no regressions in the
    flows from sections 4–13 above.
 
-## 17. Still open, known-not-fixed (do not fail the pass on these)
+## 17. Post-review release hardening
+
+These checks cover the final code-review fixes made after PR #168.
+
+### Automated checks (no human action required)
+
+1. Rust tests verify locale-neutral parsing of
+   `wsl --list --running --quiet`, running and transitional distro detection,
+   fail-closed OCI response/body bounds and manifest recursion limits, and
+   trimmed custom-manifest URLs. They also verify that overlapping custom-URL
+   installs and clones receive distinct temporary archive paths, and that a
+   stopped distro is rejected if it stops between loading and saving
+   `/etc/wsl.conf`.
+2. Frontend tests verify stale manifest previews are discarded, Apply and
+   Reset cannot overlap, stop-before-action trusts the backend's verified
+   result rather than stale UI state, and delayed terminal refresh timers do
+   not leak between tests. Unknown and transitional distro states must enter
+   the stop-verification flow rather than executing immediately. The popup
+   controller also contains recovery handling
+   for an existing popup WebView after a main-window reload so action sessions
+   remain usable.
+   Per-distribution Settings tests verify that stopped distros are not queried
+   until **Start and load settings** is selected. Native WSL install tests
+   verify that a pending download shows elapsed time and that failures preserve
+   diagnostics from both output streams while removing console progress noise.
+3. The full Rust, Vitest, TypeScript, and production-build suites plus the
+   distro-inventory and running-distro lifecycle mock E2E scenarios must pass.
+   The two stopped-distro cross-window actions are covered by the minimum
+   human gate above because WebDriver switches windows before their click
+   handlers settle.
+
+### Real-machine spot checks
+
+1. With a disposable distro running, use a disk action that offers **Stop &
+   Continue**. After confirming, the action may proceed only after the distro
+   disappears from `wsl --list --running --quiet`.
+2. **[needs non-English Windows locale]** Repeat the previous check on a
+   non-English Windows VM. A running distro must never be treated as stopped
+   because its verbose status word is translated.
+3. Settings → WSL Distribution Sources: load a manifest preview, change the
+   URL before the request completes, and confirm the old URL's entries never
+   appear. During an Apply or Reset UAC flow, both mutation buttons must stay
+   disabled until it completes.
+4. With a stopped disposable distro, Quick Actions → Clone and Manage → Rename
+   must open their dialogs directly without showing a stop prompt.
+5. With the per-distribution Settings tab remembered, stop the selected distro,
+   leave and reopen Settings, and confirm it remains stopped until **Start and
+   load settings** is clicked.
+6. Start a large Quick Install from WSL's online catalog. While it is pending,
+   the progress panel must identify WSL, show an increasing elapsed time, and
+   explain that large images may take several minutes. If an override-manifest
+   install fails, the visible error must retain WSL's diagnostic and advise
+   reviewing or resetting **Settings > Remote Sources**; the configured source
+   must not be silently removed.
+
+## 18. Still open, known-not-fixed (do not fail the pass on these)
 
 - GH #130: bare mounts invisible in the mounted list / tracking wiped on
   empty refresh.
 - GH #154: quick-install catalog can be empty when catalog endpoints are
   unreachable (needs reporter follow-up).
-- GH #103/PR 163: install/clone temp-file leak — fix under review
-  (OCT-1138).
+- OCI layer merging still buffers uncompressed tar entries in memory. A
+  streaming merge would reduce memory-exhaustion risk for hostile or unusually
+  large images, but is a separate architectural change.
+- The elevated compaction helper still uses shared temporary script/output
+  names. The UI serializes actions, but per-operation files would harden direct
+  concurrent command invocation.
+- Distribution-source strings and stop-flow notifications still need complete
+  non-English translations.
 - Remaining audit-filed backlog (#104–#166 subset) tracked individually.

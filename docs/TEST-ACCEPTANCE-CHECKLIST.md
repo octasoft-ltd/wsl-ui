@@ -133,4 +133,3 @@ Apply this section to changes involving `QuickActionsMenu`, `QuickActionsPopup`,
 
 - [ ] **Accepted** - all applicable checks passed, or approved exceptions are recorded above.
 - [ ] **Not accepted** - blocking issue(s) remain.
-

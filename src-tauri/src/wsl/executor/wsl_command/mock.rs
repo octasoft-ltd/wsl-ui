@@ -287,6 +287,25 @@ impl MockWslExecutor {
         }
         output
     }
+
+    fn build_running_list_output(&self) -> String {
+        let state = self.state.lock().unwrap();
+        state
+            .distributions
+            .iter()
+            .filter(|d| d.state == MockDistroState::Running)
+            .map(|d| format!("{}\n", d.name))
+            .collect()
+    }
+
+    fn build_quiet_list_output(&self) -> String {
+        let state = self.state.lock().unwrap();
+        state
+            .distributions
+            .iter()
+            .map(|d| format!("{}\n", d.name))
+            .collect()
+    }
 }
 
 impl Default for MockWslExecutor {
@@ -304,6 +323,32 @@ impl WslCommandExecutor for MockWslExecutor {
         self.simulate_delay(100);
         Ok(CommandOutput {
             stdout: self.build_list_output(),
+            stderr: String::new(),
+            success: true,
+        })
+    }
+
+    fn list_running(&self) -> Result<CommandOutput, WslError> {
+        if let Some(err) = self.check_error("list_running") {
+            return Err(err);
+        }
+        debug!("Mock: list_running");
+        self.simulate_delay(100);
+        Ok(CommandOutput {
+            stdout: self.build_running_list_output(),
+            stderr: String::new(),
+            success: true,
+        })
+    }
+
+    fn list_quiet(&self, _include_all: bool) -> Result<CommandOutput, WslError> {
+        if let Some(err) = self.check_error("list_quiet") {
+            return Err(err);
+        }
+        debug!("Mock: list_quiet");
+        self.simulate_delay(100);
+        Ok(CommandOutput {
+            stdout: self.build_quiet_list_output(),
             stderr: String::new(),
             success: true,
         })
@@ -890,6 +935,16 @@ mod tests {
         assert!(result.stdout.contains("VERSION"));
         assert!(result.stdout.contains("Ubuntu"));
         assert!(result.stdout.contains("Running"));
+    }
+
+    #[test]
+    fn test_list_running_only_returns_running_names() {
+        let executor = MockWslExecutor::new();
+        let result = executor.list_running().unwrap();
+
+        assert!(result.stdout.lines().any(|line| line.trim() == "Ubuntu"));
+        assert!(!result.stdout.contains("Debian"));
+        assert!(!result.stdout.contains("STATE"));
     }
 
     #[test]

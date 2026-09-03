@@ -55,6 +55,126 @@ fn is_no_distros_output(combined_output: &str) -> bool {
         || combined_output.contains("没有已安装的分发")
 }
 
+/// Parse the locale-neutral output of `wsl --list --running --quiet`.
+fn parse_running_distro_names(output: &str) -> Vec<String> {
+    output
+        .trim_start_matches('\u{feff}')
+        .lines()
+        .map(|line| line.trim().trim_start_matches('*').trim())
+        .filter(|line| !line.is_empty())
+        .map(str::to_string)
+        .collect()
+}
+
+fn command_output_names(
+    output: super::executor::wsl_command::CommandOutput,
+    description: &str,
+) -> Result<Vec<String>, WslError> {
+    if !output.success {
+        let message = if !output.stderr.trim().is_empty() {
+            output.stderr
+        } else if !output.stdout.trim().is_empty() {
+            output.stdout
+        } else {
+            format!("Unable to {}", description)
+        };
+        return Err(WslError::CommandFailed(message));
+    }
+    Ok(parse_running_distro_names(&output.stdout))
+}
+
+/// Return running distro names without depending on localized status words.
+pub(crate) fn list_running_distribution_names() -> Result<Vec<String>, WslError> {
+    command_output_names(
+        wsl_executor().list_running()?,
+        "determine which WSL distributions are running",
+    )
+}
+
+fn list_quiet_distribution_names(include_all: bool) -> Result<Vec<String>, WslError> {
+    command_output_names(
+        wsl_executor().list_quiet(include_all)?,
+        "determine whether a WSL distribution is transitioning",
+    )
+}
+
+fn find_transitioning_names(all: &[String], registered: &[String]) -> Vec<String> {
+    all.iter()
+        .filter(|name| {
+            !registered
+                .iter()
+                .any(|registered| registered.eq_ignore_ascii_case(name))
+        })
+        .cloned()
+        .collect()
+}
+
+fn list_transitioning_distribution_names() -> Result<Vec<String>, WslError> {
+    let registered = list_quiet_distribution_names(false)?;
+    let all = list_quiet_distribution_names(true)?;
+    Ok(find_transitioning_names(&all, &registered))
+}
+
+fn distribution_is_running(name: &str) -> Result<bool, WslError> {
+    Ok(list_running_distribution_names()?
+        .iter()
+        .any(|running| running.eq_ignore_ascii_case(name)))
+}
+
+fn ensure_distribution_stopped(name: &str, operation: &str) -> Result<(), WslError> {
+    if distribution_is_running(name)? {
+        return Err(WslError::CommandFailed(format!(
+            "Distribution must be stopped before {}. Please stop it first.",
+            operation
+        )));
+    }
+    if list_transitioning_distribution_names()?
+        .iter()
+        .any(|transitioning| transitioning.eq_ignore_ascii_case(name))
+    {
+        return Err(WslError::CommandFailed(format!(
+            "Distribution is busy installing, uninstalling, converting, or exporting and cannot be {} yet.",
+            operation
+        )));
+    }
+    Ok(())
+}
+
+fn wait_for_stopped(name: Option<&str>, timeout: std::time::Duration) -> Result<(), WslError> {
+    let started = std::time::Instant::now();
+    loop {
+        let running = list_running_distribution_names()?;
+        let still_running = match name {
+            Some(name) => running.iter().any(|item| item.eq_ignore_ascii_case(name)),
+            None => !running.is_empty(),
+        };
+        let still_transitioning = if still_running {
+            false
+        } else {
+            let transitioning = list_transitioning_distribution_names()?;
+            match name {
+                Some(name) => transitioning
+                    .iter()
+                    .any(|item| item.eq_ignore_ascii_case(name)),
+                None => !transitioning.is_empty(),
+            }
+        };
+        if !still_running && !still_transitioning {
+            return Ok(());
+        }
+        if started.elapsed() >= timeout {
+            let target = name
+                .map(|name| format!("distribution '{}'", name))
+                .unwrap_or_else(|| "all WSL distributions".to_string());
+            return Err(WslError::Timeout(format!(
+                "Could not confirm that {} stopped or finished transitioning",
+                target
+            )));
+        }
+        std::thread::sleep(std::time::Duration::from_secs(1));
+    }
+}
+
 /// List all WSL distributions with their status
 pub fn list_distributions() -> Result<Vec<Distribution>, WslError> {
     debug!("Listing WSL distributions");
@@ -89,6 +209,23 @@ pub fn list_distributions() -> Result<Vec<Distribution>, WslError> {
         .into_iter()
         .map(Distribution::from)
         .collect();
+
+    // Localized `--verbose` status words parse as Unknown. Promote only the
+    // running entries using the locale-neutral `--running --quiet` output.
+    if distros.iter().any(|d| d.state == DistroState::Unknown) {
+        match list_running_distribution_names() {
+            Ok(running) => {
+                for distro in &mut distros {
+                    if distro.state == DistroState::Unknown
+                        && running.iter().any(|name| name.eq_ignore_ascii_case(&distro.name))
+                    {
+                        distro.state = DistroState::Running;
+                    }
+                }
+            }
+            Err(error) => warn!("Could not resolve localized WSL states: {}", error),
+        }
+    }
 
     // Fetch registry info to get distribution IDs (GUIDs)
     let registry_info = resource_monitor().get_all_distro_registry_info();
@@ -136,34 +273,10 @@ pub fn stop_distribution(name: &str) -> Result<(), WslError> {
         return Err(WslError::CommandFailed(output.stderr));
     }
 
-    // Verify the distro actually stopped
-    let verify_timeout = std::time::Duration::from_secs(30);
-    let verify_start = std::time::Instant::now();
-
     debug!("Verifying distribution '{}' has stopped", name);
-    loop {
-        if let Ok(distros) = list_distributions() {
-            if let Some(distro) = distros.iter().find(|d| d.name == name) {
-                if distro.state != DistroState::Running {
-                    info!("Distribution '{}' stopped successfully", name);
-                    return Ok(());
-                }
-                debug!("Distribution '{}' still running (state: {}), waiting...", name, distro.state);
-            } else {
-                info!("Distribution '{}' no longer exists", name);
-                return Ok(());
-            }
-        }
-
-        if verify_start.elapsed() > verify_timeout {
-            error!("Distribution '{}' did not stop within 30 seconds", name);
-            return Err(WslError::CommandFailed(
-                format!("'{}' is taking too long to stop. Try 'Force Stop' to shutdown all WSL instances.", name)
-            ));
-        }
-
-        std::thread::sleep(std::time::Duration::from_secs(1));
-    }
+    wait_for_stopped(Some(name), std::time::Duration::from_secs(30))?;
+    info!("Distribution '{}' stopped successfully", name);
+    Ok(())
 }
 
 /// Force stop all WSL distributions (nuclear option)
@@ -177,28 +290,10 @@ pub fn force_stop_distribution(name: &str) -> Result<(), WslError> {
         return Err(WslError::CommandFailed(output.stderr));
     }
 
-    // Verify all distros are stopped
-    let verify_timeout = std::time::Duration::from_secs(15);
-    let verify_start = std::time::Instant::now();
-
     debug!("Verifying all distributions have stopped");
-    loop {
-        if let Ok(distros) = list_distributions() {
-            let running_count = distros.iter().filter(|d| d.state == DistroState::Running).count();
-            if running_count == 0 {
-                info!("All WSL instances shut down (force stop successful)");
-                return Ok(());
-            }
-            debug!("{} distributions still running, waiting...", running_count);
-        }
-
-        if verify_start.elapsed() > verify_timeout {
-            warn!("Some distributions may still be stopping after force shutdown");
-            return Ok(());
-        }
-
-        std::thread::sleep(std::time::Duration::from_secs(1));
-    }
+    wait_for_stopped(None, std::time::Duration::from_secs(15))?;
+    info!("All WSL instances shut down (force stop successful)");
+    Ok(())
 }
 
 /// Delete/unregister a WSL distribution
@@ -239,28 +334,10 @@ pub fn shutdown_all() -> Result<(), WslError> {
         return Err(WslError::CommandFailed(output.stderr));
     }
 
-    // Verify all distros are stopped
-    let verify_timeout = std::time::Duration::from_secs(15);
-    let verify_start = std::time::Instant::now();
-
     debug!("Verifying all distributions have stopped");
-    loop {
-        if let Ok(distros) = list_distributions() {
-            let running_count = distros.iter().filter(|d| d.state == DistroState::Running).count();
-            if running_count == 0 {
-                info!("All WSL instances shut down");
-                return Ok(());
-            }
-            debug!("{} distributions still running, waiting...", running_count);
-        }
-
-        if verify_start.elapsed() > verify_timeout {
-            warn!("Some distributions may still be stopping after shutdown");
-            return Ok(());
-        }
-
-        std::thread::sleep(std::time::Duration::from_secs(1));
-    }
+    wait_for_stopped(None, std::time::Duration::from_secs(15))?;
+    info!("All WSL instances shut down");
+    Ok(())
 }
 
 /// Force kill all WSL processes using wsl --shutdown --force
@@ -322,15 +399,10 @@ pub fn move_distribution(name: &str, location: &str) -> Result<(), WslError> {
 
     // Verify distro is stopped
     let distros = list_distributions()?;
-    if let Some(distro) = distros.iter().find(|d| d.name == name) {
-        if distro.state == DistroState::Running {
-            return Err(WslError::CommandFailed(
-                "Distribution must be stopped before moving. Please stop it first.".to_string()
-            ));
-        }
-    } else {
+    if !distros.iter().any(|d| d.name == name) {
         return Err(WslError::DistroNotFound(name.to_string()));
     }
+    ensure_distribution_stopped(name, "moving")?;
 
     // Create destination directory if it doesn't exist
     if let Err(e) = std::fs::create_dir_all(location) {
@@ -362,15 +434,10 @@ pub fn set_sparse(name: &str, enabled: bool) -> Result<(), WslError> {
 
     // Verify distro is stopped
     let distros = list_distributions()?;
-    if let Some(distro) = distros.iter().find(|d| d.name == name) {
-        if distro.state == DistroState::Running {
-            return Err(WslError::CommandFailed(
-                "Distribution must be stopped before changing sparse mode. Please stop it first.".to_string()
-            ));
-        }
-    } else {
+    if !distros.iter().any(|d| d.name == name) {
         return Err(WslError::DistroNotFound(name.to_string()));
     }
+    ensure_distribution_stopped(name, "changing sparse mode")?;
 
     let output = wsl_executor().set_sparse(name, enabled)?;
 
@@ -437,15 +504,10 @@ pub fn resize_distribution(name: &str, size: &str) -> Result<(), WslError> {
 
     // Verify distro is stopped
     let distros = list_distributions()?;
-    if let Some(distro) = distros.iter().find(|d| d.name == name) {
-        if distro.state == DistroState::Running {
-            return Err(WslError::CommandFailed(
-                "Distribution must be stopped before resizing. Please stop it first.".to_string()
-            ));
-        }
-    } else {
+    if !distros.iter().any(|d| d.name == name) {
         return Err(WslError::DistroNotFound(name.to_string()));
     }
+    ensure_distribution_stopped(name, "resizing")?;
 
     if size.is_empty() {
         return Err(WslError::CommandFailed("Size cannot be empty".to_string()));
@@ -569,31 +631,8 @@ pub fn compact_distribution(name: &str) -> Result<CompactResult, WslError> {
 
     // Step 2: Shutdown WSL completely (VHDX must not be in use for compaction)
     info!("Shutting down WSL to release VHDX lock...");
-    let shutdown_result = wsl_executor().shutdown();
-    if let Err(e) = shutdown_result {
-        warn!("WSL shutdown returned error (may already be stopped): {}", e);
-    }
-
-    // Verify WSL is actually stopped (up to 10 seconds)
-    let verify_timeout = std::time::Duration::from_secs(10);
-    let verify_start = std::time::Instant::now();
-    loop {
-        if let Ok(distros) = list_distributions() {
-            let running_count = distros.iter().filter(|d| d.state == DistroState::Running).count();
-            if running_count == 0 {
-                info!("WSL shutdown verified - all distros stopped");
-                break;
-            }
-            debug!("{} distributions still running, waiting...", running_count);
-        }
-
-        if verify_start.elapsed() > verify_timeout {
-            warn!("WSL distros may still be running after shutdown wait");
-            break;
-        }
-
-        std::thread::sleep(std::time::Duration::from_secs(1));
-    }
+    shutdown_all()?;
+    info!("WSL shutdown verified - all distros stopped");
 
     // Additional wait for filesystem to release VHDX lock
     std::thread::sleep(std::time::Duration::from_millis(1000));
@@ -645,11 +684,7 @@ pub fn set_distro_version(name: &str, version: u8) -> Result<(), WslError> {
     // Verify distro exists and is stopped
     let distros = list_distributions()?;
     if let Some(distro) = distros.iter().find(|d| d.name == name) {
-        if distro.state == DistroState::Running {
-            return Err(WslError::CommandFailed(
-                "Distribution must be stopped before changing version. Please stop it first.".to_string()
-            ));
-        }
+        ensure_distribution_stopped(name, "changing version")?;
         // Check if already at target version
         if distro.version == version {
             info!("Distribution is already WSL {}", version);
@@ -738,13 +773,8 @@ pub fn rename_distribution(
         .find(|d| d.id.as_deref() == Some(id))
         .ok_or_else(|| WslError::DistroNotFound(id.to_string()))?;
 
-    if distro.state == DistroState::Running {
-        return Err(WslError::CommandFailed(
-            "Distribution must be stopped before renaming. Please stop it first.".to_string()
-        ));
-    }
-
     let old_name = distro.name.clone();
+    ensure_distribution_stopped(&old_name, "renaming")?;
 
     // Check new name doesn't conflict with existing distribution
     if distros.iter().any(|d| d.name.eq_ignore_ascii_case(new_name) && d.id.as_deref() != Some(id)) {
@@ -1026,9 +1056,9 @@ fn classify_mounted_disk(disk_name: &str) -> (String, bool) {
 pub fn list_mounted_disks() -> Result<Vec<MountedDisk>, WslError> {
     info!("Listing mounted disks");
 
-    // First check if any WSL distro is running
     let distros = list_distributions()?;
-    let any_running = distros.iter().any(|d| d.state == DistroState::Running);
+    let running = list_running_distribution_names()?;
+    let any_running = !running.is_empty();
 
     if !any_running {
         debug!("WSL not running, no mounted disks");
@@ -1036,8 +1066,16 @@ pub fn list_mounted_disks() -> Result<Vec<MountedDisk>, WslError> {
     }
 
     // Get the default distro for exec (prefer default, fall back to any running)
-    let default_distro = distros.iter().find(|d| d.is_default)
-        .or_else(|| distros.iter().find(|d| d.state == DistroState::Running));
+    let is_running = |distro: &&Distribution| {
+        running
+            .iter()
+            .any(|name| name.eq_ignore_ascii_case(&distro.name))
+    };
+    let default_distro = distros
+        .iter()
+        .filter(is_running)
+        .find(|d| d.is_default)
+        .or_else(|| distros.iter().find(is_running));
 
     let distro = match default_distro {
         Some(d) => d,
@@ -1115,7 +1153,26 @@ pub fn update_wsl(pre_release: bool, current_version: Option<&str>) -> Result<St
 
 #[cfg(test)]
 mod tests {
-    use super::{classify_mounted_disk, is_no_distros_output};
+    use super::{
+        classify_mounted_disk, find_transitioning_names, is_no_distros_output,
+        parse_running_distro_names,
+    };
+
+    #[test]
+    fn test_parse_running_distro_names_is_locale_neutral() {
+        let output = "\u{feff}Ubuntu\r\n開発環境\r\n  Debian  \r\n\r\n";
+        assert_eq!(
+            parse_running_distro_names(output),
+            vec!["Ubuntu", "開発環境", "Debian"]
+        );
+    }
+
+    #[test]
+    fn test_find_transitioning_names_compares_all_with_registered() {
+        let all = vec!["Ubuntu".to_string(), "Converting".to_string()];
+        let registered = vec!["Ubuntu".to_string()];
+        assert_eq!(find_transitioning_names(&all, &registered), vec!["Converting"]);
+    }
 
     // GH #101: on localized Windows, wsl.exe emits the no-distro message in
     // the system language; treating it as an error showed a failure banner.

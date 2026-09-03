@@ -246,6 +246,22 @@ export function usePopupWindow(options: PopupWindowOptions): PopupWindowHandle {
     listenersRef.current = requestListeners;
 
     if (!persistentPopupWindow) {
+      const existingPopupWindow = await WebviewWindow.getByLabel(label);
+      if (!isCurrentOpenRequest()) {
+        return;
+      }
+      if (existingPopupWindow) {
+        persistentPopupWindow = { webviewReady: true, window: existingPopupWindow };
+        await Promise.all([
+          existingPopupWindow.setPosition(new LogicalPosition(popupX, popupY)),
+          existingPopupWindow.setSize(new LogicalSize(width, popupHeight)),
+        ]);
+        if (isCurrentOpenRequest()) {
+          await sendPopupData();
+        }
+        return;
+      }
+
       const popupWindow = new WebviewWindow(label, {
         alwaysOnTop: true,
         decorations: false,
@@ -290,6 +306,16 @@ export function usePopupWindow(options: PopupWindowOptions): PopupWindowHandle {
       hide();
     }
   }, [hide]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleScroll = () => hide(false);
+    // Capture scroll events from nested distro-list containers; `scroll` does
+    // not bubble, so a normal window listener would miss them.
+    window.addEventListener("scroll", handleScroll, true);
+    return () => window.removeEventListener("scroll", handleScroll, true);
+  }, [hide, isOpen]);
 
   return { close: hide, isOpen, open };
 }

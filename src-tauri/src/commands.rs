@@ -1409,6 +1409,13 @@ pub fn get_startup_actions_for_distro(distro_name: String) -> Vec<CustomAction> 
 }
 
 /// Install from a rootfs URL with progress events
+fn rootfs_download_temp_path() -> std::path::PathBuf {
+    std::env::temp_dir().join(format!(
+        "wsl-rootfs-{}.tar.gz",
+        crate::wsl::unique_temp_tag()
+    ))
+}
+
 #[tauri::command]
 pub async fn install_from_rootfs_url(
     app: AppHandle,
@@ -1432,8 +1439,7 @@ pub async fn install_from_rootfs_url(
     }
 
     // Create temp file path with RAII guard for automatic cleanup
-    let temp_dir = std::env::temp_dir();
-    let tar_path = temp_dir.join(format!("wsl-rootfs-{}.tar.gz", std::process::id()));
+    let tar_path = rootfs_download_temp_path();
     let temp_guard = TempFileGuard::new(&tar_path);
 
     // Download with progress events (no checksum for custom URLs)
@@ -1524,6 +1530,16 @@ pub async fn install_from_rootfs_url(
     }
 
     import_result.map_err(|e| e.to_string())
+}
+
+#[cfg(test)]
+mod rootfs_temp_path_tests {
+    use super::rootfs_download_temp_path;
+
+    #[test]
+    fn concurrent_downloads_use_distinct_temp_paths() {
+        assert_ne!(rootfs_download_temp_path(), rootfs_download_temp_path());
+    }
 }
 
 // Distro Catalog commands

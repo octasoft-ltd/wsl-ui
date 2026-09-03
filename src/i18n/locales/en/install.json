@@ -3,7 +3,7 @@
   "subtitle": "Choose how you want to install your Linux distribution",
   "mode": {
     "quickInstall": "Quick Install",
-    "quickInstallDesc": "Install from Microsoft Store",
+    "quickInstallDesc": "Install using WSL's online catalog",
     "download": "Download",
     "downloadDesc": "Direct download with custom name",
     "community": "Community",
@@ -12,7 +12,7 @@
     "containerDesc": "Create from container image"
   },
   "info": {
-    "quickInstall": "Official distributions from the Microsoft Store. Installs to the default Windows-managed location.",
+    "quickInstall": "Distributions reported by WSL's online catalog. This can include third-party entries when a remote source is configured in Settings.",
     "download": "This catalog can be customized in Settings > Distribution Sources. Custom URLs are saved for future use.",
     "community": "Images from {{url}}. Configure in Settings > Distribution Sources.",
     "container": "Selected Runtime configured in settings: {{runtime}}"
@@ -46,7 +46,8 @@
   },
   "alreadyInstalled": "\"{{name}}\" is already installed",
   "progress": {
-    "installingStore": "Installing from Microsoft Store...",
+    "installingWsl": "Downloading and installing with WSL...",
+    "nativeInstallDetails": "Elapsed {{elapsed}}. Native WSL download progress is not available in this window; large images may take several minutes.",
     "success": "Installed successfully!",
     "downloading": "Downloading: {{percent}}% ({{downloaded}} / {{total}})",
     "importing": "Importing into WSL...",

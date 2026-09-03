@@ -118,6 +118,7 @@ export function QuickActionsPopup({ distro, actions, onAction }: QuickActionsPop
           {action.requiresStopped && distro.state === "Running" && (
             <span
               className="ml-auto text-theme-status-warning"
+              data-testid="requires-stop-indicator"
               title={t("customActions.requiresStop")}
             >
               <PauseIcon size="sm" />
@@ -167,7 +168,7 @@ export function QuickActionsPopup({ distro, actions, onAction }: QuickActionsPop
                 <span className="text-theme-text-muted"><FolderIcon size="sm" /></span>
                 {t("manage.move")}
                 {distro.state === "Running" && (
-                  <span className="ml-auto text-theme-status-error" title={t("customActions.requiresShutdown")}>
+                  <span className="ml-auto text-theme-status-error" data-testid="requires-shutdown-indicator" title={t("customActions.requiresShutdown")}>
                     <PowerIcon size="sm" />
                   </span>
                 )}
@@ -183,7 +184,7 @@ export function QuickActionsPopup({ distro, actions, onAction }: QuickActionsPop
                 <span className="text-theme-text-muted"><ServerIcon size="sm" /></span>
                 {t("manage.resize")}
                 {distro.state === "Running" && (
-                  <span className="ml-auto text-theme-status-error" title={t("customActions.requiresShutdown")}>
+                  <span className="ml-auto text-theme-status-error" data-testid="requires-shutdown-indicator" title={t("customActions.requiresShutdown")}>
                     <PowerIcon size="sm" />
                   </span>
                 )}
@@ -227,7 +228,7 @@ export function QuickActionsPopup({ distro, actions, onAction }: QuickActionsPop
               </span>
               {t("manage.rename")}
               {distro.state === "Running" && (
-                <span className="ml-auto text-theme-status-warning" title={t("customActions.requiresStop")}>
+                <span className="ml-auto text-theme-status-warning" data-testid="requires-stop-indicator" title={t("customActions.requiresStop")}>
                   <PauseIcon size="sm" />
                 </span>
               )}
@@ -244,7 +245,7 @@ export function QuickActionsPopup({ distro, actions, onAction }: QuickActionsPop
                   {t("manage.sparse")}
                 </span>
                 {distro.state === "Running" && (
-                  <span className="text-theme-status-error" title={t("customActions.requiresShutdown")}>
+                  <span className="text-theme-status-error" data-testid="requires-shutdown-indicator" title={t("customActions.requiresShutdown")}>
                     <PowerIcon size="sm" />
                   </span>
                 )}
@@ -291,7 +292,7 @@ export function QuickActionsPopup({ distro, actions, onAction }: QuickActionsPop
               {action.name}
               <div className="ml-auto flex items-center gap-1.5">
                 {action.requiresStopped && distro.state === "Running" && (
-                  <span className="text-theme-status-warning" title={t("customActions.requiresStop")}>
+                  <span className="text-theme-status-warning" data-testid="requires-stop-indicator" title={t("customActions.requiresStop")}>
                     <PauseIcon size="sm" />
                   </span>
                 )}

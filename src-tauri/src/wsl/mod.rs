@@ -11,11 +11,13 @@
 //! - Version information
 
 mod core;
+pub(crate) use core::list_running_distribution_names;
 pub mod distro_sources;
 pub mod executor;
 mod import_export;
 mod info;
 mod install;
+pub(crate) use install::unique_temp_tag;
 pub mod resources;
 mod service;
 mod terminal;
