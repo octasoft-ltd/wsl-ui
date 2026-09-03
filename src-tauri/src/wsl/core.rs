@@ -986,6 +986,17 @@ pub fn unmount_disk(disk_path: Option<&str>) -> Result<(), WslError> {
     Ok(())
 }
 
+/// Classify a `/mnt/wsl/<name>` mount entry: PHYSICALDRIVE names are physical
+/// disks addressed as `\\.\PHYSICALDRIVEn`; anything else mounted there came
+/// from `wsl --mount --vhd` and is a VHD file (GH #113).
+fn classify_mounted_disk(disk_name: &str) -> (String, bool) {
+    if disk_name.starts_with("PHYSICALDRIVE") {
+        (format!(r"\\.\{}", disk_name), false)
+    } else {
+        (disk_name.to_string(), true)
+    }
+}
+
 /// List disks currently mounted in WSL via `wsl --mount`
 pub fn list_mounted_disks() -> Result<Vec<MountedDisk>, WslError> {
     info!("Listing mounted disks");
@@ -1032,11 +1043,7 @@ pub fn list_mounted_disks() -> Result<Vec<MountedDisk>, WslError> {
                 continue;
             }
 
-            let (path, is_vhd) = if disk_name.starts_with("PHYSICALDRIVE") {
-                (format!(r"\\.\{}", disk_name), false)
-            } else {
-                (disk_name.to_string(), false)
-            };
+            let (path, is_vhd) = classify_mounted_disk(disk_name);
 
             mounted_disks.push(MountedDisk {
                 path,
@@ -1080,3 +1087,23 @@ pub fn update_wsl(pre_release: bool, current_version: Option<&str>) -> Result<St
 }
 
 
+
+#[cfg(test)]
+mod tests {
+    use super::classify_mounted_disk;
+
+    // GH #113: VHD mounts were reported as physical disks (is_vhd always false).
+    #[test]
+    fn test_classify_physical_drive() {
+        let (path, is_vhd) = classify_mounted_disk("PHYSICALDRIVE2");
+        assert_eq!(path, r"\\.\PHYSICALDRIVE2");
+        assert!(!is_vhd);
+    }
+
+    #[test]
+    fn test_classify_vhd_mount() {
+        let (path, is_vhd) = classify_mounted_disk("mydata.vhdx");
+        assert_eq!(path, "mydata.vhdx");
+        assert!(is_vhd);
+    }
+}
