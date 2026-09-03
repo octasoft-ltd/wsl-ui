@@ -1418,10 +1418,11 @@ Same locale-fragility family as Issue #18 (UTF-16 LE mojibake), but a different 
 2. Check `HKCU\Software\Microsoft\Windows\CurrentVersion\Lxss` — no GUID subkeys confirms zero registered distributions.
 
 ### Solution
-Empty-state detection is now locale-independent: when the list command fails, the app consults the Lxss registry and treats "no registered distributions" as the valid empty state. The phrase match was also extended with the confirmed zh-CN message as a fast path.
+Empty-state detection is now locale-independent: when the list command fails, the app consults the Lxss registry and treats "no registered distributions" as the valid empty state. The registry check is strict — if the Lxss key cannot be read (as opposed to being absent or having no distro entries), the original command error is surfaced instead of an empty list, so a transient registry failure never silently clears the distribution inventory. The phrase match was also extended with the confirmed zh-CN message as a fast path.
 
 ### Files Changed
 - `src-tauri/src/wsl/core.rs`: added `is_no_distros_output` (English + zh-CN phrases) and a registry-based empty-distro fallback in `list_distributions`, with regression tests.
+- `src-tauri/src/wsl/executor/resource/{mod,real,mock}.rs`: new `registry_confirms_no_distros` ResourceMonitor method that distinguishes "no registered distros" from "registry unreadable".
 
 ### Related
 - GitHub issue: https://github.com/octasoft-ltd/wsl-ui/issues/101

@@ -72,8 +72,11 @@ pub fn list_distributions() -> Result<Vec<Distribution>, WslError> {
         // The "no installed distributions" message is localized, so the phrase
         // match above can miss it on locales we don't know about. The Lxss
         // registry is locale-independent: no registered distro entries means
-        // this is the valid empty state, not a failure (GH #101).
-        if resource_monitor().get_all_distro_registry_info().is_empty() {
+        // this is the valid empty state, not a failure (GH #101). The check
+        // returns false when the registry is unreadable, so a transient
+        // registry failure surfaces the command error instead of silently
+        // clearing the inventory.
+        if resource_monitor().registry_confirms_no_distros() {
             debug!("WSL list failed but registry has no distros - treating as empty state");
             return Ok(Vec::new());
         }
