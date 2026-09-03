@@ -618,6 +618,31 @@ impl ResourceMonitor for RealResourceMonitor {
         result
     }
 
+    fn registry_confirms_no_distros(&self) -> bool {
+        log::debug!("Checking Lxss registry for confirmed zero distros");
+        let hkcu = RegKey::predef(HKEY_CURRENT_USER);
+        let lxss = match hkcu.open_subkey(WSL_REGISTRY_PATH) {
+            Ok(key) => key,
+            // An absent Lxss key means WSL has never registered a distro;
+            // any other error (e.g. access denied) means we cannot rule out
+            // registered distros, so don't claim the empty state (GH #101).
+            Err(e) => return e.kind() == std::io::ErrorKind::NotFound,
+        };
+
+        for guid_result in lxss.enum_keys() {
+            match guid_result {
+                // Any GUID subkey is a registered distro, even if its values
+                // are currently unreadable
+                Ok(name) if name.starts_with('{') => return false,
+                Ok(_) => continue,
+                // Enumeration failed - cannot confirm the key is empty
+                Err(_) => return false,
+            }
+        }
+
+        true
+    }
+
     fn get_distro_base_path(&self, name: &str) -> Option<String> {
         // Reuse get_all_distro_registry_info which already uses winreg
         self.get_all_distro_registry_info()
