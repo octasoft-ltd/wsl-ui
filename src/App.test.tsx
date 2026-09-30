@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { act, render, screen, waitFor } from '@testing-library/react';
+import { act, cleanup, render, screen } from '@testing-library/react';
 import App from './App';
 import { useDistroStore } from './store/distroStore';
 import { usePollingStore } from './store/pollingStore';
@@ -104,6 +104,14 @@ vi.mock('./components/SettingsPage', () => ({
   SettingsPage: () => <div data-testid="settings-page">Settings Page</div>,
 }));
 
+async function renderApp() {
+  let view!: ReturnType<typeof render>;
+  await act(async () => {
+    view = render(<App />);
+  });
+  return view;
+}
+
 describe('App', () => {
   const mockFetchDistros = vi.fn();
   const mockUnlisten = vi.fn();
@@ -138,19 +146,19 @@ describe('App', () => {
     vi.mocked(listen).mockResolvedValue(mockUnlisten);
   });
 
-  afterEach(() => {
-    // Stop polling before test cleanup to prevent timers from firing after teardown
-    // This prevents unhandled rejections when timers fire after test environment is torn down
-    usePollingStore.getState().stop();
-    
-    // Clear any remaining timers
+  afterEach(async () => {
+    // Unmount before restoring the clock so effects cannot restart polling during cleanup.
+    // Await React's async work, including the promised event listener cleanup.
+    await act(async () => cleanup());
+    expect(usePollingStore.getState().isRunning).toBe(false);
     vi.clearAllTimers();
     vi.useRealTimers();
+    vi.unstubAllGlobals();
   });
 
   describe('event listener cleanup', () => {
-    it.each([true, false])('clears disk attachments only after confirmed tray shutdown: %s', (shutdown) => {
-      render(<App />);
+    it.each([true, false])('clears disk attachments only after confirmed tray shutdown: %s', async (shutdown) => {
+      await renderApp();
       const attachment = {
         diskPath: 'D:\\data.vhdx', mountPoint: null, filesystem: null,
         isVhd: true, mountedAt: 1,
@@ -166,53 +174,35 @@ describe('App', () => {
     });
 
     it('should clean up event listener on unmount', async () => {
-      // Use real timers for waitFor operations
-      vi.useRealTimers();
+      const { unmount } = await renderApp();
 
-      const { unmount } = render(<App />);
-
-      // Wait for the event listener to be set up
-      await waitFor(() => {
-        expect(listen).toHaveBeenCalledWith('distro-state-changed', expect.any(Function));
-      });
+      // Rendering has settled the event listener setup
+      expect(listen).toHaveBeenCalledWith('distro-state-changed', expect.any(Function));
 
       // Unmount the component
-      unmount();
+      await act(async () => unmount());
 
       // Verify unlisten was called
-      await waitFor(() => {
-        expect(mockUnlisten).toHaveBeenCalled();
-      });
-
-      // Restore fake timers
-      vi.useFakeTimers();
+      expect(mockUnlisten).toHaveBeenCalled();
     });
 
     it('should cancel pending setTimeout on unmount', async () => {
-      // Use real timers for waitFor
-      vi.useRealTimers();
+      const { unmount } = await renderApp();
 
-      const { unmount } = render(<App />);
-
-      // Wait for the event listener to be set up
-      await waitFor(() => {
-        expect(listen).toHaveBeenCalled();
-      });
+      // Rendering has settled the event listener setup
+      expect(listen).toHaveBeenCalled();
 
       // Get the event handler that was registered
       const eventHandler = vi.mocked(listen).mock.calls[0][1];
-
-      // Switch to fake timers for timeout testing
-      vi.useFakeTimers();
 
       // Trigger the event (which schedules a setTimeout)
       eventHandler({ payload: null } as any);
 
       // Unmount before timeout fires
-      unmount();
+      await act(async () => unmount());
 
       // Advance timers - if timeout wasn't cleaned up, fetchDistros would be called
-      vi.advanceTimersByTime(1000);
+      await act(async () => vi.advanceTimersByTimeAsync(1000));
 
       // fetchDistros should not be called after unmount (timeout was cleaned up)
       // Note: initial loading is now handled by usePolling, not direct call
@@ -220,31 +210,23 @@ describe('App', () => {
     });
 
     it('should not update state after unmount', async () => {
-      // Use real timers for waitFor
-      vi.useRealTimers();
-
       const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-      const { unmount } = render(<App />);
+      const { unmount } = await renderApp();
 
-      // Wait for the event listener to be set up
-      await waitFor(() => {
-        expect(listen).toHaveBeenCalled();
-      });
+      // Rendering has settled the event listener setup
+      expect(listen).toHaveBeenCalled();
 
       // Get the event handler
       const eventHandler = vi.mocked(listen).mock.calls[0][1];
 
       // Unmount the component
-      unmount();
-
-      // Switch to fake timers for timeout testing
-      vi.useFakeTimers();
+      await act(async () => unmount());
 
       // Trigger the event after unmount
       eventHandler({ payload: null } as any);
 
       // Advance timers
-      vi.advanceTimersByTime(1000);
+      await act(async () => vi.advanceTimersByTimeAsync(1000));
 
       // Should not cause React warnings about state updates on unmounted component
       expect(consoleWarnSpy).not.toHaveBeenCalledWith(
@@ -255,19 +237,11 @@ describe('App', () => {
     });
 
     it('should allow multiple event triggers before unmount', async () => {
-      // Use real timers for waitFor
-      vi.useRealTimers();
+      const { unmount } = await renderApp();
 
-      const { unmount } = render(<App />);
-
-      await waitFor(() => {
-        expect(listen).toHaveBeenCalled();
-      });
+      expect(listen).toHaveBeenCalled();
 
       const eventHandler = vi.mocked(listen).mock.calls[0][1];
-
-      // Switch to fake timers for timeout testing
-      vi.useFakeTimers();
 
       // Trigger event multiple times
       eventHandler({ payload: null } as any);
@@ -275,7 +249,7 @@ describe('App', () => {
       eventHandler({ payload: null } as any);
 
       // Advance time to fire first timeout
-      vi.advanceTimersByTime(1000);
+      await act(async () => vi.advanceTimersByTimeAsync(1000));
 
       // Only the last timeout should have been executed (debouncing behavior)
       // Initial fetch + 3 timeouts = 4 total, but if properly implemented with cleanup,
@@ -283,7 +257,7 @@ describe('App', () => {
       // Note: Current implementation doesn't cancel previous timeouts, so this will fail
       // This test documents the EXPECTED behavior after the fix
 
-      unmount();
+      await act(async () => unmount());
     });
   });
 
@@ -291,27 +265,19 @@ describe('App', () => {
     it('should initialize polling on mount via usePolling hook', async () => {
       // The App component now uses usePolling() hook to handle fetching
       // This test verifies the app renders without errors
-      render(<App />);
+      await renderApp();
       // The polling is handled by usePolling hook, not direct fetchDistros call
       expect(screen.getByTestId('header')).toBeInTheDocument();
     });
 
     it('should set up event listener on mount', async () => {
-      // Use real timers for waitFor
-      vi.useRealTimers();
+      await renderApp();
 
-      render(<App />);
-
-      await waitFor(() => {
-        expect(listen).toHaveBeenCalledWith('distro-state-changed', expect.any(Function));
-      });
-
-      // Restore fake timers
-      vi.useFakeTimers();
+      expect(listen).toHaveBeenCalledWith('distro-state-changed', expect.any(Function));
     });
 
-    it('should render main page by default', () => {
-      render(<App />);
+    it('should render main page by default', async () => {
+      await renderApp();
 
       expect(screen.getByTestId('header')).toBeInTheDocument();
       expect(screen.getByTestId('distro-list')).toBeInTheDocument();
@@ -320,14 +286,14 @@ describe('App', () => {
   });
 
   describe('error handling', () => {
-    it('should display error message when error is present', () => {
+    it('should display error message when error is present', async () => {
       vi.mocked(useDistroStore).mockReturnValue({
         fetchDistros: mockFetchDistros,
         error: 'Failed to fetch distributions',
         distributions: [],
       } as any);
 
-      render(<App />);
+      await renderApp();
 
       expect(screen.getByText('System Error')).toBeInTheDocument();
       expect(screen.getByText('Failed to fetch distributions')).toBeInTheDocument();
