@@ -1598,6 +1598,32 @@ Related: [GitHub #110](https://github.com/octasoft-ltd/wsl-ui/issues/110).
 
 ---
 
+## Issue #34: Windows ARM64 build cannot find the native C compiler
+
+### Symptoms
+
+A local `cargo build --locked --target aarch64-pc-windows-msvc` fails while compiling `aws-lc-sys`. The observed error was:
+
+```text
+error occurred in cc-rs: failed to find tool "cl.exe": program not found (see https://docs.rs/cc/latest/cc/#compile-time-requirements for help)
+```
+
+### Root Cause
+
+The reqwest 0.13 TLS dependency uses AWS-LC. Its Windows ARM64 build needs the native ARM64 build tools and `clang-cl`, in addition to Rust's ARM64 target. Installing the Rust target alone does not install those Visual Studio components. An x64 build can succeed while the ARM64 toolchain is incomplete.
+
+### Solution
+
+In Visual Studio Installer, modify the C++ build tools installation to include the ARM64 MSVC build tools and Windows SDK. Also enable **C++ Clang Compiler for Windows** and **MSBuild support for LLVM (clang-cl) toolset**, as required by [AWS-LC's Windows build instructions](https://aws.github.io/aws-lc-rs/requirements/windows). Restart the developer shell, add the Rust target with `rustup target add aarch64-pc-windows-msvc`, and retry the command from `src-tauri`.
+
+The `rust-tests` CI job now builds the ARM64 app after the Rust tests on `windows-latest`. This checks compilation without launching or publishing the app; an ARM64 compile check does not exercise the app on an ARM64 device.
+
+### Files Changed
+
+- `.github/workflows/e2e.yml`: install the ARM64 Rust target and compile the app after the existing app and core tests.
+
+---
+
 ## Template for New Issues
 
 ```markdown

@@ -50,6 +50,8 @@ jobs:
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@6bed0761d98439e5a578e2877258200ad565ba87 # stable
+        with:
+          targets: aarch64-pc-windows-msvc
 
       - name: Rust cache
         uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
@@ -67,6 +69,11 @@ jobs:
       - name: Run wsl-core tests
         working-directory: crates/wsl-core
         run: cargo test
+
+      - name: Build Windows ARM64 app
+        working-directory: src-tauri
+        # Exercise the ARM64 native TLS/compiler toolchain before release publishing.
+        run: cargo build --locked --target aarch64-pc-windows-msvc
 
   # E2E tests - only runs on manual trigger with run_e2e=true
   e2e-tests:
