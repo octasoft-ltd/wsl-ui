@@ -1,55 +1,47 @@
 version: 2
-updates:
-  - package-ecosystem: npm
-    directory: /
+
+# One weekly PR for all version updates, including major upgrades.
+multi-ecosystem-groups:
+  dependency-digest:
     schedule:
       interval: weekly
       day: monday
       time: "09:00"
       timezone: Europe/London
-    open-pull-requests-limit: 10
+    open-pull-requests-limit: 1
+    commit-message:
+      prefix: chore(deps)
+
+updates:
+  - package-ecosystem: npm
+    directory: /
+    multi-ecosystem-group: dependency-digest
+    patterns: ["*"]
     # Match the local three-day package cooldown. Security updates are exempt.
     cooldown:
       default-days: 3
+    # Security updates run independently of the weekly version digest.
     groups:
-      npm-compatible:
-        patterns: ["*"]
-        update-types: [minor, patch]
       npm-security:
         applies-to: security-updates
         patterns: ["*"]
-    commit-message:
-      prefix: chore(deps)
 
   - package-ecosystem: cargo
     directories:
       - /src-tauri
       - /crates/wsl-core
-    schedule:
-      interval: weekly
-      day: monday
-      time: "09:00"
-      timezone: Europe/London
-    open-pull-requests-limit: 10
+    multi-ecosystem-group: dependency-digest
+    patterns: ["*"]
     groups:
-      rust-compatible:
-        patterns: ["*"]
-        update-types: [minor, patch]
       rust-security:
         applies-to: security-updates
         patterns: ["*"]
-    commit-message:
-      prefix: chore(deps)
 
   - package-ecosystem: github-actions
     directory: /
-    schedule:
-      interval: weekly
-      day: monday
-      time: "09:00"
-      timezone: Europe/London
+    multi-ecosystem-group: dependency-digest
+    patterns: ["*"]
     groups:
-      actions:
+      actions-security:
+        applies-to: security-updates
         patterns: ["*"]
-    commit-message:
-      prefix: chore(ci)

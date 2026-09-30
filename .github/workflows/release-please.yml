@@ -15,6 +15,7 @@ jobs:
     outputs:
       release_created: ${{ steps.release.outputs.release_created }}
       tag_name: ${{ steps.release.outputs.tag_name }}
+      release_id: ${{ steps.release.outputs.id }}
     steps:
       - name: Run release-please
         id: release
@@ -63,24 +64,13 @@ jobs:
         run: npm ci --ignore-scripts
 
       - name: Build Tauri app
-        uses: tauri-apps/tauri-action@84b9d35b5fc46c1e45415bdb6144030364f7ebc5 # v0.6.2
+        uses: tauri-apps/tauri-action@1deb371b0cd8bd54025b384f1cd735e725c4060f # v1.0.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           VITE_APTABASE_KEY: ${{ secrets.VITE_APTABASE_KEY }}
         with:
-          tagName: ${{ needs.release-please.outputs.tag_name }}
-          releaseName: "WSL UI ${{ needs.release-please.outputs.tag_name }}"
-          releaseBody: |
-            See the [CHANGELOG](https://github.com/${{ github.repository }}/blob/main/CHANGELOG.md) for details.
-
-            ## Installation
-
-            **Standard Installation:** Download the `.msi` installer below and run it.
-
-            **Microsoft Store:** Also available on the [Microsoft Store](https://apps.microsoft.com/detail/9P8548KNJ2M9).
-          releaseDraft: false
-          prerelease: false
-          includeDebug: false
+          # Upload to the release created by release-please without replacing its notes.
+          releaseId: ${{ needs.release-please.outputs.release_id }}
           args: --target ${{ matrix.target }}
 
       - name: Convert version to MSIX format

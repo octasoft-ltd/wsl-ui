@@ -315,7 +315,7 @@ impl RegistryClient {
         // selected child of a manifest list), verify the returned bytes match it.
         // A poisoned manifest would otherwise dictate which layers we pull.
         if let Some(ref requested_digest) = image.digest {
-            let actual_hex = format!("{:x}", Sha256::digest(body.as_bytes()));
+            let actual_hex = hex::encode(Sha256::digest(body.as_bytes()));
             verify_digest(requested_digest, &actual_hex)?;
         }
 
@@ -382,7 +382,7 @@ impl RegistryClient {
         }
         verify_digest(
             &config.digest,
-            &format!("{:x}", Sha256::digest(body.as_bytes())),
+            &hex::encode(Sha256::digest(body.as_bytes())),
         )?;
         let platform: Platform = serde_json::from_str(&body).map_err(|e| {
             OciError::UnsupportedManifest(format!("Invalid image platform config: {}", e))
@@ -520,7 +520,7 @@ impl RegistryClient {
         }
 
         // Verify content-addressable digest.
-        let actual_hex = format!("{:x}", hasher.finalize());
+        let actual_hex = hex::encode(hasher.finalize());
         if let Err(e) = verify_digest(digest, &actual_hex) {
             let _ = std::fs::remove_file(output_path);
             return Err(e);
@@ -653,7 +653,7 @@ mod tests {
 
         let server = MockServer::start().await;
         let config = serde_json::json!({"architecture": "s390x", "os": "linux"}).to_string();
-        let digest = format!("sha256:{:x}", Sha256::digest(config.as_bytes()));
+        let digest = format!("sha256:{}", hex::encode(Sha256::digest(config.as_bytes())));
         let manifest = serde_json::json!({
             "schemaVersion": 2,
             "mediaType": OCI_MANIFEST,
@@ -697,13 +697,13 @@ mod tests {
         use wiremock::{Mock, MockServer, ResponseTemplate};
         let server = MockServer::start().await;
         let config = serde_json::json!({"architecture": "arm64", "os": "linux"}).to_string();
-        let config_digest = format!("sha256:{:x}", Sha256::digest(config.as_bytes()));
+        let config_digest = format!("sha256:{}", hex::encode(Sha256::digest(config.as_bytes())));
         let manifest = serde_json::json!({
             "schemaVersion": 2, "mediaType": OCI_MANIFEST,
             "config": {"mediaType": "application/vnd.oci.image.config.v1+json", "digest": config_digest, "size": config.len()},
             "layers": []
         }).to_string();
-        let manifest_digest = format!("sha256:{:x}", Sha256::digest(manifest.as_bytes()));
+        let manifest_digest = format!("sha256:{}", hex::encode(Sha256::digest(manifest.as_bytes())));
         let list = serde_json::json!({"schemaVersion": 2, "mediaType": OCI_INDEX, "manifests": [
             {"mediaType": OCI_MANIFEST, "digest": "unwanted-amd64", "size": 1, "platform": {"architecture": "amd64", "os": "linux"}},
             {"mediaType": OCI_MANIFEST, "digest": manifest_digest, "size": manifest.len(), "platform": {"architecture": "arm64", "os": "linux"}}
@@ -897,7 +897,7 @@ mod tests {
     // Tests for verify_digest (content-integrity verification).
     // `Sha256`/`Digest` are already in scope via `use super::*`.
     fn sha256_hex(data: &[u8]) -> String {
-        format!("{:x}", Sha256::digest(data))
+        hex::encode(Sha256::digest(data))
     }
 
     #[test]

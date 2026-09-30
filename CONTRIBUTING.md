@@ -35,7 +35,7 @@ Fix bugs or implement new features by submitting a pull request.
 
 ### Prerequisites
 
-- [Node.js](https://nodejs.org/) v18 or later
+- [Node.js](https://nodejs.org/) 24 LTS (v24.15 or later)
 - [Rust](https://rustup.rs/) latest stable
 - [Tauri CLI](https://tauri.app/v1/guides/getting-started/prerequisites)
 - Windows (the app must be built on Windows, not inside WSL)
@@ -59,6 +59,19 @@ npm run test:run
 # Run linting
 npm run lint
 ```
+
+### Dependency Updates
+
+Dependabot groups npm, Rust and GitHub Actions version updates into one weekly
+digest PR on Mondays at 09:00 Europe/London, including major versions. Security
+updates are raised separately and grouped by ecosystem. npm version updates
+retain a three-day cooldown.
+
+The scoped `@puppeteer/browsers` override removes vulnerable `extract-zip` from
+WebdriverIO's browser-download tooling. `proxy-agent` is explicit because the new
+browser helper makes proxy support optional. Remove the override when WebdriverIO
+supports that helper version directly; verify a fresh driver download as well as
+the desktop suite when changing it.
 
 ### Project Structure
 

@@ -312,7 +312,7 @@ async fn download_with_limits_impl<E: ProgressEmitter>(
         .map_err(|e| format!("Failed to flush file: {}", e))?;
 
     // Calculate final checksum
-    let calculated_checksum = format!("{:x}", hasher.finalize());
+    let calculated_checksum = hex::encode(hasher.finalize());
 
     // Verify checksum if provided
     if let Some(expected) = expected_checksum {
@@ -372,13 +372,18 @@ mod tests {
     fn calculate_sha256(data: &[u8]) -> String {
         let mut hasher = Sha256::new();
         hasher.update(data);
-        format!("{:x}", hasher.finalize())
+        hex::encode(hasher.finalize())
     }
 
     #[test]
     fn test_checksum_calculation() {
         let test_data = b"Hello, WSL2-UI!";
         let checksum = calculate_sha256(test_data);
+
+        assert_eq!(
+            checksum,
+            "0329af4bb620aea531c488246cfd6ccf54d8f6cb286d93e919ef2724772f5ac3"
+        );
 
         // Verify the checksum format (should be 64 hex characters)
         assert_eq!(checksum.len(), 64);

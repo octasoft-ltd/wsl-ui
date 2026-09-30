@@ -62,7 +62,7 @@ Download the latest installer from the
 
 ### From Source
 
-**Prerequisites:** [Node.js](https://nodejs.org/) v18+,
+**Prerequisites:** [Node.js](https://nodejs.org/) 24 LTS (v24.15 or later),
 [Rust](https://rustup.rs/), Windows (not WSL)
 
 ```bash

@@ -53,7 +53,7 @@ jobs:
         run: npm ci --ignore-scripts
 
       - name: Build Tauri app
-        uses: tauri-apps/tauri-action@84b9d35b5fc46c1e45415bdb6144030364f7ebc5 # v0.6.2
+        uses: tauri-apps/tauri-action@1deb371b0cd8bd54025b384f1cd735e725c4060f # v1.0.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           VITE_APTABASE_KEY: ${{ secrets.VITE_APTABASE_KEY }}
@@ -70,7 +70,6 @@ jobs:
             **Microsoft Store:** Also available on the [Microsoft Store](https://apps.microsoft.com/detail/9P8548KNJ2M9).
           releaseDraft: false
           prerelease: false
-          includeDebug: false
           args: --target ${{ matrix.target }}
 
       - name: Convert version to MSIX format

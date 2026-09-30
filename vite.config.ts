@@ -32,10 +32,10 @@ export default defineConfig(async () => ({
 
   // Multi-page build: main app + popup menu window
   build: {
-    rollupOptions: {
+    rolldownOptions: {
       input: {
-        main: resolve(__dirname, "index.html"),
-        popup: resolve(__dirname, "popup.html"),
+        main: resolve(import.meta.dirname, "index.html"),
+        popup: resolve(import.meta.dirname, "popup.html"),
       },
     },
   },

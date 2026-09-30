@@ -27,10 +27,11 @@ chrono = "0.4"
 regex = "1"
 shell-escape = "0.1"
 configparser = "3"
-reqwest = { version = "0.12", features = ["stream", "blocking", "json"] }
+reqwest = { version = "0.13", features = ["stream", "blocking", "json"] }
 tokio = { version = "1", features = ["fs"] }
 futures-util = "0.3"
-sha2 = "0.10"
+sha2 = "0.11"
+hex = "0.4"
 flate2 = "1.0"
 ruzstd = "0.9"
 tar = "0.4"
@@ -40,7 +41,7 @@ wsl-core = { path = "../crates/wsl-core" }
 
 # Windows-specific dependencies
 [target.'cfg(windows)'.dependencies]
-winreg = "0.55"
+winreg = "0.56"
 
 [dev-dependencies]
 wiremock = "0.6"
