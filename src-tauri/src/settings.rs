@@ -830,6 +830,7 @@ fn merge_wsl_conf(existing: &str, config: &WslConf) -> Result<String, String> {
 
 /// Replace only managed keys, keeping unrelated lines, comments and section ordering.
 /// A managed key omitted from `updates` is removed (reset to the WSL default).
+/// Its inline comment is retained as a standalone comment.
 fn merge_ini_settings(existing: &str, updates: &str, managed: &[(&str, &[&str])]) -> Result<String, String> {
     let mut ini = Ini::new_cs();
     ini.set_comment_symbols(&['#', ';']);
@@ -852,7 +853,11 @@ fn merge_ini_settings(existing: &str, updates: &str, managed: &[(&str, &[&str])]
     let mut output = Vec::new();
     let mut section = String::new();
     for line in existing.lines() {
-        let meaningful = line.split(['#', ';']).next().unwrap_or("").trim();
+        // Match configparser's default inline-comment rules: the first symbol
+        // starts a comment, including inside quoted values or without a space.
+        let comment_start = line.find(['#', ';']);
+        let content = &line[..comment_start.unwrap_or(line.len())];
+        let meaningful = content.trim();
         if let Some(next_section) = meaningful.strip_prefix('[').and_then(|line| line.strip_suffix(']')) {
             if let Some((_, entries)) = pending.iter_mut().find(|(name, _)| name == &section) {
                 output.extend(entries.drain(..).map(|(_, line)| line));
@@ -862,10 +867,23 @@ fn merge_ini_settings(existing: &str, updates: &str, managed: &[(&str, &[&str])]
             let key = meaningful.split_once(['=', ':']).map_or(meaningful, |(key, _)| key).trim().to_lowercase();
             let is_managed = managed.iter().any(|(name, keys)| *name == section && keys.contains(&key.as_str()));
             if is_managed {
-                if let Some((_, entries)) = pending.iter_mut().find(|(name, _)| name == &section) {
-                    if let Some(index) = entries.iter().position(|(name, _)| name == &key) {
-                        output.push(entries.remove(index).1);
+                let replacement = pending.iter_mut()
+                    .find(|(name, _)| name == &section)
+                    .and_then(|(_, entries)| {
+                        entries.iter().position(|(name, _)| name == &key)
+                            .map(|index| entries.remove(index).1)
+                    });
+                if let Some(mut replacement) = replacement {
+                    if comment_start.is_some() {
+                        // Keep the comment and its original separating whitespace.
+                        replacement.push_str(&line[content.trim_end().len()..]);
                     }
+                    output.push(replacement);
+                } else if let Some(start) = comment_start {
+                    // Reset keys and duplicate aliases no longer have an active
+                    // value, but their annotations still belong in the file.
+                    let indentation = &line[..line.len() - line.trim_start().len()];
+                    output.push(format!("{}{}", indentation, &line[start..]));
                 }
                 continue;
             }
@@ -989,6 +1007,45 @@ mod tests {
         assert_eq!(saved.matches("mountFsTab=true").count(), 1);
         assert!(!saved.contains("mountfstab=false"));
         assert!(saved.contains("[custom]\nmountfstab=untouched"));
+        assert_eq!(merge_wsl_conf(&saved, &config).unwrap(), saved);
+    }
+
+    #[test]
+    fn test_config_merge_preserves_managed_inline_comments() {
+        for (original, expected) in [
+            ("memory=4GB ; workload limit", "memory=8GB ; workload limit"),
+            ("memory:4GB\t# workload limit; keep both", "memory=8GB\t# workload limit; keep both"),
+            ("memory=4GB#limit", "memory=8GB#limit"),
+            // configparser treats the first comment symbol as a comment even
+            // inside quotes; INI values do not have shell-style quoting rules.
+            ("memory=\"4GB; workload limit\"", "memory=8GB; workload limit\""),
+        ] {
+            let existing = format!("[wsl2]\r\n{original}\r\n");
+            let updates = "[wsl2]\nmemory=8GB\n";
+            let managed: &[(&str, &[&str])] = &[("wsl2", &["memory"])];
+            let saved = merge_ini_settings(&existing, updates, managed).unwrap();
+            assert_eq!(saved, format!("[wsl2]\r\n{expected}\r\n"));
+            assert_eq!(parse_wsl_config(&saved).unwrap().memory.as_deref(), Some("8GB"));
+            assert_eq!(merge_ini_settings(&saved, updates, managed).unwrap(), saved);
+        }
+    }
+
+    #[test]
+    fn test_config_merge_keeps_reset_inline_comments_as_standalone_comments() {
+        let existing = "[network]\n  hostname: old-name ; local host\n# surrounding comment\nhostname=duplicate# legacy host\ncustom=keep\n";
+        let saved = merge_wsl_conf(existing, &WslConf::default()).unwrap();
+        assert_eq!(saved, "[network]\n  ; local host\n# surrounding comment\n# legacy host\ncustom=keep\n");
+        assert_eq!(parse_wsl_conf(&saved).unwrap().network_hostname, None);
+        assert_eq!(merge_wsl_conf(&saved, &WslConf::default()).unwrap(), saved);
+    }
+
+    #[test]
+    fn test_config_merge_preserves_inline_comments_on_duplicate_managed_keys() {
+        let existing = "[boot]\nsystemd=false ; first note\nsystemd=false # second note\n";
+        let config = WslConf { boot_systemd: Some(true), ..Default::default() };
+        let saved = merge_wsl_conf(existing, &config).unwrap();
+        assert_eq!(saved, "[boot]\nsystemd=true ; first note\n# second note\n");
+        assert_eq!(parse_wsl_conf(&saved).unwrap().boot_systemd, Some(true));
         assert_eq!(merge_wsl_conf(&saved, &config).unwrap(), saved);
     }
 

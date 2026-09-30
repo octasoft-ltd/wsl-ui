@@ -2,6 +2,7 @@ import { act, fireEvent, render, screen, waitFor } from "@testing-library/react"
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { wslService } from "../../services/wslService";
 import { useDistroStore } from "../../store/distroStore";
+import { useNotificationStore } from "../../store/notificationStore";
 import type { Distribution } from "../../types/distribution";
 import { DEFAULT_WSL_CONF, type GpuStatus } from "../../types/settings";
 import { WslDistroSettings } from "./WslDistroSettings";
@@ -36,12 +37,66 @@ describe("WslDistroSettings", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    useNotificationStore.getState().clearAll();
     vi.mocked(wslService.getWslConf).mockResolvedValue(DEFAULT_WSL_CONF);
     vi.mocked(useDistroStore).mockReturnValue({
       distributions: [stoppedDistro],
       startDistro,
       actionInProgress: null,
     } as ReturnType<typeof useDistroStore>);
+  });
+
+  async function startDeferredSave() {
+    vi.mocked(useDistroStore).mockReturnValue({
+      distributions: [
+        { ...stoppedDistro, name: "First", state: "Running" },
+        { ...stoppedDistro, name: "Second", state: "Running" },
+      ], startDistro, actionInProgress: null,
+    } as ReturnType<typeof useDistroStore>);
+    let resolve!: () => void;
+    let reject!: (error: unknown) => void;
+    vi.mocked(wslService.saveWslConf).mockReturnValueOnce(new Promise<void>((res, rej) => {
+      resolve = res;
+      reject = rej;
+    }));
+    const view = render(<WslDistroSettings />);
+    fireEvent.change(await screen.findByTestId("distro-hostname-input"), { target: { value: "first-host" } });
+    fireEvent.click(screen.getByTestId("distro-save-button"));
+    expect(wslService.saveWslConf).toHaveBeenCalledWith("First", expect.objectContaining({ networkHostname: "first-host" }));
+    return { ...view, resolve, reject };
+  }
+
+  it("notifies about a failed save for the original distro after switching, preserving the new form", async () => {
+    const { reject } = await startDeferredSave();
+    fireEvent.change(screen.getByTestId("distro-settings-selector"), { target: { value: "Second" } });
+    fireEvent.change(await screen.findByTestId("distro-hostname-input"), { target: { value: "second-draft" } });
+    await act(async () => reject("Permission denied"));
+
+    expect(useNotificationStore.getState().notifications).toEqual([
+      expect.objectContaining({ type: "error", title: expect.stringContaining("First"), message: "Permission denied", autoDismiss: 0 }),
+    ]);
+    expect(screen.getByTestId("distro-hostname-input")).toHaveValue("second-draft");
+    expect(screen.getByTestId("distro-save-button")).toBeEnabled();
+    expect(screen.queryByTestId("distro-config-error")).not.toBeInTheDocument();
+  });
+
+  it("retains a failed save notification after the settings panel unmounts", async () => {
+    const { reject, unmount } = await startDeferredSave();
+    unmount();
+    await act(async () => reject(new Error("Disk is read-only")));
+    expect(useNotificationStore.getState().notifications).toEqual([
+      expect.objectContaining({ type: "error", title: expect.stringContaining("First"), message: "Disk is read-only", autoDismiss: 0 }),
+    ]);
+  });
+
+  it("does not reset the newly selected distro's draft when an earlier save succeeds", async () => {
+    const { resolve } = await startDeferredSave();
+    fireEvent.change(screen.getByTestId("distro-settings-selector"), { target: { value: "Second" } });
+    fireEvent.change(await screen.findByTestId("distro-hostname-input"), { target: { value: "second-draft" } });
+    await act(async () => resolve());
+    expect(screen.getByTestId("distro-hostname-input")).toHaveValue("second-draft");
+    expect(screen.getByTestId("distro-save-button")).toBeEnabled();
+    expect(useNotificationStore.getState().notifications).toEqual([]);
   });
 
   it("does not read Linux-side settings until a stopped distro is explicitly started", async () => {

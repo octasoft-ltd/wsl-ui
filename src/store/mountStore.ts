@@ -9,7 +9,7 @@ import { logger } from "../utils/logger";
 interface TrackedMount {
   /** Original disk path used in wsl --mount (e.g., D:\data.vhdx or \\.\PHYSICALDRIVE2) */
   diskPath: string;
-  /** Mount point inside WSL; bare attachments have no filesystem mount. */
+  /** Explicitly named mount point; null for bare or automatically named mounts. */
   mountPoint: string | null;
   /** Whether this is a VHD file */
   isVhd: boolean;
@@ -23,15 +23,11 @@ interface TrackedMount {
 export function getDiskMountEntries(mountedDisks: MountedDisk[], trackedMounts: TrackedMount[]) {
   const matched = new Set<TrackedMount>();
   const entries = mountedDisks.map((disk) => {
-    const mountPoint = disk.mountPoint.toLowerCase();
-    const diskName = mountPoint.split('/').pop();
-    const tracked = trackedMounts.find((mount) => {
-      if (!mount.mountPoint) return false;
-      const filename = mount.diskPath.split(/[/\\]/).pop()?.toLowerCase().replace(/\.[^.]+$/, "");
-      return mount.mountPoint.toLowerCase() === mountPoint ||
-        mount.mountPoint.split('/').pop()?.toLowerCase() === diskName ||
-        (!!filename && filename === diskName);
-    });
+    // Linux paths are case-sensitive. A filename or basename is not disk
+    // identity, and an ambiguous association must never enable unmounting.
+    const candidates = trackedMounts.filter((mount) => mount.mountPoint === disk.mountPoint);
+    const uniqueDiscovery = mountedDisks.filter((mount) => mount.mountPoint === disk.mountPoint).length === 1;
+    const tracked = candidates.length === 1 && uniqueDiscovery ? candidates[0] : undefined;
     if (tracked) matched.add(tracked);
     return { ...disk, diskPath: tracked?.diskPath ?? null };
   });
@@ -39,7 +35,8 @@ export function getDiskMountEntries(mountedDisks: MountedDisk[], trackedMounts: 
     if (!matched.has(mount)) {
       entries.push({
         path: mount.diskPath,
-        mountPoint: mount.mountPoint ?? mount.diskPath,
+        // Show the known identity when discovery cannot establish the link.
+        mountPoint: mount.diskPath,
         filesystem: mount.filesystem,
         isVhd: mount.isVhd,
         diskPath: mount.diskPath,
@@ -132,10 +129,9 @@ export const useMountStore = create<MountStore>((set, get) => ({
       await wslService.mountDisk(options);
 
       // Track this mount so we can unmount it later
-      // WSL mounts to /mnt/wsl/<name> - derive mount point from options
-      const diskFileName = options.diskPath.split(/[/\\]/).pop() || options.diskPath;
-      const mountName = options.mountName || diskFileName.replace(/\.[^.]+$/, ""); // Remove extension
-      const mountPoint = options.bare ? null : `/mnt/wsl/${mountName}`;
+      // Only --name gives us a known mountpoint. WSL generates default names;
+      // inferring one from a filename could associate this with another disk.
+      const mountPoint = !options.bare && options.mountName ? `/mnt/wsl/${options.mountName}` : null;
 
       const trackedMount: TrackedMount = {
         diskPath: options.diskPath,
@@ -164,10 +160,16 @@ export const useMountStore = create<MountStore>((set, get) => ({
     set({ isUnmounting: true, error: null });
     try {
       // Look up the original disk path from our tracked mounts
-      const { trackedMounts } = get();
-      const tracked = trackedMounts.find(
-        (m) => m.mountPoint === mountPointOrPath || m.diskPath === mountPointOrPath
-      );
+      const { trackedMounts, mountedDisks } = get();
+      let tracked = trackedMounts.find((mount) => mount.diskPath === mountPointOrPath);
+      if (!tracked && mountPointOrPath.startsWith("/")) {
+        const candidates = trackedMounts.filter((mount) => mount.mountPoint === mountPointOrPath);
+        const discoveries = mountedDisks.filter((mount) => mount.mountPoint === mountPointOrPath);
+        if (candidates.length !== 1 || discoveries.length > 1) {
+          throw new Error("Cannot identify the Windows disk for this mountpoint. Select the attachment by its Windows path.");
+        }
+        tracked = candidates[0];
+      }
 
       // Use the tracked disk path if found, otherwise use what was passed
       const diskPath = tracked?.diskPath || mountPointOrPath;

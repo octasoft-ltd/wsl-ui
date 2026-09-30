@@ -9,6 +9,7 @@ import { useTranslation } from "react-i18next";
 import { open } from "@tauri-apps/plugin-shell";
 import { wslService } from "../../services/wslService";
 import { useDistroStore } from "../../store/distroStore";
+import { useNotificationStore } from "../../store/notificationStore";
 import type { WslConf, GpuStatus, NvidiaContainerToolkitStatus } from "../../types/settings";
 import { DEFAULT_WSL_CONF } from "../../types/settings";
 import { Toggle, SettingInput } from "./FormControls";
@@ -139,18 +140,29 @@ export function WslDistroSettings() {
 
   const handleSave = async () => {
     if (!selectedDistro) return;
+    const distroName = selectedDistro;
     const generation = selectionGeneration.current;
     setIsSaving(true);
     setError(null);
     try {
-      await wslService.saveWslConf(selectedDistro, config);
+      await wslService.saveWslConf(distroName, config);
       if (generation !== selectionGeneration.current) return;
       setHasChanges(false);
     } catch (err) {
-      if (generation !== selectionGeneration.current) return;
-      const message = err instanceof Error ? err.message : t('wslDistro.saveError');
+      const message = typeof err === "string" ? err : err instanceof Error ? err.message : t('wslDistro.saveError');
       logger.error("Failed to save wsl.conf:", "WslDistroSettings", err);
-      setError(message);
+      if (generation !== selectionGeneration.current) {
+        // The backend write still completes after navigation. Report its failure
+        // globally without changing another distribution's form (or an unmounted one).
+        useNotificationStore.getState().addNotification({
+          type: "error",
+          title: `${distroName}: ${t('wslDistro.saveError')}`,
+          message,
+          autoDismiss: 0,
+        });
+      } else {
+        setError(message);
+      }
     } finally {
       if (generation === selectionGeneration.current) setIsSaving(false);
     }

@@ -36,7 +36,7 @@ describe("MountedDisksPanel", () => {
     }] });
     openPanel();
 
-    expect(await screen.findByText("/mnt/wsl/data")).toBeInTheDocument();
+    expect(await screen.findByText("D:\\data.vhdx")).toBeInTheDocument();
     expect(screen.getByTestId("unmount-disk-0")).toBeInTheDocument();
   });
 
@@ -49,5 +49,56 @@ describe("MountedDisksPanel", () => {
 
     expect(await screen.findByText("/mnt/wsl/data")).toBeInTheDocument();
     expect(screen.queryByTestId("mounted-disk-1")).not.toBeInTheDocument();
+  });
+
+  it("unmounts the exact identity when an earlier attachment has the same filename", async () => {
+    vi.mocked(invoke).mockResolvedValue([{ path: "/dev/sdc", mountPoint: "/mnt/wsl/data", isVhd: true, filesystem: "ext4" }]);
+    useMountStore.setState({ trackedMounts: [
+      { diskPath: "D:\\data.vhdx", mountPoint: "/mnt/wsl/other", isVhd: true, filesystem: "ext4", mountedAt: 0 },
+      { diskPath: "E:\\actual.vhdx", mountPoint: "/mnt/wsl/data", isVhd: true, filesystem: "ext4", mountedAt: 0 },
+    ] });
+    openPanel();
+
+    await screen.findByText("/mnt/wsl/data");
+    fireEvent.click(screen.getByTestId("unmount-disk-0"));
+
+    await waitFor(() => expect(invoke).toHaveBeenCalledWith("unmount_disk", { diskPath: "E:\\actual.vhdx" }));
+    expect(invoke).not.toHaveBeenCalledWith("unmount_disk", { diskPath: "D:\\data.vhdx" });
+  });
+
+  it("offers only explicit Windows attachments when discovery has an ambiguous identity", async () => {
+    vi.mocked(invoke).mockResolvedValue([{ path: "/dev/sdc", mountPoint: "/mnt/wsl/data", isVhd: true, filesystem: "ext4" }]);
+    useMountStore.setState({ trackedMounts: ["D:\\one.vhdx", "E:\\two.vhdx"].map((diskPath) => ({
+      diskPath, mountPoint: "/mnt/wsl/data", isVhd: true, filesystem: "ext4", mountedAt: 0,
+    })) });
+    openPanel();
+
+    await screen.findByText("/mnt/wsl/data");
+    expect(screen.queryByTestId("unmount-disk-0")).not.toBeInTheDocument();
+    expect(screen.getByTestId("mounted-disk-1-path")).toHaveTextContent("D:\\one.vhdx");
+    expect(screen.getByTestId("mounted-disk-2-path")).toHaveTextContent("E:\\two.vhdx");
+    fireEvent.click(screen.getByTestId("unmount-disk-2"));
+    await waitFor(() => expect(invoke).toHaveBeenCalledWith("unmount_disk", { diskPath: "E:\\two.vhdx" }));
+  });
+
+  it("renders duplicate discovered mountpoints without duplicate React keys or guessed unmount actions", async () => {
+    const consoleError = vi.spyOn(console, "error");
+    try {
+      vi.mocked(invoke).mockResolvedValue(["/dev/sdc", "/dev/sdd"].map((path) => ({
+        path, mountPoint: "/mnt/wsl/data", isVhd: true, filesystem: "ext4",
+      })));
+      useMountStore.setState({ trackedMounts: [{
+        diskPath: "D:\\data.vhdx", mountPoint: "/mnt/wsl/data", isVhd: true, filesystem: "ext4", mountedAt: 0,
+      }] });
+      openPanel();
+
+      await waitFor(() => expect(screen.getAllByText("/mnt/wsl/data")).toHaveLength(2));
+      expect(screen.queryByTestId("unmount-disk-0")).not.toBeInTheDocument();
+      expect(screen.queryByTestId("unmount-disk-1")).not.toBeInTheDocument();
+      expect(screen.getByTestId("mounted-disk-2-path")).toHaveTextContent("D:\\data.vhdx");
+      expect(consoleError.mock.calls.some((call) => call.some((value) => String(value).includes("same key")))).toBe(false);
+    } finally {
+      consoleError.mockRestore();
+    }
   });
 });

@@ -316,25 +316,7 @@ pub fn execute_action(action_id: &str, distro: &str, id: Option<&str>, password:
     // Substitute variables
     let command = substitute_variables(&action.command, distro, id);
 
-    // If action requires sudo and password is provided, wrap command with sudo -S
-    let final_command = if action.requires_sudo {
-        match password {
-            Some(pwd) if !pwd.is_empty() => {
-                // Use echo to pipe password to sudo -S
-                // The -S flag makes sudo read password from stdin
-                format!("echo {} | sudo -S bash -c {}", escape_for_shell(pwd), escape_for_shell(&command))
-            }
-            _ => {
-                return Ok(ActionResult {
-                    success: false,
-                    output: String::new(),
-                    error: Some("This action requires sudo. Please provide your password.".to_string()),
-                });
-            }
-        }
-    } else {
-        command.clone()
-    };
+    let final_command = action_command(&command, action.requires_sudo, password);
 
     // Execute in WSL (start in user's home directory) with timeout
     // 120 seconds for sudo commands, 30 for regular
@@ -360,6 +342,25 @@ pub fn execute_action(action_id: &str, distro: &str, id: Option<&str>, password:
             Some(filtered_stderr)
         },
     })
+}
+
+fn action_command(command: &str, requires_sudo: bool, password: Option<&str>) -> String {
+    if requires_sudo {
+        match password {
+            Some(pwd) if !pwd.is_empty() => {
+                // Use echo to pipe password to sudo -S
+                // The -S flag makes sudo read password from stdin
+                format!("echo {} | sudo -S bash -c {}", escape_for_shell(pwd), escape_for_shell(command))
+            }
+            _ => {
+                // Permit NOPASSWD policies and cached credentials, but never wait
+                // for an interactive password prompt during unattended startup.
+                format!("sudo -n bash -c {}", escape_for_shell(command))
+            }
+        }
+    } else {
+        command.to_string()
+    }
 }
 
 /// Run a custom action in the user's terminal
@@ -445,6 +446,21 @@ pub fn get_startup_actions_for_distro(distro_name: &str) -> Vec<CustomAction> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_unattended_sudo_uses_noninteractive_execution() {
+        for password in [None, Some("")] {
+            assert_eq!(action_command("id -u", true, password), "sudo -n bash -c 'id -u'");
+        }
+    }
+
+    #[test]
+    fn test_action_command_keeps_script_quoted_for_sudo() {
+        let command = "printf '%s' \"$HOME\"; echo done";
+        assert_eq!(action_command(command, true, None), format!("sudo -n bash -c {}", escape_for_shell(command)));
+        assert_eq!(action_command(command, false, None), command);
+        assert_eq!(action_command("id -u", true, Some("test password")), "echo 'test password' | sudo -S bash -c 'id -u'");
+    }
 
     #[test]
     fn test_windows_home_converts_any_absolute_drive_letter() {

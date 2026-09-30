@@ -1576,7 +1576,7 @@ Related: [#112](https://github.com/octasoft-ltd/wsl-ui/issues/112), [#130](https
 
 ## Issue #31: Startup sudo actions fail without a usable password prompt
 
-Background startup actions cannot collect a sudo password. The app now explains that the action should be run through **Quick Actions**, where the password prompt is available. Actions configured to run in a terminal now open that terminal on startup. Hidden-output failures and terminal-launch failures produce notifications.
+Background startup actions cannot collect a sudo password. The app attempts them with noninteractive sudo, allowing passwordless policies or usable cached credentials. If sudo requires a password, it fails promptly and the notification directs you to **Quick Actions**, where the password prompt is available. Actions configured to run in a terminal now open that terminal on startup. Hidden-output failures and terminal-launch failures produce notifications.
 
 Related: [GitHub #119](https://github.com/octasoft-ltd/wsl-ui/issues/119).
 

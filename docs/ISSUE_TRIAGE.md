@@ -42,7 +42,7 @@ Reviewed all 39 issues open at the start of this audit in `octasoft-ltd/wsl-ui`,
 | [#165](https://github.com/octasoft-ltd/wsl-ui/issues/165) | In this PR | Discover device mounts beyond `/dev/sd*` and supported direct `/mnt/wsl` virtiofs mounts; decode escaped mount paths. |
 | [#164](https://github.com/octasoft-ltd/wsl-ui/issues/164) | In this PR | Request UTF-8 on WSL launch paths while retaining legacy UTF-16 decoding. |
 | [#125](https://github.com/octasoft-ltd/wsl-ui/issues/125) | In this PR | Verify the exact parsed distribution name and successful list result. |
-| [#119](https://github.com/octasoft-ltd/wsl-ui/issues/119) | In this PR | Route terminal startup actions correctly; tell users to run password-requiring background actions through Quick Actions. |
+| [#119](https://github.com/octasoft-ltd/wsl-ui/issues/119) | In this PR | Route terminal startup actions correctly; attempt background sudo noninteractively so passwordless policies work; show failures with Quick Actions password guidance. |
 | [#128](https://github.com/octasoft-ltd/wsl-ui/issues/128) | In this PR | Replace assumed-state sparse toggle with explicit enable/disable commands; enabling always keeps its warning. |
 | [#144](https://github.com/octasoft-ltd/wsl-ui/issues/144) | In this PR | Show failed custom actions even when output is hidden, including confirmation and sudo paths. |
 | [#132](https://github.com/octasoft-ltd/wsl-ui/issues/132) | In this PR | Surface generic RDP failures in the application error state. |

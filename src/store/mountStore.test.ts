@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { invoke } from "@tauri-apps/api/core";
-import { useMountStore } from "./mountStore";
+import { getDiskMountEntries, useMountStore } from "./mountStore";
 import type { MountedDisk, PhysicalDisk, MountDiskOptions } from "../services/wslService";
 
 // Note: @tauri-apps/api/core is mocked in test/setup.ts
@@ -56,6 +56,60 @@ describe("mountStore", () => {
       showMountDialog: false,
     });
     vi.clearAllMocks();
+  });
+
+  describe("mount identity", () => {
+    const tracked = (diskPath: string, mountPoint: string | null) => ({
+      diskPath, mountPoint, isVhd: true, filesystem: "ext4", mountedAt: 0,
+    });
+    const discovered = (mountPoint: string) => ({ ...mockMountedDisk, path: "/dev/sdc", mountPoint });
+
+    it("matches the exact mountpoint despite an earlier filename collision", () => {
+      const entries = getDiskMountEntries([discovered("/mnt/wsl/data")], [
+        tracked("D:\\data.vhdx", "/mnt/wsl/other"),
+        tracked("E:\\actual.vhdx", "/mnt/wsl/data"),
+      ]);
+      expect(entries[0].diskPath).toBe("E:\\actual.vhdx");
+      expect(entries[1].diskPath).toBe("D:\\data.vhdx");
+    });
+
+    it.each(["/other/data", "/mnt/wsl/Data", null])("does not guess identity from names or case: %s", (mountPoint) => {
+      const entries = getDiskMountEntries([discovered("/mnt/wsl/data")], [tracked("D:\\data.vhdx", mountPoint)]);
+      expect(entries[0].diskPath).toBeNull();
+      expect(entries[1].mountPoint).toBe("D:\\data.vhdx");
+      expect(entries[1].diskPath).toBe("D:\\data.vhdx");
+    });
+
+    it("keeps ambiguous tracked identities separate and labels them by Windows path", () => {
+      const entries = getDiskMountEntries([discovered("/mnt/wsl/data")], [
+        tracked("D:\\one.vhdx", "/mnt/wsl/data"), tracked("E:\\two.vhdx", "/mnt/wsl/data"),
+      ]);
+      expect(entries.map((entry) => entry.diskPath)).toEqual([null, "D:\\one.vhdx", "E:\\two.vhdx"]);
+      expect(new Set(entries.map((entry) => entry.mountPoint)).size).toBe(3);
+    });
+
+    it("does not associate one attachment with multiple discovered filesystems at the same point", () => {
+      const entries = getDiskMountEntries([discovered("/mnt/wsl/data"), { ...discovered("/mnt/wsl/data"), path: "/dev/sdd" }], [tracked("D:\\data.vhdx", "/mnt/wsl/data")]);
+      expect(entries.map((entry) => entry.diskPath)).toEqual([null, null, "D:\\data.vhdx"]);
+    });
+
+    it("rejects a Linux unmount target shared by multiple discovered filesystems", async () => {
+      useMountStore.setState({
+        trackedMounts: [tracked("D:\\data.vhdx", "/mnt/wsl/data")],
+        mountedDisks: [discovered("/mnt/wsl/data"), { ...discovered("/mnt/wsl/data"), path: "/dev/sdd" }],
+      });
+      await expect(useMountStore.getState().unmountDisk("/mnt/wsl/data")).rejects.toThrow("Cannot identify");
+      expect(invoke).not.toHaveBeenCalled();
+    });
+
+    it.each(["/mnt/wsl/data", "/mnt/wsl/DATA", "/mnt/wsl/unknown"])("rejects ambiguous or unknown Linux unmount targets: %s", async (target) => {
+      const mounts = [tracked("D:\\one.vhdx", "/mnt/wsl/data"), tracked("E:\\two.vhdx", "/mnt/wsl/data")];
+      useMountStore.setState({ trackedMounts: mounts });
+      await expect(useMountStore.getState().unmountDisk(target)).rejects.toThrow("Cannot identify");
+      expect(invoke).not.toHaveBeenCalled();
+      expect(useMountStore.getState().trackedMounts).toEqual(mounts);
+      expect(useMountStore.getState().isUnmounting).toBe(false);
+    });
   });
 
   describe("initial state", () => {
@@ -260,14 +314,17 @@ describe("mountStore", () => {
       expect(trackedMounts[0].isVhd).toBe(true);
     });
 
-    it("derives mount name from file path when not provided", async () => {
+    it.each([
+      { diskPath: "D:\\VHDs\\testdisk.vhdx", isVhd: true },
+      { diskPath: "\\\\.\\PHYSICALDRIVE2", isVhd: false },
+    ])("does not infer a Linux mountpoint for $diskPath", async ({ diskPath, isVhd }) => {
       const optionsWithoutName: MountDiskOptions = {
-        diskPath: "D:\\VHDs\\testdisk.vhdx",
-        isVhd: true,
+        diskPath,
+        isVhd,
         mountName: undefined,
         filesystemType: "ext4",
         mountOptions: null,
-        partition: null,
+        partition: 1,
         bare: false,
       };
       vi.mocked(invoke)
@@ -277,7 +334,7 @@ describe("mountStore", () => {
       await useMountStore.getState().mountDisk(optionsWithoutName);
 
       const trackedMounts = useMountStore.getState().trackedMounts;
-      expect(trackedMounts[0].mountPoint).toBe("/mnt/wsl/testdisk");
+      expect(trackedMounts[0].mountPoint).toBeNull();
     });
 
     it("refreshes mounted disks after mount", async () => {
@@ -322,7 +379,7 @@ describe("mountStore", () => {
 
       const unmountPromise = useMountStore
         .getState()
-        .unmountDisk("/mnt/wsl/test");
+        .unmountDisk("D:\\test.vhdx");
 
       expect(useMountStore.getState().isUnmounting).toBe(true);
 
@@ -414,7 +471,7 @@ describe("mountStore", () => {
       vi.mocked(invoke).mockRejectedValue(new Error("Unmount failed"));
 
       await expect(
-        useMountStore.getState().unmountDisk("/mnt/wsl/test")
+        useMountStore.getState().unmountDisk("D:\\test.vhdx")
       ).rejects.toThrow("Unmount failed");
 
       expect(useMountStore.getState().error).toBe("Unmount failed");

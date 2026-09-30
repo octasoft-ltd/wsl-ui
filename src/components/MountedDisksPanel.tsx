@@ -128,7 +128,7 @@ export function MountedDisksPanel({ isOpen, onClose, onMountNew, anchorRef }: Mo
               const isThisUnmounting = unmountingPath === disk.mountPoint;
               return (
                 <div
-                  key={disk.mountPoint}
+                  key={`${disk.path}:${disk.mountPoint}:${index}`}
                   data-testid={`mounted-disk-${index}`}
                   className="px-3 py-2 hover:bg-theme-bg-tertiary border-b border-theme-border-primary last:border-b-0"
                 >

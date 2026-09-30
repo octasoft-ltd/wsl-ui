@@ -18,9 +18,18 @@ describe("startup actions", () => {
     expect(actionsService.executeAction).not.toHaveBeenCalled();
   });
 
-  it("explains how to run password-requiring actions without silently failing", async () => {
-    await runStartupAction({ ...action, requiresSudo: true, showOutput: false }, "Ubuntu");
-    expect(actionsService.executeAction).not.toHaveBeenCalled();
+  it("attempts passwordless sudo actions without asking for a password", async () => {
+    vi.mocked(actionsService.executeAction).mockResolvedValue({ success: true, output: "done" });
+    await runStartupAction({ ...action, requiresSudo: true, showOutput: false }, "Ubuntu", "guid");
+    expect(actionsService.executeAction).toHaveBeenCalledWith("test", "Ubuntu", "guid");
+    expect(useNotificationStore.getState().notifications).toHaveLength(0);
+  });
+
+  it.each([false, true])("reports failed unattended sudo with original error and password guidance (showOutput=%s)", async (showOutput) => {
+    vi.mocked(actionsService.executeAction).mockResolvedValue({ success: false, output: "", error: "sudo: a password is required" });
+    await runStartupAction({ ...action, requiresSudo: true, showOutput }, "Ubuntu");
+    expect(actionsService.executeAction).toHaveBeenCalledWith("test", "Ubuntu", undefined);
+    expect(useNotificationStore.getState().notifications[0].message).toContain("sudo: a password is required");
     expect(useNotificationStore.getState().notifications[0].message).toContain("Quick Actions");
   });
 
