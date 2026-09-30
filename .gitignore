@@ -17,6 +17,7 @@ target/
 *.rs.bk
 Cargo.lock
 !src-tauri/Cargo.lock
+!crates/wsl-core/Cargo.lock
 
 # Tauri (keeping gen/schemas for IDE support)
 

@@ -2,8 +2,8 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { createAsyncAction } from './helpers';
 
 describe('createAsyncAction', () => {
-  let mockSet: ReturnType<typeof vi.fn>;
-  let mockGet: ReturnType<typeof vi.fn>;
+  let mockSet: ReturnType<typeof vi.fn<(partial: unknown) => void>>;
+  let mockGet: ReturnType<typeof vi.fn<() => Record<string, unknown>>>;
   let state: Record<string, unknown>;
 
   beforeEach(() => {
