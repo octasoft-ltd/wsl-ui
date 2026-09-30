@@ -488,7 +488,10 @@ export const config: Options.Testrunner = {
     // Take screenshot on failure
     if (!result.passed) {
       const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
-      const screenshotName = `${test.parent}-${test.title}-${timestamp}`.replace(/\s+/g, "_");
+      // Test titles can contain path separators (e.g. GB/TB) and other characters
+      // that Windows rejects in filenames. Keep the screenshot in this directory.
+      const screenshotName = `${test.parent}-${test.title}-${timestamp}`
+        .replace(/[<>:"/\\|?*\u0000-\u001f\s]+/g, "_");
       const screenshotDir = path.join(__dirname, "test-results", "screenshots");
 
       if (!fs.existsSync(screenshotDir)) {

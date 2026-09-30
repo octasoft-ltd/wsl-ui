@@ -736,6 +736,24 @@ export async function switchToQuickActionsPopup(): Promise<void> {
   await switchToWindowByTitle("WSL UI Popup");
 }
 
+/** Verify the persistent popup is natively hidden, not whether its retained DOM exists. */
+export async function waitForQuickActionsClosed(distroName: string, timeout = 3000): Promise<void> {
+  await switchToMainWindow();
+  const card = await $(selectors.distroCardByName(distroName));
+  const trigger = await card.$(selectors.quickActionsButton);
+  await browser.waitUntil(async () => {
+    const popup = await browser.executeAsync((done) => {
+      // @ts-expect-error - Tauri global API is enabled in the desktop app.
+      window.__TAURI__.window.Window.getByLabel("quick-actions-popup")
+        .then(async (popupWindow: { isVisible(): Promise<boolean> } | null) =>
+          done({ visible: popupWindow ? await popupWindow.isVisible() : false }))
+        .catch((error: unknown) => done({ error: String(error) }));
+    }) as { visible?: boolean; error?: string };
+    if (popup.error) throw new Error(popup.error);
+    return popup.visible === false && (await trigger.getAttribute("aria-expanded")) === "false";
+  }, { timeout, timeoutMsg: "Quick actions popup did not close" });
+}
+
 async function switchToWindowByTitle(expectedTitle: string): Promise<void> {
   const windowHandles = await browser.getWindowHandles();
   for (const windowHandle of windowHandles) {

@@ -16,8 +16,8 @@ import {
   clearMockErrors,
   selectors,
   mockDistributions,
-  switchToMainWindow,
-  switchToQuickActionsPopup,
+  focusMainWindow,
+  waitForQuickActionsClosed,
   captureDistroStates,
   verifyStatesUnchanged,
 } from "../utils";
@@ -138,19 +138,10 @@ describe("Export Distribution", () => {
       await expect(menu).toBeDisplayed();
 
       // Click outside
-      await switchToMainWindow();
+      await focusMainWindow();
       await $("main").click();
-      await switchToQuickActionsPopup();
 
-      // Wait for menu to close
-      await browser.waitUntil(
-        async () => !(await isElementDisplayed(selectors.quickActionsMenu)),
-        { timeout: 3000, timeoutMsg: "Menu did not close when clicking outside" }
-      );
-
-      // Menu should be closed
-      const menuVisible = await isElementDisplayed(selectors.quickActionsMenu);
-      expect(menuVisible).toBe(false);
+      await waitForQuickActionsClosed("Ubuntu");
     });
 
     it("should show all built-in actions including export", async () => {

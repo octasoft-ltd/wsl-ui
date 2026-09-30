@@ -266,8 +266,15 @@ export function QuickActionsPopup({ distro, actions, onAction }: QuickActionsPop
                 </span>
                 {t("manage.version")}
               </span>
-              <span className="text-xs px-2 py-0.5 rounded bg-theme-bg-tertiary text-theme-text-muted border border-theme-border-secondary">
-                v{distro.version}
+              <span className="ml-auto flex items-center gap-2">
+                <span className="text-xs px-2 py-0.5 rounded bg-theme-bg-tertiary text-theme-text-muted border border-theme-border-secondary">
+                  v{distro.version}
+                </span>
+                {distro.state === "Running" && (
+                  <span className="text-theme-status-warning" data-testid="requires-stop-indicator" title={t("customActions.requiresStop")}>
+                    <PauseIcon size="sm" />
+                  </span>
+                )}
               </span>
             </button>
           </div>

@@ -180,6 +180,7 @@ describe("Stop Before Action Pattern", () => {
       await cloneAction.click();
 
       // Wait for clone dialog to appear
+      await switchToMainWindow();
       await browser.waitUntil(
         async () => isElementDisplayed(selectors.cloneDialog),
         { timeout: 5000, timeoutMsg: "Clone dialog did not appear" }
@@ -268,6 +269,7 @@ describe("Stop Before Action Pattern", () => {
       await renameAction.click();
 
       // Wait for rename dialog to appear
+      await switchToMainWindow();
       await browser.waitUntil(
         async () => isElementDisplayed(selectors.renameDialog),
         { timeout: 5000, timeoutMsg: "Rename dialog did not appear" }

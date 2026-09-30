@@ -14,6 +14,7 @@ import {
   selectors,
   waitForDialog,
   waitForDialogToDisappear,
+  waitForQuickActionsClosed,
 } from "../utils";
 import { setupHooks, actions } from "../base";
 
@@ -310,27 +311,7 @@ describe("Keyboard Navigation", () => {
 
       await browser.keys("Escape");
 
-      // Wait for menu to close
-      await browser.waitUntil(
-        async () => {
-          const menuAfter = await $(keyboardSelectors.quickActionsMenu);
-          try {
-            return !(await menuAfter.isDisplayed());
-          } catch {
-            return true;
-          }
-        },
-        { timeout: 3000, timeoutMsg: "Quick actions menu did not close" }
-      );
-
-      const menuAfter = await $(keyboardSelectors.quickActionsMenu);
-      let isDisplayed = false;
-      try {
-        isDisplayed = await menuAfter.isDisplayed();
-      } catch {
-        isDisplayed = false;
-      }
-      expect(isDisplayed).toBe(false);
+      await waitForQuickActionsClosed(TEST_DISTRO);
     });
   });
 

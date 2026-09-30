@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import type { CustomAction } from "../types/actions";
 import type { Distribution } from "../types/distribution";
@@ -27,6 +27,18 @@ const testCustomAction: CustomAction = {
 };
 
 describe("QuickActionsPopup", () => {
+  it.each(["Running", "Stopped"] as const)("shows the version conversion stop requirement for state %s", (state) => {
+    render(<QuickActionsPopup actions={[]} distro={{ ...testDistribution, state }} onAction={vi.fn()} />);
+    fireEvent.click(screen.getByTestId("quick-action-manage"));
+    const action = within(screen.getByTestId("manage-action-set-version"));
+    if (state === "Running") {
+      expect(action.getByTestId("requires-stop-indicator")).toBeVisible();
+    } else {
+      expect(action.queryByTestId("requires-stop-indicator")).not.toBeInTheDocument();
+    }
+    expect(action.getByText("v2")).toBeVisible();
+  });
+
   it("offers explicit sparse commands without claiming the current disk state", () => {
     const onAction = vi.fn();
     render(<QuickActionsPopup actions={[]} distro={testDistribution} onAction={onAction} />);

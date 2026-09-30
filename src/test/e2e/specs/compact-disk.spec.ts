@@ -14,6 +14,7 @@ import {
   selectors,
   captureDistroStates,
   verifyStatesUnchanged,
+  switchToMainWindow,
 } from "../utils";
 import { setupHooks, actions } from "../base";
 
@@ -25,6 +26,7 @@ describe("Compact Disk", () => {
    * This ensures we have the actual compact dialog, not another dialog.
    */
   async function waitForCompactDialog(): Promise<WebdriverIO.Element> {
+    await switchToMainWindow();
     await browser.waitUntil(
       async () => {
         const dialog = await $(selectors.compactDialog);

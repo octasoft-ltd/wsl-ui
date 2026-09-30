@@ -14,6 +14,7 @@ import {
   waitForDialogToDisappear,
   captureDistroStates,
   verifyStatesUnchanged,
+  switchToMainWindow,
 } from "../utils";
 
 describe("Manage Quick Actions", () => {
@@ -31,6 +32,7 @@ describe("Manage Quick Actions", () => {
    * Helper to wait for a dialog to appear
    */
   async function waitForDialog(): Promise<WebdriverIO.Element> {
+    await switchToMainWindow();
     await browser.waitUntil(
       async () => {
         const dialog = await findOpenDialog();
@@ -60,6 +62,7 @@ describe("Manage Quick Actions", () => {
    * This clicks "Shutdown & Continue" to proceed to the actual dialog.
    */
   async function handleShutdownDialogIfPresent(): Promise<void> {
+    await switchToMainWindow();
     // Wait a moment for any dialog to appear
     try {
       await browser.waitUntil(
@@ -543,6 +546,7 @@ describe("Manage Quick Actions", () => {
       await sparseAction.click();
 
       // Wait for either error message or shutdown dialog to appear
+      await switchToMainWindow();
       await browser.waitUntil(
         async () => {
           // Check for error pre element
@@ -626,6 +630,7 @@ describe("Manage Quick Actions", () => {
       await setVersionAction.click();
 
       // Should show stop-and-action dialog
+      await switchToMainWindow();
       const stopDialog = await $(selectors.stopAndActionDialog);
       await browser.waitUntil(
         async () => stopDialog.isDisplayed(),

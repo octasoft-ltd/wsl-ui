@@ -10,7 +10,7 @@
  */
 
 import { setupHooks, actions, isElementDisplayed } from "../base";
-import { selectors, waitForDialogToDisappear } from "../utils";
+import { selectors, switchToMainWindow, waitForDialogToDisappear } from "../utils";
 
 describe("Rename Distribution", () => {
   setupHooks.standard();
@@ -34,6 +34,7 @@ describe("Rename Distribution", () => {
       const renameAction = await $(selectors.renameAction);
       await expect(renameAction).toBeDisplayed();
       await renameAction.click();
+      await switchToMainWindow();
 
       // Wait for stop and action dialog to appear
       await browser.waitUntil(
