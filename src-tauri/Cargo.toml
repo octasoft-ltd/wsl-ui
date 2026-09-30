@@ -26,7 +26,7 @@ chrono = "0.4"
 regex = "1"
 shell-escape = "0.1"
 configparser = "3"
-reqwest = { version = "0.12", features = ["stream", "blocking", "json"] }
+reqwest = { version = "0.13", features = ["stream", "blocking", "json"] }
 tokio = { version = "1", features = ["fs"] }
 futures-util = "0.3"
 sha2 = "0.10"
