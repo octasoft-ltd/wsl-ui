@@ -71,7 +71,7 @@
     "tailwindcss": "^4.1.18",
     "typescript": "^5.9.3",
     "vite": "^7.3.6",
-    "vitest": "^4.1.11",
+    "vitest": "^5.0.2",
     "wdio-video-reporter": "^6.2.0"
   }
 }
