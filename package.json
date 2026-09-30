@@ -40,7 +40,7 @@
     "i18next-browser-languagedetector": "^8.2.1",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
-    "react-i18next": "^16.5.4",
+    "react-i18next": "^17.0.15",
     "zustand": "^5.0.0"
   },
   "overrides": {
