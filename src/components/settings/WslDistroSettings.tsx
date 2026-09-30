@@ -4,7 +4,7 @@
  * Settings that apply to individual WSL distributions (wsl.conf).
  */
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { open } from "@tauri-apps/plugin-shell";
 import { wslService } from "../../services/wslService";
@@ -30,6 +30,7 @@ export function WslDistroSettings() {
   const [toolkitStatus, setToolkitStatus] = useState<NvidiaContainerToolkitStatus | null>(null);
   const [toolkitChecking, setToolkitChecking] = useState(false);
   const [toolkitError, setToolkitError] = useState<string | null>(null);
+  const selectionGeneration = useRef(0);
   const selectedDistroInfo = distributions.find(d => d.name === selectedDistro);
   const canStartSelectedDistro = selectedDistroInfo?.state === "Stopped"
     || selectedDistroInfo?.state === "Unknown";
@@ -41,6 +42,11 @@ export function WslDistroSettings() {
   }, [distributions, selectedDistro]);
 
   useEffect(() => {
+    selectionGeneration.current += 1;
+    setGpuChecking(false);
+    setToolkitChecking(false);
+    setIsLoading(false);
+    setIsSaving(false);
     if (selectedDistro) {
       setGpuStatus(null);
       setGpuError(null);
@@ -55,15 +61,18 @@ export function WslDistroSettings() {
         setError(null);
       }
     }
+    return () => { selectionGeneration.current += 1; };
   }, [selectedDistro, selectedDistroInfo?.state]);
 
   const checkGpuStatus = async () => {
     if (!selectedDistro) return;
+    const generation = selectionGeneration.current;
     setGpuChecking(true);
     setGpuError(null);
     try {
       const distro = distributions.find(d => d.name === selectedDistro);
       const status = await wslService.getDistroGpuStatus(selectedDistro, distro?.id);
+      if (generation !== selectionGeneration.current) return;
       setGpuStatus(status);
       setGpuError(null);
       // Auto-check toolkit status when NVIDIA is available
@@ -71,32 +80,37 @@ export function WslDistroSettings() {
         checkToolkitStatus(distro?.id);
       }
     } catch (err) {
+      if (generation !== selectionGeneration.current) return;
       const message = err instanceof Error ? err.message : t('wslDistro.gpuCheckError');
       logger.error("Failed to check GPU status:", "WslDistroSettings", err);
       setGpuError(message);
       setGpuStatus(null);
     } finally {
-      setGpuChecking(false);
+      if (generation === selectionGeneration.current) setGpuChecking(false);
     }
   };
 
   const checkToolkitStatus = async (id?: string) => {
     if (!selectedDistro) return;
+    const generation = selectionGeneration.current;
     setToolkitChecking(true);
     setToolkitError(null);
     try {
       const status = await wslService.checkNvidiaContainerToolkit(selectedDistro, id);
+      if (generation !== selectionGeneration.current) return;
       setToolkitStatus(status);
     } catch (err) {
+      if (generation !== selectionGeneration.current) return;
       const message = err instanceof Error ? err.message : t('wslDistro.toolkitCheckError');
       logger.error("Failed to check toolkit status:", "WslDistroSettings", err);
       setToolkitError(message);
     } finally {
-      setToolkitChecking(false);
+      if (generation === selectionGeneration.current) setToolkitChecking(false);
     }
   };
 
   const loadConfig = async (distroName: string) => {
+    const generation = selectionGeneration.current;
     setIsLoading(true);
     setHasChanges(false);
     setError(null);
@@ -104,14 +118,16 @@ export function WslDistroSettings() {
       // Find the distribution to get its id for more reliable identification
       const distro = distributions.find(d => d.name === distroName);
       const loaded = await wslService.getWslConf(distroName, distro?.id);
+      if (generation !== selectionGeneration.current) return;
       setConfig(loaded);
     } catch (err) {
+      if (generation !== selectionGeneration.current) return;
       const message = err instanceof Error ? err.message : t('wslDistro.loadError');
       logger.error("Failed to load wsl.conf:", "WslDistroSettings", err);
       setError(message);
       setConfig(DEFAULT_WSL_CONF);
     } finally {
-      setIsLoading(false);
+      if (generation === selectionGeneration.current) setIsLoading(false);
     }
   };
 
@@ -123,17 +139,20 @@ export function WslDistroSettings() {
 
   const handleSave = async () => {
     if (!selectedDistro) return;
+    const generation = selectionGeneration.current;
     setIsSaving(true);
     setError(null);
     try {
       await wslService.saveWslConf(selectedDistro, config);
+      if (generation !== selectionGeneration.current) return;
       setHasChanges(false);
     } catch (err) {
+      if (generation !== selectionGeneration.current) return;
       const message = err instanceof Error ? err.message : t('wslDistro.saveError');
       logger.error("Failed to save wsl.conf:", "WslDistroSettings", err);
       setError(message);
     } finally {
-      setIsSaving(false);
+      if (generation === selectionGeneration.current) setIsSaving(false);
     }
   };
 

@@ -1,6 +1,15 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { useDistroStore } from "./distroStore";
+import { useMountStore } from "./mountStore";
 import type { Distribution } from "../types/distribution";
+import { actionsService } from "../services/actionsService";
+import { DEFAULT_CUSTOM_ACTION } from "../types/actions";
+
+vi.mock("../services/actionsService", () => ({ actionsService: {
+  getStartupActionsForDistro: vi.fn().mockResolvedValue([]),
+  executeAction: vi.fn(),
+  runActionInTerminal: vi.fn(),
+} }));
 
 // Mock the wslService
 vi.mock("../services/wslService", () => ({
@@ -10,6 +19,7 @@ vi.mock("../services/wslService", () => ({
     stopDistribution: vi.fn(),
     deleteDistribution: vi.fn(),
     shutdownAll: vi.fn(),
+    forceKillWsl: vi.fn(),
     setDefaultDistribution: vi.fn(),
     openTerminal: vi.fn(),
     openFileExplorer: vi.fn(),
@@ -41,6 +51,8 @@ vi.mock("./notificationStore", () => ({
 
 // Mock the logger
 vi.mock("../utils/logger", () => ({
+  info: vi.fn(),
+  warn: vi.fn(),
   logger: {
     debug: vi.fn(),
     info: vi.fn(),
@@ -69,6 +81,20 @@ describe("distroStore", () => {
       actionInProgress: null,
     });
     vi.clearAllMocks();
+    vi.mocked(actionsService.getStartupActionsForDistro).mockResolvedValue([]);
+  });
+
+  it.each(["startDistro", "restartDistro"] as const)("%s routes startup terminal actions correctly", async (operation) => {
+    vi.mocked(wslService.startDistribution).mockResolvedValue(undefined);
+    vi.mocked(wslService.restartDistribution).mockResolvedValue(undefined);
+    vi.mocked(wslService.listDistributions).mockResolvedValue([]);
+    vi.mocked(actionsService.getStartupActionsForDistro).mockResolvedValue([
+      { ...DEFAULT_CUSTOM_ACTION, id: "terminal", runOnStartup: true, runInTerminal: true },
+    ]);
+    await useDistroStore.getState()[operation]("Ubuntu", "guid");
+    expect(actionsService.runActionInTerminal).toHaveBeenCalledWith("terminal", "Ubuntu", "guid");
+    expect(actionsService.executeAction).not.toHaveBeenCalled();
+    expect(useDistroStore.getState().error).toBeNull();
   });
 
   describe("initial state", () => {
@@ -537,6 +563,28 @@ describe("distroStore", () => {
   });
 
   describe("shutdownAll", () => {
+    it.each(["shutdownAll", "forceKillWsl"] as const)("clears disk attachments after successful %s", async (action) => {
+      vi.useFakeTimers();
+      try {
+        useMountStore.setState({ trackedMounts: [{ diskPath: "D:\\data.vhdx", mountPoint: null, isVhd: true, filesystem: null, mountedAt: 0 }] });
+        vi.mocked(wslService[action]).mockResolvedValue(undefined);
+        vi.mocked(wslService.listDistributions).mockResolvedValue([]);
+        const promise = useDistroStore.getState()[action]();
+        await vi.advanceTimersByTimeAsync(2000);
+        await promise;
+        expect(useMountStore.getState().trackedMounts).toEqual([]);
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+
+    it.each(["shutdownAll", "forceKillWsl"] as const)("preserves disk attachments if %s fails", async (action) => {
+      useMountStore.setState({ trackedMounts: [{ diskPath: "D:\\data.vhdx", mountPoint: null, isVhd: true, filesystem: null, mountedAt: 0 }] });
+      vi.mocked(wslService[action]).mockRejectedValue(new Error("Shutdown failed"));
+      await useDistroStore.getState()[action]();
+      expect(useMountStore.getState().trackedMounts).toHaveLength(1);
+    });
+
     it("calls wslService.shutdownAll", async () => {
       vi.mocked(wslService.shutdownAll).mockResolvedValue(undefined);
       vi.mocked(wslService.listDistributions).mockResolvedValue([]);
@@ -1472,6 +1520,7 @@ describe("distroStore", () => {
 
       expect(result.success).toBe(false);
       expect(result.error).toContain("Connection failed");
+      expect(useDistroStore.getState().error).toContain("Connection failed");
     });
 
     it("clears actionInProgress after completion", async () => {

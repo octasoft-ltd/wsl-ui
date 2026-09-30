@@ -134,6 +134,7 @@ export interface LxcDistributionRelease {
  * Cached catalog data
  */
 export interface LxcCatalogCache {
+  settingsKey?: string;
   /** When the cache was last updated */
   lastUpdated: string;
   /** Cache expiry timestamp */

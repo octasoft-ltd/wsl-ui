@@ -359,14 +359,143 @@ pub fn get_download_url(distro_id: &str) -> Option<String> {
         .map(|d| d.url.clone())
 }
 
-/// Get checksum for a distro by ID
-pub fn get_download_checksum(distro_id: &str) -> Option<String> {
-    let catalog = load_catalog();
-    catalog
+const MAX_CHECKSUM_BYTES: usize = 1024 * 1024;
+
+/// Publisher metadata is bound to the embedded URL, never an editable URL.
+fn checksum_source(distro_id: &str, download_url: &str) -> Result<Option<String>, String> {
+    let Some(default) = get_default_catalog()
         .download_distros
-        .iter()
-        .find(|d| d.id == distro_id && d.enabled)
-        .and_then(|d| d.sha256.clone())
+        .into_iter()
+        .find(|d| d.id == distro_id)
+    else {
+        return Ok(None);
+    };
+    if download_url != default.url {
+        return Err(
+            "A modified built-in download URL requires an explicit SHA-256 checksum".into(),
+        );
+    }
+    let basename = match distro_id {
+        "Ubuntu-24.04" => "SHA256SUMS",
+        "VoidLinux" => "sha256sum.txt",
+        "ArchLinux" => "sha256sums.txt",
+        "Alpine" | "NixOS" => return Ok(Some(format!("{}.sha256", default.url))),
+        _ => {
+            return Err(format!(
+                "No publisher checksum source configured for '{distro_id}'"
+            ))
+        }
+    };
+    let (directory, _) = default
+        .url
+        .rsplit_once('/')
+        .ok_or("Invalid built-in download URL")?;
+    Ok(Some(format!("{directory}/{basename}")))
+}
+
+fn valid_sha256(hash: &str) -> bool {
+    hash.len() == 64 && hash.bytes().all(|b| b.is_ascii_hexdigit())
+}
+
+/// Accept GNU sha256sum and BSD SHA256 output, requiring an exact filename.
+fn parse_checksum_manifest(manifest: &str, filename: &str) -> Result<String, String> {
+    let mut selected: Option<String> = None;
+    for line in manifest.lines() {
+        let line = line.trim();
+        let entry = if let Some(bsd) = line.strip_prefix("SHA256 (") {
+            bsd.rsplit_once(") = ").map(|(name, hash)| (hash, name))
+        } else {
+            line.split_once(char::is_whitespace).map(|(hash, name)| {
+                (
+                    hash,
+                    name.trim_start()
+                        .strip_prefix('*')
+                        .unwrap_or(name.trim_start()),
+                )
+            })
+        };
+        let Some((hash, name)) = entry else { continue };
+        if name != filename {
+            continue;
+        }
+        if !valid_sha256(hash) {
+            return Err(format!(
+                "Invalid publisher SHA-256 checksum for '{filename}'"
+            ));
+        }
+        let hash = hash.to_ascii_lowercase();
+        if selected.as_ref().is_some_and(|previous| previous != &hash) {
+            return Err(format!("Conflicting publisher checksums for '{filename}'"));
+        }
+        selected = Some(hash);
+    }
+    selected.ok_or_else(|| format!("Publisher checksum file has no SHA-256 entry for '{filename}'"))
+}
+
+async fn fetch_publisher_checksum(
+    client: &reqwest::Client,
+    source: &str,
+    filename: &str,
+) -> Result<String, String> {
+    use futures_util::StreamExt;
+    let response = client
+        .get(source)
+        .send()
+        .await
+        .map_err(|e| format!("Failed to fetch publisher checksum: {e}"))?
+        .error_for_status()
+        .map_err(|e| format!("Failed to fetch publisher checksum: {e}"))?;
+    if response
+        .content_length()
+        .is_some_and(|length| length > MAX_CHECKSUM_BYTES as u64)
+    {
+        return Err("Publisher checksum file exceeds size limit".into());
+    }
+    let mut bytes = Vec::new();
+    let mut stream = response.bytes_stream();
+    while let Some(chunk) = stream.next().await {
+        let chunk = chunk.map_err(|e| format!("Failed to read publisher checksum: {e}"))?;
+        if chunk.len() > MAX_CHECKSUM_BYTES - bytes.len() {
+            return Err("Publisher checksum file exceeds size limit".into());
+        }
+        bytes.extend_from_slice(&chunk);
+    }
+    let manifest =
+        std::str::from_utf8(&bytes).map_err(|_| "Publisher checksum file is not UTF-8")?;
+    parse_checksum_manifest(manifest, filename)
+}
+
+/// Resolve moving publisher metadata before downloading; built-ins fail closed.
+pub async fn resolve_download_checksum(
+    distro_id: &str,
+    download_url: &str,
+) -> Result<Option<String>, String> {
+    let distro = load_catalog()
+        .download_distros
+        .into_iter()
+        .find(|d| d.id == distro_id && d.enabled && d.url == download_url)
+        .ok_or("Download catalog entry changed; retry the download")?;
+    if let Some(hash) = distro.sha256 {
+        if !valid_sha256(&hash) {
+            return Err("Invalid configured SHA-256 checksum".into());
+        }
+        return Ok(Some(hash.to_ascii_lowercase()));
+    }
+    let Some(source) = checksum_source(distro_id, download_url)? else {
+        return Ok(None);
+    };
+    let filename = download_url
+        .rsplit('/')
+        .next()
+        .ok_or("Invalid download filename")?;
+    let client = reqwest::Client::builder()
+        .https_only(true)
+        .timeout(std::time::Duration::from_secs(30))
+        .build()
+        .map_err(|e| format!("Failed to create checksum client: {e}"))?;
+    fetch_publisher_checksum(&client, &source, filename)
+        .await
+        .map(Some)
 }
 
 /// Get list of enabled download distro IDs
@@ -398,8 +527,106 @@ mod tests {
         assert!(url.is_some());
         assert!(url.unwrap().contains("ubuntu"));
     }
+
+    #[test]
+    fn builtin_checksums_cover_each_default_and_exact_filename() {
+        for distro in get_default_catalog().download_distros {
+            assert!(
+                checksum_source(&distro.id, &distro.url).unwrap().is_some(),
+                "{}",
+                distro.id
+            );
+            assert!(checksum_source(&distro.id, "https://example.com/custom.tar").is_err());
+        }
+        assert!(checksum_source("custom", "https://example.com/custom.tar")
+            .unwrap()
+            .is_none());
+        let fixtures = [
+            ("bb415d824822c4b878125729af451a5d18fb13d1cf5cbed9a7393ad64ac6039e *noble-wsl-amd64.wsl", "noble-wsl-amd64.wsl"),
+            ("55ea3e5a7c2c35e6268c5dcbb8e45a9cd5b0e372e7b4e798499a526834f7ed90  alpine-minirootfs-3.21.0-x86_64.tar.gz", "alpine-minirootfs-3.21.0-x86_64.tar.gz"),
+            ("576f2dda94b0dde278cd9ebbdf04b53bd9c174fba5dd4e98bd9af227dd97fc24  nixos-wsl.tar.gz", "nixos-wsl.tar.gz"),
+            ("SHA256 (void-x86_64-ROOTFS-20250202.tar.xz) = 3f48e6673ac5907a897d913c97eb96edbfb230162731b4016562c51b3b8f1876", "void-x86_64-ROOTFS-20250202.tar.xz"),
+            ("895661bdf6c64e91b7725874165fd05dd30c438d3ffec661671ab5cfb261ca58  archlinux-bootstrap-x86_64.tar.zst", "archlinux-bootstrap-x86_64.tar.zst"),
+        ];
+        for (manifest, filename) in fixtures {
+            assert_eq!(
+                parse_checksum_manifest(manifest, filename).unwrap().len(),
+                64
+            );
+            assert!(parse_checksum_manifest(manifest, &format!("{filename}.sig")).is_err());
+        }
+    }
+
+    #[test]
+    fn checksum_manifest_rejects_missing_malformed_and_conflicting_entries() {
+        let hash = "a".repeat(64);
+        assert!(parse_checksum_manifest("invalid  archive.tar", "archive.tar").is_err());
+        assert!(
+            parse_checksum_manifest(&format!("{hash}  archive.tar.old"), "archive.tar").is_err()
+        );
+        assert!(parse_checksum_manifest(
+            &format!("{hash}  archive.tar\n{}  archive.tar", "b".repeat(64)),
+            "archive.tar"
+        )
+        .is_err());
+        assert_eq!(
+            parse_checksum_manifest(
+                &format!("{hash}  archive.tar\r\n{hash} *archive.tar"),
+                "archive.tar"
+            )
+            .unwrap(),
+            hash
+        );
+    }
+
+    #[tokio::test]
+    async fn publisher_checksum_fetch_fails_closed_on_http_missing_and_oversized_metadata() {
+        use wiremock::matchers::path;
+        use wiremock::{Mock, MockServer, ResponseTemplate};
+        let server = MockServer::start().await;
+        let hash = "c".repeat(64);
+        let fixtures = [
+            (
+                "/valid",
+                ResponseTemplate::new(200).set_body_string(format!("{hash}  archive.tar")),
+                true,
+            ),
+            (
+                "/missing",
+                ResponseTemplate::new(200).set_body_string(format!("{hash}  other.tar")),
+                false,
+            ),
+            ("/error", ResponseTemplate::new(404), false),
+            (
+                "/large",
+                ResponseTemplate::new(200).set_body_bytes(vec![b'a'; MAX_CHECKSUM_BYTES + 1]),
+                false,
+            ),
+        ];
+        let client = reqwest::Client::new();
+        for (route, response, succeeds) in fixtures {
+            Mock::given(path(route))
+                .respond_with(response)
+                .mount(&server)
+                .await;
+            let result = fetch_publisher_checksum(
+                &client,
+                &format!("{}{route}", server.uri()),
+                "archive.tar",
+            )
+            .await;
+            assert_eq!(result.is_ok(), succeeds, "{route}: {result:?}");
+            if succeeds {
+                assert_eq!(result.unwrap(), hash);
+            }
+        }
+        let https_client = reqwest::Client::builder().https_only(true).build().unwrap();
+        assert!(fetch_publisher_checksum(
+            &https_client,
+            &format!("{}/valid", server.uri()),
+            "archive.tar"
+        )
+        .await
+        .is_err());
+    }
 }
-
-
-
-

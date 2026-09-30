@@ -1,9 +1,9 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { wslService } from "../../services/wslService";
 import { useDistroStore } from "../../store/distroStore";
 import type { Distribution } from "../../types/distribution";
-import { DEFAULT_WSL_CONF } from "../../types/settings";
+import { DEFAULT_WSL_CONF, type GpuStatus } from "../../types/settings";
 import { WslDistroSettings } from "./WslDistroSettings";
 
 vi.mock("../../services/wslService", () => ({
@@ -80,5 +80,22 @@ describe("WslDistroSettings", () => {
     render(<WslDistroSettings />);
 
     expect(await screen.findByRole("button", { name: "Start and load settings" })).toBeEnabled();
+  });
+
+  it("ignores a GPU response after switching distributions", async () => {
+    vi.mocked(useDistroStore).mockReturnValue({
+      distributions: [
+        { ...stoppedDistro, name: "First", state: "Running" },
+        { ...stoppedDistro, name: "Second", state: "Running" },
+      ], startDistro, actionInProgress: null,
+    } as ReturnType<typeof useDistroStore>);
+    let resolve!: (value: GpuStatus) => void;
+    vi.mocked(wslService.getDistroGpuStatus).mockReturnValueOnce(new Promise(r => { resolve = r; }));
+    render(<WslDistroSettings />);
+    fireEvent.click(await screen.findByRole("button", { name: /check gpu/i }));
+    fireEvent.change(screen.getByTestId("distro-settings-selector"), { target: { value: "Second" } });
+    await act(async () => resolve({ nvidiaAvailable: true } as GpuStatus));
+    expect(wslService.checkNvidiaContainerToolkit).not.toHaveBeenCalled();
+    expect(screen.getByRole("button", { name: /check gpu/i })).toBeEnabled();
   });
 });

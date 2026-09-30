@@ -28,6 +28,8 @@
   },
   "loading": "Loading available distributions...",
   "empty": "No distributions available",
+  "catalogLoadFailed": "Could not load the distribution catalog",
+  "catalogRetryHint": "Check your network connection and enabled distribution sources, then retry. You can also run wsl --list --online in PowerShell to check the WSL catalog.",
   "install": "Install",
   "useUrl": "Use URL",
   "useImage": "Use Image",

@@ -77,9 +77,9 @@ fn parse_distro_line(line: &str) -> Option<Distribution> {
     })
 }
 
-/// Decode WSL command output which is often UTF-16 LE on Windows.
+/// Decode WSL output, preferring UTF-8 requested by WSL_UTF8=1.
 ///
-/// `wsl.exe` emits UTF-16 LE. On English locales the payload is ASCII, so the
+/// Older WSL versions can still emit UTF-16 LE. On English locales the payload is ASCII, so the
 /// high byte of each code unit is NUL; on non-English locales (e.g. zh-CN) the
 /// localized text contains CJK characters whose high bytes are non-NUL. We must
 /// detect and decode both cases — see OCT-1066 / GitHub #99, where localized
@@ -97,6 +97,14 @@ pub fn decode_wsl_output(bytes: &[u8]) -> String {
     // Honor an explicit UTF-8 BOM (0xEF 0xBB 0xBF).
     if bytes.len() >= 3 && bytes[0] == 0xEF && bytes[1] == 0xBB && bytes[2] == 0xBF {
         return String::from_utf8_lossy(&bytes[3..]).to_string();
+    }
+
+    // Current WSL emits UTF-8. NUL-containing output still needs the legacy check,
+    // because ASCII UTF-16 LE is also valid UTF-8 at the byte level.
+    if !bytes.contains(&0) {
+        if let Ok(text) = std::str::from_utf8(bytes) {
+            return text.to_string();
+        }
     }
 
     if looks_like_utf16le(bytes) {

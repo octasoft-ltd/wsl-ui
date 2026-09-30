@@ -18,6 +18,8 @@
     "user": "Set Default User...",
     "rename": "Rename...",
     "sparse": "Sparse Mode",
+    "sparseEnable": "Enable sparse mode",
+    "sparseDisable": "Disable sparse mode",
     "version": "Set WSL Version"
   },
   "customActions": {

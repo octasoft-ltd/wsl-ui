@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { useDistroStore } from "../store/distroStore";
 import { useResourceStore } from "../store/resourceStore";
 import { useSettingsStore } from "../store/settingsStore";
-import { useMountStore } from "../store/mountStore";
+import { getDiskMountEntries, useMountStore } from "../store/mountStore";
 import { useHealthStore } from "../store/healthStore";
 import { usePollingStore } from "../store/pollingStore";
 import { useNotificationStore } from "../store/notificationStore";
@@ -48,7 +48,8 @@ export function StatusBar() {
   const { distributions, actionInProgress, isLoading, setActionInProgress } = useDistroStore();
   const { stats: resourceStats } = useResourceStore();
   const { settings } = useSettingsStore();
-  const { mountedDisks, loadMountedDisks, openMountDialog } = useMountStore();
+  const { mountedDisks, trackedMounts, loadMountedDisks, openMountDialog } = useMountStore();
+  const diskCount = getDiskMountEntries(mountedDisks, trackedMounts).length;
   const { health, versionInfo, fetchVersion } = useHealthStore();
   const { hasBackoff, getBackoffMessage } = usePollingStore();
   const { addNotification } = useNotificationStore();
@@ -220,16 +221,16 @@ export function StatusBar() {
               onClick={() => setShowMountPanel(!showMountPanel)}
               data-testid="disk-mounts-button"
               className="flex items-center gap-2 px-2 py-1 rounded hover:bg-theme-bg-tertiary transition-colors group"
-              title={mountedDisks.length > 0 ? t('diskMounts.count', { count: mountedDisks.length }) : t('diskMounts.empty')}
+              title={diskCount > 0 ? t('diskMounts.count', { count: diskCount }) : t('diskMounts.empty')}
             >
               <svg className="w-3.5 h-3.5 text-theme-text-muted group-hover:text-theme-accent-primary transition-colors" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <circle cx="12" cy="12" r="10" />
                 <circle cx="12" cy="12" r="3" />
               </svg>
               <span className="data-label group-hover:text-theme-text-secondary">{t('disk')}</span>
-              {mountedDisks.length > 0 && (
+              {diskCount > 0 && (
                 <span className="data-value text-[10px] text-theme-accent-primary">
-                  {mountedDisks.length}
+                  {diskCount}
                 </span>
               )}
             </button>

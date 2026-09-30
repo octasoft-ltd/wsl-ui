@@ -329,7 +329,15 @@ fn main() {
                             show_main_window(app);
                         }
                         "shutdown_all" => {
-                            let _ = WslService::shutdown_all();
+                            let app_handle = app.clone();
+                            tauri::async_runtime::spawn(async move {
+                                match tokio::task::spawn_blocking(WslService::shutdown_all).await {
+                                    Ok(Ok(())) => {
+                                        let _ = app_handle.emit("distro-state-changed", serde_json::json!({ "shutdown": true }));
+                                    }
+                                    result => log::error!("Tray shutdown failed: {:?}", result),
+                                }
+                            });
                         }
                         "quit" => {
                             app.exit(0);

@@ -41,9 +41,11 @@ fn init_executors() {
     if crate::utils::is_mock_mode() {
         log::info!("Initializing mock executors");
 
-        // Create WSL mock executor
-        let wsl_mock = Arc::new(MockWslExecutor::new());
-        MOCK_WSL_EXECUTOR.get_or_init(|| wsl_mock.clone());
+        // Every consumer must use the same winning instance, even when several
+        // startup commands initialize the executors concurrently.
+        let wsl_mock = MOCK_WSL_EXECUTOR
+            .get_or_init(|| Arc::new(MockWslExecutor::new()))
+            .clone();
         WSL_EXECUTOR.get_or_init(|| wsl_mock.clone() as Arc<dyn WslCommandExecutor>);
 
         // Create terminal mock executor
@@ -179,11 +181,11 @@ pub fn supports_distribution_id() -> bool {
 /// Returns true if WSL version >= 2.4.4.
 fn probe_distribution_id_support() -> bool {
     use crate::settings::get_executable_paths;
-    use crate::utils::hidden_command;
+    use crate::utils::wsl_command;
     use std::process::Stdio;
 
     let paths = get_executable_paths();
-    let output = hidden_command(&paths.wsl)
+    let output = wsl_command(&paths.wsl)
         .args(["--version"])
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())

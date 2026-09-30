@@ -4,6 +4,7 @@
 //! and cloning distributions.
 
 use super::executor::{resource_monitor, wsl_executor};
+use super::executor::wsl_command::{CommandOutput, WslCommandExecutor};
 use super::types::WslError;
 use crate::metadata::{self, DistroMetadata};
 use crate::temp_file_guard::TempFileGuard;
@@ -100,6 +101,25 @@ pub fn import_distribution_with_version(
     Ok(())
 }
 
+fn import_cloned_distribution(
+    executor: &dyn WslCommandExecutor,
+    source: &str,
+    new_name: &str,
+    location: &str,
+    archive: &str,
+) -> Result<CommandOutput, WslError> {
+    let listed = executor.list_verbose()?;
+    if !listed.success {
+        return Err(WslError::CommandFailed(extract_error_message(&listed, "Failed to determine source WSL version")));
+    }
+    let version = wsl_core::parse_wsl_list_output(&listed.stdout)
+        .into_iter()
+        .find(|distro| distro.name.eq_ignore_ascii_case(source))
+        .ok_or_else(|| WslError::DistroNotFound(source.to_string()))?
+        .version;
+    executor.import(new_name, location, archive, Some(version))
+}
+
 /// Clone a distribution (export + import with new name)
 ///
 /// If `install_location` is None, uses the default from settings.
@@ -119,7 +139,7 @@ pub fn clone_distribution(source: &str, new_name: &str, install_location: Option
         }
 
         // Mock import (adds to mock state)
-        let import_output = wsl_executor().import(new_name, "/tmp/mock-location", "/tmp/mock-clone.tar", Some(2))?;
+        let import_output = import_cloned_distribution(wsl_executor(), source, new_name, "/tmp/mock-location", "/tmp/mock-clone.tar")?;
         if !import_output.success {
             return Err(WslError::CommandFailed(import_output.stderr));
         }
@@ -146,8 +166,15 @@ pub fn clone_distribution(source: &str, new_name: &str, install_location: Option
         _ => get_default_distro_path(new_name),
     };
 
-    // Import with new name (install dir is created inside import_distribution)
-    let result = import_distribution(new_name, &final_location, &temp_path);
+    ensure_install_location_exists(&final_location)?;
+    let result = import_cloned_distribution(wsl_executor(), source, new_name, &final_location, &temp_path)
+        .and_then(|output| {
+            if output.success {
+                Ok(())
+            } else {
+                Err(WslError::CommandFailed(extract_error_message(&output, "Import failed with no error message")))
+            }
+        });
 
     // Only create metadata if import succeeded
     if result.is_ok() {
@@ -174,7 +201,6 @@ pub fn clone_distribution(source: &str, new_name: &str, install_location: Option
 
 /// Helper to extract error message from WSL command output
 /// WSL often writes errors to stdout instead of stderr
-#[cfg(test)]
 fn extract_error_message(output: &super::executor::wsl_command::CommandOutput, default_msg: &str) -> String {
     if !output.stderr.trim().is_empty() {
         output.stderr.clone()
@@ -189,6 +215,26 @@ fn extract_error_message(output: &super::executor::wsl_command::CommandOutput, d
 mod tests {
     use super::*;
     use crate::wsl::executor::wsl_command::CommandOutput;
+
+    #[test]
+    fn test_clone_import_preserves_source_wsl_version() {
+        use crate::wsl::executor::wsl_command::MockWslExecutor;
+        for version in [1, 2] {
+            let executor = MockWslExecutor::new();
+            executor.set_version("Ubuntu", version).unwrap();
+            let output = import_cloned_distribution(&executor, "ubuntu", "Cloned", "/mock/location", "/mock/archive.tar").unwrap();
+            assert!(output.success);
+            let distributions = wsl_core::parse_wsl_list_output(&executor.list_verbose().unwrap().stdout);
+            assert_eq!(distributions.iter().find(|distro| distro.name == "Cloned").unwrap().version, version);
+        }
+    }
+
+    #[test]
+    fn test_clone_import_rejects_missing_source_before_creating_clone() {
+        let executor = crate::wsl::executor::wsl_command::MockWslExecutor::new();
+        assert!(import_cloned_distribution(&executor, "Missing", "Cloned", "/mock/location", "/mock/archive.tar").is_err());
+        assert!(!executor.distro_exists("Cloned"));
+    }
 
     #[test]
     fn test_extract_error_message_prefers_stderr() {

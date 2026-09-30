@@ -239,6 +239,7 @@ export async function executeAndWaitForComplete(
  * Waits for both DOM and store state to be ready - no arbitrary pauses.
  */
 export async function waitForAppReady(): Promise<void> {
+  await waitForSettingsSaved();
   // Wait for the main container to be visible
   await browser.waitUntil(
     async () => {
@@ -276,7 +277,7 @@ export async function waitForAppReady(): Promise<void> {
       async () => {
         // Check for either distro cards or the "no distributions" message
         const cards = await $$('[data-testid^="distro-card"]');
-        if (cards.length > 0) return true;
+        if ((await cards.length) > 0) return true;
         // Also accept if header is visible (app is loaded even if no distros)
         const header = await $("header");
         return header.isDisplayed();
@@ -290,24 +291,32 @@ export async function waitForAppReady(): Promise<void> {
   }
 }
 
-/**
- * Reset mock state to defaults via Tauri command
- * This should be called BEFORE page refresh to ensure clean state between tests.
- * The page refresh will then fetch fresh data from the reset mock.
- */
+/** Wait until settings are loaded and any asynchronous save has completed. */
+export async function waitForSettingsSaved(): Promise<void> {
+  await browser.waitUntil(async () => browser.execute(() => {
+    // @ts-expect-error - Store is exposed for e2e testing
+    const state = window.__settingsStore?.getState();
+    if (state?.error) throw new Error(state.error);
+    return !!state?.hasLoaded && !state.isLoading && !state.isSaving;
+  }), { timeout: 10000, timeoutMsg: "Settings did not finish loading/saving" });
+}
+
+/** Reset mock data before refreshing, and finish fixture saves before reloading. */
 export async function resetMockState(): Promise<void> {
   // Execute the reset command via the app's JavaScript context
   // Use executeAsync to properly wait for the Tauri IPC call to complete
-  await browser.executeAsync((done) => {
+  const resetError = await browser.executeAsync((done: (error: string | null) => void) => {
     // @ts-expect-error - Tauri API is available in the window
     window.__TAURI__.core.invoke("reset_mock_state_cmd")
-      .then(() => done())
-      .catch((err: Error) => done(err));
+      .then(() => done(null))
+      .catch((err: unknown) => done(String(err)));
   });
+  if (resetError) throw new Error(`Failed to reset mock state: ${resetError}`);
+  await waitForSettingsSaved();
 
   // Clear frontend state that should be reset between tests
   // Note: distros will be refreshed naturally when page reloads
-  await browser.execute(() => {
+  await browser.execute(async () => {
     // Clear notification store
     // @ts-expect-error - Store is exposed for e2e testing
     if (window.__notificationStore) {
@@ -329,10 +338,14 @@ export async function resetMockState(): Promise<void> {
     if (window.__settingsStore) {
       // @ts-expect-error - Store is exposed for e2e testing
       const settingsStore = window.__settingsStore.getState();
-      if (settingsStore.updateSetting) {
-        settingsStore.updateSetting("telemetryPromptSeen", true);
-        settingsStore.updateSetting("reviewPromptState", "declined");
-      }
+      await settingsStore.saveSettings({
+        ...settingsStore.settings,
+        telemetryPromptSeen: true,
+        reviewPromptState: "declined",
+      });
+      // @ts-expect-error - Store is exposed for e2e testing
+      const error = window.__settingsStore.getState().error;
+      if (error) throw new Error(error);
     }
   });
 }

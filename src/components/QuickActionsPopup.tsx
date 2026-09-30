@@ -233,16 +233,17 @@ export function QuickActionsPopup({ distro, actions, onAction }: QuickActionsPop
                 </span>
               )}
             </button>
-            {distro.version === 2 && (
+            {distro.version === 2 && [true, false].map((enabled) => (
               <button
-                onClick={() => onAction("manage:sparse")}
-                data-testid="manage-action-sparse"
+                key={enabled ? "sparse-enable" : "sparse-disable"}
+                onClick={() => onAction(enabled ? "manage:sparse-enable" : "manage:sparse-disable")}
+                data-testid={enabled ? "manage-action-sparse" : "manage-action-sparse-disable"}
                 role="menuitem"
                 className="w-full flex items-center justify-between px-6 py-2 text-sm text-left text-theme-text-secondary hover:bg-theme-bg-tertiary hover:text-theme-text-primary transition-all"
               >
                 <span className="flex items-center gap-3">
                   <span className="text-theme-text-muted"><SparklesIcon size="sm" /></span>
-                  {t("manage.sparse")}
+                  {t(enabled ? "manage.sparseEnable" : "manage.sparseDisable")}
                 </span>
                 {distro.state === "Running" && (
                   <span className="text-theme-status-error" data-testid="requires-shutdown-indicator" title={t("customActions.requiresShutdown")}>
@@ -250,7 +251,7 @@ export function QuickActionsPopup({ distro, actions, onAction }: QuickActionsPop
                   </span>
                 )}
               </button>
-            )}
+            ))}
             <button
               onClick={() => onAction("manage:setVersion")}
               data-testid="manage-action-set-version"

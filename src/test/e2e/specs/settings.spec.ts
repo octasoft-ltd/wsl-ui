@@ -8,7 +8,7 @@
  * - Settings affect app behavior
  */
 
-import { selectors, safeRefresh, waitForAppReady } from "../utils";
+import { selectors, safeRefresh, waitForAppReady, waitForSettingsSaved } from "../utils";
 import { setupHooks, actions } from "../base";
 
 describe("Settings Page", () => {
@@ -23,7 +23,7 @@ describe("Settings Page", () => {
     // Wait for tab to become active (check for accent color class)
     await browser.waitUntil(
       async () => {
-        const classes = await tab.getAttribute("class");
+        const classes = (await tab.getAttribute("class")) ?? "";
         // Active tab has accent-primary color classes
         return classes.includes("accent-primary") || classes.includes("border-r-2");
       },
@@ -143,14 +143,14 @@ describe("Settings Page", () => {
       // Wait for theme to be applied
       await browser.waitUntil(
         async () => {
-          const cls = await draculaTheme.getAttribute("class");
+          const cls = (await draculaTheme.getAttribute("class")) ?? "";
           return cls.includes("border-(--accent-primary)");
         },
         { timeout: 5000, timeoutMsg: "Dracula theme was not selected" }
       );
 
       // Verify it's selected
-      const draculaClass = await draculaTheme.getAttribute("class");
+      const draculaClass = (await draculaTheme.getAttribute("class")) ?? "";
       expect(draculaClass).toContain("border-(--accent-primary)");
 
       // Refresh the page
@@ -163,7 +163,7 @@ describe("Settings Page", () => {
 
       // Verify Dracula is still selected
       const draculaThemeAfter = await $('[data-testid="theme-dracula"]');
-      const draculaClassAfter = await draculaThemeAfter.getAttribute("class");
+      const draculaClassAfter = (await draculaThemeAfter.getAttribute("class")) ?? "";
       expect(draculaClassAfter).toContain("border-(--accent-primary)");
     });
 
@@ -178,7 +178,7 @@ describe("Settings Page", () => {
       // Wait for theme to be applied
       await browser.waitUntil(
         async () => {
-          const cls = await cobaltTheme.getAttribute("class");
+          const cls = (await cobaltTheme.getAttribute("class")) ?? "";
           return cls.includes("border-(--accent-primary)");
         },
         { timeout: 5000, timeoutMsg: "Cobalt theme was not selected" }
@@ -193,7 +193,7 @@ describe("Settings Page", () => {
       await switchToTab("appearance");
 
       const cobaltThemeAfter = await $('[data-testid="theme-cobalt"]');
-      const cobaltClassAfter = await cobaltThemeAfter.getAttribute("class");
+      const cobaltClassAfter = (await cobaltThemeAfter.getAttribute("class")) ?? "";
       expect(cobaltClassAfter).toContain("border-(--accent-primary)");
     });
 
@@ -231,7 +231,7 @@ describe("Settings Page", () => {
       await switchToTab("appearance");
 
       const customThemeAfter = await $('[data-testid="theme-custom"]');
-      const customClassAfter = await customThemeAfter.getAttribute("class");
+      const customClassAfter = (await customThemeAfter.getAttribute("class")) ?? "";
       expect(customClassAfter).toContain("border-(--accent-primary)");
 
       // Custom Colors section should still be visible
@@ -254,7 +254,7 @@ describe("Settings Page", () => {
       const toggleButton = await toggleContainer.$("button.rounded-full");
 
       // Get initial state by checking the button's class (bg-theme-accent-primary means checked)
-      const initialClass = await toggleButton.getAttribute("class");
+      const initialClass = (await toggleButton.getAttribute("class")) ?? "";
       const initialChecked = initialClass.includes("bg-theme-accent-primary");
 
       // Toggle it
@@ -263,7 +263,7 @@ describe("Settings Page", () => {
       // Wait for toggle state to change
       await browser.waitUntil(
         async () => {
-          const cls = await toggleButton.getAttribute("class");
+          const cls = (await toggleButton.getAttribute("class")) ?? "";
           const isChecked = cls.includes("bg-theme-accent-primary");
           return isChecked !== initialChecked;
         },
@@ -271,7 +271,7 @@ describe("Settings Page", () => {
       );
 
       // Verify it changed
-      const afterToggleClass = await toggleButton.getAttribute("class");
+      const afterToggleClass = (await toggleButton.getAttribute("class")) ?? "";
       const afterToggleChecked = afterToggleClass.includes("bg-theme-accent-primary");
       expect(afterToggleChecked).toBe(!initialChecked);
 
@@ -288,7 +288,7 @@ describe("Settings Page", () => {
       const labelContainerAfter = await toggleLabelAfter.parentElement();
       const toggleContainerAfter = await labelContainerAfter.parentElement();
       const toggleButtonAfter = await toggleContainerAfter.$("button.rounded-full");
-      const persistedClass = await toggleButtonAfter.getAttribute("class");
+      const persistedClass = (await toggleButtonAfter.getAttribute("class")) ?? "";
       const persistedChecked = persistedClass.includes("bg-theme-accent-primary");
       expect(persistedChecked).toBe(!initialChecked);
 
@@ -587,74 +587,30 @@ describe("Settings Page", () => {
       }
     });
 
-    // TODO: This test is flaky - the custom section doesn't appear after clicking Custom button
-    // The selector and component work in manual testing but fail in automated e2e
-    it.skip("should persist custom IDE command after refresh", async () => {
+    it("should persist custom IDE command after refresh", async () => {
       await actions.goToSettings();
+      await switchToTab("app");
+      // Scope to the IDE section, excluding the Custom Actions navigation tab.
+      const ideSection = await $("//section[.//h2[contains(., 'IDE')]]");
+      const custom = await ideSection.$(".//button[.//p[normalize-space()='Custom']]");
+      await custom.waitForClickable({ timeout: 5000 });
+      await custom.click();
+      const input = await $('[data-testid="ide-setting-custom-input"]');
+      await input.waitForDisplayed({ timeout: 5000 });
+      const command = `e2e-ide-${Date.now()}`;
+      await input.setValue(command);
+      const save = await $('[data-testid="ide-setting-custom-save"]');
+      await save.waitForClickable({ timeout: 5000 });
+      await save.click();
+      await expect($("(//section[.//h2[contains(., 'IDE')]]//code)[last()]")).toHaveText(command);
+      await waitForSettingsSaved();
 
-      // Find and click the Custom option in IDE section (first Custom button is IDE)
-      const customButtons = await $$("button*=Custom");
-      if ((await customButtons.length) > 0) {
-        await customButtons[0].waitForClickable({ timeout: 5000 });
-        await customButtons[0].click();
-
-        // Wait for custom section to appear (contains "Custom Command" label)
-        await browser.waitUntil(
-          async () => {
-            const labels = await $$("label");
-            for (const label of labels) {
-              const text = await label.getText().catch(() => "");
-              if (text.includes("Custom Command")) return true;
-            }
-            return false;
-          },
-          { timeout: 5000, timeoutMsg: "Custom section did not appear after clicking Custom button" }
-        );
-
-        // Now find the custom input - first text input after the Custom button is clicked
-        const customSection = await $('[data-testid="ide-setting-custom-section"]');
-        const customInput = await customSection.$('input[type="text"]');
-        await customInput.waitForClickable({ timeout: 5000 });
-        await customInput.setValue("myide");
-
-        // Click save using data-testid
-        const saveButton = await $('[data-testid="ide-setting-custom-save"]');
-        await saveButton.waitForClickable({ timeout: 5000 });
-        await saveButton.click();
-
-        // Wait for command to update (look for code element showing myide)
-        await browser.waitUntil(
-          async () => {
-            const codes = await $$("code");
-            for (const code of codes) {
-              const text = await code.getText();
-              if (text === "myide") return true;
-            }
-            return false;
-          },
-          { timeout: 5000, timeoutMsg: "Custom IDE command did not save" }
-        );
-
-        // Refresh
-        await safeRefresh();
-        await waitForAppReady();
-
-        // Go to settings and verify
-        await actions.goToSettings();
-
-        // Verify the custom command persisted
-        await browser.waitUntil(
-          async () => {
-            const codes = await $$("code");
-            for (const code of codes) {
-              const text = await code.getText();
-              if (text === "myide") return true;
-            }
-            return false;
-          },
-          { timeout: 5000, timeoutMsg: "Custom IDE command did not persist after refresh" }
-        );
-      }
+      await safeRefresh();
+      await waitForAppReady();
+      await actions.goToSettings();
+      await switchToTab("app");
+      await expect($('[data-testid="ide-setting-custom-input"]')).toHaveValue(command);
+      await expect($("(//section[.//h2[contains(., 'IDE')]]//code)[last()]")).toHaveText(command);
     });
   });
 
@@ -699,50 +655,33 @@ describe("Settings Page", () => {
   });
 
   describe("Settings Reset and Defaults", () => {
-    // TODO: This test is flaky - the select values don't update after selecting new options
-    // Need to investigate why the selectByVisibleText isn't working consistently
-    it.skip("should reset polling intervals to defaults when reset button is clicked", async () => {
+    it("should reset polling intervals to defaults when reset button is clicked", async () => {
       await actions.goToSettings();
       await switchToTab("polling");
-
-      // Change all intervals to non-default values
-      const selects = await $$("select");
-      await selects[0].selectByVisibleText("2 minutes");
-      await selects[1].selectByVisibleText("2 minutes");
-      await selects[2].selectByVisibleText("2 minutes");
-
-      // Wait for all values to be set
-      await browser.waitUntil(
-        async () => {
-          const val0 = await selects[0].getValue();
-          const val1 = await selects[1].getValue();
-          const val2 = await selects[2].getValue();
-          return val0 === "120000" && val1 === "120000" && val2 === "120000";
-        },
-        { timeout: 5000, timeoutMsg: "Polling intervals did not update to 2 minutes" }
-      );
-
-      // Find and click reset button
-      const resetButton = await $("button*=Reset intervals to defaults");
-      await resetButton.click();
-
-      // Wait for defaults to be restored
-      await browser.waitUntil(
-        async () => {
-          const selectsNow = await $$("select");
-          const val0 = await selectsNow[0].getValue();
-          const val1 = await selectsNow[1].getValue();
-          const val2 = await selectsNow[2].getValue();
-          return val0 === "10000" && val1 === "5000" && val2 === "10000";
-        },
-        { timeout: 5000, timeoutMsg: "Polling intervals did not reset to defaults" }
-      );
-
-      // Verify defaults are restored (10s for distros, 5s for resources, 10s for health)
-      const selectsAfter = await $$("select");
-      expect(await selectsAfter[0].getValue()).toBe("10000");
-      expect(await selectsAfter[1].getValue()).toBe("5000");
-      expect(await selectsAfter[2].getValue()).toBe("10000");
+      const keys = ["distros", "resources", "health"];
+      const firstSelect = await $('[data-testid="polling-interval-distros"]');
+      await firstSelect.waitForDisplayed({ timeout: 5000 });
+      if (!(await firstSelect.isEnabled())) {
+        const toggle = await $("//div[p[normalize-space()='Enable Auto-Refresh']]/following-sibling::button");
+        await toggle.click();
+        await expect(firstSelect).toBeEnabled();
+        await waitForSettingsSaved();
+      }
+      // Each asynchronous save must finish before constructing the next update.
+      for (const key of keys) {
+        const select = await $(`[data-testid="polling-interval-${key}"]`);
+        await select.selectByAttribute("value", "120000");
+        await expect(select).toHaveValue("120000");
+        await waitForSettingsSaved();
+      }
+      const reset = await $("//button[contains(., 'Reset intervals to defaults')]");
+      await reset.scrollIntoView();
+      await reset.waitForClickable({ timeout: 5000 });
+      await reset.click();
+      for (const [key, value] of [["distros", "10000"], ["resources", "5000"], ["health", "10000"]]) {
+        await expect($(`[data-testid="polling-interval-${key}"]`)).toHaveValue(value);
+      }
+      await waitForSettingsSaved();
     });
   });
 
@@ -765,7 +704,7 @@ describe("Settings Page", () => {
         // Wait for theme to be applied
         await browser.waitUntil(
           async () => {
-            const cls = await nordTheme.getAttribute("class");
+            const cls = (await nordTheme.getAttribute("class")) ?? "";
             return cls.includes("border-(--accent-primary)");
           },
           { timeout: 5000, timeoutMsg: "Nord theme was not selected" }
@@ -789,7 +728,7 @@ describe("Settings Page", () => {
       }
 
       if (isNordAfterDisplayed) {
-        const nordClass = await nordThemeAfter.getAttribute("class");
+        const nordClass = (await nordThemeAfter.getAttribute("class")) ?? "";
         expect(nordClass).toContain("border-(--accent-primary)");
       }
 
@@ -832,7 +771,7 @@ describe("Settings Page", () => {
       }
 
       if (isNordFinalDisplayed) {
-        const nordClassFinal = await nordThemeFinal.getAttribute("class");
+        const nordClassFinal = (await nordThemeFinal.getAttribute("class")) ?? "";
         expect(nordClassFinal).toContain("border-(--accent-primary)");
       }
 
@@ -863,7 +802,7 @@ describe("Settings Page", () => {
         // Wait for theme to be applied
         await browser.waitUntil(
           async () => {
-            const cls = await draculaTheme.getAttribute("class");
+            const cls = (await draculaTheme.getAttribute("class")) ?? "";
             return cls.includes("border-(--accent-primary)");
           },
           { timeout: 5000, timeoutMsg: "Dracula theme was not selected" }
@@ -892,7 +831,7 @@ describe("Settings Page", () => {
       const toggleButton = await toggleContainer.$("button.rounded-full");
 
       // Get initial state
-      const initialClass = await toggleButton.getAttribute("class");
+      const initialClass = (await toggleButton.getAttribute("class")) ?? "";
       const isEnabled = initialClass.includes("bg-theme-accent-primary");
 
       if (isEnabled) {
@@ -902,7 +841,7 @@ describe("Settings Page", () => {
         // Wait for toggle state to change
         await browser.waitUntil(
           async () => {
-            const cls = await toggleButton.getAttribute("class");
+            const cls = (await toggleButton.getAttribute("class")) ?? "";
             return !cls.includes("bg-theme-accent-primary");
           },
           { timeout: 5000, timeoutMsg: "Toggle did not change state" }

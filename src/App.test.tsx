@@ -1,8 +1,9 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { act, render, screen, waitFor } from '@testing-library/react';
 import App from './App';
 import { useDistroStore } from './store/distroStore';
 import { usePollingStore } from './store/pollingStore';
+import { useMountStore } from './store/mountStore';
 import { listen } from '@tauri-apps/api/event';
 
 // Mock the stores used by polling
@@ -110,6 +111,7 @@ describe('App', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.useFakeTimers();
+    useMountStore.setState({ mountedDisks: [], trackedMounts: [] });
 
     // Node's optional localStorage implementation may not expose the complete
     // browser Storage API in the Vitest environment.
@@ -147,6 +149,22 @@ describe('App', () => {
   });
 
   describe('event listener cleanup', () => {
+    it.each([true, false])('clears disk attachments only after confirmed tray shutdown: %s', (shutdown) => {
+      render(<App />);
+      const attachment = {
+        diskPath: 'D:\\data.vhdx', mountPoint: null, filesystem: null,
+        isVhd: true, mountedAt: 1,
+      };
+      const filesystem = { path: '/dev/sdc', mountPoint: '/mnt/wsl/data', filesystem: 'ext4', isVhd: true };
+      act(() => useMountStore.setState({ trackedMounts: [attachment], mountedDisks: [filesystem] }));
+      const eventHandler = vi.mocked(listen).mock.calls.find(([name]) => name === 'distro-state-changed')![1];
+
+      act(() => eventHandler({ payload: shutdown ? { shutdown: true } : null } as any));
+
+      expect(useMountStore.getState().trackedMounts).toEqual(shutdown ? [] : [attachment]);
+      expect(useMountStore.getState().mountedDisks).toEqual(shutdown ? [] : [filesystem]);
+    });
+
     it('should clean up event listener on unmount', async () => {
       // Use real timers for waitFor operations
       vi.useRealTimers();

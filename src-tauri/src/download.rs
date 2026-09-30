@@ -215,7 +215,7 @@ async fn download_with_limits_impl<E: ProgressEmitter>(
         stage: "downloading".to_string(),
         bytes_downloaded: 0,
         total_bytes: total_size,
-        percent: Some(0.0),
+        percent: total_size.filter(|total| *total > 0).map(|_| 0.0),
     });
 
     let mut file = tokio::fs::File::create(dest_path)
@@ -225,6 +225,8 @@ async fn download_with_limits_impl<E: ProgressEmitter>(
     let mut downloaded: u64 = 0;
     let mut stream = response.bytes_stream();
     let mut last_emit_percent: i32 = -1;
+    let mut last_emit_bytes = 0;
+    let mut last_emit_time = tokio::time::Instant::now();
 
     // Initialize SHA256 hasher for streaming checksum calculation
     let mut hasher = Sha256::new();
@@ -280,11 +282,21 @@ async fn download_with_limits_impl<E: ProgressEmitter>(
         }
 
         // Calculate percentage and emit progress (throttled to avoid too many events)
-        let percent = total_size.map(|total| (downloaded as f32 / total as f32) * 100.0);
-        let current_percent = percent.map(|p| p as i32).unwrap_or(-1);
+        let percent = total_size
+            .filter(|total| *total > 0)
+            .map(|total| (downloaded as f32 / total as f32) * 100.0);
+        let should_emit = match percent {
+            Some(percent) => percent as i32 != last_emit_percent,
+            None => {
+                downloaded - last_emit_bytes >= 1024 * 1024
+                    || last_emit_time.elapsed() >= Duration::from_millis(250)
+            }
+        };
 
-        if current_percent != last_emit_percent {
-            last_emit_percent = current_percent;
+        if should_emit {
+            last_emit_percent = percent.map(|percent| percent as i32).unwrap_or(-1);
+            last_emit_bytes = downloaded;
+            last_emit_time = tokio::time::Instant::now();
             app.emit_progress(DownloadProgress {
                 distro_name: distro_name.to_string(),
                 stage: "downloading".to_string(),
@@ -321,6 +333,19 @@ async fn download_with_limits_impl<E: ProgressEmitter>(
             distro_name,
             calculated_checksum
         );
+    }
+
+    // Flush any bytes suppressed by throttling before changing stages.
+    if downloaded != last_emit_bytes {
+        app.emit_progress(DownloadProgress {
+            distro_name: distro_name.to_string(),
+            stage: "downloading".to_string(),
+            bytes_downloaded: downloaded,
+            total_bytes: total_size,
+            percent: total_size
+                .filter(|total| *total > 0)
+                .map(|total| (downloaded as f32 / total as f32) * 100.0),
+        });
     }
 
     // Emit completion
@@ -481,6 +506,156 @@ mod tests {
         fn emit_progress(&self, _progress: super::DownloadProgress) {
             // No-op for tests
         }
+    }
+
+    #[derive(Default)]
+    struct RecordingApp(std::sync::Mutex<Vec<DownloadProgress>>);
+
+    impl ProgressEmitter for RecordingApp {
+        fn emit_progress(&self, progress: DownloadProgress) {
+            self.0.lock().unwrap().push(progress);
+        }
+    }
+
+    async fn download_raw_response(response: Vec<u8>, expected: &[u8]) -> Vec<DownloadProgress> {
+        use tokio::io::AsyncReadExt;
+
+        let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let address = listener.local_addr().unwrap();
+        let server = tokio::spawn(async move {
+            let (mut socket, _) = listener.accept().await.unwrap();
+            let mut request = [0u8; 4096];
+            socket.read(&mut request).await.unwrap();
+            socket.write_all(&response).await.unwrap();
+        });
+        let dest_path = std::env::temp_dir().join(format!("test_download_progress_{}.dat", address.port()));
+        let app = RecordingApp::default();
+        let result = download_with_progress_and_limits(
+            &app,
+            &format!("http://{address}/image"),
+            &dest_path,
+            "test-distro",
+            DownloadLimits::default(),
+            Some(calculate_sha256(expected)),
+        )
+        .await;
+        server.await.unwrap();
+        let contents = tokio::fs::read(&dest_path).await.unwrap();
+        tokio::fs::remove_file(&dest_path).await.unwrap();
+        assert!(result.is_ok(), "Download failed: {result:?}");
+        assert_eq!(contents, expected);
+        app.0.into_inner().unwrap()
+    }
+
+    #[tokio::test]
+    async fn test_short_unknown_length_download_flushes_final_progress() {
+        let events = download_raw_response(
+            b"HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\nConnection: close\r\n\r\n4\r\nabcd\r\n0\r\n\r\n".to_vec(),
+            b"abcd",
+        )
+        .await;
+        let final_download = events.iter().rfind(|event| event.stage == "downloading").unwrap();
+        assert_eq!(final_download.bytes_downloaded, 4);
+        assert!(final_download.percent.is_none());
+        assert!(final_download.total_bytes.is_none());
+        assert_eq!(events.last().unwrap().stage, "importing");
+    }
+
+    #[tokio::test]
+    async fn test_large_unknown_length_download_throttles_byte_updates() {
+        let body = vec![b'x'; 3 * 1024 * 1024];
+        let mut response = format!(
+            "HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\nConnection: close\r\n\r\n{:x}\r\n",
+            body.len()
+        ).into_bytes();
+        response.extend_from_slice(&body);
+        response.extend_from_slice(b"\r\n0\r\n\r\n");
+        let events = download_raw_response(response, &body).await;
+        let downloading: Vec<_> = events.iter().filter(|event| event.stage == "downloading").collect();
+        assert!(downloading.iter().any(|event| event.bytes_downloaded > 0 && event.bytes_downloaded < 3 * 1024 * 1024));
+        assert!(downloading.len() <= 10, "Must throttle updates instead of emitting every network chunk");
+        assert_eq!(downloading.last().unwrap().bytes_downloaded, 3 * 1024 * 1024);
+        assert!(downloading.iter().all(|event| event.percent.is_none() && event.total_bytes.is_none()));
+    }
+
+    #[tokio::test]
+    async fn test_known_length_download_preserves_percentage_throttle() {
+        let body = vec![b'x'; 3 * 1024 * 1024];
+        let mut response = format!(
+            "HTTP/1.1 200 OK\r\nContent-Length: {}\r\nConnection: close\r\n\r\n",
+            body.len()
+        ).into_bytes();
+        response.extend_from_slice(&body);
+        let events = download_raw_response(response, &body).await;
+        let downloading: Vec<_> = events.iter().filter(|event| event.stage == "downloading").collect();
+        // The initial zero event is separate from the stream's percentage throttle.
+        for pair in downloading[1..].windows(2) {
+            assert_ne!(pair[0].percent.unwrap() as i32, pair[1].percent.unwrap() as i32);
+        }
+        assert!(downloading.len() <= 102);
+        assert_eq!(downloading.last().unwrap().percent, Some(100.0));
+        assert!(downloading.iter().all(|event| event.total_bytes == Some(3 * 1024 * 1024)));
+    }
+
+    #[tokio::test]
+    async fn test_zero_length_download_has_finite_progress() {
+        let events = download_raw_response(
+            b"HTTP/1.1 200 OK\r\nContent-Length: 0\r\nConnection: close\r\n\r\n".to_vec(),
+            b"",
+        )
+        .await;
+        assert!(events.iter().all(|event| event.bytes_downloaded == 0 && event.total_bytes == Some(0)));
+        assert!(events.iter().filter_map(|event| event.percent).all(f32::is_finite));
+        assert_eq!(events.last().unwrap().stage, "importing");
+    }
+
+    #[tokio::test]
+    async fn test_download_without_content_length_reports_progress_and_final_bytes() {
+        use tokio::io::AsyncReadExt;
+
+        // A real chunked response is needed: wiremock adds Content-Length to bodies.
+        let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let address = listener.local_addr().unwrap();
+        let server = tokio::spawn(async move {
+            let (mut socket, _) = listener.accept().await.unwrap();
+            let mut request = [0u8; 4096];
+            socket.read(&mut request).await.unwrap();
+            socket
+                .write_all(b"HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\nConnection: close\r\n\r\n4\r\nabcd\r\n")
+                .await
+                .unwrap();
+            tokio::time::sleep(Duration::from_millis(350)).await;
+            socket.write_all(b"4\r\nefgh\r\n").await.unwrap();
+            tokio::time::sleep(Duration::from_millis(350)).await;
+            socket.write_all(b"4\r\nijkl\r\n0\r\n\r\n").await.unwrap();
+        });
+
+        let dest_path = std::env::temp_dir().join(format!("test_chunked_progress_{}.dat", address.port()));
+        let app = RecordingApp::default();
+        let result = download_with_progress_and_limits(
+            &app,
+            &format!("http://{address}/image"),
+            &dest_path,
+            "test-distro",
+            DownloadLimits::default(),
+            Some(calculate_sha256(b"abcdefghijkl")),
+        )
+        .await;
+        server.await.unwrap();
+        let contents = tokio::fs::read(&dest_path).await.unwrap();
+        tokio::fs::remove_file(&dest_path).await.unwrap();
+        assert!(result.is_ok(), "Download failed: {result:?}");
+        assert_eq!(contents, b"abcdefghijkl");
+
+        let events = app.0.lock().unwrap();
+        let downloading: Vec<_> = events.iter().filter(|event| event.stage == "downloading").collect();
+        assert!(
+            downloading.iter().any(|event| event.bytes_downloaded > 0 && event.bytes_downloaded < 12),
+            "Unknown-length downloads must report bytes while the transfer is running"
+        );
+        assert!(downloading.iter().all(|event| event.total_bytes.is_none() && event.percent.is_none()));
+        assert_eq!(downloading.last().unwrap().bytes_downloaded, 12);
+        assert_eq!(events.last().unwrap().stage, "importing");
     }
 
     #[tokio::test]

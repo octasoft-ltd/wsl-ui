@@ -5,6 +5,7 @@ import { useDistroStore } from "../store/distroStore";
 import { useActionsStore } from "../store/actionsStore";
 import { useNotificationStore } from "../store/notificationStore";
 import { wslService } from "../services/wslService";
+import type { ActionResult } from "../services/actionsService";
 import { CloneDialog } from "./CloneDialog";
 import { MoveDistroDialog } from "./MoveDistroDialog";
 import { ResizeDistroDialog } from "./ResizeDistroDialog";
@@ -42,7 +43,6 @@ export function QuickActionsMenu({ distro, disabled }: QuickActionsMenuProps) {
   const [showSetVersionDialog, setShowSetVersionDialog] = useState(false);
   const [showRenameDialog, setShowRenameDialog] = useState(false);
   const [showInfoDialog, setShowInfoDialog] = useState(false);
-  const [sparseEnabled, setSparseEnabled] = useState(false);
   const [isTogglingSprase, setIsTogglingSprase] = useState(false);
   const [showConfirmDialog, setShowConfirmDialog] = useState<{ actionId: string; actionName: string } | null>(null);
   const [showSparseConfirm, setShowSparseConfirm] = useState(false);
@@ -69,22 +69,20 @@ export function QuickActionsMenu({ distro, disabled }: QuickActionsMenuProps) {
 
   const isDisabled = disabled || !!actionInProgress || isExecuting || isTogglingSprase;
 
-  const handleToggleSparse = async (confirmed = false) => {
+  const handleSetSparse = async (enabled: boolean, confirmed = false) => {
     // Show warning when enabling sparse mode (not when disabling)
-    if (!sparseEnabled && !confirmed) {
+    if (enabled && !confirmed) {
       setShowSparseConfirm(true);
       return;
     }
 
     setIsTogglingSprase(true);
     try {
-      const newState = !sparseEnabled;
-      await wslService.setSparseDisk(distro.name, newState);
-      setSparseEnabled(newState);
+      await wslService.setSparseDisk(distro.name, enabled);
       addNotification({
         type: "success",
         title: t('sparseChanged'),
-        message: t('sparseChangedMessage', { name: distro.name, state: newState ? t('common:label.on') : t('common:label.off') }),
+        message: t('sparseChangedMessage', { name: distro.name, state: enabled ? t('common:label.on') : t('common:label.off') }),
       });
     } catch (err) {
       // Tauri returns string errors, not Error instances
@@ -101,9 +99,9 @@ export function QuickActionsMenu({ distro, disabled }: QuickActionsMenuProps) {
 
   // Handle sparse toggle with stop-before-action pattern
   // Requires full WSL shutdown as VHDX must not be in use
-  const handleSparseWithStopCheck = () => {
-    executeWithStopCheck(distro, t('sparseToggle'), () => {
-      handleToggleSparse();
+  const handleSparseWithStopCheck = (enabled: boolean) => {
+    executeWithStopCheck(distro, t(enabled ? 'manage.sparseEnable' : 'manage.sparseDisable'), () => {
+      handleSetSparse(enabled);
     }, { requiresShutdown: true });
   };
 
@@ -173,8 +171,8 @@ export function QuickActionsMenu({ distro, disabled }: QuickActionsMenuProps) {
       });
       return;
     }
-    if (actionId === "manage:sparse") {
-      handleSparseWithStopCheck();
+    if (actionId === "manage:sparse-enable" || actionId === "manage:sparse-disable") {
+      handleSparseWithStopCheck(actionId === "manage:sparse-enable");
       return;
     }
     if (actionId === "manage:setVersion") {
@@ -239,6 +237,18 @@ export function QuickActionsMenu({ distro, disabled }: QuickActionsMenuProps) {
     width: 260,
   });
 
+  const showActionResult = (action: CustomAction, result: ActionResult | null) => {
+    if (!result) return;
+    if (action.showOutput) {
+      setShowOutputDialog({ title: action.name, output: result.output, error: result.error });
+    } else if (!result.success) {
+      addNotification({
+        type: "error", title: t('actionFailed'),
+        message: `${action.name}: ${result.error || result.output || t('actionFailedMessage')}`,
+      });
+    }
+  };
+
   const runCustomAction = async (action: CustomAction) => {
     if (action.confirmBeforeRun) {
       setShowConfirmDialog({ actionId: action.id, actionName: action.name });
@@ -269,13 +279,7 @@ export function QuickActionsMenu({ distro, disabled }: QuickActionsMenuProps) {
     try {
       const result = await executeAction(action.id, distro.name, distro.id);
 
-      if (action.showOutput && result) {
-        setShowOutputDialog({
-          title: action.name,
-          output: result.output,
-          error: result.error,
-        });
-      }
+      showActionResult(action, result);
     } finally {
       setActionInProgress(null);
     }
@@ -309,13 +313,7 @@ export function QuickActionsMenu({ distro, disabled }: QuickActionsMenuProps) {
         setActionInProgress(`Running ${action.name}...`);
         try {
           const result = await executeAction(action.id, distro.name, distro.id);
-          if (action.showOutput && result) {
-            setShowOutputDialog({
-              title: action.name,
-              output: result.output,
-              error: result.error,
-            });
-          }
+          showActionResult(action, result);
         } finally {
           setActionInProgress(null);
         }
@@ -331,13 +329,7 @@ export function QuickActionsMenu({ distro, disabled }: QuickActionsMenuProps) {
       setActionInProgress(`Running ${action.name}...`);
       try {
         const result = await executeAction(action.id, distro.name, distro.id, password);
-        if (action.showOutput && result) {
-          setShowOutputDialog({
-            title: action.name,
-            output: result.output,
-            error: result.error,
-          });
-        }
+        showActionResult(action, result);
       } finally {
         setActionInProgress(null);
       }
@@ -450,7 +442,7 @@ export function QuickActionsMenu({ distro, disabled }: QuickActionsMenuProps) {
         confirmLabel={t('sparseConfirm.confirm')}
         onConfirm={() => {
           setShowSparseConfirm(false);
-          handleToggleSparse(true);
+          handleSetSparse(true, true);
         }}
         onCancel={() => setShowSparseConfirm(false)}
         danger

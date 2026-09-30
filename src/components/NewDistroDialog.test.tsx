@@ -84,8 +84,8 @@ describe('NewDistroDialog - Memory Leaks', () => {
       },
     } as any);
 
-    vi.mocked(wslService.getDistroCatalog).mockResolvedValue(mockCatalog);
-    vi.mocked(wslService.listOnlineDistributions).mockResolvedValue(['Ubuntu', 'Debian']);
+    vi.mocked(wslService.getDistroCatalog).mockReset().mockResolvedValue(mockCatalog);
+    vi.mocked(wslService.listOnlineDistributions).mockReset().mockResolvedValue(['Ubuntu', 'Debian']);
     vi.mocked(wslService.onDownloadProgress).mockResolvedValue(() => {});
   });
 
@@ -94,6 +94,50 @@ describe('NewDistroDialog - Memory Leaks', () => {
   });
 
   describe('quick install mode', () => {
+    it('shows catalog failures and lets the user retry without closing the dialog', async () => {
+      vi.mocked(wslService.listOnlineDistributions)
+        .mockRejectedValueOnce('The online catalog could not be reached')
+        .mockResolvedValueOnce(['Ubuntu']);
+      render(<NewDistroDialog isOpen={true} onClose={mockOnClose} />);
+      await act(async () => { await vi.advanceTimersByTimeAsync(700); });
+
+      expect(screen.getByRole('alert')).toHaveTextContent('The online catalog could not be reached');
+      fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
+      await act(async () => { await vi.advanceTimersByTimeAsync(700); });
+
+      expect(screen.getByText('Ubuntu')).toBeInTheDocument();
+      expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+      expect(wslService.listOnlineDistributions).toHaveBeenCalledTimes(2);
+    });
+
+    it('reloads an empty online list when reopened even if catalog metadata loaded', async () => {
+      vi.mocked(wslService.listOnlineDistributions)
+        .mockResolvedValueOnce([]).mockResolvedValueOnce(['Debian']);
+      const { rerender } = render(<NewDistroDialog isOpen={true} onClose={mockOnClose} />);
+      await act(async () => { await vi.advanceTimersByTimeAsync(700); });
+      rerender(<NewDistroDialog isOpen={false} onClose={mockOnClose} />);
+      rerender(<NewDistroDialog isOpen={true} onClose={mockOnClose} />);
+      await act(async () => { await vi.advanceTimersByTimeAsync(700); });
+
+      expect(screen.getByText('Debian')).toBeInTheDocument();
+      expect(wslService.getDistroCatalog).toHaveBeenCalledTimes(2);
+    });
+
+    it('ignores a stale catalog response after closing and reopening', async () => {
+      let resolveOld!: (value: string[]) => void;
+      vi.mocked(wslService.listOnlineDistributions)
+        .mockReturnValueOnce(new Promise(resolve => { resolveOld = resolve; }))
+        .mockResolvedValueOnce(['Debian']);
+      const { rerender } = render(<NewDistroDialog isOpen={true} onClose={mockOnClose} />);
+      rerender(<NewDistroDialog isOpen={false} onClose={mockOnClose} />);
+      rerender(<NewDistroDialog isOpen={true} onClose={mockOnClose} />);
+      await act(async () => { await vi.advanceTimersByTimeAsync(700); });
+      await act(async () => { resolveOld(['Ubuntu']); });
+
+      expect(screen.getByText('Debian')).toBeInTheDocument();
+      expect(screen.queryByText('Ubuntu')).not.toBeInTheDocument();
+    });
+
     it('explains a native WSL download and shows elapsed time while it is pending', async () => {
       let resolveInstall!: () => void;
       vi.mocked(wslService.quickInstallDistribution).mockReturnValue(

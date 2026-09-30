@@ -1,5 +1,29 @@
-import { describe, it, expect } from "vitest";
-import { compareVersionsDesc } from "./lxcCatalogService";
+import { describe, it, expect, vi } from "vitest";
+import { compareVersionsDesc, lxcCatalogService } from "./lxcCatalogService";
+import { DEFAULT_DISTRIBUTION_SOURCE_SETTINGS } from "../types/lxcCatalog";
+
+it("invalidates the catalog when filters, mirror or cache duration change", async () => {
+  localStorage.clear();
+  const product = (release: string) => ({ os: "alpine", release, arch: "amd64", versions: {
+    latest: { items: { "rootfs.tar.xz": { path: `${release}/rootfs.tar.xz`, size: 100 } } },
+  } });
+  const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ products: {
+    "alpine:3.22:amd64:default": product("3.22"), "alpine:edge:amd64:default": product("edge"),
+  } }) });
+  vi.stubGlobal("fetch", fetchMock);
+  try {
+    const config = { ...DEFAULT_DISTRIBUTION_SOURCE_SETTINGS, showUnstableReleases: false };
+    expect((await lxcCatalogService.fetchCatalog(config)).distributions).toHaveLength(1);
+    await lxcCatalogService.fetchCatalog(config);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect((await lxcCatalogService.fetchCatalog({ ...config, showUnstableReleases: true })).distributions).toHaveLength(2);
+    const mirror = { ...config, lxcBaseUrl: "https://mirror.example.test" };
+    const result = await lxcCatalogService.fetchCatalog(mirror);
+    expect(result.distributions[0].downloadUrl).toMatch(/^https:\/\/mirror.example.test\//);
+    await lxcCatalogService.fetchCatalog({ ...mirror, cacheDurationHours: 1 });
+    expect(fetchMock).toHaveBeenCalledTimes(4);
+  } finally { vi.unstubAllGlobals(); localStorage.clear(); }
+});
 
 // GH #122: parseFloat-based sorting ordered Alpine 3.10 below 3.9, showing the
 // oldest release as newest.

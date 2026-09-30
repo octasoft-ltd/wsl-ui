@@ -162,8 +162,11 @@ function App() {
     // Listen for state changes triggered by tray actions
     // This triggers an immediate refresh instead of waiting for the next poll
     debug("[App] Setting up distro-state-changed event listener");
-    const unlisten = listen("distro-state-changed", () => {
+    const unlisten = listen<{ shutdown?: boolean } | null>("distro-state-changed", (event) => {
       debug("[App] Received distro-state-changed event");
+      if (event.payload?.shutdown === true) {
+        useMountStore.setState({ mountedDisks: [], trackedMounts: [] });
+      }
       // Clear any pending timeout to prevent multiple fetches
       if (timeoutRef.current !== null) {
         clearTimeout(timeoutRef.current);
@@ -172,7 +175,7 @@ function App() {
       // Small delay to let WSL state settle after terminal opens
       timeoutRef.current = window.setTimeout(() => {
         fetchDistros();
-        // Also refresh mounted disks (clears when WSL shuts down)
+        // Refresh filesystem discovery; bare attachments need the explicit shutdown signal.
         loadMountedDisks();
         timeoutRef.current = null;
       }, 1000);

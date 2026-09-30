@@ -183,7 +183,7 @@ function groupDistributions(distributions: LxcDistribution[]): LxcDistributionGr
 /**
  * Load cached catalog from localStorage
  */
-function loadCache(): LxcCatalogCache | null {
+function loadCache(settingsKey?: string): LxcCatalogCache | null {
   try {
     const cached = localStorage.getItem(CACHE_KEY);
     if (!cached) {
@@ -192,6 +192,7 @@ function loadCache(): LxcCatalogCache | null {
     }
 
     const data = JSON.parse(cached) as LxcCatalogCache;
+    if (settingsKey !== undefined && data.settingsKey !== settingsKey) return null;
 
     // Check if cache has expired
     if (new Date(data.expiresAt) < new Date()) {
@@ -211,12 +212,13 @@ function loadCache(): LxcCatalogCache | null {
 /**
  * Save catalog to cache
  */
-function saveCache(distributions: LxcDistribution[], cacheDurationHours: number): void {
+function saveCache(distributions: LxcDistribution[], cacheDurationHours: number, settingsKey: string): void {
   try {
     const now = new Date();
     const expiresAt = new Date(now.getTime() + cacheDurationHours * 60 * 60 * 1000);
 
     const cache: LxcCatalogCache = {
+      settingsKey,
       lastUpdated: now.toISOString(),
       expiresAt: expiresAt.toISOString(),
       distributions,
@@ -251,12 +253,13 @@ export const lxcCatalogService = {
   ): Promise<{ distributions: LxcDistribution[]; groups: LxcDistributionGroup[] }> {
     const config = settings || DEFAULT_DISTRIBUTION_SOURCE_SETTINGS;
     const systemArch = getSystemArch();
+    const settingsKey = JSON.stringify([config.lxcBaseUrl, config.showUnstableReleases, systemArch, config.cacheDurationHours]);
 
     debug(`[lxcCatalog] Fetching catalog (forceRefresh=${forceRefresh})`);
 
     // Check cache first (unless forcing refresh)
     if (!forceRefresh) {
-      const cached = loadCache();
+      const cached = loadCache(settingsKey);
       if (cached) {
         debug("[lxcCatalog] Using cached catalog");
         const groups = groupDistributions(cached.distributions);
@@ -304,7 +307,7 @@ export const lxcCatalogService = {
     });
 
     // Save to cache
-    saveCache(distributions, config.cacheDurationHours);
+    saveCache(distributions, config.cacheDurationHours, settingsKey);
 
     // Group for display
     const groups = groupDistributions(distributions);

@@ -441,71 +441,94 @@ describe("Distribution Creation", () => {
   });
 
   describe("Creation Flow Verification", () => {
-    // Skip: In mock mode, operations complete too quickly to reliably observe the disabled state
-    it.skip("should disable install button while operation is in progress", async () => {
-      const newButton = await $(selectors.newDistroButton);
-      await newButton.click();
-      const dialog = await waitForDialog(selectors.dialog, 10000);
+    it("should disable install button while operation is in progress", async () => {
+      type InstallTestWindow = Window & {
+        __TAURI_INTERNALS__: {
+          convertFileSrc: (path: string, protocol: string) => string;
+        };
+        __pendingInstallTest?: {
+          calls: number;
+          release?: () => void;
+          restore: () => void;
+        };
+      };
 
-      // Switch to Download tab
-      const downloadTab = await dialog.$("button*=Download");
-      await downloadTab.click();
+      // Hold only the install IPC call. No backend install runs, and unrelated
+      // Tauri commands (including polling) continue through the original fetch.
+      await browser.execute(() => {
+        const testWindow = window as unknown as InstallTestWindow;
+        const installUrl = testWindow.__TAURI_INTERNALS__.convertFileSrc("quick_install_distribution", "ipc");
+        const original = window.fetch;
+        const fixture: NonNullable<InstallTestWindow["__pendingInstallTest"]> = {
+          calls: 0,
+          restore: () => { window.fetch = original; },
+        };
+        // Tauri makes invoke non-writable. Intercept its fetch transport for
+        // this exact command URL instead, leaving all other IPC untouched.
+        const intercept: typeof window.fetch = (input, init) => {
+          const url = input instanceof Request ? input.url : String(input);
+          if (url !== installUrl) {
+            return original.call(window, input, init);
+          }
+          fixture.calls += 1;
+          return new Promise<Response>((resolve) => {
+            fixture.release = () => resolve(new Response("E2E controlled install failure", {
+              headers: { "Content-Type": "text/plain", "Tauri-Response": "error" },
+            }));
+          });
+        };
+        window.fetch = intercept;
+        if (window.fetch !== intercept) {
+          throw new Error("Could not intercept the Tauri install transport");
+        }
+        testWindow.__pendingInstallTest = fixture;
+      });
 
-      // Wait for tab to become active
-      await browser.waitUntil(
-        async () => {
-          const classes = await downloadTab.getAttribute("class");
-          return classes.includes("bg-");
-        },
-        { timeout: 3000, timeoutMsg: "Download tab did not become active" }
-      );
+      try {
+        const newButton = await $(selectors.newDistroButton);
+        await newButton.click();
+        await waitForDialog(selectors.newDistroDialog, 10000);
+        await $(selectors.newDistroTabQuickInstall).click();
 
-      // Enable Custom URL
-      const customUrlOption = await dialog.$("button*=Custom URL");
-      if (await customUrlOption.isExisting()) {
-        await customUrlOption.click();
-
-        // Wait for custom URL fields to appear
-        await browser.waitUntil(
-          async () => {
-            const input = await dialog.$("input[placeholder*='Enter a unique name']");
-            try {
-              return await input.isDisplayed();
-            } catch {
-              return false;
-            }
-          },
-          { timeout: 3000 }
-        ).catch(() => {});
-      }
-
-      // Fill in required fields
-      const nameInput = await dialog.$("input[placeholder*='Enter a unique name']");
-      if (await nameInput.isExisting()) {
-        await nameInput.setValue("TestDistro");
-      }
-
-      const urlInput = await dialog.$("input[placeholder*='URL']");
-      if (await urlInput.isExisting()) {
-        await urlInput.setValue("https://example.com/distro.tar.gz");
-      }
-
-      // Try to click install
-      const installButton = await dialog.$("button*=Install");
-      if (await installButton.isExisting() && await installButton.isEnabled()) {
+        // Choose an available distro, rather than depending on one mock name.
+        const distro = await $('[data-testid="quick-install-content"] .grid button:not(:disabled)');
+        await distro.waitForClickable({ timeout: 5000 });
+        await distro.click();
+        const installButton = await $(selectors.newDistroInstallButton);
+        await installButton.waitForClickable({ timeout: 5000 });
         await installButton.click();
 
-        // Button should become disabled during operation
         await browser.waitUntil(
-          async () => {
-            const disabled = await installButton.getAttribute("disabled");
-            return disabled !== null;
-          },
-          {
-            timeout: 2000,
-            timeoutMsg: "Install button should be disabled during operation",
-          }
+          async () => browser.execute(() =>
+            (window as unknown as InstallTestWindow).__pendingInstallTest?.calls === 1
+          ),
+          { timeout: 5000, timeoutMsg: "The install IPC call was not intercepted" }
         );
+        await expect(installButton).toBeDisabled();
+        await expect($(selectors.newDistroCancelButton)).toBeDisabled();
+
+        // Explicitly complete the pending operation; failure leaves the dialog
+        // open so the same install button can be checked for retry readiness.
+        await browser.execute(() => {
+          (window as unknown as InstallTestWindow).__pendingInstallTest?.release?.();
+        });
+        await expect($(selectors.installErrorText)).toHaveText("E2E controlled install failure");
+        await expect(installButton).toBeEnabled();
+        await expect($(selectors.newDistroCancelButton)).toBeEnabled();
+      } finally {
+        // Release on assertion failures too, and always remove the IPC override.
+        await browser.execute(() => {
+          const testWindow = window as unknown as InstallTestWindow;
+          testWindow.__pendingInstallTest?.restore();
+          testWindow.__pendingInstallTest?.release?.();
+          delete testWindow.__pendingInstallTest;
+        });
+        const cancel = await $(selectors.newDistroCancelButton);
+        if (await cancel.isExisting()) {
+          await cancel.waitForClickable({ timeout: 5000 });
+          await cancel.click();
+          await waitForDialogToDisappear(selectors.newDistroDialog);
+        }
       }
     });
   });

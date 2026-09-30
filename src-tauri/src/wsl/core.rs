@@ -925,34 +925,38 @@ fn update_single_terminal_settings(path: &str, profile_guid: &str, new_name: &st
     let content = std::fs::read_to_string(path)
         .map_err(|e| format!("Failed to read settings: {}", e))?;
 
-    // Parse JSON
-    let mut json: serde_json::Value = serde_json::from_str(&content)
-        .map_err(|e| format!("Failed to parse settings JSON: {}", e))?;
+    use jsonc_parser::common::Ranged;
+    let parsed = jsonc_parser::parse_to_ast(&content, &Default::default(), &jsonc_parser::ParseOptions {
+        allow_comments: true,
+        allow_trailing_commas: true,
+        allow_loose_object_property_names: false,
+        allow_missing_commas: false,
+        allow_single_quoted_strings: false,
+        allow_hexadecimal_numbers: false,
+        allow_unary_plus_numbers: false,
+    }).map_err(|error| format!("Failed to parse settings JSONC: {}", error))?;
 
-    // Find the profile by GUID in profiles.list
-    let mut updated = false;
-    if let Some(profiles) = json.get_mut("profiles") {
-        if let Some(list) = profiles.get_mut("list").and_then(|l| l.as_array_mut()) {
-            for profile in list {
-                if let Some(guid) = profile.get("guid").and_then(|g| g.as_str()) {
-                    // Compare GUIDs case-insensitively
-                    if guid.eq_ignore_ascii_case(profile_guid) {
-                        profile["name"] = serde_json::Value::String(new_name.to_string());
-                        updated = true;
-                        break;
-                    }
-                }
-            }
-        }
-    }
+    let profile = parsed.value.as_ref()
+        .and_then(|value| value.as_object())
+        .and_then(|root| root.get_object("profiles"))
+        .and_then(|profiles| profiles.get_array("list"))
+        .and_then(|list| list.elements.iter().filter_map(|value| value.as_object()).find(|profile| {
+            profile.get_string("guid").is_some_and(|guid| guid.value.eq_ignore_ascii_case(profile_guid))
+        }))
+        .ok_or_else(|| format!("Profile with GUID {} not found in settings", profile_guid))?;
+    let encoded_name = serde_json::to_string(new_name)
+        .map_err(|error| format!("Failed to serialize terminal profile name: {}", error))?;
 
-    if !updated {
-        return Err(format!("Profile with GUID {} not found in settings", profile_guid));
-    }
-
-    // Write back (preserve formatting as much as possible)
-    let new_content = serde_json::to_string_pretty(&json)
-        .map_err(|e| format!("Failed to serialize settings JSON: {}", e))?;
+    // Replace only the value token. Comments, whitespace, ordering and unrelated
+    // profiles stay byte-for-byte intact. A GUID match guarantees a nonempty object.
+    let (range, replacement) = if let Some(name) = profile.get("name") {
+        (name.value.start()..name.value.end(), encoded_name)
+    } else {
+        let insertion = profile.start() + 1;
+        (insertion..insertion, format!("\"name\":{},", encoded_name))
+    };
+    let mut new_content = content.clone();
+    new_content.replace_range(range, &replacement);
 
     std::fs::write(path, new_content)
         .map_err(|e| format!("Failed to write settings: {}", e))?;
@@ -1085,40 +1089,57 @@ pub fn list_mounted_disks() -> Result<Vec<MountedDisk>, WslError> {
     let output = wsl_executor().exec(
         &distro.name,
         distro.id.as_deref(),
-        "mount | grep -E '^/dev/sd[a-z]+[0-9]* on /mnt/wsl/[^/]+\\s' 2>/dev/null || echo ''"
+        "cat /proc/self/mounts"
     )?;
 
+    if !output.success {
+        return Err(WslError::CommandFailed(output.stderr));
+    }
+    Ok(parse_mounted_disks(&output.stdout))
+}
+
+fn parse_mounted_disks(output: &str) -> Vec<MountedDisk> {
     let mut mounted_disks = Vec::new();
     let internal_mounts = ["docker-desktop", "docker-desktop-data", "docker-desktop-bind", "rancher-desktop", "rancher-desktop-data"];
 
-    for line in output.stdout.lines() {
-        if line.trim().is_empty() {
+    for line in output.lines() {
+        let parts: Vec<&str> = line.split_whitespace().collect();
+        if parts.len() != 6 {
             continue;
         }
-
-        let parts: Vec<&str> = line.split_whitespace().collect();
-        if parts.len() >= 5 && parts[1] == "on" && parts[3] == "type" {
-            let mount_point = parts[2].to_string();
-            let filesystem = Some(parts[4].to_string());
-            let disk_name = mount_point.strip_prefix("/mnt/wsl/").unwrap_or("");
-
-            if internal_mounts.iter().any(|&m| disk_name.starts_with(m)) {
-                continue;
-            }
-
-            let (path, is_vhd) = classify_mounted_disk(disk_name);
-
-            mounted_disks.push(MountedDisk {
-                path,
-                mount_point,
-                filesystem,
-                is_vhd,
-            });
+        let (source, filesystem) = (parts[0], parts[2]);
+        // Disk devices have several naming schemes. virtiofs uses a share tag
+        // instead of a /dev path. Exclude unrelated pseudo filesystems.
+        if filesystem != "virtiofs"
+            && (!source.starts_with("/dev/") || matches!(filesystem, "tmpfs" | "devtmpfs" | "devpts"))
+        {
+            continue;
         }
+        // procfs escapes whitespace and backslashes. Decode backslashes last
+        // so a literal \040 (encoded as \134040) is not decoded twice.
+        let mount_point = parts[1].replace(r"\040", " ")
+            .replace(r"\011", "\t")
+            .replace(r"\012", "\n")
+            .replace(r"\134", "\\");
+        let Some(disk_name) = mount_point.strip_prefix("/mnt/wsl/") else {
+            continue;
+        };
+        if disk_name.is_empty() || disk_name.contains('/')
+            || internal_mounts.iter().any(|&name| disk_name.starts_with(name))
+        {
+            continue;
+        }
+        let (path, is_vhd) = classify_mounted_disk(disk_name);
+        mounted_disks.push(MountedDisk {
+            path,
+            mount_point,
+            filesystem: Some(filesystem.to_string()),
+            is_vhd,
+        });
     }
 
     debug!("Found {} mounted disks", mounted_disks.len());
-    Ok(mounted_disks)
+    mounted_disks
 }
 
 /// List physical disks available for mounting
@@ -1153,6 +1174,92 @@ pub fn update_wsl(pre_release: bool, current_version: Option<&str>) -> Result<St
 
 #[cfg(test)]
 mod tests {
+    fn rename_terminal_fixture(content: &str, guid: &str, name: &str) -> Result<String, String> {
+        let path = std::env::temp_dir().join(format!("wslui_terminal_{}.json", super::super::unique_temp_tag()));
+        std::fs::write(&path, content).unwrap();
+        let result = super::update_single_terminal_settings(&path.to_string_lossy(), guid, name);
+        let saved = std::fs::read_to_string(&path).unwrap();
+        std::fs::remove_file(path).unwrap();
+        result.map(|_| saved)
+    }
+
+    #[test]
+    fn test_terminal_settings_rename_preserves_jsonc_comments_and_trailing_commas() {
+        let original = "{\r\n  // User preferences\r\n  \"profiles\": { \"list\": [\r\n    {\"guid\":\"{ABC}\", /* keep */ \"name\":\"Old\",},\r\n    {\"guid\":\"{OTHER}\", \"name\":\"Old\"},\r\n  ], },\r\n  \"theme\": \"dark\",\r\n}\r\n";
+        let saved = rename_terminal_fixture(original, "{abc}", "New").unwrap();
+        assert_eq!(saved, original.replacen("\"name\":\"Old\"", "\"name\":\"New\"", 1));
+    }
+
+    #[test]
+    fn test_terminal_settings_rename_preserves_json_formatting_and_escapes_new_name() {
+        let original = r#"{ "profiles": { "list": [{"guid":"{ABC}","name":"Old","commandline":"wsl -d Old"}] }, "theme":"dark" }"#;
+        let saved = rename_terminal_fixture(original, "{abc}", "New \"name\"").unwrap();
+        assert_eq!(saved, original.replacen("\"name\":\"Old\"", "\"name\":\"New \\\"name\\\"\"", 1));
+    }
+
+    #[test]
+    fn test_terminal_settings_rename_adds_missing_name_without_rewriting_profile() {
+        let original = r#"{"profiles":{"list":[{/* profile */ "guid":"{ABC}","icon":"https://example.test/icon.png",}]}}"#;
+        let saved = rename_terminal_fixture(original, "{abc}", "New").unwrap();
+        assert_eq!(saved, original.replacen("{/* profile */", "{\"name\":\"New\",/* profile */", 1));
+    }
+
+    #[test]
+    fn test_terminal_settings_rename_does_not_write_invalid_or_unmatched_files() {
+        for original in [
+            r#"{"profiles":{"list":[{"guid":"{OTHER}","name":"Old"}]}}"#,
+            r#"{"profiles":{"list":[{"guid":"{ABC}" "name":"Old"}]}}"#,
+        ] {
+            let path = std::env::temp_dir().join(format!("wslui_terminal_invalid_{}.json", super::super::unique_temp_tag()));
+            std::fs::write(&path, original).unwrap();
+            let result = super::update_single_terminal_settings(&path.to_string_lossy(), "{abc}", "New");
+            let saved = std::fs::read_to_string(&path).unwrap();
+            std::fs::remove_file(path).unwrap();
+            assert!(result.is_err());
+            assert_eq!(saved, original);
+        }
+    }
+
+    #[test]
+    fn test_mounted_disks_discovers_scsi_nvme_virtio_and_virtiofs() {
+        let disks = super::parse_mounted_disks(concat!(
+            "/dev/sdc1 /mnt/wsl/scsi ext4 rw 0 0\n",
+            "/dev/nvme0n1p2 /mnt/wsl/nvme xfs rw 0 0\n",
+            "/dev/vdb /mnt/wsl/virtio ext4 rw 0 0\n",
+            "share-tag /mnt/wsl/shared virtiofs rw 0 0\n",
+        ));
+        assert_eq!(disks.iter().map(|disk| disk.mount_point.as_str()).collect::<Vec<_>>(),
+            ["/mnt/wsl/scsi", "/mnt/wsl/nvme", "/mnt/wsl/virtio", "/mnt/wsl/shared"]);
+        assert_eq!(disks[1].filesystem.as_deref(), Some("xfs"));
+        assert_eq!(disks[3].filesystem.as_deref(), Some("virtiofs"));
+    }
+
+    #[test]
+    fn test_mounted_disks_decodes_mount_table_escapes_once() {
+        let disks = super::parse_mounted_disks(
+            r"/dev/sdc /mnt/wsl/my\040disk\134040\011tab\012line ext4 rw 0 0"
+        );
+        assert_eq!(disks.len(), 1);
+        assert_eq!(disks[0].mount_point, "/mnt/wsl/my disk\\040\ttab\nline");
+    }
+
+    #[test]
+    fn test_mounted_disks_excludes_system_container_nested_and_malformed_mounts() {
+        let disks = super::parse_mounted_disks(concat!(
+            "tmpfs /mnt/wsl tmpfs rw 0 0\n",
+            "tmpfs /mnt/wsl/scratch tmpfs rw 0 0\n",
+            "overlay /mnt/wsl/overlay overlay rw 0 0\n",
+            "/dev/shm /mnt/wsl/shm tmpfs rw 0 0\n",
+            "/dev/sdc /mnt/wsl/docker-desktop ext4 rw 0 0\n",
+            "container-tag /mnt/wsl/rancher-desktop virtiofs rw 0 0\n",
+            "/dev/vdb /mnt/wsl/disk/nested ext4 rw 0 0\n",
+            "/dev/sda / ext4 rw 0 0\n",
+            "windows-tag /mnt/c virtiofs rw 0 0\n",
+            "/dev/sdc /mnt/wsl/incomplete ext4\n",
+        ));
+        assert!(disks.is_empty());
+    }
+
     use super::{
         classify_mounted_disk, find_transitioning_names, is_no_distros_output,
         parse_running_distro_names,

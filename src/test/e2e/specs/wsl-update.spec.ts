@@ -16,6 +16,7 @@ import {
   setMockError,
   clearMockErrors,
   setMockUpdateResult,
+  waitForSettingsSaved,
 } from "../utils";
 
 /**
@@ -29,8 +30,8 @@ async function switchToTab(tabId: string): Promise<void> {
   // Wait for tab content to load
   await browser.waitUntil(
     async () => {
-      const classes = await tab.getAttribute("class");
-      return classes.includes("accent") || classes.includes("bg-");
+      const classes = (await tab.getAttribute("class")) ?? "";
+      return classes.includes("accent-primary") || classes.includes("border-r-2");
     },
     { timeout: 3000, timeoutMsg: "Tab did not become active" }
   );
@@ -39,9 +40,20 @@ async function switchToTab(tabId: string): Promise<void> {
 describe("WSL Update", () => {
   setupHooks.withCleanNotifications();
 
+  beforeEach(async () => {
+    await waitForSettingsSaved();
+    // Start every case on the stable channel; pre-release tests enable it via UI.
+    await browser.execute(async () => {
+      // @ts-expect-error - Store is exposed for e2e testing
+      await window.__settingsStore.getState().updateSetting("usePreReleaseUpdates", false);
+    });
+    await waitForSettingsSaved();
+  });
+
   afterEach(async () => {
     // Clear any error configurations and update results
     await clearMockErrors();
+    await setMockUpdateResult("already_up_to_date");
   });
 
   describe("Update Button", () => {
@@ -156,10 +168,7 @@ describe("WSL Update", () => {
       await setMockUpdateResult("updated", "2.3.24.0", "2.3.26.0");
     });
 
-    // TODO: This test is flaky - mock update result configuration doesn't reliably apply
-    // before the test runs due to race conditions with Tauri IPC. The mock sometimes
-    // returns the default "AlreadyUpToDate" instead of the configured "Updated" result.
-    it.skip("should show success notification with version change", async () => {
+    it("should show success notification with version change", async () => {
       const updateButton = await $(selectors.wslUpdateButton);
       await updateButton.click();
 
@@ -199,9 +208,7 @@ describe("WSL Update", () => {
       await setMockError("update", "cancelled", 100);
     });
 
-    // TODO: This test is flaky - mock error configuration doesn't reliably apply
-    // before the test runs. The mock sometimes returns success instead of cancelled.
-    it.skip("should show warning notification when update is cancelled", async () => {
+    it("should show warning notification when update is cancelled", async () => {
       const updateButton = await $(selectors.wslUpdateButton);
       await updateButton.click();
 
@@ -263,9 +270,7 @@ describe("WSL Update", () => {
       await setMockError("update", "command_failed", 100);
     });
 
-    // TODO: This test is flaky - mock error configuration doesn't reliably apply
-    // before the test runs. The mock sometimes returns success instead of error.
-    it.skip("should show error notification on failure", async () => {
+    it("should show error notification on failure", async () => {
       const updateButton = await $(selectors.wslUpdateButton);
       await updateButton.click();
 
@@ -296,8 +301,7 @@ describe("WSL Update", () => {
       expect(titleText.toLowerCase()).toContain("failed");
     });
 
-    // TODO: Skipped - depends on error configuration which is flaky
-    it.skip("should NOT auto-dismiss error notification", async () => {
+    it("should NOT auto-dismiss error notification", async () => {
       const updateButton = await $(selectors.wslUpdateButton);
       await updateButton.click();
 
@@ -307,22 +311,12 @@ describe("WSL Update", () => {
         { timeout: 10000, timeoutMsg: "Notification did not appear" }
       );
 
-      // Wait 6 seconds and verify notification is still visible (no auto-dismiss)
-      // Use a waitUntil with inverse condition and expect it to timeout
-      let stillVisible = true;
-      try {
-        await browser.waitUntil(
-          async () => !(await isElementDisplayed(selectors.notificationBanner)),
-          { timeout: 6000, timeoutMsg: "Notification should not auto-dismiss" }
-        );
-        stillVisible = false; // If we get here, notification was dismissed (bad)
-      } catch {
-        stillVisible = true; // Timeout means notification stayed visible (good)
-      }
-
-      expect(stillVisible).toBe(true);
-      const notification = await $(selectors.notificationBanner);
-      await expect(notification).toBeDisplayed();
+      await expect($(selectors.notificationTitle)).toHaveText(/WSL Update Failed/i);
+      // Deliberately pass the success banner's 5-second dismissal deadline.
+      // This is the behavior under test, not a delay used to synchronize setup.
+      await browser.pause(6000);
+      await expect($(selectors.notificationBanner)).toBeDisplayed();
+      await expect($(selectors.notificationTitle)).toHaveText(/WSL Update Failed/i);
     });
 
     it("should allow manual dismissal of error notification", async () => {
@@ -365,42 +359,29 @@ describe("WSL Update", () => {
       const toggle = await $('[data-testid="wsl-prerelease-updates-toggle"]');
       await toggle.waitForClickable({ timeout: 5000 });
 
-      // Click the toggle to enable pre-release updates
-      await toggle.click();
-
-      // Wait for save button to appear
-      await browser.waitUntil(
-        async () => isElementDisplayed('button*=Save'),
-        { timeout: 3000 }
-      ).catch(() => {}); // Ignore if save button doesn't appear
-
-      // Save settings if button is visible
-      const saveButtonVisible = await isElementDisplayed('button*=Save');
-      if (saveButtonVisible) {
-        const saveButton = await $('button*=Save');
-        await saveButton.click();
-
-        // Wait for save to complete (button disappears)
-        await browser.waitUntil(
-          async () => !(await isElementDisplayed('button*=Save')),
-          { timeout: 5000, timeoutMsg: "Save did not complete" }
-        ).catch(() => {});
+      if (!((await toggle.getAttribute("class")) ?? "").includes("bg-theme-accent-primary")) {
+        await toggle.click();
       }
-
+      await browser.waitUntil(
+        async () => ((await toggle.getAttribute("class")) ?? "").includes("bg-theme-accent-primary"),
+        { timeout: 5000, timeoutMsg: "Pre-release setting did not become enabled" }
+      );
+      // This app setting saves immediately; the WSL config Save button is unrelated.
+      await waitForSettingsSaved();
       await actions.goBackFromSettings();
     }
 
-    // Skip: Mock doesn't persist pre-release setting for tooltip
-    it.skip("should show pre-release in tooltip when setting is enabled", async () => {
+    it("should show pre-release in tooltip when setting is enabled", async () => {
       await enablePreReleaseUpdates();
 
       const updateButton = await $(selectors.wslUpdateButton);
-      const title = await updateButton.getAttribute("title");
-      expect(title?.toLowerCase()).toContain("pre-release");
+      await browser.waitUntil(
+        async () => (await updateButton.getAttribute("title"))?.toLowerCase().includes("pre-release"),
+        { timeout: 5000, timeoutMsg: "Update tooltip did not reflect the saved pre-release setting" }
+      );
     });
 
-    // Skip: Mock doesn't persist pre-release setting for notification message
-    it.skip("should include pre-release channel in success message when enabled", async () => {
+    it("should include pre-release channel in success message when enabled", async () => {
       await enablePreReleaseUpdates();
       await setMockUpdateResult("already_up_to_date");
 
@@ -418,12 +399,10 @@ describe("WSL Update", () => {
 
       // Check notification mentions pre-release
       const message = await $(selectors.notificationMessage);
-      const messageText = await message.getText();
-      expect(messageText.toLowerCase()).toContain("pre-release");
+      await expect(message).toHaveText(/pre-release/i);
     });
 
-    // Skip: Mock doesn't persist pre-release setting for notification message
-    it.skip("should include pre-release channel in update message when enabled", async () => {
+    it("should include pre-release channel in update message when enabled", async () => {
       await enablePreReleaseUpdates();
       await setMockUpdateResult("updated", "2.3.24.0", "2.4.0.0-pre");
 
@@ -441,9 +420,8 @@ describe("WSL Update", () => {
 
       // Check notification mentions pre-release channel
       const message = await $(selectors.notificationMessage);
-      const messageText = await message.getText();
-      expect(messageText).toContain("2.4.0.0-pre");
-      expect(messageText.toLowerCase()).toContain("pre-release");
+      await expect(message).toHaveText(/2\.4\.0\.0-pre/);
+      await expect(message).toHaveText(/pre-release/i);
     });
   });
 });

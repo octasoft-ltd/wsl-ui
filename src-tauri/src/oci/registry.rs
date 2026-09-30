@@ -16,8 +16,70 @@ const OCI_MANIFEST: &str = "application/vnd.oci.image.manifest.v1+json";
 const OCI_INDEX: &str = "application/vnd.oci.image.index.v1+json";
 const MAX_TOKEN_BYTES: u64 = 1024 * 1024;
 const MAX_MANIFEST_BYTES: u64 = 10 * 1024 * 1024;
+const MAX_CONFIG_BYTES: u64 = 2 * 1024 * 1024;
 const MAX_BLOB_BYTES: u64 = 10 * 1024 * 1024 * 1024;
 const MAX_MANIFEST_DEPTH: usize = 8;
+
+fn oci_architecture(rust_architecture: &str) -> Result<&'static str, OciError> {
+    match rust_architecture {
+        "x86_64" => Ok("amd64"),
+        "aarch64" => Ok("arm64"),
+        other => Err(OciError::UnsupportedManifest(format!(
+            "Unsupported host architecture: {}",
+            other
+        ))),
+    }
+}
+
+fn platform_matches(platform: &Platform, architecture: &str) -> bool {
+    platform.os == "linux"
+        && platform.architecture == architecture
+        && match platform.variant.as_deref() {
+            None | Some("") => true,
+            Some("v8") => architecture == "arm64",
+            Some("v1") => architecture == "amd64",
+            _ => false,
+        }
+}
+
+fn select_linux_manifest<'a>(
+    list: &'a ManifestList,
+    architecture: &str,
+) -> Result<&'a ManifestDescriptor, OciError> {
+    list.manifests
+        .iter()
+        .find(|manifest| {
+            manifest
+                .platform
+                .as_ref()
+                .is_some_and(|platform| platform_matches(platform, architecture))
+        })
+        .ok_or_else(|| {
+            let available = list
+                .manifests
+                .iter()
+                .filter_map(|manifest| manifest.platform.as_ref())
+                .map(|platform| {
+                    let variant = platform
+                        .variant
+                        .as_deref()
+                        .map(|v| format!("/{}", v))
+                        .unwrap_or_default();
+                    format!("{}/{}{}", platform.os, platform.architecture, variant)
+                })
+                .collect::<Vec<_>>()
+                .join(", ");
+            OciError::UnsupportedManifest(format!(
+                "No compatible linux/{} manifest found. Available platforms: {}",
+                architecture,
+                if available.is_empty() {
+                    "none"
+                } else {
+                    &available
+                }
+            ))
+        })
+}
 
 fn read_text_limited(
     response: reqwest::blocking::Response,
@@ -42,9 +104,8 @@ fn read_text_limited(
             description, limit
         )));
     }
-    String::from_utf8(bytes).map_err(|e| {
-        OciError::RegistryError(format!("{} is not valid UTF-8: {}", description, e))
-    })
+    String::from_utf8(bytes)
+        .map_err(|e| OciError::RegistryError(format!("{} is not valid UTF-8: {}", description, e)))
 }
 
 fn validate_manifest_hop(
@@ -106,7 +167,9 @@ impl RegistryClient {
 
         // Try to access the manifest to trigger auth challenge
         let url = format!("{}/v2/{}/manifests/latest", base_url, repository);
-        let response = self.client.get(&url)
+        let response = self
+            .client
+            .get(&url)
             .header(ACCEPT, MANIFEST_V2)
             .send()
             .map_err(|e| OciError::NetworkError(e.to_string()))?;
@@ -125,7 +188,11 @@ impl RegistryClient {
     }
 
     /// Get a bearer token from the auth service
-    fn get_bearer_token(&self, www_auth: &str, repository: &str) -> Result<Option<String>, OciError> {
+    fn get_bearer_token(
+        &self,
+        www_auth: &str,
+        repository: &str,
+    ) -> Result<Option<String>, OciError> {
         // Parse: Bearer realm="https://auth.docker.io/token",service="registry.docker.io",scope="repository:library/alpine:pull"
         if !www_auth.starts_with("Bearer ") {
             return Ok(None);
@@ -141,9 +208,9 @@ impl RegistryClient {
             })
             .collect();
 
-        let realm = params.get("realm").ok_or_else(|| {
-            OciError::AuthRequired("No realm in auth header".to_string())
-        })?;
+        let realm = params
+            .get("realm")
+            .ok_or_else(|| OciError::AuthRequired("No realm in auth header".to_string()))?;
 
         let mut url = format!("{}?", realm);
         if let Some(service) = params.get("service") {
@@ -152,7 +219,9 @@ impl RegistryClient {
         // Request pull scope
         url.push_str(&format!("scope=repository:{}:pull", repository));
 
-        let response = self.client.get(&url)
+        let response = self
+            .client
+            .get(&url)
             .send()
             .map_err(|e| OciError::NetworkError(e.to_string()))?;
 
@@ -179,13 +248,15 @@ impl RegistryClient {
 
     /// Fetch the image manifest
     pub fn get_manifest(&mut self, image: &ImageReference) -> Result<ImageManifest, OciError> {
+        let architecture = oci_architecture(std::env::consts::ARCH)?;
         let mut seen_digests = std::collections::HashSet::new();
-        self.get_manifest_inner(image, 0, &mut seen_digests)
+        self.get_manifest_inner(image, architecture, 0, &mut seen_digests)
     }
 
     fn get_manifest_inner(
         &mut self,
         image: &ImageReference,
+        architecture: &str,
         depth: usize,
         seen_digests: &mut std::collections::HashSet<String>,
     ) -> Result<ImageManifest, OciError> {
@@ -196,16 +267,25 @@ impl RegistryClient {
 
         let base_url = self.registry_url(&image.registry);
         let reference = image.digest.as_ref().unwrap_or(&image.tag);
-        let url = format!("{}/v2/{}/manifests/{}", base_url, image.repository, reference);
+        let url = format!(
+            "{}/v2/{}/manifests/{}",
+            base_url, image.repository, reference
+        );
 
-        let mut request = self.client.get(&url)
-            .header(ACCEPT, format!("{}, {}, {}, {}", MANIFEST_V2, OCI_MANIFEST, MANIFEST_LIST, OCI_INDEX));
+        let mut request = self.client.get(&url).header(
+            ACCEPT,
+            format!(
+                "{}, {}, {}, {}",
+                MANIFEST_V2, OCI_MANIFEST, MANIFEST_LIST, OCI_INDEX
+            ),
+        );
 
         if let Some(ref token) = self.token {
             request = request.header(AUTHORIZATION, format!("Bearer {}", token));
         }
 
-        let response = request.send()
+        let response = request
+            .send()
             .map_err(|e| OciError::NetworkError(e.to_string()))?;
 
         if response.status() == reqwest::StatusCode::NOT_FOUND {
@@ -222,7 +302,8 @@ impl RegistryClient {
             )));
         }
 
-        let content_type = response.headers()
+        let content_type = response
+            .headers()
             .get("content-type")
             .and_then(|v| v.to_str().ok())
             .unwrap_or("")
@@ -231,7 +312,7 @@ impl RegistryClient {
         let body = read_text_limited(response, MAX_MANIFEST_BYTES, "Image manifest")?;
 
         // When the manifest was requested by digest (pinned reference or the
-        // amd64 child of a manifest list), verify the returned bytes match it.
+        // selected child of a manifest list), verify the returned bytes match it.
         // A poisoned manifest would otherwise dictate which layers we pull.
         if let Some(ref requested_digest) = image.digest {
             let actual_hex = format!("{:x}", Sha256::digest(body.as_bytes()));
@@ -240,31 +321,85 @@ impl RegistryClient {
 
         // Check if it's a manifest list (multi-arch)
         if content_type.contains("manifest.list") || content_type.contains("image.index") {
-            let list: ManifestList = serde_json::from_str(&body)
-                .map_err(|e| OciError::RegistryError(format!("Failed to parse manifest list: {}", e)))?;
+            let list: ManifestList = serde_json::from_str(&body).map_err(|e| {
+                OciError::RegistryError(format!("Failed to parse manifest list: {}", e))
+            })?;
 
-            // Find amd64/linux manifest
-            let amd64_manifest = list.manifests.iter()
-                .find(|m| {
-                    m.platform.as_ref().map(|p| {
-                        p.architecture == "amd64" && p.os == "linux"
-                    }).unwrap_or(false)
-                })
-                .ok_or_else(|| OciError::UnsupportedManifest(
-                    "No amd64/linux manifest found".to_string()
-                ))?;
+            let selected_manifest = select_linux_manifest(&list, architecture)?;
 
             // Fetch the actual manifest using digest
             let mut child_image = image.clone();
-            child_image.digest = Some(amd64_manifest.digest.clone());
-            return self.get_manifest_inner(&child_image, depth + 1, seen_digests);
+            child_image.digest = Some(selected_manifest.digest.clone());
+            return self.get_manifest_inner(&child_image, architecture, depth + 1, seen_digests);
         }
 
         // Parse as regular manifest
         let manifest: ImageManifest = serde_json::from_str(&body)
             .map_err(|e| OciError::RegistryError(format!("Failed to parse manifest: {}", e)))?;
 
+        // Single manifests do not advertise a platform in the manifest itself.
+        // Verify the content-addressed config too, so pinned or single-platform
+        // images cannot silently import binaries for another architecture.
+        self.validate_config_platform(image, &manifest.config, architecture)?;
         Ok(manifest)
+    }
+
+    fn validate_config_platform(
+        &self,
+        image: &ImageReference,
+        config: &Descriptor,
+        architecture: &str,
+    ) -> Result<(), OciError> {
+        if config.size > MAX_CONFIG_BYTES {
+            return Err(OciError::UnsupportedManifest(
+                "Image config exceeds size limit".into(),
+            ));
+        }
+        let url = format!(
+            "{}/v2/{}/blobs/{}",
+            self.registry_url(&image.registry),
+            image.repository,
+            config.digest
+        );
+        let mut request = self.client.get(url);
+        if let Some(ref token) = self.token {
+            request = request.header(AUTHORIZATION, format!("Bearer {}", token));
+        }
+        let response = request
+            .send()
+            .map_err(|e| OciError::NetworkError(e.to_string()))?;
+        if !response.status().is_success() {
+            return Err(OciError::RegistryError(format!(
+                "Failed to get image config: {}",
+                response.status()
+            )));
+        }
+        let body = read_text_limited(response, MAX_CONFIG_BYTES, "Image config")?;
+        if body.len() as u64 != config.size {
+            return Err(OciError::RegistryError(
+                "Image config size does not match manifest".into(),
+            ));
+        }
+        verify_digest(
+            &config.digest,
+            &format!("{:x}", Sha256::digest(body.as_bytes())),
+        )?;
+        let platform: Platform = serde_json::from_str(&body).map_err(|e| {
+            OciError::UnsupportedManifest(format!("Invalid image platform config: {}", e))
+        })?;
+        if !platform_matches(&platform, architecture) {
+            return Err(OciError::UnsupportedManifest(format!(
+                "Image platform {}/{}{} is incompatible with linux/{}",
+                platform.os,
+                platform.architecture,
+                platform
+                    .variant
+                    .map(|v| format!("/{}", v))
+                    .unwrap_or_default(),
+                architecture
+            )));
+        }
+        Ok(())
     }
 
     /// Download a blob (layer) to a file
@@ -297,7 +432,8 @@ impl RegistryClient {
             request = request.header(AUTHORIZATION, format!("Bearer {}", token));
         }
 
-        let response = request.send()
+        let response = request
+            .send()
             .map_err(|e| OciError::NetworkError(e.to_string()))?;
 
         if !response.status().is_success() {
@@ -463,10 +599,163 @@ fn get_registry_url(registry: &str) -> String {
 mod tests {
     use super::*;
 
+    fn platform_manifest_list() -> ManifestList {
+        serde_json::from_value(serde_json::json!({
+            "schemaVersion": 2,
+            "manifests": [
+                {"mediaType": OCI_MANIFEST, "digest": "windows", "size": 1,
+                    "platform": {"os": "windows", "architecture": "amd64"}},
+                {"mediaType": OCI_MANIFEST, "digest": "x64", "size": 1,
+                    "platform": {"os": "linux", "architecture": "amd64"}},
+                {"mediaType": OCI_MANIFEST, "digest": "arm-newer", "size": 1,
+                    "platform": {"os": "linux", "architecture": "arm64", "variant": "v9"}},
+                {"mediaType": OCI_MANIFEST, "digest": "arm", "size": 1,
+                    "platform": {"os": "linux", "architecture": "arm64", "variant": "v8"}}
+            ]
+        }))
+        .unwrap()
+    }
+
+    #[test]
+    fn manifest_selection_maps_native_architecture_and_filters_os_and_variant() {
+        let list = platform_manifest_list();
+        assert_eq!(
+            select_linux_manifest(&list, oci_architecture("x86_64").unwrap())
+                .unwrap()
+                .digest,
+            "x64"
+        );
+        assert_eq!(
+            select_linux_manifest(&list, oci_architecture("aarch64").unwrap())
+                .unwrap()
+                .digest,
+            "arm"
+        );
+        assert!(oci_architecture("arm").is_err());
+        assert!(oci_architecture("unknown").is_err());
+    }
+
+    #[test]
+    fn missing_host_architecture_reports_available_platforms_without_fallback() {
+        let mut list = platform_manifest_list();
+        list.manifests.retain(|manifest| manifest.digest != "arm");
+        let error = select_linux_manifest(&list, "arm64")
+            .unwrap_err()
+            .to_string();
+        assert!(error.contains("linux/arm64"));
+        assert!(error.contains("Available platforms: windows/amd64, linux/amd64, linux/arm64/v9"));
+    }
+
+    #[tokio::test]
+    async fn single_manifest_rejects_foreign_platform_before_any_layers_are_downloaded() {
+        use wiremock::matchers::{method, path};
+        use wiremock::{Mock, MockServer, ResponseTemplate};
+
+        let server = MockServer::start().await;
+        let config = serde_json::json!({"architecture": "s390x", "os": "linux"}).to_string();
+        let digest = format!("sha256:{:x}", Sha256::digest(config.as_bytes()));
+        let manifest = serde_json::json!({
+            "schemaVersion": 2,
+            "mediaType": OCI_MANIFEST,
+            "config": {"mediaType": "application/vnd.oci.image.config.v1+json", "digest": digest, "size": config.len()},
+            "layers": []
+        });
+        Mock::given(method("GET"))
+            .and(path("/v2/test/manifests/latest"))
+            .respond_with(
+                ResponseTemplate::new(200)
+                    .insert_header("content-type", OCI_MANIFEST)
+                    .set_body_json(manifest),
+            )
+            .mount(&server)
+            .await;
+        Mock::given(method("GET"))
+            .and(path(format!("/v2/test/blobs/{}", digest)))
+            .respond_with(ResponseTemplate::new(200).set_body_string(config))
+            .mount(&server)
+            .await;
+        let image = ImageReference {
+            registry: server.uri(),
+            repository: "test".into(),
+            tag: "latest".into(),
+            digest: None,
+        };
+        let result =
+            tokio::task::spawn_blocking(move || RegistryClient::new().get_manifest(&image))
+                .await
+                .unwrap();
+        assert!(
+            matches!(result, Err(OciError::UnsupportedManifest(_))),
+            "foreign image must be rejected: {result:?}"
+        );
+        assert!(result.unwrap_err().to_string().contains("s390x"));
+    }
+
+    #[tokio::test]
+    async fn arm64_index_fetches_matching_child_and_verified_config() {
+        use wiremock::matchers::{method, path};
+        use wiremock::{Mock, MockServer, ResponseTemplate};
+        let server = MockServer::start().await;
+        let config = serde_json::json!({"architecture": "arm64", "os": "linux"}).to_string();
+        let config_digest = format!("sha256:{:x}", Sha256::digest(config.as_bytes()));
+        let manifest = serde_json::json!({
+            "schemaVersion": 2, "mediaType": OCI_MANIFEST,
+            "config": {"mediaType": "application/vnd.oci.image.config.v1+json", "digest": config_digest, "size": config.len()},
+            "layers": []
+        }).to_string();
+        let manifest_digest = format!("sha256:{:x}", Sha256::digest(manifest.as_bytes()));
+        let list = serde_json::json!({"schemaVersion": 2, "mediaType": OCI_INDEX, "manifests": [
+            {"mediaType": OCI_MANIFEST, "digest": "unwanted-amd64", "size": 1, "platform": {"architecture": "amd64", "os": "linux"}},
+            {"mediaType": OCI_MANIFEST, "digest": manifest_digest, "size": manifest.len(), "platform": {"architecture": "arm64", "os": "linux"}}
+        ]});
+        Mock::given(method("GET"))
+            .and(path("/v2/test/manifests/latest"))
+            .respond_with(ResponseTemplate::new(200).set_body_raw(list.to_string(), OCI_INDEX))
+            .mount(&server)
+            .await;
+        Mock::given(method("GET"))
+            .and(path(format!("/v2/test/manifests/{}", manifest_digest)))
+            .respond_with(
+                ResponseTemplate::new(200)
+                    .insert_header("content-type", OCI_MANIFEST)
+                    .set_body_string(manifest),
+            )
+            .expect(1)
+            .mount(&server)
+            .await;
+        Mock::given(method("GET"))
+            .and(path(format!("/v2/test/blobs/{}", config_digest)))
+            .respond_with(ResponseTemplate::new(200).set_body_string(config))
+            .expect(1)
+            .mount(&server)
+            .await;
+        let image = ImageReference {
+            registry: server.uri(),
+            repository: "test".into(),
+            tag: "latest".into(),
+            digest: None,
+        };
+        let result = tokio::task::spawn_blocking(move || {
+            RegistryClient::new().get_manifest_inner(
+                &image,
+                "arm64",
+                0,
+                &mut std::collections::HashSet::new(),
+            )
+        })
+        .await
+        .unwrap()
+        .unwrap();
+        assert_eq!(result.config.digest, config_digest);
+    }
+
     // Tests for get_registry_url
     #[test]
     fn test_registry_url_docker_hub() {
-        assert_eq!(get_registry_url("docker.io"), "https://registry-1.docker.io");
+        assert_eq!(
+            get_registry_url("docker.io"),
+            "https://registry-1.docker.io"
+        );
     }
 
     #[test]
@@ -476,19 +765,28 @@ mod tests {
 
     #[test]
     fn test_registry_url_already_https() {
-        assert_eq!(get_registry_url("https://myregistry.com"), "https://myregistry.com");
+        assert_eq!(
+            get_registry_url("https://myregistry.com"),
+            "https://myregistry.com"
+        );
     }
 
     #[test]
     fn test_registry_url_http_preserved() {
         // Insecure registries keep http://
-        assert_eq!(get_registry_url("http://localhost:5000"), "http://localhost:5000");
+        assert_eq!(
+            get_registry_url("http://localhost:5000"),
+            "http://localhost:5000"
+        );
     }
 
     #[test]
     fn test_registry_url_adds_https() {
         assert_eq!(get_registry_url("quay.io"), "https://quay.io");
-        assert_eq!(get_registry_url("mcr.microsoft.com"), "https://mcr.microsoft.com");
+        assert_eq!(
+            get_registry_url("mcr.microsoft.com"),
+            "https://mcr.microsoft.com"
+        );
     }
 
     #[test]
@@ -504,7 +802,10 @@ mod tests {
 
         assert_eq!(params.get("realm").unwrap(), "https://auth.docker.io/token");
         assert_eq!(params.get("service").unwrap(), "registry.docker.io");
-        assert_eq!(params.get("scope").unwrap(), "repository:library/alpine:pull");
+        assert_eq!(
+            params.get("scope").unwrap(),
+            "repository:library/alpine:pull"
+        );
     }
 
     #[test]
@@ -582,9 +883,15 @@ mod tests {
     fn test_registry_client_registry_url() {
         let client = RegistryClient::new();
 
-        assert_eq!(client.registry_url("docker.io"), "https://registry-1.docker.io");
+        assert_eq!(
+            client.registry_url("docker.io"),
+            "https://registry-1.docker.io"
+        );
         assert_eq!(client.registry_url("ghcr.io"), "https://ghcr.io");
-        assert_eq!(client.registry_url("http://localhost:5000"), "http://localhost:5000");
+        assert_eq!(
+            client.registry_url("http://localhost:5000"),
+            "http://localhost:5000"
+        );
     }
 
     // Tests for verify_digest (content-integrity verification).
@@ -609,7 +916,11 @@ mod tests {
     #[test]
     fn test_verify_digest_mismatch() {
         let hex = sha256_hex(b"honest bytes");
-        assert!(verify_digest("sha256:0000000000000000000000000000000000000000000000000000000000000000", &hex).is_err());
+        assert!(verify_digest(
+            "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+            &hex
+        )
+        .is_err());
     }
 
     #[test]
@@ -677,7 +988,10 @@ mod tests {
 
         // Registry serves tampered bytes but the manifest promised a different digest.
         let served = b"tampered / MITM'd layer bytes".to_vec();
-        let expected_digest = format!("sha256:{}", sha256_hex(b"the honest layer the manifest points at"));
+        let expected_digest = format!(
+            "sha256:{}",
+            sha256_hex(b"the honest layer the manifest points at")
+        );
         let size = served.len() as u64; // size matches so the digest check is what fires
 
         let server = MockServer::start().await;
@@ -687,7 +1001,10 @@ mod tests {
             .await;
 
         let uri = server.uri();
-        let out = std::env::temp_dir().join(format!("oci-blob-digest-mismatch-{}.bin", std::process::id()));
+        let out = std::env::temp_dir().join(format!(
+            "oci-blob-digest-mismatch-{}.bin",
+            std::process::id()
+        ));
         let out_thread = out.clone();
 
         let result = tokio::task::spawn_blocking(move || {
@@ -700,7 +1017,10 @@ mod tests {
 
         assert!(result.is_err(), "digest mismatch must be rejected");
         // Partial/tampered file must be deleted so a broken layer is never imported
-        assert!(!out.exists(), "partial file should be removed on digest mismatch");
+        assert!(
+            !out.exists(),
+            "partial file should be removed on digest mismatch"
+        );
     }
 
     #[tokio::test]
@@ -720,7 +1040,8 @@ mod tests {
             .await;
 
         let uri = server.uri();
-        let out = std::env::temp_dir().join(format!("oci-blob-size-mismatch-{}.bin", std::process::id()));
+        let out =
+            std::env::temp_dir().join(format!("oci-blob-size-mismatch-{}.bin", std::process::id()));
         let out_thread = out.clone();
 
         let result = tokio::task::spawn_blocking(move || {
@@ -732,7 +1053,10 @@ mod tests {
         .unwrap();
 
         assert!(result.is_err(), "size mismatch must be rejected");
-        assert!(!out.exists(), "partial file should be removed on size mismatch");
+        assert!(
+            !out.exists(),
+            "partial file should be removed on size mismatch"
+        );
     }
 
     #[test]

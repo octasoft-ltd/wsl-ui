@@ -32,7 +32,7 @@ pub enum ValidationError {
 /// Rules:
 /// - Not empty
 /// - Max 64 characters
-/// - Alphanumeric, hyphens, underscores, periods only
+/// - Alphanumeric, hyphens, underscores, periods, and interior spaces only
 /// - Cannot start with hyphen (looks like command argument)
 pub fn validate_distro_name(name: &str) -> Result<(), ValidationError> {
     if name.is_empty() {
@@ -49,10 +49,16 @@ pub fn validate_distro_name(name: &str) -> Result<(), ValidationError> {
 
     if !name
         .chars()
-        .all(|c| c.is_alphanumeric() || c == '-' || c == '_' || c == '.')
+        .all(|c| c.is_alphanumeric() || c == '-' || c == '_' || c == '.' || c == ' ')
     {
         return Err(ValidationError::InvalidDistroName(
-            "name can only contain letters, numbers, hyphens, underscores, and periods".into(),
+            "name can only contain letters, numbers, hyphens, underscores, periods, and spaces".into(),
+        ));
+    }
+
+    if name.trim() != name {
+        return Err(ValidationError::InvalidDistroName(
+            "name cannot start or end with whitespace".into(),
         ));
     }
 
@@ -428,8 +434,15 @@ mod tests {
 
     #[test]
     fn test_distro_name_with_spaces() {
-        let result = validate_distro_name("name with spaces");
-        assert!(matches!(result, Err(ValidationError::InvalidDistroName(_))));
+        assert!(validate_distro_name("Ubuntu 22.04 LTS").is_ok());
+        assert!(validate_distro_name("My Distro").is_ok());
+    }
+
+    #[test]
+    fn test_distro_name_rejects_edge_whitespace_and_control_characters() {
+        for name in [" ", " Ubuntu", "Ubuntu ", "Ubuntu\tDev", "Ubuntu\nDev", "Ubuntu\rDev", "Ubuntu\0Dev"] {
+            assert!(validate_distro_name(name).is_err(), "accepted {name:?}");
+        }
     }
 
     #[test]

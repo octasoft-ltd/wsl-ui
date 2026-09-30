@@ -7,7 +7,7 @@ use wsl_core::decode_wsl_output;
 
 use super::{CommandOutput, WslCommandExecutor};
 use crate::settings::{get_executable_paths, get_timeout_config};
-use crate::utils::hidden_command;
+use crate::utils::wsl_command;
 use crate::wsl::executor::supports_distribution_id;
 use crate::wsl::types::{WslError, WslPreflightStatus};
 
@@ -135,8 +135,42 @@ fn classify_preflight_command_failure(
     }
 }
 
+fn mount_disk_args(
+    disk: &str, vhd: bool, bare: bool, name: Option<&str>,
+    fs_type: Option<&str>, options: Option<&str>, partition: Option<u32>,
+) -> Vec<String> {
+    let mut args = vec!["--mount", disk];
+    if vhd {
+        args.push("--vhd");
+    }
+    if bare {
+        args.push("--bare");
+    }
+    for (flag, value) in [("--name", name), ("--type", fs_type), ("--options", options)] {
+        if let Some(value) = value {
+            args.extend([flag, value]);
+        }
+    }
+    let partition = partition.map(|value| value.to_string());
+    if let Some(ref partition) = partition {
+        args.extend(["--partition", partition.as_str()]);
+    }
+    args.into_iter().map(String::from).collect()
+}
+
 /// Real implementation that calls wsl.exe
 pub struct RealWslExecutor;
+
+/// Killing a client while WSL is writing a VHD or archive can interrupt or
+/// orphan the operation. These commands must be allowed to finish naturally.
+fn command_timeout(args: &[&str], requested: Duration) -> Option<Duration> {
+    match args.first().copied() {
+        Some("--install" | "--import" | "--import-in-place" | "--export" | "--set-version") => None,
+        Some("--manage") if args.get(2).is_some_and(|flag|
+            matches!(*flag, "--move" | "--resize" | "--set-sparse")) => None,
+        _ => Some(requested),
+    }
+}
 
 impl RealWslExecutor {
     pub fn new() -> Self {
@@ -165,13 +199,14 @@ impl RealWslExecutor {
 
     /// Execute a WSL command with custom timeout
     fn execute_with_timeout(&self, args: &[&str], timeout: Duration) -> Result<CommandOutput, WslError> {
+        let deadline = command_timeout(args, timeout);
         debug!(
             "Executing WSL command: {:?}",
             args.iter().map(|a| redact_secrets_for_log(a)).collect::<Vec<_>>()
         );
 
         let paths = get_executable_paths();
-        let mut child = hidden_command(&paths.wsl)
+        let mut child = wsl_command(&paths.wsl)
             .args(args)
             .stdout(Stdio::piped())
             .stderr(Stdio::piped())
@@ -211,7 +246,7 @@ impl RealWslExecutor {
             match child.try_wait() {
                 Ok(Some(status)) => break status,
                 Ok(None) => {
-                    if start.elapsed() > timeout {
+                    if deadline.is_some_and(|limit| start.elapsed() > limit) {
                         let _ = child.kill();
                         // Join reader threads so they clean up; they should exit
                         // quickly now that the child process has been killed.
@@ -219,7 +254,7 @@ impl RealWslExecutor {
                         let _ = stderr_thread.join();
                         error!("WSL command timed out after {} seconds", timeout.as_secs());
                         return Err(WslError::Timeout(
-                            "WSL is not responding. Try 'Force Restart WSL' to recover.".into()
+                            "WSL did not respond before the command timeout. Check for ongoing WSL operations before restarting it.".into()
                         ));
                     }
                     std::thread::sleep(Duration::from_millis(50));
@@ -381,42 +416,8 @@ impl WslCommandExecutor for RealWslExecutor {
 
     fn mount_disk(&self, disk: &str, vhd: bool, bare: bool, name: Option<&str>,
                   fs_type: Option<&str>, options: Option<&str>, partition: Option<u32>) -> Result<CommandOutput, WslError> {
-        let mut args = vec!["--mount", disk];
-
-        if vhd {
-            args.push("--vhd");
-        }
-        if bare {
-            args.push("--bare");
-        }
-        if let Some(n) = name {
-            args.push("--name");
-            args.push(n);
-        }
-        if let Some(fs) = fs_type {
-            args.push("--type");
-            args.push(fs);
-        }
-        if let Some(opts) = options {
-            args.push("--options");
-            args.push(opts);
-        }
-        if let Some(p) = partition {
-            let part_str = p.to_string();
-            args.push("--partition");
-            // Need to own this string
-            return self.execute(&["--mount", disk,
-                if vhd { "--vhd" } else { "" },
-                if bare { "--bare" } else { "" },
-                "--partition", &part_str].iter()
-                .filter(|s| !s.is_empty())
-                .copied()
-                .collect::<Vec<_>>()
-                .as_slice());
-        }
-
-        let args: Vec<&str> = args.into_iter().filter(|s| !s.is_empty()).collect();
-        self.execute(&args)
+        let args = mount_disk_args(disk, vhd, bare, name, fs_type, options, partition);
+        self.execute(&args.iter().map(String::as_str).collect::<Vec<_>>())
     }
 
     fn unmount_disk(&self, disk: Option<&str>) -> Result<CommandOutput, WslError> {
@@ -467,7 +468,7 @@ impl WslCommandExecutor for RealWslExecutor {
         debug!("Running WSL update via PowerShell elevation: {}", wsl_args);
         info!("WSL update requires administrator privileges - UAC dialog will appear");
 
-        let output = hidden_command(&paths.powershell)
+        let output = wsl_command(&paths.powershell)
             .args(["-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", &ps_script])
             .output()
             .map_err(|e| {
@@ -689,6 +690,43 @@ impl WslCommandExecutor for RealWslExecutor {
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn disk_writing_commands_have_no_kill_deadline() {
+        let limit = std::time::Duration::from_secs(1);
+        for args in [
+            vec!["--install", "Ubuntu"], vec!["--import", "clone", "D:\\WSL", "archive.tar"],
+            vec!["--import-in-place", "disk", "disk.vhdx"], vec!["--export", "Ubuntu", "archive.tar"],
+            vec!["--set-version", "Ubuntu", "2"], vec!["--manage", "Ubuntu", "--move", "D:\\WSL"],
+            vec!["--manage", "Ubuntu", "--resize", "100GB"], vec!["--manage", "Ubuntu", "--set-sparse", "true"],
+        ] {
+            assert_eq!(super::command_timeout(&args, limit), None, "{:?}", args);
+        }
+        for args in [vec!["--list", "--verbose"], vec!["--shutdown"], vec!["-d", "Ubuntu", "--", "echo", "--export"]] {
+            assert_eq!(super::command_timeout(&args, limit), Some(limit));
+        }
+    }
+
+    #[test]
+    fn test_mount_disk_without_partition_preserves_options() {
+        assert_eq!(super::mount_disk_args(
+            r"D:\data.vhdx", true, false, Some("data"), Some("ext4"), Some("ro"), None,
+        ), ["--mount", r"D:\data.vhdx", "--vhd", "--name", "data", "--type", "ext4", "--options", "ro"]);
+    }
+
+    #[test]
+    fn test_mount_disk_partition_preserves_all_options() {
+        assert_eq!(super::mount_disk_args(
+            r"\\.\PHYSICALDRIVE2", false, false, Some("my disk"), Some("ntfs"), Some("ro"), Some(3),
+        ), ["--mount", r"\\.\PHYSICALDRIVE2", "--name", "my disk", "--type", "ntfs", "--options", "ro", "--partition", "3"]);
+    }
+
+    #[test]
+    fn test_mount_disk_partition_preserves_vhd_and_bare_flags() {
+        assert_eq!(super::mount_disk_args(
+            r"D:\My Disks\data.vhdx", true, true, None, None, None, Some(2),
+        ), ["--mount", r"D:\My Disks\data.vhdx", "--vhd", "--bare", "--partition", "2"]);
+    }
+
     use super::{
         classify_preflight_command_failure, redact_secrets_for_log, with_distro_ip_fallback,
         CommandOutput,

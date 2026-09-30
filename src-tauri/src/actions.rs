@@ -208,6 +208,16 @@ fn escape_for_shell(s: &str) -> String {
     escape(s.into()).to_string()
 }
 
+fn windows_home_in_wsl(userprofile: &str) -> String {
+    let normalized = userprofile.replace('\\', "/");
+    let bytes = normalized.as_bytes();
+    if bytes.len() >= 3 && bytes[0].is_ascii_alphabetic() && &bytes[1..3] == b":/" {
+        format!("/mnt/{}{}", (bytes[0] as char).to_ascii_lowercase(), &normalized[2..])
+    } else {
+        normalized
+    }
+}
+
 /// Substitute variables in command with proper shell escaping
 ///
 /// All variable values are properly escaped to prevent shell injection.
@@ -235,11 +245,7 @@ fn substitute_variables(command: &str, distro: &str, id: Option<&str>) -> String
     if result.contains("${WINDOWS_HOME}") {
         if let Ok(userprofile) = std::env::var("USERPROFILE") {
             // Convert C:\Users\name to /mnt/c/Users/name
-            let wsl_path = userprofile
-                .replace('\\', "/")
-                .replacen("C:", "/mnt/c", 1)
-                .replacen("D:", "/mnt/d", 1)
-                .replacen("E:", "/mnt/e", 1);
+            let wsl_path = windows_home_in_wsl(&userprofile);
             result = result.replace("${WINDOWS_HOME}", &escape_for_shell(&wsl_path));
         }
     }
@@ -439,6 +445,30 @@ pub fn get_startup_actions_for_distro(distro_name: &str) -> Vec<CustomAction> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_windows_home_converts_any_absolute_drive_letter() {
+        for (input, expected) in [
+            (r"C:\Users\name", "/mnt/c/Users/name"),
+            (r"F:\Users\name", "/mnt/f/Users/name"),
+            (r"z:\Users\A B", "/mnt/z/Users/A B"),
+            ("e:/Users/name", "/mnt/e/Users/name"),
+        ] {
+            assert_eq!(windows_home_in_wsl(input), expected);
+        }
+    }
+
+    #[test]
+    fn test_windows_home_only_translates_an_absolute_drive_prefix() {
+        for (input, expected) in [
+            (r"\\server\Users\name", "//server/Users/name"),
+            ("/home/C:/name", "/home/C:/name"),
+            ("C:relative", "C:relative"),
+            ("", ""),
+        ] {
+            assert_eq!(windows_home_in_wsl(input), expected);
+        }
+    }
 
     fn create_test_action(scope: DistroScope) -> CustomAction {
         CustomAction {

@@ -51,51 +51,48 @@ pub fn get_wsl_version() -> Result<WslVersionInfo, WslError> {
 
 /// Parse the output of `wsl --version`
 ///
-/// Uses position-based parsing rather than key-name matching so it works
-/// regardless of the Windows display language (English, Chinese, etc.).
-/// The output always has 7 fields in a fixed order:
-///   1. WSL version
-///   2. Kernel version
-///   3. WSLg version
-///   4. MSRDC version
-///   5. Direct3D version
-///   6. DXCore version
-///   7. Windows version
+/// Match component labels so extra/missing lines cannot shift unrelated values.
+/// Product names remain recognizable across locales; kernel has translated aliases.
 fn parse_wsl_version_output(output: &str) -> WslVersionInfo {
     let mut info = WslVersionInfo::default();
 
     // Strip leading BOM character that appears in some UTF-16 decoded outputs
     let output = output.trim_start_matches('\u{FEFF}');
 
-    let mut field_index = 0;
     for line in output.lines() {
-        let line = line.trim();
-        if line.is_empty() {
+        let Some((label, value)) = line.trim().split_once([':', '：']) else {
+            continue;
+        };
+        let value = value.trim();
+        if value.is_empty() {
             continue;
         }
-
-        // Extract the value after the last colon on the line.
-        // Using rfind handles both English ("WSL version: 2.6") and localized
-        // keys ("WSL 版本: 2.6") correctly since the value is always ASCII.
-        if let Some(colon_pos) = line.rfind(':') {
-            let value = line[colon_pos + 1..].trim().to_string();
-            // Always advance field_index so subsequent fields stay aligned even
-            // when a field is absent (e.g. WSLg missing on older WSL versions).
-            let idx = field_index;
-            field_index += 1;
-            if !value.is_empty() {
-                match idx {
-                    0 => info.wsl_version = value,
-                    1 => info.kernel_version = value,
-                    2 => info.wslg_version = value,
-                    3 => info.msrdc_version = value,
-                    4 => info.direct3d_version = value,
-                    5 => info.dxcore_version = value,
-                    6 => info.windows_version = value,
-                    _ => {}
-                }
-            }
-        }
+        let label = label.trim().to_lowercase();
+        let has_component = |component: &str| {
+            label.split(|c: char| !c.is_alphanumeric()).any(|word| word == component)
+        };
+        let field = if has_component("wslg") {
+            &mut info.wslg_version
+        } else if has_component("msrdc") {
+            &mut info.msrdc_version
+        } else if has_component("direct3d") {
+            &mut info.direct3d_version
+        } else if has_component("dxcore") {
+            &mut info.dxcore_version
+        } else if has_component("windows") {
+            &mut info.windows_version
+        } else if ["kernel", "内核", "核心", "カーネル", "커널", "ядр", "noyau", "núcleo", "nucleo", "jądr", "çekirdek"]
+            .iter().any(|name| label.contains(name)) {
+            &mut info.kernel_version
+        } else if label.ends_with("wsl") || label.strip_prefix("wsl")
+            .map(|suffix| suffix.trim_start_matches(|c: char| !c.is_alphanumeric()))
+            .is_some_and(|suffix| ["version", "versión", "versão", "wersja", "sürüm", "версия", "版本", "バージョン", "버전", "verze", "verzió"]
+                .iter().any(|word| suffix.starts_with(word))) {
+            &mut info.wsl_version
+        } else {
+            continue;
+        };
+        *field = value.to_string();
     }
 
     info
@@ -586,6 +583,34 @@ mod tests {
         assert_eq!(info.wslg_version, "Unknown", "Empty WSLg should remain Unknown");
         assert_eq!(info.msrdc_version, "1.2.6000", "MSRDC must not shift into WSLg slot");
         assert_eq!(info.windows_version, "10.0.22000.0");
+    }
+
+    #[test]
+    fn test_parse_wsl_version_ignores_new_components_and_reordered_lines() {
+        let info = parse_wsl_version_output("Windows version: 10.0.26100\nWSL version: 2.9.0\nWSL Containers version: 0.1.0\nKernel version: 6.6.0\nDXCore version: 10.0.1\nMSRDC version: 1.2.3\n");
+        assert_eq!(info.wsl_version, "2.9.0");
+        assert_eq!(info.kernel_version, "6.6.0");
+        assert_eq!(info.wslg_version, "Unknown");
+        assert_eq!(info.msrdc_version, "1.2.3");
+        assert_eq!(info.direct3d_version, "Unknown");
+        assert_eq!(info.dxcore_version, "10.0.1");
+        assert_eq!(info.windows_version, "10.0.26100");
+    }
+
+    #[test]
+    fn test_parse_wsl_version_matches_localized_labels_without_positions() {
+        for (output, kernel) in [
+            ("Version Windows : 10.0.1\nVersion du noyau : 6.6.1\nVersion WSL : 2.9.0\n", "6.6.1"),
+            ("Windows 版本：10.0.1\n内核版本：6.6.2\nWSL 版本：2.9.0\n", "6.6.2"),
+            ("Windows-Version: 10.0.1\nKernelversion: 6.6.3\nWSL-Version: 2.9.0\n", "6.6.3"),
+            ("Windows バージョン: 10.0.1\nカーネル バージョン: 6.6.4\nWSL バージョン: 2.9.0\n", "6.6.4"),
+        ] {
+            let info = parse_wsl_version_output(output);
+            assert_eq!(info.wsl_version, "2.9.0");
+            assert_eq!(info.kernel_version, kernel);
+            assert_eq!(info.windows_version, "10.0.1");
+            assert_eq!(info.wslg_version, "Unknown");
+        }
     }
 
     #[test]

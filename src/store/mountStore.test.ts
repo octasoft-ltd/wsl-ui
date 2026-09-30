@@ -102,7 +102,7 @@ describe("mountStore", () => {
       expect(invoke).toHaveBeenCalledWith("list_mounted_disks");
     });
 
-    it("clears tracked mounts when no disks mounted", async () => {
+    it("preserves tracked mounts when filesystem discovery returns empty", async () => {
       useMountStore.setState({
         trackedMounts: [
           {
@@ -118,7 +118,8 @@ describe("mountStore", () => {
 
       await useMountStore.getState().loadMountedDisks();
 
-      expect(useMountStore.getState().trackedMounts).toEqual([]);
+      expect(useMountStore.getState().trackedMounts).toHaveLength(1);
+      expect(useMountStore.getState().trackedMounts[0].diskPath).toBe("D:\\test.vhdx");
     });
 
     it("preserves tracked mounts when disks are mounted", async () => {
@@ -206,10 +207,23 @@ describe("mountStore", () => {
   });
 
   describe("mountDisk", () => {
+    it.each([
+      { diskPath: "D:\\data.vhdx", isVhd: true },
+      { diskPath: "\\\\.\\PHYSICALDRIVE1", isVhd: false },
+    ])("keeps bare attachment $diskPath without inventing a mount point", async ({ diskPath, isVhd }) => {
+      vi.mocked(invoke).mockResolvedValueOnce(undefined).mockResolvedValueOnce([]);
+
+      await useMountStore.getState().mountDisk({ ...mockMountOptions, diskPath, isVhd, bare: true });
+
+      expect(useMountStore.getState().trackedMounts).toEqual([
+        expect.objectContaining({ diskPath, isVhd, mountPoint: null, filesystem: null }),
+      ]);
+    });
+
     it("sets mounting state while mounting", async () => {
       vi.mocked(invoke)
         .mockResolvedValueOnce(undefined) // mount_disk
-        .mockResolvedValueOnce([mockMountedDisk]); // list_mounted_disks - return non-empty to preserve tracked
+        .mockResolvedValueOnce([mockMountedDisk]); // list_mounted_disks
 
       const mountPromise = useMountStore.getState().mountDisk(mockMountOptions);
 
@@ -233,7 +247,6 @@ describe("mountStore", () => {
     });
 
     it("tracks mounted disk", async () => {
-      // Return non-empty array from loadMountedDisks to preserve trackedMounts
       vi.mocked(invoke)
         .mockResolvedValueOnce(undefined) // mount_disk
         .mockResolvedValueOnce([mockMountedDisk]); // list_mounted_disks
@@ -259,7 +272,7 @@ describe("mountStore", () => {
       };
       vi.mocked(invoke)
         .mockResolvedValueOnce(undefined)
-        .mockResolvedValueOnce([mockMountedDisk]); // Return non-empty to preserve trackedMounts
+        .mockResolvedValueOnce([mockMountedDisk]);
 
       await useMountStore.getState().mountDisk(optionsWithoutName);
 
@@ -290,6 +303,18 @@ describe("mountStore", () => {
   });
 
   describe("unmountDisk", () => {
+    it("removes only the requested bare attachment", async () => {
+      useMountStore.setState({ trackedMounts: ["D:\\one.vhdx", "D:\\two.vhdx"].map((diskPath) => ({
+        diskPath, mountPoint: null, isVhd: true, filesystem: null, mountedAt: 0,
+      })) });
+      vi.mocked(invoke).mockResolvedValueOnce(undefined).mockResolvedValueOnce([]);
+
+      await useMountStore.getState().unmountDisk("D:\\one.vhdx");
+
+      expect(invoke).toHaveBeenCalledWith("unmount_disk", { diskPath: "D:\\one.vhdx" });
+      expect(useMountStore.getState().trackedMounts.map((disk) => disk.diskPath)).toEqual(["D:\\two.vhdx"]);
+    });
+
     it("sets unmounting state while unmounting", async () => {
       vi.mocked(invoke)
         .mockResolvedValueOnce(undefined) // unmount_disk

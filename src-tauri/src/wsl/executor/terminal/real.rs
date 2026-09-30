@@ -9,7 +9,7 @@ use std::os::windows::process::CommandExt;
 
 use super::{ContainerRuntime, InstalledTerminal, TerminalExecutor};
 use crate::settings::get_executable_paths;
-use crate::utils::hidden_command;
+use crate::utils::{hidden_command, wsl_command};
 use crate::wsl::executor::supports_distribution_id;
 use crate::wsl::types::WslError;
 
@@ -252,7 +252,7 @@ impl TerminalExecutor for RealTerminalExecutor {
 
         // Method 3: Try running the IDE from within WSL itself
         log::debug!("Trying IDE via WSL: {} -d {} -- {} .", paths.wsl, distro, ide_command);
-        if hidden_command(&paths.wsl)
+        if wsl_command(&paths.wsl)
             .args(["-d", distro, "--", ide_command, "."])
             .current_dir(format!(r"{}\{}\home", paths.wsl_unc_prefix, distro))
             .spawn()
@@ -397,6 +397,9 @@ fn parse_command_with_quotes(cmd: &str) -> (String, Vec<String>) {
     (program, args)
 }
 
+fn parse_terminal_command(expanded: &str) -> (String, Vec<String>) {
+    parse_command_with_quotes(expanded)
+}
 /// Strip curly braces from a GUID string.
 /// Registry GUIDs include braces like `{3c002dba-...}`, but curly braces cause
 /// issues in PowerShell (interpreted as ScriptBlock) and some terminal launchers.
@@ -499,7 +502,7 @@ fn open_terminal_wt(distro: &str, id: Option<&str>) -> Result<(), WslError> {
     };
 
     log::debug!("Opening Windows Terminal: {} {:?}", paths.windows_terminal, args);
-    hidden_command(&paths.windows_terminal)
+    wsl_command(&paths.windows_terminal)
         .args(&args)
         .spawn()
         .map_err(|e| {
@@ -527,21 +530,18 @@ fn open_terminal_wt_preview_with_package(distro: &str, id: Option<&str>, package
     // the user's configured colours, fonts, and title for the distribution.
     // Fall back to wsl --distribution-id (or -d) only when no profile is found.
     let settings_path = get_wt_preview_settings_path();
-    let ps_command = if wt_profile_exists(distro, &settings_path) {
-        format!(
-            "Start-Process 'shell:AppsFolder\\{}!App' -ArgumentList '-p','{}'",
-            package_family_name, distro
-        )
+    let args = if wt_profile_exists(distro, &settings_path) {
+        vec!["-p".to_string(), distro.to_string()]
     } else {
-        let distro_args = wsl_distro_args(distro, id);
-        format!(
-            "Start-Process 'shell:AppsFolder\\{}!App' -ArgumentList 'wsl','{}','{}','--cd','~'",
-            package_family_name, distro_args[0], distro_args[1]
-        )
+        let mut args = vec![paths.wsl.clone()];
+        args.extend(wsl_distro_args(distro, id));
+        args.extend(["--cd".to_string(), "~".to_string()]);
+        args
     };
-
+    let argument_list = args.iter().map(|arg| quote_windows_arg(arg)).collect::<Vec<_>>().join(" ");
+    let ps_command = terminal_preview_script(package_family_name, &argument_list);
     log::debug!("Opening Windows Terminal Preview via PowerShell: {}", ps_command);
-    hidden_command(&paths.powershell)
+    wsl_command(&paths.powershell)
         .args(["-NoProfile", "-Command", &ps_command])
         .spawn()
         .map_err(|e| {
@@ -558,7 +558,7 @@ fn open_terminal_cmd(distro: &str, id: Option<&str>) -> Result<(), WslError> {
     let paths = get_executable_paths();
     let distro_args = wsl_distro_args(distro, id);
     log::debug!("Opening cmd terminal: {} /C start {} {} {} --cd ~", paths.cmd, paths.wsl, distro_args[0], distro_args[1]);
-    hidden_command(&paths.cmd)
+    wsl_command(&paths.cmd)
         .args(["/C", "start", &paths.wsl, &distro_args[0], &distro_args[1], "--cd", "~"])
         .spawn()
         .map_err(|e| WslError::CommandFailed(e.to_string()))?;
@@ -577,27 +577,49 @@ fn has_template_placeholders(cmd: &str) -> bool {
 ///   $DISTRO_ID - distribution GUID on WSL >= 2.4.4, falls back to name on older WSL (legacy)
 ///   $DISTRO_NAME - distribution name (legacy)
 fn expand_template(template: &str, distro: &str, id: Option<&str>, wsl_path: &str) -> String {
-    let result = template.replace("$WSL", wsl_path);
+    let result = replace_template_value(template, "$WSL", wsl_path);
 
     // $DISTRO_ARGS expands to the full distribution identification args
     let distro_args = match id.filter(|_| supports_distribution_id()) {
         Some(guid) => format!("--distribution-id {} --cd ~", strip_guid_braces(guid)),
-        None => format!("-d {} --cd ~", distro),
+        None => format!("-d \"{}\" --cd ~", distro),
     };
     let result = result.replace("$DISTRO_ARGS", &distro_args);
 
     // Legacy placeholders for backwards compatibility
-    let result = result.replace("$DISTRO_NAME", distro);
+    let result = replace_template_value(&result, "$DISTRO_NAME", distro);
     let distro_id = id.filter(|_| supports_distribution_id())
         .map(|g| strip_guid_braces(g))
         .unwrap_or_else(|| distro.to_string());
-    result.replace("$DISTRO_ID", &distro_id)
+    replace_template_value(&result, "$DISTRO_ID", &distro_id)
+}
+
+/// Preserve a scalar placeholder as one argument, respecting template quotes.
+fn replace_template_value(template: &str, placeholder: &str, value: &str) -> String {
+    let mut result = String::new();
+    let mut previous = 0;
+    let mut in_quotes = false;
+    for (index, _) in template.match_indices(placeholder) {
+        let prefix = &template[previous..index];
+        in_quotes ^= prefix.matches('"').count() % 2 != 0;
+        result.push_str(prefix);
+        if !in_quotes && value.chars().any(char::is_whitespace) {
+            result.push('"');
+            result.push_str(value);
+            result.push('"');
+        } else {
+            result.push_str(value);
+        }
+        previous = index + placeholder.len();
+    }
+    result.push_str(&template[previous..]);
+    result
 }
 
 /// Expand template placeholders for system terminal
 /// $DISTRO_ARGS expands to "--system --cd ~"
 fn expand_template_system(template: &str, wsl_path: &str) -> String {
-    let result = template.replace("$WSL", wsl_path);
+    let result = replace_template_value(template, "$WSL", wsl_path);
     let result = result.replace("$DISTRO_ARGS", "--system --cd ~");
     // Clear legacy placeholders (not applicable for system terminal)
     let result = result.replace("$DISTRO_NAME", "");
@@ -615,16 +637,13 @@ fn open_terminal_custom(distro: &str, id: Option<&str>, terminal_cmd: &str) -> R
 
         // Split the expanded command into program and args
         // Use shell-words style splitting to handle quoted arguments
-        let parts: Vec<&str> = expanded.split_whitespace().collect();
-        if parts.is_empty() {
+        let (program, args) = parse_terminal_command(&expanded);
+        if program.is_empty() {
             return Err(WslError::CommandFailed("Empty terminal command".to_string()));
         }
 
-        let program = parts[0];
-        let args: Vec<&str> = parts[1..].to_vec();
-
         log::debug!("Custom terminal expanded: {} {:?}", program, args);
-        return hidden_command(program)
+        return wsl_command(&program)
             .args(&args)
             .spawn()
             .map(|_| ())
@@ -641,7 +660,7 @@ fn open_terminal_custom(distro: &str, id: Option<&str>, terminal_cmd: &str) -> R
 
     // Pattern 1: Terminal that can run wsl directly
     log::debug!("Trying custom terminal pattern 1: {} {} {} {} --cd ~", terminal_cmd, paths.wsl, distro_args[0], distro_args[1]);
-    if hidden_command(terminal_cmd)
+    if wsl_command(terminal_cmd)
         .args([&paths.wsl, &distro_args[0], &distro_args[1], "--cd", "~"])
         .spawn()
         .is_ok()
@@ -651,7 +670,7 @@ fn open_terminal_custom(distro: &str, id: Option<&str>, terminal_cmd: &str) -> R
 
     // Pattern 2: Terminal with -e to execute a command
     log::debug!("Trying custom terminal pattern 2: {} -e {} {} {} --cd ~", terminal_cmd, paths.wsl, distro_args[0], distro_args[1]);
-    if hidden_command(terminal_cmd)
+    if wsl_command(terminal_cmd)
         .args(["-e", &paths.wsl, &distro_args[0], &distro_args[1], "--cd", "~"])
         .spawn()
         .is_ok()
@@ -661,7 +680,7 @@ fn open_terminal_custom(distro: &str, id: Option<&str>, terminal_cmd: &str) -> R
 
     // Pattern 3: Terminal with --command or -c flag
     log::debug!("Trying custom terminal pattern 3: {} --command {} {} {} --cd ~", terminal_cmd, paths.wsl, distro_args[0], distro_args[1]);
-    if hidden_command(terminal_cmd)
+    if wsl_command(terminal_cmd)
         .args(["--command", &paths.wsl, &distro_args[0], &distro_args[1], "--cd", "~"])
         .spawn()
         .is_ok()
@@ -703,7 +722,7 @@ fn open_system_terminal_auto() -> Result<(), WslError> {
 fn open_system_terminal_wt() -> Result<(), WslError> {
     let paths = get_executable_paths();
     log::debug!("Opening Windows Terminal for system shell: {} {} --system --cd ~", paths.windows_terminal, paths.wsl);
-    hidden_command(&paths.windows_terminal)
+    wsl_command(&paths.windows_terminal)
         .args([&paths.wsl, "--system", "--cd", "~"])
         .spawn()
         .map_err(|e| {
@@ -731,7 +750,7 @@ fn open_system_terminal_wt_preview_with_package(package_family_name: &str) -> Re
     );
 
     log::debug!("Opening Windows Terminal Preview for system shell via PowerShell: {}", ps_command);
-    hidden_command(&paths.powershell)
+    wsl_command(&paths.powershell)
         .args(["-NoProfile", "-Command", &ps_command])
         .spawn()
         .map_err(|e| {
@@ -747,7 +766,7 @@ fn open_system_terminal_wt_preview_with_package(package_family_name: &str) -> Re
 fn open_system_terminal_cmd() -> Result<(), WslError> {
     let paths = get_executable_paths();
     log::debug!("Opening cmd for system shell: {} /C start {} --system --cd ~", paths.cmd, paths.wsl);
-    hidden_command(&paths.cmd)
+    wsl_command(&paths.cmd)
         .args(["/C", "start", &paths.wsl, "--system", "--cd", "~"])
         .spawn()
         .map_err(|e| WslError::CommandFailed(e.to_string()))?;
@@ -763,16 +782,13 @@ fn open_system_terminal_custom(terminal_cmd: &str) -> Result<(), WslError> {
     if has_template_placeholders(terminal_cmd) {
         let expanded = expand_template_system(terminal_cmd, &paths.wsl);
 
-        let parts: Vec<&str> = expanded.split_whitespace().collect();
-        if parts.is_empty() {
+        let (program, args) = parse_terminal_command(&expanded);
+        if program.is_empty() {
             return Err(WslError::CommandFailed("Empty terminal command".to_string()));
         }
 
-        let program = parts[0];
-        let args: Vec<&str> = parts[1..].to_vec();
-
         log::debug!("Custom system terminal expanded: {} {:?}", program, args);
-        return hidden_command(program)
+        return wsl_command(&program)
             .args(&args)
             .spawn()
             .map(|_| ())
@@ -787,7 +803,7 @@ fn open_system_terminal_custom(terminal_cmd: &str) -> Result<(), WslError> {
     // Legacy fallback: try common patterns for simple terminal names
     // Pattern 1: Terminal that can run wsl directly
     log::debug!("Trying custom system terminal pattern 1: {} {} --system --cd ~", terminal_cmd, paths.wsl);
-    if hidden_command(terminal_cmd)
+    if wsl_command(terminal_cmd)
         .args([&paths.wsl, "--system", "--cd", "~"])
         .spawn()
         .is_ok()
@@ -797,7 +813,7 @@ fn open_system_terminal_custom(terminal_cmd: &str) -> Result<(), WslError> {
 
     // Pattern 2: Terminal with -e to execute a command
     log::debug!("Trying custom system terminal pattern 2: {} -e {} --system --cd ~", terminal_cmd, paths.wsl);
-    if hidden_command(terminal_cmd)
+    if wsl_command(terminal_cmd)
         .args(["-e", &paths.wsl, "--system", "--cd", "~"])
         .spawn()
         .is_ok()
@@ -807,7 +823,7 @@ fn open_system_terminal_custom(terminal_cmd: &str) -> Result<(), WslError> {
 
     // Pattern 3: Terminal with --command or -c flag
     log::debug!("Trying custom system terminal pattern 3: {} --command {} --system --cd ~", terminal_cmd, paths.wsl);
-    if hidden_command(terminal_cmd)
+    if wsl_command(terminal_cmd)
         .args(["--command", &paths.wsl, "--system", "--cd", "~"])
         .spawn()
         .is_ok()
@@ -823,12 +839,72 @@ fn open_system_terminal_custom(terminal_cmd: &str) -> Result<(), WslError> {
 
 // === Terminal with Command Helper Functions ===
 
-/// Escape a command for use in bash -c "..."
-/// Escapes single quotes by replacing ' with '\''
-fn escape_for_bash(cmd: &str) -> String {
-    cmd.replace('\'', "'\\''")
+/// Encode user code before crossing cmd.exe, PowerShell, and WT parsers.
+/// Bash decodes the UTF-8 bytes in its own process, preserving shell syntax.
+fn bash_action_script(command: &str) -> String {
+    let script = format!(
+        "{} && echo && echo Done. Press Enter to close... && read || (echo && echo Command failed. Press Enter to close... && read)",
+        command,
+    );
+    // Keep common text compact; escape bytes that any intervening shell could
+    // interpret, plus non-ASCII bytes to preserve UTF-8 across code pages.
+    let encoded: String = script.bytes().map(|byte| {
+        if byte.is_ascii_alphanumeric() || b" _-/.:,=+".contains(&byte) {
+            char::from(byte).to_string()
+        } else {
+            format!(r"\x{byte:02x}")
+        }
+    }).collect();
+    // Keep eval outside an AND/OR list: testing its status would suppress
+    // `set -e` inside user code. Encode the existing completion prompt too.
+    format!("eval -- $'{}'", encoded)
 }
 
+/// Quote a single native Windows argument, including backslashes before quotes.
+fn quote_windows_arg(value: &str) -> String {
+    let mut quoted = String::from("\"");
+    let mut backslashes = 0;
+    for character in value.chars() {
+        if character == '\\' {
+            backslashes += 1;
+            continue;
+        }
+        quoted.extend(std::iter::repeat('\\').take(if character == '"' { backslashes * 2 + 1 } else { backslashes }));
+        quoted.push(character);
+        backslashes = 0;
+    }
+    quoted.extend(std::iter::repeat('\\').take(backslashes * 2));
+    quoted.push('"');
+    quoted
+}
+
+fn terminal_action_args(wsl: &str, distro_args: &[String], profile: Option<&str>, command: &str) -> String {
+    let mut args = Vec::new();
+    if let Some(profile) = profile {
+        args.extend(["-p".to_string(), profile.to_string()]);
+    }
+    args.push(wsl.to_string());
+    args.extend_from_slice(distro_args);
+    args.extend(["--cd", "~", "--", "bash", "-c"].map(String::from));
+    args.push(bash_action_script(command));
+    args.iter().map(|arg| quote_windows_arg(arg)).collect::<Vec<_>>().join(" ")
+}
+fn terminal_preview_script(package: &str, args: &str) -> String {
+    format!("Start-Process 'shell:AppsFolder\\{}!App' -ArgumentList '{}'",
+        package.replace('\'', "''"), args.replace('\'', "''"))
+}
+
+fn validate_terminal_command_length(program: &str, args: &str, limit: usize, terminal: &str) -> Result<(), WslError> {
+    // Include the quoted executable, separator, and terminating NUL. Windows
+    // limits UTF-16 code units rather than UTF-8 bytes or Unicode characters.
+    let length = quote_windows_arg(program).encode_utf16().count() + 1 + args.encode_utf16().count() + 1;
+    if length > limit {
+        return Err(WslError::CommandFailed(format!(
+            "This action is too long for {terminal} ({length} command-line characters; limit {limit}). Save the command in a script inside WSL and run that script from the action."
+        )));
+    }
+    Ok(())
+}
 /// Auto-detect terminal and run command
 fn open_terminal_with_command_auto(distro: &str, id: Option<&str>, command: &str) -> Result<(), WslError> {
     let cache = STORE_TERMINALS_CACHE.get_or_init(RealTerminalExecutor::detect_store_terminals_impl);
@@ -856,50 +932,12 @@ fn open_terminal_with_command_wt(distro: &str, id: Option<&str>, command: &str) 
     let paths = get_executable_paths();
     let distro_args = wsl_distro_args(distro, id);
 
-    // For Windows Terminal, we need to be careful about argument parsing.
-    // WT treats `;` as a command separator for multiple tabs.
-    // Solution: Use `&&` for command chaining instead of `;`
-    // Also escape the command for bash by replacing ' with '\''
-    let escaped_cmd = escape_for_bash(command);
-
-    // Build bash script using && to avoid WT's ; parsing
-    // The final `&& read || read` ensures we wait for Enter regardless of command success
-    let bash_script = format!(
-        "{} && echo && echo Done. Press Enter to close... && read || (echo && echo Command failed. Press Enter to close... && read)",
-        escaped_cmd
-    );
-
-    // Escape backslashes and double quotes for the command line
-    let cmd_escaped = bash_script
-        .replace('\\', "\\\\")
-        .replace('"', "\\\"");
-
-    // Prepend -p <profile> when a matching profile exists so the tab opens with
-    // the user's configured colours/fonts/title. The explicit wsl command that
-    // follows overrides the profile's default shell, which is intentional here
-    // since we need to run a specific command in the correct distribution.
-    // Double-quote the profile name so that distros with spaces (e.g. "Ubuntu 22.04")
-    // are treated as a single token by Windows command-line parsing.
     let settings_path = get_wt_settings_path();
-    let profile_prefix = if wt_profile_exists(distro, &settings_path) {
-        format!("-p \"{}\" ", distro)
-    } else {
-        String::new()
-    };
-
-    // Build the command line for wt.exe directly
-    // Using double quotes for the bash -c argument
-    let wt_args = format!(
-        "{}{} {} {} --cd ~ -- bash -c \"{}\"",
-        profile_prefix,
-        paths.wsl,
-        distro_args[0],
-        distro_args[1],
-        cmd_escaped
-    );
-
-    log::debug!("Opening Windows Terminal with command: {} {}", paths.windows_terminal, wt_args);
-    hidden_command(&paths.windows_terminal)
+    let profile = wt_profile_exists(distro, &settings_path).then_some(distro);
+    let wt_args = terminal_action_args(&paths.wsl, &distro_args, profile, command);
+    validate_terminal_command_length(&paths.windows_terminal, &wt_args, 32767, "Windows Terminal")?;
+    log::debug!("Opening Windows Terminal for action in {}", distro);
+    wsl_command(&paths.windows_terminal)
         .raw_arg(&wt_args)
         .spawn()
         .map_err(|e| {
@@ -923,56 +961,15 @@ fn open_terminal_with_command_wt_preview_with_package(distro: &str, id: Option<&
     let paths = get_executable_paths();
     let distro_args = wsl_distro_args(distro, id);
 
-    // Escape for bash: replace single quotes with '\''
-    let escaped_cmd = escape_for_bash(command);
-
-    // Build bash script using && to avoid WT's ; parsing
-    // The final `&& read || read` ensures we wait for Enter regardless of command success
-    let bash_script = format!(
-        "{} && echo && echo Done. Press Enter to close... && read || (echo && echo Command failed. Press Enter to close... && read)",
-        escaped_cmd
-    );
-
-    // Escape backslashes and double quotes for the command line
-    let cmd_escaped = bash_script
-        .replace('\\', "\\\\")
-        .replace('"', "\\\"");
-
-    // Prepend -p <profile> when a matching profile exists so the tab opens with
-    // the user's configured colours/fonts/title. The explicit wsl command that
-    // follows overrides the profile's default shell, which is intentional here
-    // since we need to run a specific command in the correct distribution.
-    // Double-quote the profile name so that distros with spaces (e.g. "Ubuntu 22.04")
-    // are treated as a single token by Windows command-line parsing / PowerShell.
     let settings_path = get_wt_preview_settings_path();
-    let profile_prefix = if wt_profile_exists(distro, &settings_path) {
-        format!("-p \"{}\" ", distro)
-    } else {
-        String::new()
-    };
+    let profile = wt_profile_exists(distro, &settings_path).then_some(distro);
+    let wt_args = terminal_action_args(&paths.wsl, &distro_args, profile, command);
+    let ps_command = terminal_preview_script(package_family_name, &wt_args);
+    let ps_args = ["-NoProfile", "-Command", &ps_command].map(quote_windows_arg).join(" ");
+    validate_terminal_command_length(&paths.powershell, &ps_args, 32767, "Windows Terminal Preview")?;
 
-    // Build the argument list as a single string
-    // Use double quotes for bash -c argument
-    let wt_args = format!(
-        "{}wsl {} {} --cd ~ -- bash -c \"{}\"",
-        profile_prefix,
-        distro_args[0],
-        distro_args[1],
-        cmd_escaped
-    );
-
-    // Escape for PowerShell string (escape single quotes by doubling them)
-    let ps_escaped_args = wt_args.replace('\'', "''");
-
-    // Build PowerShell command - use shell:AppsFolder to launch store app
-    let ps_command = format!(
-        "Start-Process 'shell:AppsFolder\\{}!App' -ArgumentList '{}'",
-        package_family_name,
-        ps_escaped_args
-    );
-
-    log::debug!("Opening Windows Terminal Preview with command via PowerShell: {}", ps_command);
-    hidden_command(&paths.powershell)
+    log::debug!("Opening Windows Terminal Preview for action in {}", distro);
+    wsl_command(&paths.powershell)
         .args(["-NoProfile", "-Command", &ps_command])
         .spawn()
         .map_err(|e| {
@@ -988,43 +985,168 @@ fn open_terminal_with_command_wt_preview_with_package(distro: &str, id: Option<&
 fn open_terminal_with_command_cmd(distro: &str, id: Option<&str>, command: &str) -> Result<(), WslError> {
     let paths = get_executable_paths();
     let distro_args = wsl_distro_args(distro, id);
-
-    // Escape for bash: replace single quotes with '\''
-    let escaped_cmd = escape_for_bash(command);
-
-    // Build bash script using && to chain commands
-    // The final `&& read || read` ensures we wait for Enter regardless of command success
-    let bash_script = format!(
-        "{} && echo && echo Done. Press Enter to close... && read || (echo && echo Command failed. Press Enter to close... && read)",
-        escaped_cmd
-    );
-
-    // Escape backslashes and double quotes for the command line
-    let cmd_escaped = bash_script
-        .replace('\\', "\\\\")
-        .replace('"', "\\\"");
-
-    // Build the command line for cmd.exe
-    // cmd /K keeps window open, using double quotes for bash -c argument
-    let cmd_args = format!(
-        "/K {} {} {} --cd ~ -- bash -c \"{}\"",
-        paths.wsl,
-        distro_args[0],
-        distro_args[1],
-        cmd_escaped
-    );
-
-    log::debug!("Opening cmd with command: cmd {}", cmd_args);
-    hidden_command(&paths.cmd)
-        .raw_arg(&cmd_args)
+    log::debug!("Opening cmd for action in {}", distro);
+    cmd_action_command(&paths.cmd, &paths.wsl, &distro_args, command)?
         .spawn()
         .map_err(|e| WslError::CommandFailed(e.to_string()))?;
     Ok(())
 }
 
+fn cmd_action_command(cmd: &str, wsl: &str, distro_args: &[String], command: &str) -> Result<std::process::Command, WslError> {
+    const CREATE_NEW_CONSOLE: u32 = 0x00000010;
+    let args = format!("/D /S /K \"{}\"", terminal_action_args(wsl, distro_args, None, command));
+    validate_terminal_command_length(cmd, &args, 8191, "Command Prompt")?;
+    let mut process = wsl_command(cmd);
+    // This process is the requested interactive terminal. Replace the helper's
+    // CREATE_NO_WINDOW flag so cmd and its WSL child get a visible console.
+    process.creation_flags(CREATE_NEW_CONSOLE);
+    process.raw_arg(args);
+    Ok(process)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_terminal_action_keeps_long_plain_commands_under_cmd_limit() {
+        let source = format!("echo {}", "a".repeat(6000));
+        let args = terminal_action_args("wsl.exe", &["-d".into(), "Ubuntu".into()], None, &source);
+        assert!(args.encode_utf16().count() < 8000, "ordinary action expanded beyond cmd capacity");
+        assert_eq!(action_source(windows_arguments(&args).last().unwrap()), source);
+        assert!(cmd_action_command("cmd.exe", "wsl.exe", &["-d".into(), "Ubuntu".into()], &source).is_ok());
+    }
+
+    #[test]
+    fn test_cmd_action_rejects_oversized_encoded_command_before_spawn() {
+        let error = cmd_action_command("cmd.exe", "wsl.exe", &["-d".into(), "Ubuntu".into()], &"'".repeat(2100)).unwrap_err().to_string();
+        assert!(error.contains("too long for Command Prompt"));
+        assert!(error.contains("script inside WSL"));
+        assert!(!error.contains("''''"));
+    }
+
+    #[test]
+    fn test_terminal_length_guard_counts_serialized_utf16_and_terminator() {
+        // Quoted x, separator, surrogate pair, NUL = seven UTF-16 units.
+        assert!(validate_terminal_command_length("x", "😀", 7, "test terminal").is_ok());
+        assert!(validate_terminal_command_length("x", "😀", 6, "test terminal").is_err());
+        assert!(validate_terminal_command_length("wt.exe", &"x".repeat(32767), 32767, "Windows Terminal").is_err());
+    }
+
+    #[test]
+    fn test_terminal_action_transport_preserves_every_non_nul_ascii_byte() {
+        let source: String = (1u8..=127).map(char::from).collect();
+        let args = terminal_action_args("wsl.exe", &["-d".into(), "Ubuntu".into()], None, &source);
+        assert_eq!(action_source(windows_arguments(&args).last().unwrap()), source);
+    }
+
+    #[test]
+    fn test_cmd_action_builder_keeps_interactive_arguments_and_utf8_environment() {
+        let process = cmd_action_command("cmd.exe", r"C:\Program Files\WSL\wsl.exe", &["-d".into(), "Ubuntu 22.04 LTS".into()], "echo 'hello'").unwrap();
+        assert_eq!(process.get_program(), "cmd.exe");
+        assert!(process.get_envs().any(|(name, value)| name == "WSL_UTF8" && value == Some(std::ffi::OsStr::new("1"))));
+        let args: Vec<_> = process.get_args().map(|arg| arg.to_string_lossy().into_owned()).collect();
+        assert_eq!(args.len(), 1);
+        let inner = args[0].strip_prefix("/D /S /K \"").unwrap().strip_suffix('"').unwrap();
+        let parsed = windows_arguments(inner);
+        assert_eq!(&parsed[..8], &[r"C:\Program Files\WSL\wsl.exe", "-d", "Ubuntu 22.04 LTS", "--cd", "~", "--", "bash", "-c"]);
+        assert_eq!(action_source(&parsed[8]), "echo 'hello'");
+        assert!(!args[0].contains("echo 'hello'"));
+        assert!(args[0].contains("eval --"));
+    }
+
+    #[cfg(windows)]
+    fn windows_arguments(command: &str) -> Vec<String> {
+        use std::os::windows::ffi::OsStrExt;
+        #[link(name = "shell32", kind = "raw-dylib")]
+        extern "system" { fn CommandLineToArgvW(command: *const u16, count: *mut i32) -> *mut *mut u16; }
+        #[link(name = "kernel32", kind = "raw-dylib")]
+        extern "system" { fn LocalFree(memory: *mut std::ffi::c_void) -> *mut std::ffi::c_void; }
+        let wide: Vec<u16> = std::ffi::OsStr::new(&format!("terminal.exe {command}")).encode_wide().chain(Some(0)).collect();
+        let mut count = 0;
+        unsafe {
+            let args = CommandLineToArgvW(wide.as_ptr(), &mut count);
+            assert!(!args.is_null());
+            let result = std::slice::from_raw_parts(args, count as usize).iter().skip(1).map(|&arg| {
+                let mut len = 0;
+                while *arg.add(len) != 0 { len += 1; }
+                String::from_utf16(std::slice::from_raw_parts(arg, len)).unwrap()
+            }).collect();
+            LocalFree(args.cast());
+            result
+        }
+    }
+
+    // Decode the transport independently to check the bytes Bash receives.
+    fn action_source(script: &str) -> String {
+        let decoded = if let Some(encoded) = script.strip_prefix("eval -- $'").and_then(|s| s.strip_suffix('\'')) {
+            let mut bytes = Vec::new();
+            let mut remaining = encoded;
+            while !remaining.is_empty() {
+                if remaining.starts_with(r"\x") {
+                    bytes.push(u8::from_str_radix(&remaining[2..4], 16).unwrap());
+                    remaining = &remaining[4..];
+                } else {
+                    bytes.push(remaining.as_bytes()[0]);
+                    remaining = &remaining[1..];
+                }
+            }
+            String::from_utf8(bytes).unwrap()
+        } else {
+            script.to_string()
+        };
+        decoded.split(" && echo && echo Done.").next().unwrap().to_string()
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn test_terminal_action_keeps_distro_and_executable_paths_as_single_arguments() {
+        let args = terminal_action_args(r"C:\Program Files\WSL\wsl.exe", &["-d".into(), "Ubuntu 22.04 LTS".into()], Some("Ubuntu 22.04 LTS"), "echo hello");
+        let parsed = windows_arguments(&args);
+        assert_eq!(&parsed[..10], &["-p", "Ubuntu 22.04 LTS", r"C:\Program Files\WSL\wsl.exe", "-d", "Ubuntu 22.04 LTS", "--cd", "~", "--", "bash", "-c"]);
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn test_terminal_action_preserves_bash_source_through_windows_arguments() {
+        for command in ["echo 'hi'", r#"awk '{print $1}' /etc/hostname"#, r#"printf '%s\n' "hello"; echo %PATH% !VAR! & echo café"#] {
+            let args = terminal_action_args("wsl", &["-d".into(), "Ubuntu".into()], None, command);
+            let parsed = windows_arguments(&args);
+            assert_eq!(action_source(parsed.last().unwrap()), command);
+        }
+    }
+
+    #[test]
+    fn test_custom_terminal_template_preserves_quoted_paths_and_distro_name() {
+        let expanded = expand_template(
+            r#""C:\Program Files\Terminal\terminal.exe" -e "$WSL" -d "$DISTRO_NAME""#,
+            "Ubuntu 22.04 LTS", None, r"C:\Program Files\WSL\wsl.exe",
+        );
+        assert_eq!(parse_terminal_command(&expanded), (
+            r"C:\Program Files\Terminal\terminal.exe".into(),
+            vec!["-e".into(), r"C:\Program Files\WSL\wsl.exe".into(), "-d".into(), "Ubuntu 22.04 LTS".into()],
+        ));
+    }
+
+    #[test]
+    fn test_custom_terminal_template_preserves_unquoted_placeholders_with_spaces() {
+        let expanded = expand_template(
+            "terminal -e $WSL $DISTRO_ARGS", "My Distro", None, r"C:\Program Files\WSL\wsl.exe",
+        );
+        assert_eq!(parse_terminal_command(&expanded).1, ["-e", r"C:\Program Files\WSL\wsl.exe", "-d", "My Distro", "--cd", "~"]);
+    }
+
+    #[test]
+    fn test_custom_system_terminal_template_preserves_quoted_program_and_wsl_path() {
+        let expanded = expand_template_system(
+            r#""C:\Program Files\Terminal\terminal.exe" -e $WSL $DISTRO_ARGS"#,
+            r"C:\Program Files\WSL\wsl.exe",
+        );
+        assert_eq!(parse_terminal_command(&expanded), (
+            r"C:\Program Files\Terminal\terminal.exe".into(),
+            vec!["-e".into(), r"C:\Program Files\WSL\wsl.exe".into(), "--system".into(), "--cd".into(), "~".into()],
+        ));
+    }
 
     #[test]
     fn test_strip_guid_braces_with_braces() {
@@ -1102,88 +1224,16 @@ mod tests {
         assert!(wt_profile_exists("Ubuntu 22.04", &path));
     }
 
-    // --- profile_prefix quoting in open_terminal_with_command_wt ---
-
+    #[cfg(windows)]
     #[test]
-    fn test_profile_prefix_simple_name() {
-        // Simple distro name: no spaces, no special chars
-        let distro = "DevBox";
-        let prefix = format!("-p \"{}\" ", distro);
-        assert_eq!(prefix, "-p \"DevBox\" ");
-        // Must not split on spaces (there are none here), but verify token structure
-        assert!(prefix.contains("\"DevBox\""));
-    }
-
-    #[test]
-    fn test_profile_prefix_name_with_spaces() {
-        // Distro names with spaces must be double-quoted so Windows
-        // command-line parsing treats them as a single token.
-        let distro = "Ubuntu 22.04 LTS";
-        let prefix = format!("-p \"{}\" ", distro);
-        assert_eq!(prefix, "-p \"Ubuntu 22.04 LTS\" ");
-    }
-
-    // --- wt_args construction for open_terminal_with_command_wt ---
-
-    #[test]
-    fn test_wt_args_with_profile_and_spaces() {
-        let distro = "Ubuntu 22.04";
-        let wsl = "wsl";
-        let distro_arg0 = "-d";
-        let distro_arg1 = "Ubuntu 22.04";
-        let cmd_escaped = "echo hello";
-        let profile_prefix = format!("-p \"{}\" ", distro);
-        let wt_args = format!(
-            "{}{} {} {} --cd ~ -- bash -c \"{}\"",
-            profile_prefix, wsl, distro_arg0, distro_arg1, cmd_escaped
-        );
-        assert_eq!(
-            wt_args,
-            "-p \"Ubuntu 22.04\" wsl -d Ubuntu 22.04 --cd ~ -- bash -c \"echo hello\""
-        );
-    }
-
-    #[test]
-    fn test_wt_args_without_profile() {
-        // No profile: prefix is empty, distribution-id path is used
-        let wsl = "wsl";
-        let distro_arg0 = "--distribution-id";
-        let distro_arg1 = "3c002dba-d670-4eed-b0c2-97e6eb929d06";
-        let cmd_escaped = "echo hello";
-        let profile_prefix = String::new();
-        let wt_args = format!(
-            "{}{} {} {} --cd ~ -- bash -c \"{}\"",
-            profile_prefix, wsl, distro_arg0, distro_arg1, cmd_escaped
-        );
-        assert_eq!(
-            wt_args,
-            "wsl --distribution-id 3c002dba-d670-4eed-b0c2-97e6eb929d06 --cd ~ -- bash -c \"echo hello\""
-        );
-    }
-
-    // --- PowerShell ArgumentList for open_terminal_with_command_wt_preview ---
-
-    #[test]
-    fn test_ps_args_with_profile_and_spaces() {
-        let distro = "Ubuntu 22.04";
-        let distro_arg0 = "-d";
-        let distro_arg1 = "Ubuntu 22.04";
-        let cmd_escaped = "echo hello";
-        let profile_prefix = format!("-p \"{}\" ", distro);
-        let wt_args = format!(
-            "{}wsl {} {} --cd ~ -- bash -c \"{}\"",
-            profile_prefix, distro_arg0, distro_arg1, cmd_escaped
-        );
-        let ps_escaped_args = wt_args.replace('\'', "''");
-        let pkg = "Microsoft.WindowsTerminalPreview_8wekyb3d8bbwe";
-        let ps_command = format!(
-            "Start-Process 'shell:AppsFolder\\{}!App' -ArgumentList '{}'",
-            pkg, ps_escaped_args
-        );
-        // Double-quoted profile name must be present in the PS command
-        assert!(ps_command.contains("-p \"Ubuntu 22.04\""));
-        // Single quotes around the ArgumentList value must not be broken by the
-        // profile name (no bare single quotes introduced by the distro name)
-        assert!(ps_command.starts_with("Start-Process 'shell:AppsFolder\\"));
+    fn test_preview_script_preserves_argument_list_through_powershell() {
+        let args = terminal_action_args("wsl", &["-d".into(), "Ubuntu 22.04 LTS".into()], Some("Ubuntu 22.04 LTS"), "echo 'hi'");
+        let script = terminal_preview_script("Microsoft.WindowsTerminalPreview_8wekyb3d8bbwe", &args);
+        // Capture the real PowerShell parameter binding without opening a terminal.
+        let probe = format!("function Start-Process {{ param($FilePath, $ArgumentList) Write-Output $ArgumentList }}; {}", script);
+        let output = hidden_command("powershell.exe").args(["-NoProfile", "-Command", &probe]).output().unwrap();
+        assert!(output.status.success(), "{}", String::from_utf8_lossy(&output.stderr));
+        assert_eq!(String::from_utf8_lossy(&output.stdout).trim(), args);
+        assert_eq!(action_source(windows_arguments(&args).last().unwrap()), "echo 'hi'");
     }
 }

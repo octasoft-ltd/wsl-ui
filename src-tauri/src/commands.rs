@@ -12,8 +12,8 @@ use crate::validation::{
 };
 use crate::wsl::resources::parse_memory_string;
 use crate::wsl::{reset_mock_state, set_mock_error, clear_mock_errors, set_stubborn_shutdown, was_force_shutdown_used, MockErrorType, CompactResult, Distribution, DistroResourceUsage, VhdSizeInfo, WslResourceUsage, WslService, WslVersionInfo, WslPreflightStatus, MountedDisk, MountDiskOptions, PhysicalDisk, InstalledTerminal};
-use crate::wsl::executor::{terminal_executor, wsl_executor, supports_distribution_id};
-use crate::{build_tray_menu, TrayState};
+use crate::wsl::executor::{terminal_executor, wsl_executor};
+use crate::{build_tray_menu_with_distros, TrayState};
 use tauri::{AppHandle, Emitter, Manager};
 
 /// Combined resource stats response
@@ -67,16 +67,22 @@ pub async fn list_distributions() -> Result<Vec<Distribution>, String> {
 }
 
 #[tauri::command]
-pub fn refresh_tray_menu(app: AppHandle) -> Result<(), String> {
+pub async fn refresh_tray_menu(app: AppHandle, distributions: Option<Vec<Distribution>>) -> Result<(), String> {
+    let distributions = match distributions {
+        Some(distributions) => Some(distributions),
+        None => tokio::task::spawn_blocking(WslService::list_distributions)
+            .await
+            .map_err(|e| format!("Task failed: {}", e))?
+            .ok(),
+    };
+    let menu = build_tray_menu_with_distros(&app, distributions)
+        .map_err(|e| AppError::Other(format!("Failed to build tray menu: {}", e)))?;
     let tray_state: tauri::State<TrayState> = app.state();
     let tray_guard = tray_state
         .tray
         .lock()
         .map_err(|e| AppError::Other(format!("Failed to lock tray: {}", e)))?;
     if let Some(tray) = tray_guard.as_ref() {
-        // Query WSL for actual distro list when refreshing (not during startup)
-        let menu = build_tray_menu(&app, false)
-            .map_err(|e| AppError::Other(format!("Failed to build tray menu: {}", e)))?;
         tray.set_menu(Some(menu))
             .map_err(|e| AppError::Other(format!("Failed to set tray menu: {}", e)))?;
     }
@@ -680,48 +686,12 @@ pub async fn open_terminal_with_message(name: String, id: Option<String>, messag
     validate_distro_name(&name).map_err(|e| e.to_string())?;
 
     tokio::task::spawn_blocking(move || {
-        use crate::utils::hidden_command;
-        #[cfg(windows)]
-        use std::os::windows::process::CommandExt;
-
-        let paths = settings::get_executable_paths();
-
-        // Build distro args (only use --distribution-id when WSL version supports it)
-        // Strip curly braces from GUID to avoid PowerShell/WT argument parsing issues
-        let distro_args = match id.as_deref().filter(|_| supports_distribution_id()) {
-            Some(guid) => {
-                let bare_guid = guid.trim_start_matches('{').trim_end_matches('}');
-                format!("--distribution-id {}", bare_guid)
-            }
-            None => format!("-d {}", name),
-        };
-
-        // Escape single quotes in message for bash
-        let escaped_message = message.replace('\'', "'\\''");
-
-        // Build bash command: echo message, then exec login shell to keep terminal open
-        // Using && to chain commands (WT treats ; as tab separator)
-        let bash_cmd = format!("echo '' && echo '{}' && echo '' && exec bash -l", escaped_message);
-
-        // Escape for the command line
-        let bash_cmd_escaped = bash_cmd.replace('\\', "\\\\").replace('"', "\\\"");
-
-        // Build the full WT argument string
-        let wt_args = format!(
-            "{} {} --cd ~ -- bash -c \"{}\"",
-            paths.wsl,
-            distro_args,
-            bash_cmd_escaped
+        let command = format!(
+            "printf '\\n%s\\n\\n' {} && exec bash -l",
+            shell_escape::unix::escape(message.into()),
         );
-
-        log::debug!("Opening terminal with message: {} {}", paths.windows_terminal, wt_args);
-
-        hidden_command(&paths.windows_terminal)
-            .raw_arg(&wt_args)
-            .spawn()
-            .map_err(|e| format!("Failed to open terminal: {}", e))?;
-
-        Ok(())
+        WslService::open_terminal_with_command(&name, id.as_deref(), &command, "wt")
+            .map_err(|e| e.to_string())
     })
     .await
     .map_err(|e| format!("Task failed: {}", e))?
@@ -1187,12 +1157,12 @@ pub async fn custom_install_with_progress(
         )
     })?;
 
-    // Get checksum from catalog (if available)
-    let expected_checksum = distro_catalog::get_download_checksum(&distro_id);
+    // Resolve publisher checksums before downloading built-in images.
+    let expected_checksum = distro_catalog::resolve_download_checksum(&distro_id, &download_url).await?;
 
     // Create temp file path with RAII guard for automatic cleanup
     let temp_dir = std::env::temp_dir();
-    let tar_path = temp_dir.join(format!("wsl-download-{}.tar.gz", std::process::id()));
+    let tar_path = temp_dir.join(format!("wsl-download-{}.tar.gz", crate::wsl::unique_temp_tag()));
     let temp_guard = TempFileGuard::new(&tar_path);
 
     // Download with progress events and checksum verification

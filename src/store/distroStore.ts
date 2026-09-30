@@ -1,9 +1,10 @@
 import { create } from "zustand";
+import { useMountStore } from "./mountStore";
 import type { Distribution, WslStatus } from "../types/distribution";
 import type { RdpDetectionResult } from "../types/rdp";
 import { wslService } from "../services/wslService";
 import { actionsService } from "../services/actionsService";
-import { useActionsStore } from "./actionsStore";
+import { runStartupAction } from "./startupActions";
 import { useNotificationStore } from "./notificationStore";
 import { parseError, logError, formatError } from "../utils/errors";
 import { logger, info, warn } from "../utils/logger";
@@ -266,20 +267,7 @@ export const useDistroStore = create<DistroStore>((set, get) => ({
           set({ actionInProgress: `Running startup actions for ${name}...` });
 
           for (const action of startupActions) {
-            try {
-              const result = await actionsService.executeAction(action.id, name, id);
-              // If action has showOutput enabled, show the output dialog
-              if (action.showOutput && result) {
-                useActionsStore.getState().setStartupActionOutput({
-                  actionName: action.name,
-                  distro: name,
-                  output: result.output,
-                  error: result.error,
-                });
-              }
-            } catch (e) {
-              warn(`[distroStore] Startup action '${action.name}' failed: ${e}`);
-            }
+            await runStartupAction(action, name, id);
           }
         }
       } catch (startupError) {
@@ -338,6 +326,7 @@ export const useDistroStore = create<DistroStore>((set, get) => ({
     set({ actionInProgress: "Shutting down WSL...", isTimeoutError: false });
     try {
       await wslService.shutdownAll();
+      useMountStore.setState({ mountedDisks: [], trackedMounts: [] });
       await get().fetchDistros();
       return true;
     } catch (error) {
@@ -358,6 +347,7 @@ export const useDistroStore = create<DistroStore>((set, get) => ({
     set({ actionInProgress: "Force shutting down WSL...", isTimeoutError: false, error: null });
     try {
       await wslService.forceKillWsl();
+      useMountStore.setState({ mountedDisks: [], trackedMounts: [] });
       // Give WSL service time to fully shut down before fetching
       await new Promise((resolve) => setTimeout(resolve, 2000));
       // Fetch silently - don't propagate errors that might show duplicate timeout messages
@@ -480,6 +470,7 @@ export const useDistroStore = create<DistroStore>((set, get) => ({
     } catch (error) {
       const appError = parseError(error);
       logError(appError, "distroStore.openRemoteDesktop");
+      set({ error: formatError(appError) });
       return {
         success: false,
         error: formatError(appError),
@@ -550,20 +541,7 @@ export const useDistroStore = create<DistroStore>((set, get) => ({
           set({ actionInProgress: `Running startup actions for ${name}...` });
 
           for (const action of startupActions) {
-            try {
-              const result = await actionsService.executeAction(action.id, name, id);
-              // If action has showOutput enabled, show the output dialog
-              if (action.showOutput && result) {
-                useActionsStore.getState().setStartupActionOutput({
-                  actionName: action.name,
-                  distro: name,
-                  output: result.output,
-                  error: result.error,
-                });
-              }
-            } catch (e) {
-              warn(`[distroStore] Startup action '${action.name}' failed: ${e}`);
-            }
+            await runStartupAction(action, name, id);
           }
         }
       } catch (startupError) {

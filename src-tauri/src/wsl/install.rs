@@ -33,31 +33,24 @@ pub(crate) fn unique_temp_tag() -> String {
 /// Get the distributions exposed by WSL's online catalog (for quick install)
 pub fn list_online_distributions() -> Result<Vec<String>, WslError> {
     let output = wsl_executor().list_online()?;
+    parse_online_catalog_result(&output)
+}
 
-    let mut distros = Vec::new();
-    let mut found_header = false;
-
-    for line in output.stdout.lines() {
-        let line = line.trim();
-        if line.is_empty() {
-            continue;
-        }
-
-        if line.contains("NAME") || line.contains("----") {
-            found_header = true;
-            continue;
-        }
-
-        if found_header {
-            if let Some(name) = line.split_whitespace().next() {
-                if !name.contains("following") && !name.contains("install") {
-                    distros.push(name.to_string());
-                }
-            }
-        }
+fn parse_online_catalog_result(output: &CommandOutput) -> Result<Vec<String>, WslError> {
+    if !output.success {
+        let details = [&output.stdout, &output.stderr]
+            .into_iter()
+            .map(|text| text.trim())
+            .filter(|text| !text.is_empty())
+            .collect::<Vec<_>>()
+            .join("\n");
+        return Err(WslError::CommandFailed(if details.is_empty() {
+            "WSL could not load the online distribution catalog. Run wsl --list --online in PowerShell for details.".to_string()
+        } else {
+            details
+        }));
     }
-
-    Ok(distros)
+    Ok(parse_online_distros_output(&output.stdout))
 }
 
 /// Quick install through WSL's online catalog (uses wsl --install with a fixed name)
@@ -181,13 +174,6 @@ fn verify_distro_installed(
     max_attempts: u32,
     delay_secs: u32,
 ) -> Result<(), WslError> {
-    // Normalize the distro ID: lowercase, keep only alphanumeric and hyphen
-    let distro_normalized: String = distro_id
-        .to_lowercase()
-        .chars()
-        .filter(|c| c.is_alphanumeric() || *c == '-')
-        .collect();
-
     for attempt in 1..=max_attempts {
         // Give WSL time to register the distro
         if attempt > 1 {
@@ -196,18 +182,8 @@ fn verify_distro_installed(
 
         // Check if distro appears in list
         if let Ok(output) = wsl_executor().list_verbose() {
-            for line in output.stdout.lines() {
-                // WSL output has Unicode spacing - strip to alphanumeric for comparison
-                let line_normalized: String = line
-                    .to_lowercase()
-                    .chars()
-                    .filter(|c| c.is_alphanumeric() || *c == '-')
-                    .collect();
-
-                // Check if this line contains our distro name
-                if line_normalized.contains(&distro_normalized) {
-                    return Ok(());
-                }
+            if installed_list_contains(&output, distro_id) {
+                return Ok(());
             }
         }
     }
@@ -402,7 +378,6 @@ pub fn create_from_oci_image(
 }
 
 /// Parse WSL online distributions output (extracted for testability)
-#[cfg(test)]
 fn parse_online_distros_output(output: &str) -> Vec<String> {
     let mut distros = Vec::new();
     let mut found_header = false;
@@ -430,29 +405,38 @@ fn parse_online_distros_output(output: &str) -> Vec<String> {
     distros
 }
 
-/// Normalize a distro name for comparison (extracted for testability)
-#[cfg(test)]
-fn normalize_distro_name(name: &str) -> String {
-    name.to_lowercase()
-        .chars()
-        .filter(|c| c.is_alphanumeric() || *c == '-')
-        .collect()
-}
-
-/// Check if a normalized line contains a normalized distro name
-#[cfg(test)]
-fn line_contains_distro(line: &str, distro_normalized: &str) -> bool {
-    let line_normalized: String = line
-        .to_lowercase()
-        .chars()
-        .filter(|c| c.is_alphanumeric() || *c == '-')
-        .collect();
-    line_normalized.contains(distro_normalized)
+/// Compare parsed names exactly so similarly named installations cannot mask a failure.
+fn installed_list_contains(output: &CommandOutput, name: &str) -> bool {
+    output.success && wsl_core::parse_wsl_list_output(&output.stdout)
+        .iter()
+        .any(|distro| distro.name.eq_ignore_ascii_case(name))
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn online_catalog_failure_keeps_native_diagnostics() {
+        let output = CommandOutput {
+            stdout: "无法连接服务器".to_string(),
+            stderr: "Network timeout".to_string(),
+            success: false,
+        };
+        let error = parse_online_catalog_result(&output).unwrap_err().to_string();
+        assert!(error.contains("无法连接服务器"));
+        assert!(error.contains("Network timeout"));
+    }
+
+    #[test]
+    fn online_catalog_with_chinese_preamble_parses_real_table() {
+        let output = CommandOutput {
+            stdout: "以下是可安装的有效分发的列表。\n使用 wsl.exe --install 安装。\n\nNAME  FRIENDLY NAME\nUbuntu-26.04  Ubuntu 26.04 LTS\nDebian Debian GNU/Linux\n".to_string(),
+            stderr: String::new(),
+            success: true,
+        };
+        assert_eq!(parse_online_catalog_result(&output).unwrap(), vec!["Ubuntu-26.04", "Debian"]);
+    }
 
     #[test]
     fn test_install_failure_includes_both_streams_and_override_hint() {
@@ -550,77 +534,31 @@ Debian                                 Debian
         assert_eq!(distros, vec!["Ubuntu", "Debian"]);
     }
 
-    // Tests for normalize_distro_name
     #[test]
-    fn test_normalize_distro_name_lowercase() {
-        assert_eq!(normalize_distro_name("Ubuntu"), "ubuntu");
-        assert_eq!(normalize_distro_name("DEBIAN"), "debian");
+    fn installed_list_requires_exact_name_and_success() {
+        let mut output = CommandOutput {
+            stdout: "  NAME STATE VERSION\n* Ubuntu-22.04 Running 2\n  My Distro Stopped 1\n  Arch_Linux Stopped 2\n".into(),
+            stderr: String::new(),
+            success: true,
+        };
+        assert!(!installed_list_contains(&output, "Ubuntu"));
+        assert!(!installed_list_contains(&output, "ArchLinux"));
+        assert!(!installed_list_contains(&output, ""));
+        assert!(installed_list_contains(&output, "ubuntu-22.04"));
+        assert!(installed_list_contains(&output, "My Distro"));
+        assert!(installed_list_contains(&output, "Arch_Linux"));
+        output.success = false;
+        assert!(!installed_list_contains(&output, "Ubuntu-22.04"));
     }
 
     #[test]
-    fn test_normalize_distro_name_preserves_hyphens() {
-        assert_eq!(normalize_distro_name("Ubuntu-22.04"), "ubuntu-2204");
-        assert_eq!(normalize_distro_name("kali-linux"), "kali-linux");
-    }
-
-    #[test]
-    fn test_normalize_distro_name_strips_special_chars() {
-        assert_eq!(normalize_distro_name("Open SUSE (15.5)"), "opensuse155");
-        assert_eq!(normalize_distro_name("Arch_Linux"), "archlinux");
-    }
-
-    #[test]
-    fn test_normalize_distro_name_unicode() {
-        // WSL output sometimes has Unicode spacing
-        assert_eq!(normalize_distro_name("Ubuntu\u{00A0}22.04"), "ubuntu2204");
-    }
-
-    #[test]
-    fn test_normalize_distro_name_empty() {
-        assert_eq!(normalize_distro_name(""), "");
-    }
-
-    // Tests for line_contains_distro
-    #[test]
-    fn test_line_contains_distro_exact_match() {
-        assert!(line_contains_distro("Ubuntu", "ubuntu"));
-        assert!(line_contains_distro("  Ubuntu  ", "ubuntu"));
-    }
-
-    #[test]
-    fn test_line_contains_distro_with_extras() {
-        assert!(line_contains_distro("* Ubuntu (Default)", "ubuntu"));
-        assert!(line_contains_distro("  Ubuntu    Running    2", "ubuntu"));
-    }
-
-    #[test]
-    fn test_line_contains_distro_case_insensitive() {
-        assert!(line_contains_distro("UBUNTU", "ubuntu"));
-        assert!(line_contains_distro(
-            "ubuntu",
-            "UBUNTU".to_lowercase().as_str()
-        ));
-    }
-
-    #[test]
-    fn test_line_contains_distro_unicode_wsl_output() {
-        // WSL output often contains Unicode non-breaking spaces
-        let wsl_line = "  Ubuntu\u{00A0}\u{00A0}Running\u{00A0}\u{00A0}2";
-        assert!(line_contains_distro(wsl_line, "ubuntu"));
-    }
-
-    #[test]
-    fn test_line_contains_distro_no_match() {
-        assert!(!line_contains_distro("Debian", "ubuntu"));
-        assert!(!line_contains_distro("", "ubuntu"));
-    }
-
-    #[test]
-    fn test_line_contains_distro_partial_match() {
-        // "Ubuntu-22.04" normalized is "ubuntu-2204", should match "ubuntu"
-        assert!(line_contains_distro("Ubuntu-22.04", "ubuntu"));
-        // But "Ubuntu" should not match if looking for "ubuntu-22"
-        assert!(!line_contains_distro("Ubuntu", "ubuntu-22"));
+    fn installed_list_accepts_localized_state_and_unicode_spacing() {
+        let output = CommandOutput {
+            stdout: "  名称 状态 版本\n* Ubuntu\u{00a0}\u{00a0}正在运行\u{00a0}2\n".into(),
+            stderr: String::new(),
+            success: true,
+        };
+        assert!(installed_list_contains(&output, "Ubuntu"));
     }
 
     // Tests for runtime hint handling

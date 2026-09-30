@@ -29,6 +29,13 @@ pub fn hidden_command(program: &str) -> Command {
     cmd
 }
 
+/// Build a background WSL command with deterministic output encoding.
+pub fn wsl_command(program: &str) -> Command {
+    let mut command = hidden_command(program);
+    command.env("WSL_UTF8", "1");
+    command
+}
+
 /// Check if we're running in mock mode for development
 ///
 /// Mock mode is enabled when:
@@ -75,6 +82,15 @@ pub fn get_user_profile() -> PathBuf {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_wsl_command_requests_utf8_output() {
+        let command = wsl_command("custom-wsl.exe");
+        assert!(command.get_envs().any(|(name, value)| {
+            name == "WSL_UTF8" && value == Some(std::ffi::OsStr::new("1"))
+        }));
+        assert_eq!(command.get_program(), "custom-wsl.exe");
+    }
 
     #[test]
     fn test_app_name() {

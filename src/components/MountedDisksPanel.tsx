@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useMountStore } from "../store/mountStore";
+import { getDiskMountEntries, useMountStore } from "../store/mountStore";
 import { TrashIcon } from "./icons";
 
 interface MountedDisksPanelProps {
@@ -44,32 +44,7 @@ export function MountedDisksPanel({ isOpen, onClose, onMountNew, anchorRef }: Mo
 
   if (!isOpen) return null;
 
-  // Check if a mount point is tracked (we mounted it via this UI)
-  // Use flexible matching since WSL might report slightly different paths
-  const findTrackedMount = (mountPoint: string) => {
-    const diskName = mountPoint.split('/').pop()?.toLowerCase() || "";
-
-    return trackedMounts.find((m) => {
-      // Exact mount point match
-      if (m.mountPoint === mountPoint) return true;
-      // Case-insensitive mount point match
-      if (m.mountPoint.toLowerCase() === mountPoint.toLowerCase()) return true;
-
-      // Check if the mount name part matches
-      const trackedName = m.mountPoint.split('/').pop()?.toLowerCase();
-      if (trackedName && trackedName === diskName) return true;
-
-      // Also try matching against the filename from the original disk path
-      // e.g., D:\data.vhdx -> "data" should match /mnt/wsl/data
-      const diskFileName = m.diskPath.split(/[/\\]/).pop()?.toLowerCase() || "";
-      const diskFileNameNoExt = diskFileName.replace(/\.[^.]+$/, "");
-      if (diskFileNameNoExt && diskFileNameNoExt === diskName) return true;
-
-      return false;
-    });
-  };
-
-  const isTracked = (mountPoint: string) => !!findTrackedMount(mountPoint);
+  const diskEntries = getDiskMountEntries(mountedDisks, trackedMounts);
 
   const handleUnmountAll = async () => {
     try {
@@ -79,14 +54,11 @@ export function MountedDisksPanel({ isOpen, onClose, onMountNew, anchorRef }: Mo
     }
   };
 
-  const handleUnmountDisk = async (mountPoint: string) => {
-    const tracked = findTrackedMount(mountPoint);
-    if (!tracked) return;
-
+  const handleUnmountDisk = async (mountPoint: string, diskPath: string) => {
     setUnmountingPath(mountPoint);
     try {
       // Use the original diskPath for unmounting
-      await unmountDisk(tracked.diskPath);
+      await unmountDisk(diskPath);
     } catch {
       // Error is handled in store
     } finally {
@@ -106,7 +78,7 @@ export function MountedDisksPanel({ isOpen, onClose, onMountNew, anchorRef }: Mo
           <span className="text-xs font-medium text-theme-text-muted uppercase tracking-wide font-mono" data-testid="mounted-disks-title">
             {t('mountedDisks.title')}
           </span>
-          {mountedDisks.length > 0 && (
+          {diskEntries.length > 0 && (
             <button
               onClick={handleUnmountAll}
               disabled={isUnmounting}
@@ -141,7 +113,7 @@ export function MountedDisksPanel({ isOpen, onClose, onMountNew, anchorRef }: Mo
           <div className="px-3 py-6 text-center" data-testid="mounted-disks-loading">
             <div className="w-4 h-4 border-2 border-theme-border-secondary border-t-theme-accent-primary rounded-full animate-spin mx-auto" />
           </div>
-        ) : mountedDisks.length === 0 ? (
+        ) : diskEntries.length === 0 ? (
           <div className="px-3 py-6 text-center" data-testid="mounted-disks-empty">
             <div className="text-theme-status-stopped text-2xl mb-1">○</div>
             <p className="text-xs text-theme-text-muted">{t('mountedDisks.noDisks')}</p>
@@ -151,8 +123,8 @@ export function MountedDisksPanel({ isOpen, onClose, onMountNew, anchorRef }: Mo
           </div>
         ) : (
           <div className="py-1">
-            {mountedDisks.map((disk, index) => {
-              const tracked = isTracked(disk.mountPoint);
+            {diskEntries.map((disk, index) => {
+              const tracked = disk.diskPath;
               const isThisUnmounting = unmountingPath === disk.mountPoint;
               return (
                 <div
@@ -169,7 +141,7 @@ export function MountedDisksPanel({ isOpen, onClose, onMountNew, anchorRef }: Mo
                     </div>
                     {tracked && (
                       <button
-                        onClick={() => handleUnmountDisk(disk.mountPoint)}
+                        onClick={() => handleUnmountDisk(disk.mountPoint, tracked)}
                         disabled={isUnmounting}
                         data-testid={`unmount-disk-${index}`}
                         className="p-1 text-theme-text-muted hover:text-theme-status-error hover:bg-[rgba(var(--status-error-rgb),0.1)] rounded transition-colors disabled:opacity-50"

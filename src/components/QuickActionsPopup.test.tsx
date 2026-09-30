@@ -27,6 +27,15 @@ const testCustomAction: CustomAction = {
 };
 
 describe("QuickActionsPopup", () => {
+  it("offers explicit sparse commands without claiming the current disk state", () => {
+    const onAction = vi.fn();
+    render(<QuickActionsPopup actions={[]} distro={testDistribution} onAction={onAction} />);
+    fireEvent.click(screen.getByTestId("quick-action-manage"));
+    fireEvent.click(screen.getByTestId("manage-action-sparse"));
+    fireEvent.click(screen.getByTestId("manage-action-sparse-disable"));
+    expect(onAction.mock.calls).toEqual([["manage:sparse-enable"], ["manage:sparse-disable"]]);
+  });
+
   it("exposes menu semantics and stable test selectors", () => {
     render(
       <QuickActionsPopup

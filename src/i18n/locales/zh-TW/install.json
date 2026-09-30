@@ -28,6 +28,8 @@
   },
   "loading": "正在載入可用發行版...",
   "empty": "沒有可用的發行版",
+  "catalogLoadFailed": "無法載入發行版目錄",
+  "catalogRetryHint": "請檢查網路連線和已啟用的發行版來源，然後重試。也可以在 PowerShell 中執行 wsl --list --online 來檢查 WSL 目錄。",
   "install": "安裝",
   "useUrl": "使用 URL",
   "useImage": "使用映像",

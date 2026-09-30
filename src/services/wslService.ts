@@ -40,7 +40,7 @@ export const wslService = {
     const distros = await invoke<Distribution[]>("list_distributions");
     debug(`[wslService] Found ${distros.length} distributions`);
     // Refresh tray menu to keep it in sync with distro states
-    await invoke("refresh_tray_menu").catch(() => {});
+    await invoke("refresh_tray_menu", { distributions: distros }).catch(() => {});
     return distros;
   },
 

@@ -82,6 +82,8 @@ export function NewDistroDialog({ isOpen, onClose }: NewDistroDialogProps) {
   const [catalog, setCatalog] = useState<DistroCatalog | null>(null);
   const [onlineDistros, setOnlineDistros] = useState<string[]>([]);
   const [loadingDistros, setLoadingDistros] = useState(false);
+  const [catalogLoadError, setCatalogLoadError] = useState<string | null>(null);
+  const [catalogReload, setCatalogReload] = useState(0);
   const [selectedDistro, setSelectedDistro] = useState<string | null>(null);
   const [selectedContainer, setSelectedContainer] = useState<ContainerImage | null>(null);
   const [selectedLxcDistro, setSelectedLxcDistro] = useState<LxcDistribution | null>(null);
@@ -147,23 +149,33 @@ export function NewDistroDialog({ isOpen, onClose }: NewDistroDialogProps) {
     return downloadableDistros.find(d => d.id === distroId);
   };
 
-  // Fetch catalog and available distros when dialog opens (only if not already loaded)
+  // Refresh on each open so a failed request or changed source is not cached forever.
   useEffect(() => {
-    if (isOpen && !catalog && onlineDistros.length === 0) {
-      setLoadingDistros(true);
-      const minDelay = new Promise(resolve => setTimeout(resolve, 600));
-      Promise.all([
-        wslService.getDistroCatalog().catch(() => null),
-        wslService.listOnlineDistributions().catch(() => []),
-        minDelay,
-      ])
-        .then(([catalogData, online]) => {
-          setCatalog(catalogData as DistroCatalog | null);
-          setOnlineDistros(online as string[]);
-        })
-        .finally(() => setLoadingDistros(false));
-    }
-  }, [isOpen]);
+    if (!isOpen) return;
+    let cancelled = false;
+    setLoadingDistros(true);
+    setCatalogLoadError(null);
+    setSelectedDistro(null);
+    Promise.allSettled([
+      wslService.getDistroCatalog(),
+      wslService.listOnlineDistributions(),
+      new Promise(resolve => setTimeout(resolve, 600)),
+    ]).then(([catalogResult, onlineResult]) => {
+      if (cancelled) return;
+      setCatalog(catalogResult.status === "fulfilled" ? catalogResult.value : null);
+      setOnlineDistros(onlineResult.status === "fulfilled" ? onlineResult.value : []);
+      const failures = [catalogResult, onlineResult].filter(result => result.status === "rejected");
+      if (failures.length) {
+        const details = failures.map(result => {
+          const reason = result.reason;
+          return reason instanceof Error ? reason.message : typeof reason === "string" ? reason : "";
+        }).filter(Boolean);
+        setCatalogLoadError(details.join("\n") || t('catalogLoadFailed'));
+      }
+      setLoadingDistros(false);
+    });
+    return () => { cancelled = true; };
+  }, [isOpen, catalogReload]);
 
   // Cleanup timeouts on unmount
   useEffect(() => {
@@ -756,6 +768,16 @@ export function NewDistroDialog({ isOpen, onClose }: NewDistroDialogProps) {
 
           {/* Content */}
           <div ref={contentRef} className="flex-1 overflow-y-auto px-6 pb-4">
+            {catalogLoadError && (
+              <div role="alert" className="mb-4 p-4 rounded-xl border border-theme-status-error text-theme-status-error text-sm">
+                <p className="font-medium">{t('catalogLoadFailed')}</p>
+                <p className="mt-1 whitespace-pre-wrap">{catalogLoadError}</p>
+                <p className="mt-2">{t('catalogRetryHint')}</p>
+                <Button variant="secondary" className="mt-3" onClick={() => setCatalogReload(value => value + 1)} disabled={loadingDistros || isCreating}>
+                  {t('common:button.retry')}
+                </Button>
+              </div>
+            )}
             {/* Error Message */}
             {error && (
               <div
@@ -840,6 +862,14 @@ export function NewDistroDialog({ isOpen, onClose }: NewDistroDialogProps) {
                   <div className="flex flex-col items-center justify-center py-16 text-theme-text-muted">
                     <LinuxLogo size={48} className="mb-3 opacity-50" />
                     <span className="text-sm">{t('empty')}</span>
+                    {!catalogLoadError && (
+                      <>
+                        <p className="mt-2 text-sm text-center">{t('catalogRetryHint')}</p>
+                        <Button variant="secondary" className="mt-3" onClick={() => setCatalogReload(value => value + 1)} disabled={isCreating}>
+                          {t('common:button.retry')}
+                        </Button>
+                      </>
+                    )}
                   </div>
                 ) : (
                   <div className="animate-fade-in" data-testid="quick-install-content">

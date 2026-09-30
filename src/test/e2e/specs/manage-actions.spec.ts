@@ -157,14 +157,14 @@ describe("Manage Quick Actions", () => {
       expect(text).toContain("Set Default User");
     });
 
-    it("should have Sparse Mode option with toggle indicator", async () => {
+    it("should offer explicit sparse mode enable and disable commands", async () => {
       await actions.openManageSubmenu("Ubuntu");
 
       const sparseAction = await $(selectors.sparseAction);
       const text = await sparseAction.getText();
-      expect(text).toContain("Sparse Mode");
-      // Note: OR is intentional - checking that a toggle state indicator is present (either state is valid)
-      expect(text).toMatch(/\b(Off|On)\b/);
+      expect(text).toContain("Enable sparse mode");
+      const disableAction = await $('[data-testid="manage-action-sparse-disable"]');
+      await expect(disableAction).toHaveText(expect.stringContaining("Disable sparse mode"));
     });
   });
 
