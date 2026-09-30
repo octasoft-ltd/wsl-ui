@@ -69,7 +69,7 @@
     "postcss": "^8.5.28",
     "sharp": "^0.35.5",
     "tailwindcss": "^4.1.18",
-    "typescript": "^5.9.3",
+    "typescript": "^7.0.2",
     "vite": "^7.3.6",
     "vitest": "^4.1.11",
     "wdio-video-reporter": "^6.2.0"
