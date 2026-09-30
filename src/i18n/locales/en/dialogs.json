@@ -240,6 +240,7 @@
     "wholeDisk": "Whole disk",
     "mountNameLabel": "Mount Name (optional)",
     "mountPointHint": "Mount point will be /mnt/wsl/{{name}}",
+    "mountPointAutomaticHint": "Leave blank to use a unique mount name under /mnt/wsl/.",
     "filesystemLabel": "Filesystem Type",
     "advancedOptions": "Advanced Options",
     "mountOptionsLabel": "Mount Options",

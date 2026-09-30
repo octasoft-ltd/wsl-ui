@@ -281,7 +281,9 @@ export function DiskMountDialog({ isOpen, onClose }: DiskMountDialogProps) {
               className="w-full px-3 py-2 bg-theme-bg-tertiary border border-theme-border-secondary rounded-lg text-theme-text-primary placeholder-theme-text-muted focus:outline-hidden focus:border-theme-accent-primary"
             />
             <p className="text-xs text-theme-text-muted mt-1" data-testid="disk-mount-point-hint">
-              {t('diskMount.mountPointHint', { name: mountName || "<diskname>" })}
+              {mountName
+                ? t('diskMount.mountPointHint', { name: mountName })
+                : t('diskMount.mountPointAutomaticHint')}
             </p>
           </div>
 

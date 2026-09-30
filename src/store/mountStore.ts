@@ -9,7 +9,7 @@ import { logger } from "../utils/logger";
 interface TrackedMount {
   /** Original disk path used in wsl --mount (e.g., D:\data.vhdx or \\.\PHYSICALDRIVE2) */
   diskPath: string;
-  /** Explicitly named mount point; null for bare or automatically named mounts. */
+  /** Mount point explicitly requested from WSL; null for bare attachments. */
   mountPoint: string | null;
   /** Whether this is a VHD file */
   isVhd: boolean;
@@ -126,12 +126,15 @@ export const useMountStore = create<MountStore>((set, get) => ({
   mountDisk: async (options: MountDiskOptions) => {
     set({ isMounting: true, error: null });
     try {
-      await wslService.mountDisk(options);
+      // Give unnamed filesystem mounts a known, collision-resistant identity.
+      // This avoids guessing WSL's default mountpoint from the disk filename.
+      const requestedOptions = !options.bare && !options.mountName
+        ? { ...options, mountName: `wsl-ui-${crypto.randomUUID()}` }
+        : options;
+      await wslService.mountDisk(requestedOptions);
 
       // Track this mount so we can unmount it later
-      // Only --name gives us a known mountpoint. WSL generates default names;
-      // inferring one from a filename could associate this with another disk.
-      const mountPoint = !options.bare && options.mountName ? `/mnt/wsl/${options.mountName}` : null;
+      const mountPoint = options.bare ? null : `/mnt/wsl/${requestedOptions.mountName}`;
 
       const trackedMount: TrackedMount = {
         diskPath: options.diskPath,

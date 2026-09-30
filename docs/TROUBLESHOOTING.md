@@ -1572,6 +1572,8 @@ A bare attachment has no mounted filesystem, so filesystem discovery can legitim
 
 Partition mounts now preserve their supplied name, filesystem and options. Discovery recognizes device names beyond `/dev/sd*` and filters out unrelated system/container mounts.
 
+For filesystem mounts with no name supplied, the app requests a unique `wsl-ui-...` name under `/mnt/wsl`. This gives discovery and attachment tracking the same exact path, so the disk appears once and its unmount button uses the correct Windows path. Supply a mount name if you need a predictable Linux path. Bare attachments remain unnamed.
+
 Related: [#112](https://github.com/octasoft-ltd/wsl-ui/issues/112), [#130](https://github.com/octasoft-ltd/wsl-ui/issues/130), [#116](https://github.com/octasoft-ltd/wsl-ui/issues/116), [#165](https://github.com/octasoft-ltd/wsl-ui/issues/165).
 
 ## Issue #31: Startup sudo actions fail without a usable password prompt

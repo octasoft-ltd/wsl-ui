@@ -317,7 +317,7 @@ describe("mountStore", () => {
     it.each([
       { diskPath: "D:\\VHDs\\testdisk.vhdx", isVhd: true },
       { diskPath: "\\\\.\\PHYSICALDRIVE2", isVhd: false },
-    ])("does not infer a Linux mountpoint for $diskPath", async ({ diskPath, isVhd }) => {
+    ])("requests and tracks the same generated mountpoint for $diskPath", async ({ diskPath, isVhd }) => {
       const optionsWithoutName: MountDiskOptions = {
         diskPath,
         isVhd,
@@ -327,14 +327,42 @@ describe("mountStore", () => {
         partition: 1,
         bare: false,
       };
-      vi.mocked(invoke)
-        .mockResolvedValueOnce(undefined)
-        .mockResolvedValueOnce([mockMountedDisk]);
+      let requestedOptions: MountDiskOptions | undefined;
+      vi.mocked(invoke).mockImplementation(async (command, args) => {
+        if (command === "mount_disk") {
+          requestedOptions = (args as { options: MountDiskOptions }).options;
+          return undefined;
+        }
+        return [{ ...mockMountedDisk, path: "/dev/sdc1", mountPoint: `/mnt/wsl/${requestedOptions?.mountName}` }];
+      });
 
       await useMountStore.getState().mountDisk(optionsWithoutName);
 
       const trackedMounts = useMountStore.getState().trackedMounts;
-      expect(trackedMounts[0].mountPoint).toBeNull();
+      expect(requestedOptions?.mountName).toMatch(/^wsl-ui-[a-f0-9-]{36}$/);
+      expect(requestedOptions).toEqual({ ...optionsWithoutName, mountName: requestedOptions?.mountName });
+      expect(optionsWithoutName.mountName).toBeUndefined();
+      expect(trackedMounts[0].mountPoint).toBe(`/mnt/wsl/${requestedOptions?.mountName}`);
+      const entries = getDiskMountEntries(useMountStore.getState().mountedDisks, trackedMounts);
+      expect(entries).toHaveLength(1);
+      expect(entries[0].diskPath).toBe(diskPath);
+    });
+
+    it.each([undefined, null, ""])("generates distinct names for unnamed filesystem mounts: %s", async (mountName) => {
+      vi.mocked(invoke).mockResolvedValue([]);
+      await useMountStore.getState().mountDisk({ ...mockMountOptions, diskPath: "D:\\one.vhdx", mountName });
+      await useMountStore.getState().mountDisk({ ...mockMountOptions, diskPath: "E:\\two.vhdx", mountName });
+      const points = useMountStore.getState().trackedMounts.map((mount) => mount.mountPoint);
+      expect(points.every((point) => point?.startsWith("/mnt/wsl/wsl-ui-"))).toBe(true);
+      expect(new Set(points).size).toBe(2);
+    });
+
+    it.each([undefined, null, ""])("does not generate a name for a bare attachment: %s", async (mountName) => {
+      vi.mocked(invoke).mockResolvedValue([]);
+      const options = { ...mockMountOptions, bare: true, mountName };
+      await useMountStore.getState().mountDisk(options);
+      expect(invoke).toHaveBeenCalledWith("mount_disk", { options });
+      expect(useMountStore.getState().trackedMounts[0].mountPoint).toBeNull();
     });
 
     it("refreshes mounted disks after mount", async () => {
