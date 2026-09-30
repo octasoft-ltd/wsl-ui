@@ -38,7 +38,7 @@ wsl-core = { path = "../crates/wsl-core" }
 
 # Windows-specific dependencies
 [target.'cfg(windows)'.dependencies]
-winreg = "0.55"
+winreg = "0.56"
 
 [dev-dependencies]
 wiremock = "0.6"
