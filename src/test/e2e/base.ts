@@ -187,6 +187,15 @@ export const actions = {
     await quickActionsButton.waitForClickable({ timeout: 5000 });
     await quickActionsButton.click();
 
+    // Query native visibility from main: the restricted popup intentionally
+    // has no permission to inspect window state.
+    await browser.waitUntil(async () => browser.executeAsync((done) => {
+      // @ts-expect-error - Tauri global API is enabled for desktop tests.
+      window.__TAURI__.window.Window.getByLabel("quick-actions-popup")
+        .then(async (popup: { isVisible(): Promise<boolean> } | null) => done(popup ? await popup.isVisible() : false))
+        .catch(() => done(false));
+    }), { timeout: 5000, timeoutMsg: "Quick actions native window did not appear" });
+
     await browser.waitUntil(
       async () => {
         try {
@@ -200,9 +209,14 @@ export const actions = {
       { timeout: 5000, timeoutMsg: "Quick Actions popup WebView did not appear" }
     );
 
-    // Wait for menu to appear
+    // The popup WebView retains its old DOM while hidden. Wait for the new
+    // target and native visibility before clicking, not just retained markup.
     await browser.waitUntil(
-      async () => isElementDisplayed(selectors.quickActionsMenu),
+      async () => {
+        const menu = await $(selectors.quickActionsMenu);
+        return (await menu.isDisplayed()) &&
+          !!(await menu.getAttribute("aria-label"))?.endsWith(`: ${distroName}`);
+      },
       { timeout: 5000, timeoutMsg: "Quick actions menu did not appear" }
     );
 

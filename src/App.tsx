@@ -17,6 +17,7 @@ import { SettingsPage } from "./components/SettingsPage";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { NotificationBanner } from "./components/NotificationBanner";
 import { PreflightBanner } from "./components/PreflightBanner";
+import { Portal } from "./components/ui/Portal";
 import { Button } from "./components/ui/Button";
 import { DiskMountDialog } from "./components/DiskMountDialog";
 import { ConfirmDialog } from "./components/ConfirmDialog";
@@ -27,6 +28,7 @@ import { wslService } from "./services/wslService";
 import { trackAppStarted } from "./services/telemetryService";
 import { info, debug } from "./utils/logger";
 
+import { ContainerWorkspace } from "./components/containers/ContainerWorkspace";
 type AppPage = "main" | "settings";
 
 function App() {
@@ -37,6 +39,7 @@ function App() {
   const { notifications, removeNotification } = useNotificationStore();
   const { checkPreflight, isReady: wslReady } = usePreflightStore();
   const { startupActionOutput, clearStartupActionOutput } = useActionsStore();
+  const [workspace, setWorkspace] = useState<"distributions" | "containers">(() => { try { return localStorage.getItem("wsl-ui-workspace") === "containers" ? "containers" : "distributions"; } catch { return "distributions"; } });
   const [currentPage, setCurrentPage] = useState<AppPage>("main");
   const [showForceRestartConfirm, setShowForceRestartConfirm] = useState(false);
   const [showCloseDialog, setShowCloseDialog] = useState(false);
@@ -208,73 +211,44 @@ function App() {
     };
   }, []);
 
-  if (currentPage === "settings") {
-    return (
-      <ErrorBoundary>
+  return (
+    <ErrorBoundary>
+      {currentPage === "settings" && (
         <div className="flex flex-col h-screen">
           <SettingsPage onBack={() => setCurrentPage("main")} />
         </div>
-        {/* Close dialog must be rendered on all pages */}
-        <CloseActionDialog
-          isOpen={showCloseDialog}
-          onMinimize={handleMinimize}
-          onQuit={handleQuit}
-          onCancel={handleCloseDialogCancel}
-          onRememberChoice={handleRememberChoice}
-        />
-        {/* Telemetry opt-in dialog */}
-        <TelemetryOptInDialog
-          isOpen={showTelemetryOptIn}
-          onAccept={handleTelemetryAccept}
-          onDecline={handleTelemetryDecline}
-        />
-        {/* Review prompt dialog */}
-        <ReviewPromptDialog
-          isOpen={showReviewPrompt}
-          onReview={handleReview}
-          onMaybeLater={handleMaybeLater}
-          onNoThanks={handleNoThanks}
-        />
-        {/* Startup action output dialog */}
-        {startupActionOutput && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center">
-            <div className="absolute inset-0 bg-black/50" onClick={clearStartupActionOutput} />
-            <div className="relative bg-theme-bg-secondary border border-theme-border rounded-lg p-4 max-w-lg w-full mx-4 max-h-[80vh] overflow-auto">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="font-semibold text-theme-text-primary">{startupActionOutput.actionName} {t('common:output')}</h3>
-                <button
-                  onClick={clearStartupActionOutput}
-                  className="text-theme-text-muted hover:text-theme-text-primary"
-                >
-                  &times;
-                </button>
-              </div>
-              <div className="font-mono text-xs bg-theme-bg-primary p-3 rounded">
-                {startupActionOutput.output && (
-                  <pre className="text-sm text-theme-text-secondary font-mono whitespace-pre-wrap">{startupActionOutput.output}</pre>
-                )}
-                {startupActionOutput.error && (
-                  <pre className="mt-2 text-sm text-theme-status-error font-mono whitespace-pre-wrap">{startupActionOutput.error}</pre>
-                )}
-                {!startupActionOutput.output && !startupActionOutput.error && (
-                  <p className="text-theme-text-muted italic">{t('common:noOutput')}</p>
-                )}
-              </div>
-              <p className="mt-2 text-xs text-theme-text-muted">
-                {t('common:ranOn', { distro: startupActionOutput.distro })}
-              </p>
-            </div>
-          </div>
-        )}
-      </ErrorBoundary>
-    );
-  }
-
-  return (
-    <ErrorBoundary>
-      <div className="flex flex-col h-screen">
-        <Header onOpenSettings={() => setCurrentPage("settings")} />
-        <main ref={mainContentRef} className="flex-1 overflow-auto px-6 pb-4">
+      )}
+      <div
+        hidden={currentPage !== "main"}
+        className={currentPage === "main" ? "flex flex-col h-screen" : "hidden"}
+      >
+        <Header workspace={workspace} onOpenSettings={() => setCurrentPage("settings")} />
+        <nav aria-label="Workspace" className="flex gap-2 px-6 py-3 border-b border-theme-border-primary">
+          {(["distributions", "containers"] as const).map(view => (
+            <Button
+              key={view}
+              size="sm"
+              variant={workspace === view ? "accent" : "secondary"}
+              aria-pressed={workspace === view}
+              data-testid={`workspace-${view}`}
+              onClick={() => {
+                setWorkspace(view);
+                try {
+                  localStorage.setItem("wsl-ui-workspace", view);
+                } catch {
+                  // Preferences are optional when storage is restricted.
+                }
+              }}
+            >
+              {t(`common:containers.${view}`)}
+            </Button>
+          ))}
+        </nav>
+        <main
+          hidden={workspace !== "distributions"}
+          ref={mainContentRef}
+          className={workspace === "distributions" ? "flex-1 overflow-auto px-6 pb-4" : "hidden"}
+        >
           {/* WSL Preflight Banner - shows when WSL is not installed/configured */}
           <PreflightBanner />
           {/* System Error Banner */}
@@ -316,7 +290,8 @@ function App() {
           ))}
           <DistroList />
         </main>
-        <StatusBar />
+        <div hidden={workspace !== "distributions"}><StatusBar /></div>
+        <ContainerWorkspace visible={workspace === "containers" && currentPage === "main"} />
 
         {/* Global Dialogs */}
         <DiskMountDialog isOpen={showMountDialog} onClose={closeMountDialog} />
@@ -359,7 +334,7 @@ function App() {
 
         {/* Startup action output dialog */}
         {startupActionOutput && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <Portal><div className="fixed inset-0 z-50 flex items-center justify-center">
             <div className="absolute inset-0 bg-black/50" onClick={clearStartupActionOutput} />
             <div className="relative bg-theme-bg-secondary border border-theme-border rounded-lg p-4 max-w-lg w-full mx-4 max-h-[80vh] overflow-auto">
               <div className="flex justify-between items-center mb-4">
@@ -386,7 +361,7 @@ function App() {
                 {t('common:ranOn', { distro: startupActionOutput.distro })}
               </p>
             </div>
-          </div>
+          </div></Portal>
         )}
       </div>
     </ErrorBoundary>

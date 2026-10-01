@@ -3,6 +3,9 @@
 
 mod actions;
 mod commands;
+mod containers;
+mod container_commands;
+use container_commands::*;
 mod constants;
 mod distro_catalog;
 mod download;
@@ -453,6 +456,9 @@ fn main() {
             }
         })
         .invoke_handler(tauri::generate_handler![
+            container_probe, container_connect, container_list, container_inspect,
+            container_stats, container_action, container_create, container_recreate, container_logs, container_terminal,
+            container_backup_preflight, container_backup, container_restore,
             list_distributions,
             refresh_tray_menu,
             quit_app,

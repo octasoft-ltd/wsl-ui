@@ -1885,6 +1885,7 @@ pub fn reset_mock_state_cmd() -> Result<(), String> {
         reset_mock_state();
         download::reset_mock_download();
         metadata::reset_mock_metadata();
+        crate::container_commands::reset_mock_state();
         actions::reset_mock_actions();
         Ok(())
     } else {
