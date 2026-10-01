@@ -6,7 +6,7 @@ Date: 2026-10-01. The app was tested in an isolated checkout on Windows 11 x64. 
 
 | Check | Result |
 | --- | --- |
-| Frontend unit/component suite | 48 files, 818 tests passed |
+| Frontend unit/component suite | 48 files, 822 tests passed |
 | Rust suite | 491 passed, 1 subprocess helper ignored by the normal runner |
 | TypeScript/Vite and debug desktop builds | Passed |
 | Independent code review | Reported correctness/privacy findings addressed and rechecked |
@@ -67,6 +67,11 @@ Confirmed removal now inspects the captured container, stops it when running, ve
 - Native WSL 3.0.1 desktop UI: running PostgreSQL removal and already-stopped PostgreSQL removal passed. Recreating a test container with its retained named volume recovered the written marker. The existing user's PostgreSQL container kept the same full ID and running state; all test-owned containers and volumes were cleaned up.
 - A preliminary native harness run timed out waiting for the refresh button and cleaned up its test resources. The final run handles first-run dialogs before clicking and passed.
 - Independent review found no important defects. Debug desktop builds and the diff whitespace check passed.
+## Background refresh stability
+
+The five-second container poll previously toggled the global loading flag, disabling and dimming workspace controls on each refresh. Inventory refresh now retains existing content and leaves controls available; initial connection still reports loading. Starting an operation invalidates earlier inventory/detail refresh responses, including errors, and allows a fresh post-operation read.
+
+Four regressions reproduced the disabled controls and blocked actions before the fix. The full frontend suite then passed 822 tests across 48 files. All 12 container desktop cases passed, including two observed polling cycles with zero disabled-attribute changes. A separate real WSLc desktop run observed three completed refresh cycles with zero disabled-state changes; its initially empty inventory remained empty and no workload mutations were performed. Debug builds and the diff check passed. Independent review found no important concurrency defects.
 ## Release boundaries
 
 Passing simulated recovery tests does not establish native archive fidelity. Native complete backup, restore and configuration recreation remain unavailable because WSLc inspection omits effective settings. Named-volume recovery additionally needs a pinned helper and Linux metadata/data roundtrip evidence.

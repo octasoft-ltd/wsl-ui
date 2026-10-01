@@ -92,6 +92,28 @@ async function connect() {
   await screen.findByText("external-web");
 }
 describe("container workspace", () => {
+  it("keeps action buttons enabled during a periodic inventory refresh", async () => {
+    const view = render(<ContainerWorkspace visible />);
+    await connect();
+    let finish!: (rows: (typeof row)[]) => void;
+    const pending = new Promise<(typeof row)[]>((resolve) => {
+      finish = resolve;
+    });
+    vi.mocked(invoke).mockImplementationOnce(() => pending);
+    vi.useFakeTimers();
+    view.rerender(<ContainerWorkspace visible={false} />);
+    view.rerender(<ContainerWorkspace visible />);
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(5000);
+    });
+    expect(screen.getByTestId("container-create")).toBeEnabled();
+    expect(screen.getByTestId("container-stop")).toBeEnabled();
+    expect(screen.getByTestId("container-remove")).toBeEnabled();
+    await act(async () => {
+      finish([row]);
+      await pending;
+    });
+  });
   it("never probes or connects while hidden, and requires explicit Connect when shown", async () => {
     const view = render(<ContainerWorkspace visible={false} />);
     expect(invoke).not.toHaveBeenCalled();

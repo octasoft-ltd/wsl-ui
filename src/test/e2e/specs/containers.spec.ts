@@ -82,6 +82,28 @@ describe('WSL container workspace', () => {
     await card.$('[data-testid="container-stop"]').waitForClickable();
   });
 
+  it('keeps controls visually stable across background refresh cycles', async () => {
+    await connect();
+    await $('[data-testid="container-create"]').waitForClickable();
+    const observed = await browser.executeAsync((done: (result: { refreshes: number; disabledChanges: number }) => void) => {
+      const workspace = document.querySelector('[data-testid="container-workspace"]')!;
+      const footer = workspace.querySelector('footer')!;
+      let previous = footer.textContent;
+      let refreshes = 0;
+      let disabledChanges = 0;
+      const observer = new MutationObserver(records => {
+        disabledChanges += records.filter(record => record.type === 'attributes' && record.attributeName === 'disabled').length;
+        if (footer.textContent !== previous) { previous = footer.textContent; refreshes++; }
+        if (refreshes >= 2) finish();
+      });
+      const finish = () => { observer.disconnect(); clearTimeout(timeout); done({ refreshes, disabledChanges }); };
+      const timeout = setTimeout(finish, 20000);
+      observer.observe(workspace, { subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: ['disabled'] });
+    });
+    expect(observed.refreshes).toBeGreaterThanOrEqual(2);
+    expect(observed.disabledChanges).toBe(0);
+  });
+
   it('browses local logos and filters the tool gallery at a narrow width', async () => {
     await connect();
     const prior = await browser.getWindowSize();

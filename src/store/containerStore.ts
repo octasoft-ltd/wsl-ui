@@ -75,10 +75,15 @@ export function createContainerStore(
 ) {
   let epoch = 0;
   let detailRequest = 0;
+  let refreshRevision = 0;
   let probing: Promise<void> | null = null;
   let refreshing: { epoch: number; promise: Promise<void> } | null = null;
   return create<ContainerStore>((set, get) => {
     const current = (captured: number) => captured === epoch;
+    const invalidateRefresh = () => {
+      refreshRevision++;
+      refreshing = null;
+    };
     const fail = (
       error: unknown,
       captured: number,
@@ -198,11 +203,15 @@ export function createContainerStore(
         const captured = epoch;
         if (!connection || get().busy) return Promise.resolve();
         if (refreshing?.epoch === captured) return refreshing.promise;
-        set({ isLoading: true });
+        // Polling updates existing content without disabling or dimming controls.
+        // A mutation invalidates this read so it cannot restore obsolete state.
+        const revision = refreshRevision;
+        const currentRefresh = () =>
+          current(captured) && revision === refreshRevision;
         const promise = (async () => {
           try {
             const containers = await service.list(connection);
-            if (!current(captured)) return;
+            if (!currentRefresh()) return;
             set({ containers, error: null, updatedAt: Date.now() });
             if (
               get().selectedId &&
@@ -215,14 +224,14 @@ export function createContainerStore(
               try {
                 const detail = await service.inspect(connection, id);
                 if (
-                  current(captured) &&
+                  currentRefresh() &&
                   get().selectedId === id &&
                   request === detailRequest
                 )
                   set({ detail, detailError: null, detailLoading: false });
               } catch (e) {
                 if (
-                  current(captured) &&
+                  currentRefresh() &&
                   get().selectedId === id &&
                   request === detailRequest
                 ) {
@@ -232,10 +241,9 @@ export function createContainerStore(
               }
             }
           } catch (e) {
-            fail(e, captured, "error");
+            if (currentRefresh()) fail(e, captured, "error");
           } finally {
-            if (current(captured)) {
-              set({ isLoading: false });
+            if (currentRefresh()) {
               refreshing = null;
             }
           }
@@ -274,6 +282,7 @@ export function createContainerStore(
         const connection = get().connection;
         if (!connection || get().busy || get().isLoading) return;
         const captured = epoch;
+        invalidateRefresh();
         detailRequest++;
         set({
           busy: `${action}:${id}`,
@@ -305,6 +314,7 @@ export function createContainerStore(
         const connection = get().connection;
         if (!connection || get().busy || get().isLoading) return false;
         const captured = epoch;
+        invalidateRefresh();
         let success = false;
         set({ busy: originalId ? "recreate" : "create", operationError: null });
         try {
@@ -326,6 +336,7 @@ export function createContainerStore(
         const connection = get().connection;
         if (!connection || get().busy || get().isLoading) return null;
         const captured = epoch;
+        invalidateRefresh();
         set({ busy: "backup", operationError: null });
         try {
           const targetName =
@@ -353,6 +364,7 @@ export function createContainerStore(
         const connection = get().connection;
         if (!connection || get().busy || get().isLoading) return null;
         const captured = epoch;
+        invalidateRefresh();
         set({ busy: "restore", operationError: null });
         let result = null;
         try {
@@ -379,6 +391,7 @@ export function createContainerStore(
         const connection = get().connection;
         if (!connection || get().busy || get().isLoading) return;
         const captured = epoch;
+        invalidateRefresh();
         set({ busy: `terminal:${id}`, operationError: null });
         try {
           await service.terminal(connection, id, { executable, args });

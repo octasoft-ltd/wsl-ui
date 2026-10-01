@@ -58,6 +58,46 @@ async function makeStore(overrides = {}) {
   return { store: mod!.createContainerStore(service), service };
 }
 describe("container state boundaries", () => {
+  it("keeps background refresh quiet while retaining the current inventory", async () => {
+    const pending = deferred<ContainerSummary[]>();
+    const { store, service } = await makeStore();
+    await store.getState().connect();
+    service.list.mockReturnValueOnce(pending.promise);
+    const refresh = store.getState().refresh();
+    expect(store.getState().isLoading).toBe(false);
+    expect(store.getState().containers).toEqual([external]);
+    pending.resolve([{ ...external, state: "exited" }]);
+    await refresh;
+    expect(store.getState().containers[0].state).toBe("exited");
+  });
+  it.each([false, true])(
+    "allows actions during a refresh and discards its stale result (error: %s)",
+    async (error) => {
+      const pending = deferred<ContainerSummary[]>();
+      const stopped = { ...external, state: "exited" as const };
+      const { store, service } = await makeStore({
+        action: vi.fn().mockResolvedValue({ container: null, warning: null }),
+      });
+      await store.getState().connect();
+      service.list
+        .mockReturnValueOnce(
+          pending.promise.then((rows) => {
+            if (error)
+              throw { code: "sessionLost", message: "Obsolete read failure" };
+            return rows;
+          }),
+        )
+        .mockResolvedValue([stopped]);
+      const oldRead = store.getState().refresh();
+      await store.getState().action(external.id, "stop");
+      expect(store.getState().containers[0].state).toBe("exited");
+      pending.resolve([external]);
+      await oldRead;
+      expect(store.getState().containers[0].state).toBe("exited");
+      expect(store.getState().connection).toEqual(connection);
+      expect(store.getState().error).toBeNull();
+    },
+  );
   it("closes details after confirmed removal", async () => {
     const { store, service } = await makeStore({
       action: vi.fn().mockResolvedValue({ container: null, warning: null }),
