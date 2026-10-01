@@ -164,6 +164,19 @@ describe('WSL container workspace', () => {
     });
   });
 
+  it('stops and removes a running container after confirmation', async () => {
+    await connect();
+    const card = await cardNamed('web');
+    await card.$('[data-testid="container-stop"]').waitForClickable();
+    await card.$('[data-testid="container-remove"]').click();
+    const dialog = await $('[role="alertdialog"]');
+    await dialog.waitForDisplayed();
+    await browser.waitUntil(async () => (await dialog.getText()).includes('stopped before removal'));
+    await dialog.$('button=Confirm remove').click();
+    await browser.waitUntil(async () => !(await cardTexts()).some(value => value.split('\n').includes('web')));
+    await cardNamed('database');
+  });
+
   it('keeps details inside the app at the minimum window width', async () => {
     await connect();
     const prior = await browser.getWindowSize();

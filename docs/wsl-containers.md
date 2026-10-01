@@ -4,6 +4,9 @@ The Containers workspace manages the normal default WSLc session for the current
 
 The inventory includes containers created elsewhere in that session. Docker and Podman inventories and elevated or custom WSLc sessions are separate. Names are display labels; existing-container actions use a full container ID. A connection captures the session name and ID, which are checked before and after each CLI operation. WSLc routes the actual command by session name. A replacement during dispatch can make a write outcome unknown; reconnect and inspect the resulting resources before retrying. Cleanup never blindly targets the replacement session.
 
+## Removing containers
+
+Remove asks for confirmation, then stops a running container before deleting it. If stopping or session verification fails, deletion is not attempted. The app verifies a stopped state and uses ordinary removal; it does not force removal. Named volumes, bind-mounted files and images are retained. Only the container and its writable layer are deleted.
 ## Backup and restore
 
 A complete backup includes a stopped container's root filesystem and every supported effective creation setting, plus supported persistent data. Stop the container before Backup. Backup does not stop a workload automatically or capture running memory.

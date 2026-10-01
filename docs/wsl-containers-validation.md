@@ -6,8 +6,8 @@ Date: 2026-10-01. The app was tested in an isolated checkout on Windows 11 x64. 
 
 | Check | Result |
 | --- | --- |
-| Frontend unit/component suite | 48 files, 817 tests passed |
-| Rust suite | 487 passed, 1 subprocess helper ignored by the normal runner |
+| Frontend unit/component suite | 48 files, 818 tests passed |
+| Rust suite | 491 passed, 1 subprocess helper ignored by the normal runner |
 | TypeScript/Vite and debug desktop builds | Passed |
 | Independent code review | Reported correctness/privacy findings addressed and rechecked |
 | Optional E2E TypeScript check | 28 existing errors, also present in the unchanged base checkout; none added by the new container spec |
@@ -55,6 +55,18 @@ The Add container gallery includes ten bundled recipes with local logos, categor
 The rebuilt desktop app passed all ten container E2E cases, including local-logo loading, filtered gallery layout at 800 CSS pixels and PostgreSQL recipe creation through Rust IPC. The gallery screenshot was visually checked. This was a focused container rerun; the previous complete desktop run is recorded above.
 
 All ten recipes passed native acceptance through the real desktop Rust IPC on WSL 3.0.1: image pull/create/start, database or cache writes where applicable, Windows localhost HTTP for the six web interfaces, and restart persistence for every configured volume. The first run passed eight recipes; a MariaDB readiness-probe correction and the Grafana tag correction passed focused reruns. Recorded test containers and volumes were removed, and the original container inventory was preserved. See [catalog details and native run boundaries](container-catalog.md).
+## Running-container removal regression
+
+User testing exposed a missing lifecycle step: the UI allowed removal of a running container, but ordinary WSLc removal rejects that state with `WSLC_E_CONTAINER_IS_RUNNING`. Earlier native checks explicitly stopped containers before removal, and the existing desktop removal case used a stopped container.
+
+Confirmed removal now inspects the captured container, stops it when running, verifies a stopped state, then removes it. Each stage retains the full container ID and session checks. Stop failure or an uncertain session aborts removal; internal recovery cleanup retains its original stopped-only removal behavior. The confirmation explains the stop and retained named volumes, and the error dismiss button is separated from its message.
+
+- Full frontend suite: 818 tests across 48 files passed.
+- Full Rust suite: 491 passed, 1 subprocess helper ignored by the normal runner.
+- Container desktop suite: all 11 cases passed, including removal of a running container.
+- Native WSL 3.0.1 desktop UI: running PostgreSQL removal and already-stopped PostgreSQL removal passed. Recreating a test container with its retained named volume recovered the written marker. The existing user's PostgreSQL container kept the same full ID and running state; all test-owned containers and volumes were cleaned up.
+- A preliminary native harness run timed out waiting for the refresh button and cleaned up its test resources. The final run handles first-run dialogs before clicking and passed.
+- Independent review found no important defects. Debug desktop builds and the diff whitespace check passed.
 ## Release boundaries
 
 Passing simulated recovery tests does not establish native archive fidelity. Native complete backup, restore and configuration recreation remain unavailable because WSLc inspection omits effective settings. Named-volume recovery additionally needs a pinned helper and Linux metadata/data roundtrip evidence.

@@ -288,7 +288,10 @@ export function createContainerStore(
             detailRequest++;
             set({ detail: result.container, detailLoading: false });
           }
-          if (action === "remove" && get().selectedId === id)
+          if (
+            (action === "remove" || action === "stopAndRemove") &&
+            get().selectedId === id
+          )
             set({ selectedId: null, detail: null });
         } catch (e) {
           fail(e, captured, "operationError");

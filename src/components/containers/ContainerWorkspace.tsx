@@ -132,12 +132,13 @@ export function ContainerWorkspace({ visible }: { visible: boolean }) {
         {store.operationError && (
           <div
             role="alert"
-            className="rounded-lg border border-theme-border-secondary p-3 text-theme-status-error break-words"
+            className="rounded-lg border border-theme-border-secondary p-3 text-theme-status-error break-words flex items-start justify-between gap-3"
           >
-            {store.operationError}
+            <span>{store.operationError}</span>
             <Button
               variant="ghost"
               size="sm"
+              aria-label={t("containers.dismiss")}
               onClick={store.clearOperationError}
             >
               ×
@@ -197,7 +198,9 @@ export function ContainerWorkspace({ visible }: { visible: boolean }) {
             data-testid="container-busy"
             className="text-theme-text-muted"
           >
-            {t("containers.busy")}: {store.busy.split(":")[0]}
+            {store.busy.startsWith("stopAndRemove:")
+              ? t("containers.removing")
+              : `${t("containers.busy")}: ${store.busy.split(":")[0]}`}
           </p>
         )}
         {!store.connection && (
@@ -428,7 +431,7 @@ export function ContainerWorkspace({ visible }: { visible: boolean }) {
         confirmLabel={t("containers.confirmRemove")}
         onCancel={() => setRemove(null)}
         onConfirm={() => {
-          if (remove) void store.action(remove.id, "remove");
+          if (remove) void store.action(remove.id, "stopAndRemove");
           setRemove(null);
         }}
         variant="danger"

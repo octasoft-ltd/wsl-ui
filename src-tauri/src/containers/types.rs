@@ -118,6 +118,8 @@ pub enum ContainerAction {
     Restart,
     Kill,
     Remove,
+    #[serde(rename = "stopAndRemove")]
+    StopAndRemove,
 }
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]

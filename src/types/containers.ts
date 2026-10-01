@@ -9,7 +9,7 @@ export interface ContainerEnvironment { key: string; value: string }
 export interface ContainerCreateSpec { name: string; image: string; start: boolean; ports: ContainerPort[]; mounts: ContainerMount[]; environment: ContainerEnvironment[]; command: string[]; entrypoint: string | null; workingDirectory: string | null; user: string | null; cpus: number | null; memoryMb: number | null }
 export interface ContainerSummary { id: string; name: string; image: string; state: ContainerState; rawState: string; status: string; health: string | null; origin: 'wsl-ui' | 'external'; ports: string; mounts: string }
 export interface ContainerInspect extends ContainerSummary { imageId: string; publishedPorts: ContainerPort[]; dataMounts: ContainerMount[]; exitCode: number | null; lastError: string | null; configuration: ContainerCreateSpec | null; projectedConfiguration?: ContainerCreateSpec | null; configurationCoverageReason?: string | null; unsupportedFields: string[] }
-export type ContainerAction = 'start' | 'stop' | 'restart' | 'kill' | 'remove';
+export type ContainerAction = 'start' | 'stop' | 'restart' | 'kill' | 'remove' | 'stopAndRemove';
 export interface ContainerMutationResult { container: ContainerInspect | null; warning: string | null }
 export interface ContainerLogs { text: string; truncated: boolean }
 export interface ContainerTerminalRequest { executable: string; args: string[] }

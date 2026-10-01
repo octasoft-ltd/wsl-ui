@@ -132,6 +132,9 @@ describe("container workspace", () => {
     await connect();
     fireEvent.click(screen.getByRole("button", { name: "Remove" }));
     expect(screen.getByRole("alertdialog")).toHaveTextContent("writable layer");
+    expect(screen.getByRole("alertdialog")).toHaveTextContent(
+      "stopped before removal",
+    );
     expect(invoke).not.toHaveBeenCalledWith(
       "container_action",
       expect.anything(),
@@ -141,6 +144,11 @@ describe("container workspace", () => {
     });
     fireEvent.click(screen.getByRole("button", { name: "Confirm remove" }));
     expect(await screen.findByText("Removal failed")).toBeVisible();
+    expect(invoke).toHaveBeenCalledWith("container_action", {
+      connection,
+      id: row.id,
+      action: "stopAndRemove",
+    });
     expect(screen.getByText("external-web")).toBeVisible();
   });
   it("offers force stop separately after graceful stop fails", async () => {

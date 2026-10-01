@@ -58,6 +58,18 @@ async function makeStore(overrides = {}) {
   return { store: mod!.createContainerStore(service), service };
 }
 describe("container state boundaries", () => {
+  it("closes details after confirmed removal", async () => {
+    const { store, service } = await makeStore({
+      action: vi.fn().mockResolvedValue({ container: null, warning: null }),
+    });
+    await store.getState().connect();
+    store.setState({ selectedId: external.id });
+    service.list.mockResolvedValue([]);
+    await store.getState().action(external.id, "stopAndRemove");
+    expect(store.getState().selectedId).toBeNull();
+    expect(store.getState().containers).toEqual([]);
+    expect(store.getState().operationError).toBeNull();
+  });
   it("does no discovery until requested and never connects from probe or refresh", async () => {
     const { store, service } = await makeStore();
     expect(service.probe).not.toHaveBeenCalled();
@@ -300,12 +312,10 @@ describe("container state boundaries", () => {
       sessionId: "session-b",
     });
     await store.getState().connect();
-    store
-      .getState()
-      .reportReadError(captured, {
-        code: "sessionLost",
-        message: "Old session vanished",
-      });
+    store.getState().reportReadError(captured, {
+      code: "sessionLost",
+      message: "Old session vanished",
+    });
     expect(store.getState().connection?.sessionId).toBe("session-b");
     expect(store.getState().error).toBeNull();
   });

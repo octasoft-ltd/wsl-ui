@@ -217,12 +217,34 @@ impl<E: Executor> Service<E> {
         action: ContainerAction,
     ) -> Result<ContainerMutationResult, ContainerError> {
         super::inventory::validate_id(id)?;
+        // Only the user-confirmed removal flow may stop a running container.
+        // Recovery cleanup keeps using Remove, which never stops workloads.
+        if matches!(action, ContainerAction::StopAndRemove) {
+            let mut row = self.inspect(c, id)?;
+            if row.summary.state == ContainerState::Running {
+                row = self.action(c, id, ContainerAction::Stop).map_err(|mut e| {
+                    e.message = format!("Removal was not attempted because stopping the container failed. {}", e.message);
+                    e
+                })?.container.ok_or_else(|| ContainerError::new(
+                    "containerNotStopped", "The stopped state could not be verified. The container has not been removed. Refresh and try again.",
+                ))?;
+            }
+            if !matches!(
+                row.summary.state,
+                ContainerState::Created | ContainerState::Exited | ContainerState::Dead
+            ) {
+                return Err(ContainerError::new(
+                    "containerNotStopped", "The container is not stopped and has not been removed. Stop it, then try Remove again.",
+                ));
+            }
+            return self.action(c, id, ContainerAction::Remove);
+        }
         let verb = match action {
             ContainerAction::Start => "start",
             ContainerAction::Stop => "stop",
             ContainerAction::Restart => "restart",
             ContainerAction::Kill => "kill",
-            ContainerAction::Remove => "rm",
+            ContainerAction::Remove | ContainerAction::StopAndRemove => "rm",
         };
         let mut a = args(&["container", verb]);
         if matches!(action, ContainerAction::Stop | ContainerAction::Restart) {

@@ -701,8 +701,106 @@ fn lifecycle_uses_each_native_commands_grace_period_option() {
             &session, "", &session, &session, &detail, &session,
         ]));
         service.action(&connection(), ID, action).unwrap();
-        assert_eq!(service.executor.calls.lock().unwrap()[1], vec![
-            "--session", "wslc-cli-alice", "container", verb, option, "10", ID,
-        ]);
+        assert_eq!(
+            service.executor.calls.lock().unwrap()[1],
+            vec![
+                "--session",
+                "wslc-cli-alice",
+                "container",
+                verb,
+                option,
+                "10",
+                ID,
+            ]
+        );
     }
+}
+
+#[test]
+fn confirmed_removal_stops_a_running_container_and_preserves_other_containers() {
+    let s = Service::new(mock::MockExecutor::new());
+    let c = s.connect().unwrap();
+    let before = s.list(&c).unwrap();
+    let web = before.iter().find(|r| r.name == "web").unwrap();
+    assert_eq!(web.state, types::ContainerState::Running);
+    let action = serde_json::from_value(json!("stopAndRemove")).unwrap();
+    assert!(s.action(&c, &web.id, action).unwrap().container.is_none());
+    let after = s.list(&c).unwrap();
+    assert!(!after.iter().any(|r| r.id == web.id));
+    assert_eq!(after.len(), before.len() - 1);
+}
+
+#[test]
+fn confirmed_removal_does_not_remove_if_stop_leaves_container_running() {
+    let session = info(1);
+    let detail = inspect_fixture();
+    let s = Service::new(ScriptExecutor::new(&[
+        &session, &detail, &session, // inspect before stop
+        &session, "", &session, // stop dispatch
+        &session, &detail, &session, // still running afterwards
+    ]));
+    let action = serde_json::from_value(json!("stopAndRemove")).unwrap();
+    let error = s.action(&connection(), ID, action).err().unwrap();
+    assert_eq!(error.code, "containerNotStopped");
+    assert!(error.message.contains("not been removed"));
+    let calls = s.executor.calls.lock().unwrap();
+    assert!(calls
+        .iter()
+        .any(|a| a.get(3).map(String::as_str) == Some("stop")));
+    assert!(!calls
+        .iter()
+        .any(|a| a.iter().any(|v| v == "rm" || v == "kill" || v == "--force")));
+}
+
+#[test]
+fn confirmed_removal_of_stopped_container_does_not_send_stop() {
+    let session = info(1);
+    let mut detail: serde_json::Value = serde_json::from_str(&inspect_fixture()).unwrap();
+    detail[0]["State"]["Status"] = json!("exited");
+    detail[0]["State"]["Running"] = json!(false);
+    let detail = detail.to_string();
+    let s = Service::new(ScriptExecutor::new(&[
+        &session, &detail, &session, // inspect
+        &session, "", &session, // rm
+        &session, "", &session, // inventory after removal
+    ]));
+    let action = serde_json::from_value(json!("stopAndRemove")).unwrap();
+    assert!(s
+        .action(&connection(), ID, action)
+        .unwrap()
+        .container
+        .is_none());
+    let calls = s.executor.calls.lock().unwrap();
+    assert!(!calls.iter().any(|a| a
+        .iter()
+        .any(|v| v == "stop" || v == "kill" || v == "--force" || v == "--volumes")));
+    assert!(calls
+        .iter()
+        .any(|a| a.get(3).map(String::as_str) == Some("rm")));
+}
+
+#[test]
+fn confirmed_removal_does_not_delete_after_session_changes_during_stop() {
+    let session = info(1);
+    let replacement = info(2);
+    let detail = inspect_fixture();
+    let s = Service::new(ScriptExecutor::new(&[
+        &session,
+        &detail,
+        &session,
+        &session,
+        "",
+        &replacement,
+    ]));
+    let action = serde_json::from_value(json!("stopAndRemove")).unwrap();
+    let error = s.action(&connection(), ID, action).err().unwrap();
+    assert_eq!(error.code, "mutationOutcomeUnknown");
+    assert!(error.message.contains("Removal was not attempted"));
+    assert!(!s
+        .executor
+        .calls
+        .lock()
+        .unwrap()
+        .iter()
+        .any(|a| a.iter().any(|v| v == "rm")));
 }
