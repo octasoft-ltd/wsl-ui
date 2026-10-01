@@ -1,9 +1,11 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { act, cleanup, render, screen } from '@testing-library/react';
+import { act, cleanup, render, screen, fireEvent } from '@testing-library/react';
 import App from './App';
 import { useDistroStore } from './store/distroStore';
 import { usePollingStore } from './store/pollingStore';
 import { useMountStore } from './store/mountStore';
+import { useActionsStore } from './store/actionsStore';
+import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
 
 // Mock the stores used by polling
@@ -89,7 +91,7 @@ vi.mock('@tauri-apps/api/event', () => ({
 
 // Mock child components to simplify tests
 vi.mock('./components/Header', () => ({
-  Header: () => <div data-testid="header">Header</div>,
+  Header: ({ onOpenSettings }: { onOpenSettings: () => void }) => <div data-testid="header">Header<button onClick={onOpenSettings}>Open settings</button></div>,
 }));
 
 vi.mock('./components/DistroList', () => ({
@@ -118,6 +120,7 @@ describe('App', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    useActionsStore.setState({ startupActionOutput: null });
     vi.useFakeTimers();
     useMountStore.setState({ mountedDisks: [], trackedMounts: [] });
 
@@ -156,6 +159,23 @@ describe('App', () => {
     vi.unstubAllGlobals();
   });
 
+  it('offers an independent container workspace and returns to distributions', async () => {
+    await renderApp();
+    expect(vi.mocked(invoke).mock.calls.some(([command]) => command.startsWith('container_'))).toBe(false);
+    expect(screen.getByRole('button', { name: 'Distributions' })).toHaveAttribute('aria-pressed', 'true');
+    await act(async () => fireEvent.click(screen.getByRole('button', { name: 'Containers' })));
+    expect(screen.getByTestId('container-workspace')).toBeVisible();
+    expect(screen.getByTestId('distro-list')).not.toBeVisible();
+    await act(async () => fireEvent.click(screen.getByRole('button', { name: 'Distributions' })));
+    expect(screen.getByTestId('distro-list')).toBeVisible();
+  });
+
+  it('shows startup action output when Settings is open', async () => {
+    await renderApp(); await act(async () => fireEvent.click(screen.getByRole('button', { name: 'Open settings' })));
+    await act(async () => useActionsStore.setState({ startupActionOutput: { actionName: 'Startup script', distro: 'Ubuntu', output: 'late startup result', error: undefined } }));
+    expect(screen.getByText('late startup result')).toBeVisible();
+    useActionsStore.setState({ startupActionOutput: null });
+  });
   describe('event listener cleanup', () => {
     it.each([true, false])('clears disk attachments only after confirmed tray shutdown: %s', async (shutdown) => {
       await renderApp();

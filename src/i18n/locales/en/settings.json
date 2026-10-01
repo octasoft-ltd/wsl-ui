@@ -452,9 +452,9 @@
     "communityNoteSuffix": " and may vary in WSL compatibility."
   },
   "containerRuntime": {
-    "title": "Container Runtime",
-    "description": "Configure how container images are pulled",
-    "infoBox": "Choose how to pull container images. The built-in OCI implementation works for public registries. For private registries that require authentication, use Docker or Podman with your existing credentials.",
+    "title": "Distribution image source",
+    "description": "Choose how OCI images are downloaded to install WSL distributions.",
+    "infoBox": "This setting controls distribution image downloads. WSL containers use Microsoft WSLc and have their own workspace.",
     "builtin": "Built-in OCI",
     "builtinDesc": "Native implementation, no external dependencies. Works with public registries.",
     "docker": "Docker",

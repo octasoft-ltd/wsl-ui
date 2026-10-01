@@ -62,3 +62,7 @@ This application is built with the following open source technologies:
 ---
 
 If you believe any attribution is missing or incorrect, please open an issue or submit a pull request.
+
+## Container service logos
+
+The bundled PostgreSQL, MariaDB, Redis, Valkey, RabbitMQ, Mailpit, Adminer, Nginx, Caddy and Grafana SVGs are unmodified assets from [Homarr Labs Dashboard Icons](https://github.com/homarr-labs/dashboard-icons/tree/f1d048d9885b97a7319e0a51e508217459f212df/svg), pinned to revision `f1d048d9885b97a7319e0a51e508217459f212df` (Apache-2.0). The license is included in `public/container-logos/LICENSE`. Logos identify the corresponding projects; their trademarks remain with their respective owners and imply no endorsement.

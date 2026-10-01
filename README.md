@@ -24,6 +24,19 @@ Built with [Tauri](https://tauri.app/) (Rust) and [React](https://react.dev/)
 
 See the [User Guide](docs/USER-GUIDE.md) for detailed features and screenshots.
 
+### WSL containers preview
+
+The Containers workspace adds explicit connection to WSLc, discovery of containers
+created outside the app, creation, start/stop/restart, removal, logs, terminal and
+configuration inspection. It targets WSL 3.0.1 or newer; distribution
+management remains available on older installations.
+
+Native backup, restore and configuration recreation are unavailable in this
+preview: WSLc inspection omits settings needed to reproduce a container completely.
+Recovery workflows and the archive implementation are tested with the simulated
+runtime. Native named-volume recovery also needs a verified helper. See
+[container usage and recovery limits](docs/wsl-containers.md).
+
 ## Language Support
 
 WSL UI is available in multiple languages. The app automatically detects your

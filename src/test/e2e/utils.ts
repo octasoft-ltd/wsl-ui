@@ -71,7 +71,7 @@ export async function safeRefresh(): Promise<void> {
  * await waitForStoreValue('__distroStore', 'state.actionInProgress', 'value === null');
  *
  * // Wait for distro list to be loaded
- * await waitForStoreValue('__distroStore', 'state.distros.length', 'value > 0');
+ * await waitForStoreValue('__distroStore', 'state.distributions.length', 'value > 0');
  */
 export async function waitForStoreValue(
   storeName: string,
@@ -261,8 +261,8 @@ export async function waitForAppReady(): Promise<void> {
         const store = window.__distroStore;
         if (!store) return false;
         const state = store.getState();
-        // Ready when: store exists, not loading, and distros array exists
-        return !state.isLoading && Array.isArray(state.distros);
+        // Match the actual store field so every setup does not exhaust the fallback timeout.
+        return !state.isLoading && Array.isArray(state.distributions);
       });
     },
     {
@@ -317,6 +317,9 @@ export async function resetMockState(): Promise<void> {
   // Clear frontend state that should be reset between tests
   // Note: distros will be refreshed naturally when page reloads
   await browser.execute(async () => {
+    // Each test starts in the distribution workspace, independently of the
+    // last workspace selected by the preceding test or an earlier app launch.
+    localStorage.removeItem("wsl-ui-workspace");
     // Clear notification store
     // @ts-expect-error - Store is exposed for e2e testing
     if (window.__notificationStore) {
@@ -755,8 +758,11 @@ export async function waitForQuickActionsClosed(distroName: string, timeout = 30
 }
 
 async function switchToWindowByTitle(expectedTitle: string): Promise<void> {
+  if ((await browser.getTitle().catch(() => "")) === expectedTitle) return;
+  const currentHandle = await browser.getWindowHandle();
   const windowHandles = await browser.getWindowHandles();
   for (const windowHandle of windowHandles) {
+    if (windowHandle === currentHandle) continue;
     await browser.switchToWindow(windowHandle);
     const windowTitle = await browser.getTitle().catch(() => "");
     if (windowTitle === expectedTitle) {
@@ -1126,6 +1132,10 @@ export async function captureDistroStates(): Promise<DistroSnapshot[]> {
     if (!name) continue;
 
     const badge = await card.$(selectors.stateBadge);
+    await browser.waitUntil(async () => (await badge.getText()).trim().length > 0, {
+      timeout: 3000,
+      timeoutMsg: `State badge for ${name} did not finish appearing`,
+    });
     const state = await badge.getText().catch(() => "UNKNOWN");
     states.push({ name, state });
   }

@@ -8,6 +8,7 @@
     "shell:default",
     "dialog:default",
     "fs:default",
+    "fs:allow-write-text-file",
     "log:default",
     "core:webview:allow-create-webview-window",
     "core:window:allow-hide",

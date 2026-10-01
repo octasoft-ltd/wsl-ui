@@ -312,7 +312,8 @@ describe("New Distribution Installation", () => {
         // Enter invalid name with special characters
         await nameInput.click();
         await browser.keys(['Control', 'a']);
-        await nameInput.setValue("invalid name!@#");
+        await browser.keys("invalid name!@#");
+        await expect(nameInput).toHaveValue("invalid name!@#");
 
         // Wait for validation to update
         await browser.waitUntil(
@@ -352,7 +353,8 @@ describe("New Distribution Installation", () => {
         // Enter existing name (Ubuntu exists in mock)
         await nameInput.click();
         await browser.keys(['Control', 'a']);
-        await nameInput.setValue("Ubuntu");
+        await browser.keys("Ubuntu");
+        await expect(nameInput).toHaveValue("Ubuntu");
 
         // Wait for validation to update
         await browser.waitUntil(
@@ -389,7 +391,8 @@ describe("New Distribution Installation", () => {
         // Enter existing name to trigger duplicate error
         await nameInput.click();
         await browser.keys(['Control', 'a']);
-        await nameInput.setValue("Ubuntu");
+        await browser.keys("Ubuntu");
+        await expect(nameInput).toHaveValue("Ubuntu");
 
         // Wait for error to appear
         await browser.waitUntil(
@@ -591,7 +594,7 @@ describe("New Distribution Installation", () => {
 
         // Verify error is shown in dialog text
         const dialogText = await dialog.getText();
-        expect(dialogText.toLowerCase()).toContain("failed");
+        expect(dialogText).toContain("Network error: Connection refused");
       }
     });
 

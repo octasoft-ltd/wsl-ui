@@ -279,7 +279,8 @@ export const config: Options.Testrunner = {
 
   // Use tauri-driver as the WebDriver server
   port: 4444,
-  hostname: "localhost",
+  // tauri-driver listens on IPv4. Avoid an IPv6 fallback delay on every request.
+  hostname: "127.0.0.1",
 
   //
   // Framework
@@ -475,6 +476,26 @@ export const config: Options.Testrunner = {
   before: async function () {
     // Wait for the app to be ready
     await browser.pause(2000);
+  },
+
+  // Fast local driver requests can reach an entering dialog/card before its
+  // finite CSS animation finishes. Wait on animation state, not a fixed delay.
+  beforeCommand: async function (commandName: string) {
+    if (!["click", "getText", "setValue"].includes(commandName)) return;
+    await browser.executeAsync((done: () => void) => {
+      const pending = document.getAnimations().filter(animation =>
+        animation.playState === "running" &&
+        Number.isFinite(animation.effect?.getTiming().iterations)
+      );
+      if (pending.length === 0) { done(); return; }
+      let completed = false;
+      const finish = () => { if (!completed) { completed = true; done(); } };
+      const deadline = setTimeout(finish, 2000);
+      void Promise.allSettled(pending.map(animation => animation.finished)).then(() => {
+        clearTimeout(deadline);
+        finish();
+      });
+    });
   },
 
   /**

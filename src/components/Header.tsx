@@ -12,9 +12,10 @@ import { wslService, SystemDistroInfo } from "../services/wslService";
 
 interface HeaderProps {
   onOpenSettings: () => void;
+  workspace?: "distributions" | "containers";
 }
 
-export function Header({ onOpenSettings }: HeaderProps) {
+export function Header({ onOpenSettings, workspace = "distributions" }: HeaderProps) {
   const { t } = useTranslation("header");
   const { shutdownAll, fetchDistros, openSystemTerminal, isLoading, actionInProgress, distributions } = useDistroStore();
   const [showImportDialog, setShowImportDialog] = useState(false);
@@ -110,7 +111,7 @@ export function Header({ onOpenSettings }: HeaderProps) {
           </div>
 
           {/* System Distro Info Box - hidden below lg breakpoint */}
-          {systemInfo && (
+          {workspace === "distributions" && systemInfo && (
             <div className="hidden lg:flex items-center gap-4">
               {/* Divider */}
               <div className="w-px h-8 bg-gradient-to-b from-transparent via-theme-border-secondary to-transparent" />
@@ -138,6 +139,7 @@ export function Header({ onOpenSettings }: HeaderProps) {
 
         {/* Right: Action buttons */}
         <div className="relative flex items-center gap-3">
+          {workspace === "distributions" && <>
           {/* Primary action - New */}
           <Button
             variant="success"
@@ -203,6 +205,7 @@ export function Header({ onOpenSettings }: HeaderProps) {
             data-testid="system-terminal-button"
           />
 
+          </>}
           {/* Help */}
           <IconButton
             icon={<HelpIcon size="md" />}
@@ -241,4 +244,3 @@ export function Header({ onOpenSettings }: HeaderProps) {
     </>
   );
 }
-
