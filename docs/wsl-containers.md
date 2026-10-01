@@ -56,3 +56,7 @@ Run only after an authorized stable-runtime setup is available, using newly crea
 5. Inject export interruption and import/create failure on test resources. Verify no completed backup appears and only attempt-owned resources are cleaned up. Confirm a replaced session stops the operation without deleting anything in its replacement.
 6. For named volumes, first select and pin a helper image by immutable digest for both supported architectures. Prove metadata preservation, refusal of shared active writers, bounded output, a fresh-volume restore and failure cleanup. Enable native named-volume support only after these checks pass with a data-bearing test service.
 7. Remove only the test objects explicitly recorded in this run. Record the results and any remaining capability gates.
+
+## Add container gallery
+
+The Add container action now offers ten curated developer-service recipes with logos, search and category filters. Review editable ports, named storage and service credentials before creation, or choose Custom image. See [the catalog and native validation](container-catalog.md).

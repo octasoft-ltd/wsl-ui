@@ -7,7 +7,7 @@ import { useAppVisibility } from "../../hooks/useAppVisibility";
 import { useContainerStore } from "../../store/containerStore";
 import type { ContainerSummary } from "../../types/containers";
 import { ContainerDetail } from "./ContainerDetail";
-import { ContainerForm } from "./ContainerForm";
+import { AddContainerDialog } from "./AddContainerDialog";
 import { ContainerRestore } from "./ContainerRecovery";
 export function ContainerWorkspace({ visible }: { visible: boolean }) {
   const { t } = useTranslation();
@@ -78,7 +78,7 @@ export function ContainerWorkspace({ visible }: { visible: boolean }) {
             disabled={disabled}
             onClick={() => setCreating(true)}
           >
-            {t("containers.create")}
+            {t("containers.catalog.title")}
           </Button>
           <Button
             size="sm"
@@ -401,7 +401,7 @@ export function ContainerWorkspace({ visible }: { visible: boolean }) {
           ` · ${t("containers.updated")} ${new Date(store.updatedAt).toLocaleTimeString()}`}
       </footer>
       {visible && creating && (
-        <ContainerForm onClose={() => setCreating(false)} />
+        <AddContainerDialog onClose={() => setCreating(false)} />
       )}
       {visible && restoring && store.connection && (
         <ContainerRestore

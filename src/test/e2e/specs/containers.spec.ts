@@ -62,6 +62,7 @@ describe('WSL container workspace', () => {
   it('creates a container through the form and starts and stops it', async () => {
     await connect();
     await $('[data-testid="container-create"]').click();
+    await $('[data-testid="container-custom-image"]').click();
     await $('[data-testid="container-create-name"]').setValue('e2e-service');
     await $('[data-testid="container-create-image"]').setValue('alpine:latest');
     await $('summary=Advanced').click();
@@ -79,6 +80,40 @@ describe('WSL container workspace', () => {
     await card.$('[data-testid="container-start"]').click();
     card = await cardNamed('e2e-service');
     await card.$('[data-testid="container-stop"]').waitForClickable();
+  });
+
+  it('browses local logos and filters the tool gallery at a narrow width', async () => {
+    await connect();
+    const prior = await browser.getWindowSize();
+    try {
+      await browser.setWindowSize(800, 720);
+      await $('[data-testid="container-create"]').click();
+      await $('[data-testid="container-recipe-postgres"]').waitForDisplayed();
+      await browser.waitUntil(() => browser.execute(() => Array.from(document.querySelectorAll<HTMLImageElement>('[data-testid^="container-recipe-"] img')).every(image => image.complete && image.naturalWidth > 0)));
+      await browser.waitUntil(() => browser.execute(() => document.getAnimations().every(animation => animation.playState !== 'running' || animation.effect?.getTiming().iterations === Infinity)));
+      await browser.saveScreenshot(path.join(process.cwd(), '.cache', 'container-catalog-800.png'));
+      await $('[data-testid="container-catalog-search"]').setValue('email');
+      await $('[data-testid="container-recipe-mailpit"]').waitForDisplayed();
+      expect(await $('[data-testid="container-recipe-postgres"]').isExisting()).toBe(false);
+      expect(await browser.execute(() => document.documentElement.scrollWidth > document.documentElement.clientWidth)).toBe(false);
+    } finally {
+      await browser.setWindowSize(prior.width, prior.height);
+    }
+  });
+
+  it('creates PostgreSQL from its recipe with credentials and explicit data mapping', async () => {
+    await connect();
+    await $('[data-testid="container-create"]').click();
+    await $('[data-testid="container-recipe-postgres"]').click();
+    await $('[data-testid="container-recipe-field-POSTGRES_PASSWORD"]').setValue('e2e-literal-$()-password');
+    await $('[data-testid="container-create-submit"]').click();
+    await cardNamed('postgres');
+    const connection = await invoke<ContainerConnection>('container_connect');
+    const created = (await invoke<ContainerSummary[]>('container_list', { connection })).find(row => row.name === 'postgres')!;
+    const inspected = await invoke<ContainerInspect>('container_inspect', { connection, id: created.id });
+    expect(inspected.projectedConfiguration?.mounts[0].target).toBe('/var/lib/postgresql');
+    expect(inspected.projectedConfiguration?.environment).toContainEqual({ key: 'POSTGRES_PASSWORD', value: 'e2e-literal-$()-password' });
+    expect(inspected.publishedPorts[0].hostIp).toBe('127.0.0.1');
   });
 
   it('preserves search across views and reconnects explicitly after reload', async () => {

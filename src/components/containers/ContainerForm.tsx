@@ -6,6 +6,11 @@ import { Input, Select, TextArea } from "../ui/Input";
 import { Modal, ModalHeader, ModalBody, ModalFooter } from "../ui/Modal";
 import type { ContainerCreateSpec } from "../../types/containers";
 import { useContainerStore } from "../../store/containerStore";
+import {
+  createRecipeSpec,
+  type ContainerRecipe,
+} from "../../data/containerRecipes";
+import { open as openLink } from "@tauri-apps/plugin-shell";
 const empty: ContainerCreateSpec = {
   name: "",
   image: "",
@@ -23,22 +28,28 @@ const empty: ContainerCreateSpec = {
 export function ContainerForm({
   initial,
   originalId,
+  recipe,
+  existingNames = [],
+  onBack,
   onClose,
 }: {
   initial?: ContainerCreateSpec;
   originalId?: string;
+  recipe?: ContainerRecipe;
+  existingNames?: string[];
+  onBack?: () => void;
   onClose: () => void;
 }) {
   const { t } = useTranslation();
   const titleId = useId();
   const [spec, setSpec] = useState<ContainerCreateSpec>(() =>
-    initial
-      ? { ...structuredClone(initial), name: `${initial.name}-updated` }
-      : structuredClone(empty),
+    recipe
+      ? createRecipeSpec(recipe, existingNames)
+      : initial
+        ? { ...structuredClone(initial), name: `${initial.name}-updated` }
+        : structuredClone(empty),
   );
-  const [commandText, setCommandText] = useState(
-    () => initial?.command.join("\n") ?? "",
-  );
+  const [commandText, setCommandText] = useState(() => spec.command.join("\n"));
   const [error, setError] = useState<string | null>(null);
   const [acknowledged, setAcknowledged] = useState(false);
   const { create, busy, operationError } = useContainerStore();
@@ -48,6 +59,25 @@ export function ContainerForm({
   ) => setSpec((s) => ({ ...s, [key]: value }));
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const environmentKeys = spec.environment
+      .filter((variable) => variable.key || variable.value)
+      .map((variable) => variable.key);
+    if (new Set(environmentKeys).size !== environmentKeys.length) {
+      setError(t("containers.catalog.duplicateVariables"));
+      return;
+    }
+    if (
+      recipe?.fields.some(
+        (field) =>
+          field.required &&
+          !spec.environment
+            .find((variable) => variable.key === field.key)
+            ?.value.trim(),
+      )
+    ) {
+      setError(t("containers.catalog.required"));
+      return;
+    }
     if (
       !spec.name.trim() ||
       !spec.image.trim() ||
@@ -105,6 +135,50 @@ export function ContainerForm({
             </p>
           )}
           <fieldset disabled={!!busy} className="space-y-4">
+            {recipe && (
+              <div className="rounded-lg bg-theme-bg-tertiary p-4 space-y-3">
+                <div className="flex items-center gap-3">
+                  <img
+                    src={`/container-logos/${recipe.id}.svg`}
+                    alt=""
+                    width="40"
+                    height="40"
+                    className="w-10 h-10 object-contain"
+                  />
+                  <div>
+                    <h3 className="font-semibold text-theme-text-primary">
+                      {recipe.name}
+                    </h3>
+                    <p className="text-sm text-theme-text-secondary">
+                      {t(`containers.catalog.descriptions.${recipe.id}`)}
+                    </p>
+                  </div>
+                </div>
+                <p className="text-xs text-theme-text-secondary">
+                  {t("containers.catalog.localPorts")}
+                </p>
+                {recipe.volumes.length > 0 && (
+                  <p className="text-xs text-theme-text-secondary">
+                    {t("containers.catalog.storage")}
+                  </p>
+                )}
+                <p className="text-xs text-theme-text-secondary">
+                  {t(`containers.catalog.notes.${recipe.id}`)}
+                </p>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="secondary"
+                  onClick={() =>
+                    void openLink(recipe.documentation).catch(() =>
+                      setError(t("containers.catalog.linkError")),
+                    )
+                  }
+                >
+                  {t("containers.catalog.documentation")}
+                </Button>
+              </div>
+            )}
             {originalId && (
               <label className="flex gap-2 text-sm text-theme-text-secondary">
                 <input
@@ -137,6 +211,44 @@ export function ContainerForm({
               />
               {t("containers.startAfter")}
             </label>
+            {recipe && recipe.fields.length > 0 && (
+              <section
+                className="space-y-3"
+                aria-label={t("containers.catalog.serviceSettings")}
+              >
+                <h3 className="font-semibold text-theme-text-primary">
+                  {t("containers.catalog.serviceSettings")}
+                </h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {recipe.fields.map((field) => (
+                    <Input
+                      key={field.key}
+                      label={t(`containers.catalog.fields.${field.label}`)}
+                      type={field.secret ? "password" : "text"}
+                      required={field.required}
+                      autoComplete="off"
+                      helperText={field.key}
+                      data-testid={`container-recipe-field-${field.key}`}
+                      value={
+                        spec.environment.find(
+                          (variable) => variable.key === field.key,
+                        )?.value ?? ""
+                      }
+                      onChange={(event) =>
+                        update(
+                          "environment",
+                          spec.environment.map((variable) =>
+                            variable.key === field.key
+                              ? { ...variable, value: event.target.value }
+                              : variable,
+                          ),
+                        )
+                      }
+                    />
+                  ))}
+                </div>
+              </section>
+            )}
             <details open={spec.ports.length > 0}>
               <summary className="cursor-pointer text-theme-text-primary">
                 {t("containers.ports")}
@@ -388,48 +500,53 @@ export function ContainerForm({
                 {t("containers.environment")}
               </summary>
               <div className="space-y-3 mt-3">
-                {spec.environment.map((variable, index) => (
-                  <div key={index} className="grid grid-cols-2 gap-2">
-                    <Input
-                      label={`${t("containers.key")} ${index + 1}`}
-                      value={variable.key}
-                      onChange={(e) =>
-                        update(
-                          "environment",
-                          spec.environment.map((v, i) =>
-                            i === index ? { ...v, key: e.target.value } : v,
-                          ),
-                        )
-                      }
-                    />
-                    <Input
-                      label={`${t("containers.value")} ${index + 1}`}
-                      type="password"
-                      autoComplete="off"
-                      value={variable.value}
-                      onChange={(e) =>
-                        update(
-                          "environment",
-                          spec.environment.map((v, i) =>
-                            i === index ? { ...v, value: e.target.value } : v,
-                          ),
-                        )
-                      }
-                    />
-                    <Button
-                      type="button"
-                      size="sm"
-                      onClick={() =>
-                        update(
-                          "environment",
-                          spec.environment.filter((_, i) => i !== index),
-                        )
-                      }
-                    >
-                      {t("containers.deleteRow")}
-                    </Button>
-                  </div>
-                ))}
+                {spec.environment.map((variable, index) =>
+                  recipe?.fields.some((field) => field.key === variable.key) &&
+                  spec.environment.findIndex(
+                    (item) => item.key === variable.key,
+                  ) === index ? null : (
+                    <div key={index} className="grid grid-cols-2 gap-2">
+                      <Input
+                        label={`${t("containers.key")} ${index + 1}`}
+                        value={variable.key}
+                        onChange={(e) =>
+                          update(
+                            "environment",
+                            spec.environment.map((v, i) =>
+                              i === index ? { ...v, key: e.target.value } : v,
+                            ),
+                          )
+                        }
+                      />
+                      <Input
+                        label={`${t("containers.value")} ${index + 1}`}
+                        type="password"
+                        autoComplete="off"
+                        value={variable.value}
+                        onChange={(e) =>
+                          update(
+                            "environment",
+                            spec.environment.map((v, i) =>
+                              i === index ? { ...v, value: e.target.value } : v,
+                            ),
+                          )
+                        }
+                      />
+                      <Button
+                        type="button"
+                        size="sm"
+                        onClick={() =>
+                          update(
+                            "environment",
+                            spec.environment.filter((_, i) => i !== index),
+                          )
+                        }
+                      >
+                        {t("containers.deleteRow")}
+                      </Button>
+                    </div>
+                  ),
+                )}
                 <Button
                   type="button"
                   size="sm"
@@ -494,6 +611,16 @@ export function ContainerForm({
           </fieldset>
         </ModalBody>
         <ModalFooter>
+          {onBack && (
+            <Button
+              type="button"
+              variant="secondary"
+              disabled={!!busy}
+              onClick={onBack}
+            >
+              {t("containers.catalog.back")}
+            </Button>
+          )}
           <Button type="button" variant="secondary" onClick={onClose}>
             {t("containers.cancel")}
           </Button>

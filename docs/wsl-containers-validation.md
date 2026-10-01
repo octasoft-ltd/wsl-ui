@@ -6,7 +6,7 @@ Date: 2026-10-01. The app was tested in an isolated checkout on Windows 11 x64. 
 
 | Check | Result |
 | --- | --- |
-| Frontend unit/component suite | 48 files, 812 tests passed |
+| Frontend unit/component suite | 48 files, 817 tests passed |
 | Rust suite | 487 passed, 1 subprocess helper ignored by the normal runner |
 | TypeScript/Vite and debug desktop builds | Passed |
 | Independent code review | Reported correctness/privacy findings addressed and rechecked |
@@ -48,6 +48,13 @@ The isolated native desktop test explicitly asserted that mock mode was disabled
 First-run telemetry dialog handling was corrected in the smoke script. Failed preliminary runs cleaned up their recorded container IDs. The successful final native run exercised the rebuilt application. Native backup/restore fidelity, ports/bind-mount traffic and Linux metadata recovery are not established by these checks.
 
 Screenshots were inspected for the real connected workspace and the detail view at 800 CSS pixels; the detail panel and tabs remained within the app window.
+## Developer tool gallery
+
+The Add container gallery includes ten bundled recipes with local logos, category/search filters, required service credentials, editable ports/storage and the custom-image route. The frontend suite passed 817 tests across 48 files after these changes, including a regression for duplicate environment variables. Independent review found that a duplicate recipe variable could disappear from the editor; duplicate rows now remain editable and submission rejects duplicate keys.
+
+The rebuilt desktop app passed all ten container E2E cases, including local-logo loading, filtered gallery layout at 800 CSS pixels and PostgreSQL recipe creation through Rust IPC. The gallery screenshot was visually checked. This was a focused container rerun; the previous complete desktop run is recorded above.
+
+All ten recipes passed native acceptance through the real desktop Rust IPC on WSL 3.0.1: image pull/create/start, database or cache writes where applicable, Windows localhost HTTP for the six web interfaces, and restart persistence for every configured volume. The first run passed eight recipes; a MariaDB readiness-probe correction and the Grafana tag correction passed focused reruns. Recorded test containers and volumes were removed, and the original container inventory was preserved. See [catalog details and native run boundaries](container-catalog.md).
 ## Release boundaries
 
 Passing simulated recovery tests does not establish native archive fidelity. Native complete backup, restore and configuration recreation remain unavailable because WSLc inspection omits effective settings. Named-volume recovery additionally needs a pinned helper and Linux metadata/data roundtrip evidence.

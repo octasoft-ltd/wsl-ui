@@ -182,6 +182,66 @@
     "restoreComplete": "Restored {{name}}. The container is stopped.",
     "dismiss": "Dismiss",
     "cpuUsage": "CPU usage",
-    "memoryUsage": "Memory usage"
+    "memoryUsage": "Memory usage",
+    "catalog": {
+      "title": "Add container",
+      "categories": {
+        "monitoring": "Monitoring",
+        "messaging": "Messaging & email",
+        "web": "Web & admin",
+        "data": "Databases & cache",
+        "all": "All tools"
+      },
+      "fields": {
+        "password": "Password",
+        "username": "Username",
+        "nodeName": "Node name",
+        "database": "Database name",
+        "adminUser": "Admin username",
+        "mailDatabase": "Mail database path",
+        "databaseUser": "Database user",
+        "databasePassword": "Database password",
+        "adminPassword": "Admin password",
+        "rootPassword": "Root password"
+      },
+      "custom": "Custom image",
+      "serviceSettings": "Service settings",
+      "footer": "A curated starter collection. Images are downloaded when you create a container.",
+      "search": "Search developer tools",
+      "localPorts": "Ports default to this computer only (127.0.0.1). Review them if another service uses the same port.",
+      "linkError": "Could not open the documentation in your browser.",
+      "documentation": "Project documentation",
+      "category": "Tool category",
+      "required": "Complete the required service settings before creating the container.",
+      "subtitle": "Choose a developer tool and review its settings before creating it.",
+      "notes": {
+        "postgres": "PostgreSQL 18 stores its versioned data beneath /var/lib/postgresql. Credentials initialize a new volume; they do not reset an existing database.",
+        "grafana": "Sign in with the supplied credentials and add a data source to begin. Admin credentials only initialize new data.",
+        "caddy": "The default configuration serves a welcome page. Custom sites and HTTPS need a Caddyfile and the appropriate additional ports.",
+        "nginx": "The default welcome page confirms the server is running. Add a folder mapping to serve your own content.",
+        "adminer": "Enter your database server address on the login screen; localhost inside this container is not another container.",
+        "mailpit": "The SMTP server captures development email into the browser inbox. Messages are stored in the named volume.",
+        "mariadb": "Database and root passwords initialize a new volume. Changing these values does not reset users in existing data.",
+        "rabbitmq": "This image includes the message broker and browser management console. Keep the node name unchanged when reusing its data.",
+        "redis": "Append-only persistence is enabled. This recipe has no password; keep its port local unless you configure authentication.",
+        "valkey": "Append-only persistence is enabled. The default host port is 6380 so it can run alongside Redis. Keep the port local unless you configure authentication."
+      },
+      "descriptions": {
+        "postgres": "Relational database for application development.",
+        "grafana": "Explore metrics and build monitoring dashboards.",
+        "caddy": "Web server with a simple configuration format.",
+        "nginx": "Serve a local website or configure a reverse proxy.",
+        "adminer": "Manage SQL databases through a browser.",
+        "mailpit": "Capture development email in a local inbox.",
+        "mariadb": "MySQL-compatible database for your projects.",
+        "rabbitmq": "Message broker with a browser management console.",
+        "redis": "Fast in-memory data store with persistent writes.",
+        "valkey": "Open-source key/value store and Redis-compatible cache."
+      },
+      "back": "Back to tools",
+      "empty": "No tools match. Try another search or use a custom image.",
+      "storage": "Named volumes retain data when a container is removed. Each new setup gets fresh volume names; review them to reuse existing data.",
+      "duplicateVariables": "Environment variable names must be unique. Edit or remove the duplicate row."
+    }
   }
 }

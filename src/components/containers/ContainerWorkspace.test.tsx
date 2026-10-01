@@ -177,6 +177,7 @@ describe("container workspace", () => {
     render(<ContainerWorkspace visible />);
     await connect();
     fireEvent.click(screen.getByTestId("container-create"));
+    fireEvent.click(screen.getByTestId("container-custom-image"));
     const command = screen.getByLabelText("Command arguments (one per line)");
     fireEvent.change(command, { target: { value: "/bin/tool" } });
     fireEvent.change(command, {
@@ -456,6 +457,7 @@ describe("container workspace", () => {
     render(<ContainerWorkspace visible />);
     await connect();
     fireEvent.click(screen.getByTestId("container-create"));
+    fireEvent.click(screen.getByTestId("container-custom-image"));
     fireEvent.change(screen.getByTestId("container-create-name"), {
       target: { value: "my-web" },
     });
@@ -493,4 +495,133 @@ describe("container workspace", () => {
       }),
     );
   });
+});
+
+describe("add container gallery", () => {
+  it("browses services without creating a container and filters by use case", async () => {
+    render(<ContainerWorkspace visible />);
+    await connect();
+    fireEvent.click(screen.getByTestId("container-create"));
+    expect(screen.getByRole("dialog", { name: "Add container" })).toBeVisible();
+    expect(screen.getByRole("button", { name: /PostgreSQL/ })).toBeVisible();
+    fireEvent.change(screen.getByLabelText("Search developer tools"), {
+      target: { value: "email" },
+    });
+    expect(screen.getByRole("button", { name: /Mailpit/ })).toBeVisible();
+    expect(
+      screen.queryByRole("button", { name: /PostgreSQL/ }),
+    ).not.toBeInTheDocument();
+    expect(
+      vi
+        .mocked(invoke)
+        .mock.calls.some(([command]) => command === "container_create"),
+    ).toBe(false);
+  });
+
+  it("requires database credentials and submits the editable recipe with persistent storage", async () => {
+    render(<ContainerWorkspace visible />);
+    await connect();
+    fireEvent.click(screen.getByTestId("container-create"));
+    fireEvent.click(screen.getByRole("button", { name: /PostgreSQL/ }));
+    expect(screen.getByTestId("container-create-name")).toHaveValue("postgres");
+    expect(screen.getByTestId("container-create-image")).toHaveValue(
+      "docker.io/library/postgres:18",
+    );
+    expect(screen.getByLabelText("Database password")).toBeRequired();
+    fireEvent.submit(screen.getByTestId("container-create-form"));
+    expect(
+      vi
+        .mocked(invoke)
+        .mock.calls.some(([command]) => command === "container_create"),
+    ).toBe(false);
+    fireEvent.change(screen.getByLabelText("Database password"), {
+      target: { value: "literal-$()-password" },
+    });
+    fireEvent.change(screen.getByTestId("container-create-name"), {
+      target: { value: "project-db" },
+    });
+    fireEvent.submit(screen.getByTestId("container-create-form"));
+    await waitFor(() =>
+      expect(invoke).toHaveBeenCalledWith(
+        "container_create",
+        expect.objectContaining({
+          spec: expect.objectContaining({
+            name: "project-db",
+            environment: expect.arrayContaining([
+              { key: "POSTGRES_PASSWORD", value: "literal-$()-password" },
+            ]),
+            ports: [
+              expect.objectContaining({
+                hostIp: "127.0.0.1",
+                hostPort: 5432,
+                containerPort: 5432,
+              }),
+            ],
+            mounts: [
+              expect.objectContaining({
+                kind: "volume",
+                target: "/var/lib/postgresql",
+                readOnly: false,
+              }),
+            ],
+          }),
+        }),
+      ),
+    );
+  });
+
+  it("avoids an existing container name and gives each recipe attempt fresh storage", async () => {
+    render(<ContainerWorkspace visible />);
+    await connect();
+    act(() =>
+      useContainerStore.setState({
+        containers: [{ ...row, name: "postgres" } as never],
+      }),
+    );
+    fireEvent.click(screen.getByTestId("container-create"));
+    fireEvent.click(screen.getByRole("button", { name: /PostgreSQL/ }));
+    expect(screen.getByTestId("container-create-name")).toHaveValue(
+      "postgres-2",
+    );
+    const firstVolume = (screen.getByLabelText("Source 1") as HTMLInputElement)
+      .value;
+    fireEvent.click(screen.getByRole("button", { name: "Back to tools" }));
+    fireEvent.click(screen.getByRole("button", { name: /PostgreSQL/ }));
+    expect(screen.getByLabelText("Source 1")).not.toHaveValue(firstVolume);
+  });
+
+  it("retains the custom-image route without recipe fields", async () => {
+    render(<ContainerWorkspace visible />);
+    await connect();
+    fireEvent.click(screen.getByTestId("container-create"));
+    fireEvent.click(screen.getByRole("button", { name: "Custom image" }));
+    expect(screen.getByTestId("container-create-image")).toHaveValue("");
+    expect(
+      screen.queryByLabelText("Database password"),
+    ).not.toBeInTheDocument();
+  });
+});
+
+it("keeps duplicate recipe environment rows editable and rejects them before dispatch", async () => {
+  render(<ContainerWorkspace visible />);
+  await connect();
+  fireEvent.click(screen.getByTestId("container-create"));
+  fireEvent.click(screen.getByRole("button", { name: /PostgreSQL/ }));
+  fireEvent.change(screen.getByLabelText("Database password"), {
+    target: { value: "test-password" },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "Add variable" }));
+  fireEvent.change(screen.getByLabelText("Key 4"), {
+    target: { value: "POSTGRES_PASSWORD" },
+  });
+  expect(screen.getByLabelText("Key 4")).toHaveValue("POSTGRES_PASSWORD");
+  fireEvent.submit(screen.getByTestId("container-create-form"));
+  expect(screen.getByRole("alert")).toHaveTextContent(
+    "Environment variable names must be unique",
+  );
+  expect(
+    vi
+      .mocked(invoke)
+      .mock.calls.some(([command]) => command === "container_create"),
+  ).toBe(false);
 });
