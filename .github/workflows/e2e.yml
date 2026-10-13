@@ -162,6 +162,15 @@ jobs:
           icacls "$env:GITHUB_WORKSPACE" /grant "*${runnerSid}:(OI)(CI)M"
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
+      - name: Check desktop test startup
+        timeout-minutes: 5
+        shell: pwsh
+        run: gsudo --integrity Medium npm.cmd run test:e2e -- --spec src/test/e2e/specs/distro-name-spaces.spec.ts
+        env:
+          CI: true
+          WSL_MOCK: "1"
+          VERBOSE: "1"
+
       - name: Run E2E tests
         # wdio.conf.ts owns driver startup, runtime matching, and cleanup.
         # WebView2 150+ ignores WebDriver's debugging arguments in elevated processes.
