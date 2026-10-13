@@ -158,6 +158,9 @@ jobs:
         run: |
           choco install gsudo --version=2.6.1 --yes --no-progress
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $gsudoDirectory = 'C:\tools\gsudo\Current'
+          if (-not (Test-Path "$gsudoDirectory\gsudo.exe")) { throw 'gsudo installation not found' }
+          Add-Content -LiteralPath $env:GITHUB_PATH -Value $gsudoDirectory
           $runnerSid = [Security.Principal.WindowsIdentity]::GetCurrent().User.Value
           icacls "$env:GITHUB_WORKSPACE" /grant "*${runnerSid}:(OI)(CI)M"
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
