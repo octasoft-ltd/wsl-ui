@@ -722,13 +722,15 @@ export async function switchToMainWindow(): Promise<void> {
   await switchToWindowByTitle("WSL UI");
 }
 
-/** Focus the native main window so popup blur handlers run in E2E tests. */
+/** Request native main-window focus before opening or dismissing a popup. */
 export async function focusMainWindow(): Promise<void> {
   await switchToMainWindow();
-  await browser.executeAsync((done) => {
+  const focusError = await browser.executeAsync((done) => {
     // @ts-expect-error - Tauri global API is enabled for the desktop application.
-    window.__TAURI__.window.getCurrentWindow().setFocus().then(() => done()).catch(done);
-  });
+    window.__TAURI__.window.getCurrentWindow().setFocus()
+      .then(() => done(null)).catch((error: unknown) => done(String(error)));
+  }) as string | null;
+  if (focusError) throw new Error(`Failed to focus main window: ${focusError}`);
 }
 
 /** Switch to the persistent Quick Actions popup WebView. */

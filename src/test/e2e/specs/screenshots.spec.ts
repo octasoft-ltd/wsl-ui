@@ -452,7 +452,7 @@ describe("Screenshot Capture", () => {
         async () => {
           const html = await $("html");
           const className = await html.getAttribute("class");
-          return className.includes("dracula");
+          return className?.includes("dracula") ?? false;
         },
         { timeout: 5000, timeoutMsg: "Dracula theme was not applied" }
       );
@@ -475,7 +475,7 @@ describe("Screenshot Capture", () => {
           async () => {
             const html = await $("html");
             const className = await html.getAttribute("class");
-            return className.includes("nord");
+            return className?.includes("nord") ?? false;
           },
           { timeout: 5000, timeoutMsg: "Nord theme was not applied" }
         );
@@ -499,7 +499,7 @@ describe("Screenshot Capture", () => {
           async () => {
             const html = await $("html");
             const className = await html.getAttribute("class");
-            return className.includes("cobalt");
+            return className?.includes("cobalt") ?? false;
           },
           { timeout: 5000, timeoutMsg: "Cobalt theme was not applied" }
         );
@@ -523,7 +523,7 @@ describe("Screenshot Capture", () => {
           async () => {
             const html = await $("html");
             const className = await html.getAttribute("class");
-            return className.includes("light");
+            return className?.includes("light") ?? false;
           },
           { timeout: 5000, timeoutMsg: "Light theme was not applied" }
         );
@@ -551,7 +551,7 @@ describe("Screenshot Capture", () => {
           async () => {
             const html = await $("html");
             const className = await html.getAttribute("class");
-            return className.includes("mission-control");
+            return className?.includes("mission-control") ?? false;
           },
           { timeout: 5000 }
         );

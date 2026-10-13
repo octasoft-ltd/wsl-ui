@@ -28,6 +28,7 @@ import {
   waitForDistroState,
   switchToMainWindow,
   switchToQuickActionsPopup,
+  focusMainWindow,
 } from "./utils";
 
 // ============================================================================
@@ -180,12 +181,36 @@ export const actions = {
    * @returns The menu element
    */
   openQuickActionsMenu: async (distroName: string): Promise<WebdriverIO.Element> => {
-    await switchToMainWindow();
+    // Context switching does not activate the native window. Request focus
+    // immediately before the interaction, as a real click on this window would.
+    await focusMainWindow();
     const card = await $(selectors.distroCardByName(distroName));
     await card.waitForDisplayed({ timeout: 5000 });
     const quickActionsButton = await card.$(selectors.quickActionsButton);
     await quickActionsButton.waitForClickable({ timeout: 5000 });
     await quickActionsButton.click();
+
+    // The popup retains its HTML while hidden. Check native readiness from
+    // the main window (the popup deliberately has minimal permissions), and
+    // wait for the trigger to acknowledge the show/focus handshake.
+    let popupStatus: Record<string, unknown> = {};
+    await browser.waitUntil(async () => {
+      const nativeState = await browser.executeAsync((done) => {
+        // @ts-expect-error - Tauri global API is enabled for the desktop app.
+        window.__TAURI__.window.Window.getByLabel("quick-actions-popup")
+          .then(async (popup: { isVisible(): Promise<boolean>; isFocused(): Promise<boolean> } | null) => {
+            if (!popup) return done({ visible: false, focused: false });
+            const [visible, focused] = await Promise.all([popup.isVisible(), popup.isFocused()]);
+            done({ visible, focused });
+          })
+          .catch((error: unknown) => done({ error: String(error) }));
+      }) as { visible?: boolean; focused?: boolean; error?: string };
+      if (nativeState.error) throw new Error(nativeState.error);
+      const expanded = await quickActionsButton.getAttribute("aria-expanded");
+      popupStatus = { ...nativeState, expanded };
+      return nativeState.visible === true && nativeState.focused === true && expanded === "true";
+    }, { timeout: 5000, interval: 100, timeoutMsg: `Quick actions popup was not ready for '${distroName}'` })
+      .catch((error: Error) => { throw new Error(`${error.message}; last state: ${JSON.stringify(popupStatus)}`); });
 
     await browser.waitUntil(
       async () => {
@@ -200,10 +225,14 @@ export const actions = {
       { timeout: 5000, timeoutMsg: "Quick Actions popup WebView did not appear" }
     );
 
-    // Wait for menu to appear
+    // Verify this is the requested distro's content, not the previous menu.
     await browser.waitUntil(
-      async () => isElementDisplayed(selectors.quickActionsMenu),
-      { timeout: 5000, timeoutMsg: "Quick actions menu did not appear" }
+      async () => {
+        const menu = await $(selectors.quickActionsMenu);
+        return await menu.isDisplayed() &&
+          (await menu.getAttribute("aria-label"))?.endsWith(`: ${distroName}`) === true;
+      },
+      { timeout: 5000, interval: 100, timeoutMsg: `Quick actions menu did not show '${distroName}'` }
     );
 
     return (await $(selectors.quickActionsMenu)) as unknown as WebdriverIO.Element;
@@ -387,7 +416,7 @@ export const actions = {
     await browser.waitUntil(
       async () => {
         const expandedButtons = await $$(`${selectors.quickActionsButton}[aria-expanded="true"]`);
-        return expandedButtons.length === 0;
+        return await expandedButtons.length === 0;
       },
       { timeout: 3000, timeoutMsg: "Quick actions menu did not close" }
     );

@@ -56,7 +56,7 @@ describe("Theme Settings", () => {
       await browser.waitUntil(
         async () => {
           const classes = await draculaTheme.getAttribute("class");
-          return classes.includes("accent-primary");
+          return classes?.includes("accent-primary") ?? false;
         },
         { timeout: 3000, timeoutMsg: "Dracula theme selection did not update" }
       );
@@ -74,7 +74,7 @@ describe("Theme Settings", () => {
       await browser.waitUntil(
         async () => {
           const classes = await cobaltTheme.getAttribute("class");
-          return classes.includes("accent-primary");
+          return classes?.includes("accent-primary") ?? false;
         },
         { timeout: 3000, timeoutMsg: "Cobalt theme selection did not update" }
       );
@@ -97,7 +97,7 @@ describe("Theme Settings", () => {
       await browser.waitUntil(
         async () => {
           const classes = await customTheme.getAttribute("class");
-          return classes.includes("accent-primary");
+          return classes?.includes("accent-primary") ?? false;
         },
         { timeout: 3000, timeoutMsg: "Custom theme selection did not update" }
       );

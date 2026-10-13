@@ -88,7 +88,7 @@ describe("Distribution Creation", () => {
       await browser.waitUntil(
         async () => {
           const classes = await downloadTab.getAttribute("class");
-          return classes.includes("bg-");
+          return classes?.includes("bg-") ?? false;
         },
         { timeout: 3000, timeoutMsg: "Tab did not become active" }
       );
@@ -116,7 +116,7 @@ describe("Distribution Creation", () => {
       await browser.waitUntil(
         async () => {
           const classes = await downloadTab.getAttribute("class");
-          return classes.includes("bg-");
+          return classes?.includes("bg-") ?? false;
         },
         { timeout: 3000, timeoutMsg: "Download tab did not become active" }
       );
@@ -215,7 +215,7 @@ describe("Distribution Creation", () => {
       await browser.waitUntil(
         async () => {
           const classes = await containerTab.getAttribute("class");
-          return classes.includes("bg-");
+          return classes?.includes("bg-") ?? false;
         },
         { timeout: 3000, timeoutMsg: "Container tab did not become active" }
       );
@@ -270,7 +270,7 @@ describe("Distribution Creation", () => {
       await browser.waitUntil(
         async () => {
           const classes = await downloadTab.getAttribute("class");
-          return classes.includes("bg-");
+          return classes?.includes("bg-") ?? false;
         },
         { timeout: 3000, timeoutMsg: "Download tab did not become active" }
       );

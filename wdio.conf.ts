@@ -1,4 +1,4 @@
-import type { Options } from "@wdio/types";
+import type { Reporters } from "@wdio/types";
 import * as path from "path";
 import * as fs from "fs";
 import { fileURLToPath } from "url";
@@ -217,19 +217,13 @@ function findTauriBinary(): string {
   );
 }
 
-export const config: Options.Testrunner = {
+export const config: WebdriverIO.Config = {
   //
   // ====================
   // Runner Configuration
   // ====================
   runner: "local",
-  autoCompileOpts: {
-    autoCompile: true,
-    tsNodeOpts: {
-      project: "./tsconfig.e2e.json",
-      transpileOnly: true,
-    },
-  },
+  tsConfigPath: "./tsconfig.e2e.json",
 
   //
   // ==================
@@ -255,7 +249,7 @@ export const config: Options.Testrunner = {
         application: findTauriBinary(),
       },
       // Ensure sequential test execution
-      maxInstances: 1,
+      "wdio:maxInstances": 1,
     },
   ],
 
@@ -307,7 +301,7 @@ export const config: Options.Testrunner = {
               // Store temp screenshots in test-results (easier to gitignore/clean)
               rawPath: "./test-results/.video-screenshots",
             },
-          ] as const,
+          ] satisfies Reporters.ReporterEntry,
         ]
       : []),
   ],
@@ -335,7 +329,7 @@ export const config: Options.Testrunner = {
       });
     }
 
-    // Ensure msedgedriver.exe matches the installed Edge browser version
+    // Match the WebView2 runtime used by Tauri, not the standalone Edge browser.
     await ensureEdgeDriver();
 
     if (isVerbose) {
@@ -355,7 +349,6 @@ export const config: Options.Testrunner = {
 
     tauriDriver = spawn("tauri-driver", args, {
       stdio: ["ignore", "pipe", "pipe"],
-      shell: true,
       env,
     });
 

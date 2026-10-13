@@ -43,6 +43,9 @@ jobs:
         shell: bash
         run: npm run test:run 2>&1 | tee node-tests.log
 
+      - name: Type-check desktop E2E tests
+        run: npm run test:e2e:typecheck
+
       - name: Build frontend
         shell: bash
         run: npm run build 2>&1 | tee node-build.log
@@ -147,27 +150,12 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ""
 
       - name: Run E2E tests
-        run: |
-          # Start tauri-driver in background
-          $driver = Start-Process -FilePath "tauri-driver" -PassThru -WindowStyle Hidden
-
-          # Wait for driver to be ready
-          Start-Sleep -Seconds 3
-
-          try {
-            # Run the tests
-            npm run test:e2e
-            $testExit = $LASTEXITCODE
-          } finally {
-            # Cleanup - always kill the driver
-            Stop-Process -Id $driver.Id -Force -ErrorAction SilentlyContinue
-          }
-
-          exit $testExit
+        # wdio.conf.ts owns driver startup, runtime matching, and cleanup.
+        run: npm run test:e2e
         shell: pwsh
         env:
           CI: true
-          WSL_UI_MOCK_MODE: "true"
+          WSL_MOCK: "1"
 
       - name: Upload test results
         if: always()

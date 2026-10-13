@@ -91,7 +91,7 @@ async function closeMenu(): Promise<void> {
 /**
  * Helper to safely check if an element is displayed
  */
-async function isElementDisplayedSafe(element: WebdriverIO.Element): Promise<boolean> {
+async function isElementDisplayedSafe(element: { isDisplayed(): Promise<boolean> }): Promise<boolean> {
   try {
     return await element.isDisplayed();
   } catch {
