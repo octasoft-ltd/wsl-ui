@@ -116,12 +116,15 @@ async function ensureEdgeDriver(): Promise<void> {
   const extractDir = path.join(__dirname, "msedgedriver-temp");
   const url = `https://msedgedriver.microsoft.com/${edgeVersion}/edgedriver_win64.zip`;
 
-  // Download
+  // Keep the automation subprocess independent of profiles and console progress UI.
+  // A medium-integrity CI process cannot access its elevated parent's console buffer.
   const downloadResult = spawnSync(
     "powershell",
     [
+      "-NoProfile",
+      "-NonInteractive",
       "-Command",
-      `Invoke-WebRequest -Uri '${url}' -OutFile '${zipPath}'`,
+      `$ProgressPreference = 'SilentlyContinue'; Invoke-WebRequest -UseBasicParsing -Uri '${url}' -OutFile '${zipPath}'`,
     ],
     { encoding: "utf-8", stdio: ["ignore", "pipe", "pipe"], timeout: 120000 }
   );
@@ -139,8 +142,10 @@ async function ensureEdgeDriver(): Promise<void> {
   const extractResult = spawnSync(
     "powershell",
     [
+      "-NoProfile",
+      "-NonInteractive",
       "-Command",
-      `Expand-Archive -Path '${zipPath}' -DestinationPath '${extractDir}' -Force`,
+      `$ProgressPreference = 'SilentlyContinue'; Expand-Archive -Path '${zipPath}' -DestinationPath '${extractDir}' -Force`,
     ],
     { encoding: "utf-8", stdio: ["ignore", "pipe", "pipe"] }
   );
