@@ -195,15 +195,15 @@ export const actions = {
     // wait for the trigger to acknowledge the show/focus handshake.
     let popupStatus: Record<string, unknown> = {};
     await browser.waitUntil(async () => {
-      const nativeState = await browser.executeAsync((done) => {
+      const nativeState = await browser.execute(async () => {
         // @ts-expect-error - Tauri global API is enabled for the desktop app.
-        window.__TAURI__.window.Window.getByLabel("quick-actions-popup")
+        return window.__TAURI__.window.Window.getByLabel("quick-actions-popup")
           .then(async (popup: { isVisible(): Promise<boolean>; isFocused(): Promise<boolean> } | null) => {
-            if (!popup) return done({ visible: false, focused: false });
+            if (!popup) return { visible: false, focused: false };
             const [visible, focused] = await Promise.all([popup.isVisible(), popup.isFocused()]);
-            done({ visible, focused });
+            return { visible, focused };
           })
-          .catch((error: unknown) => done({ error: String(error) }));
+          .catch((error: unknown) => ({ error: String(error) }));
       }) as { visible?: boolean; focused?: boolean; error?: string };
       if (nativeState.error) throw new Error(nativeState.error);
       const expanded = await quickActionsButton.getAttribute("aria-expanded");

@@ -304,12 +304,12 @@ export async function waitForSettingsSaved(): Promise<void> {
 /** Reset mock data before refreshing, and finish fixture saves before reloading. */
 export async function resetMockState(): Promise<void> {
   // Execute the reset command via the app's JavaScript context
-  // Use executeAsync to properly wait for the Tauri IPC call to complete
-  const resetError = await browser.executeAsync((done: (error: string | null) => void) => {
+  // Return the promise so WebDriver waits for the Tauri IPC call to complete.
+  const resetError = await browser.execute(async () => {
     // @ts-expect-error - Tauri API is available in the window
-    window.__TAURI__.core.invoke("reset_mock_state_cmd")
-      .then(() => done(null))
-      .catch((err: unknown) => done(String(err)));
+    return window.__TAURI__.core.invoke("reset_mock_state_cmd")
+      .then(() => null)
+      .catch((err: unknown) => String(err));
   });
   if (resetError) throw new Error(`Failed to reset mock state: ${resetError}`);
   await waitForSettingsSaved();
@@ -725,10 +725,10 @@ export async function switchToMainWindow(): Promise<void> {
 /** Request native main-window focus before opening or dismissing a popup. */
 export async function focusMainWindow(): Promise<void> {
   await switchToMainWindow();
-  const focusError = await browser.executeAsync((done) => {
+  const focusError = await browser.execute(async () => {
     // @ts-expect-error - Tauri global API is enabled for the desktop application.
-    window.__TAURI__.window.getCurrentWindow().setFocus()
-      .then(() => done(null)).catch((error: unknown) => done(String(error)));
+    return window.__TAURI__.window.getCurrentWindow().setFocus()
+      .then(() => null).catch((error: unknown) => String(error));
   }) as string | null;
   if (focusError) throw new Error(`Failed to focus main window: ${focusError}`);
 }
@@ -744,12 +744,12 @@ export async function waitForQuickActionsClosed(distroName: string, timeout = 30
   const card = await $(selectors.distroCardByName(distroName));
   const trigger = await card.$(selectors.quickActionsButton);
   await browser.waitUntil(async () => {
-    const popup = await browser.executeAsync((done) => {
+    const popup = await browser.execute(async () => {
       // @ts-expect-error - Tauri global API is enabled in the desktop app.
-      window.__TAURI__.window.Window.getByLabel("quick-actions-popup")
+      return window.__TAURI__.window.Window.getByLabel("quick-actions-popup")
         .then(async (popupWindow: { isVisible(): Promise<boolean> } | null) =>
-          done({ visible: popupWindow ? await popupWindow.isVisible() : false }))
-        .catch((error: unknown) => done({ error: String(error) }));
+          ({ visible: popupWindow ? await popupWindow.isVisible() : false }))
+        .catch((error: unknown) => ({ error: String(error) }));
     }) as { visible?: boolean; error?: string };
     if (popup.error) throw new Error(popup.error);
     return popup.visible === false && (await trigger.getAttribute("aria-expanded")) === "false";
