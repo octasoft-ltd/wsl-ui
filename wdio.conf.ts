@@ -4,6 +4,7 @@ import * as fs from "fs";
 import { fileURLToPath } from "url";
 import { spawn, spawnSync, type ChildProcess } from "child_process";
 import video from "wdio-video-reporter";
+import { getWebViewRuntimeVersion } from "./scripts/webview-runtime";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -42,27 +43,18 @@ function killProcessTree(pid: number): void {
 }
 
 /**
- * Get the installed Microsoft Edge browser version from the Windows registry.
+ * Get the installed WebView2 runtime version from the Windows registry.
  * Returns the full version string (e.g., "145.0.3800.70") or null if not found.
  */
-function getEdgeBrowserVersion(): string | null {
+function getInstalledWebViewVersion(): string | null {
   if (process.platform !== "win32") return null;
 
-  const result = spawnSync(
-    "reg",
-    [
-      "query",
-      "HKLM\\SOFTWARE\\WOW6432Node\\Microsoft\\EdgeUpdate\\Clients\\{56EB18F8-B008-4CBD-B6D2-8C97FE7E9062}",
-      "/v",
-      "pv",
-    ],
-    { encoding: "utf-8", stdio: ["ignore", "pipe", "pipe"] }
-  );
-
-  if (result.status !== 0) return null;
-
-  const match = result.stdout.match(/pv\s+REG_SZ\s+(\S+)/);
-  return match ? match[1] : null;
+  return getWebViewRuntimeVersion((key) => {
+    const result = spawnSync("reg", ["query", key, "/v", "pv"], {
+      encoding: "utf-8", stdio: ["ignore", "pipe", "pipe"],
+    });
+    return result.status === 0 ? result.stdout : null;
+  });
 }
 
 /**
@@ -85,18 +77,18 @@ function getEdgeDriverVersion(driverPath: string): string | null {
 }
 
 /**
- * Ensure msedgedriver.exe matches the installed Edge browser version.
+ * Ensure msedgedriver.exe matches the installed WebView2 runtime version.
  * Downloads the correct version automatically if there's a mismatch.
  */
 async function ensureEdgeDriver(): Promise<void> {
   if (process.platform !== "win32") return;
 
   const driverPath = path.join(__dirname, "msedgedriver.exe");
-  const edgeVersion = getEdgeBrowserVersion();
+  const edgeVersion = getInstalledWebViewVersion();
 
   if (!edgeVersion) {
     console.warn(
-      "Could not detect Edge browser version. Skipping driver version check."
+      "Could not detect WebView2 runtime version. Skipping driver version check."
     );
     return;
   }
@@ -108,7 +100,7 @@ async function ensureEdgeDriver(): Promise<void> {
   if (driverVersion && edgeMajor === driverMajor) {
     if (isVerbose) {
       console.log(
-        `Edge driver version ${driverVersion} matches browser ${edgeVersion}`
+        `Edge driver version ${driverVersion} matches WebView2 ${edgeVersion}`
       );
     }
     return;
@@ -116,8 +108,8 @@ async function ensureEdgeDriver(): Promise<void> {
 
   console.log(
     driverVersion
-      ? `Edge driver ${driverVersion} does not match browser ${edgeVersion} — updating...`
-      : `Edge driver not found — downloading for Edge ${edgeVersion}...`
+      ? `Edge driver ${driverVersion} does not match WebView2 ${edgeVersion} — updating...`
+      : `Edge driver not found — downloading for WebView2 ${edgeVersion}...`
   );
 
   const zipPath = path.join(__dirname, "msedgedriver.zip");
