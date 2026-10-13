@@ -18,9 +18,11 @@ describe('Distribution names with spaces', () => {
     await useUrl.click();
     await $(selectors.installConfigNameInput).waitForDisplayed();
     await $(selectors.installConfigNameInput).setValue('Release Test');
+    await expect($(selectors.installConfigNameInput)).toHaveValue('Release Test');
     await expect($('[data-testid="install-config-dialog"]')).toHaveText(expect.stringContaining('Name can only contain letters, numbers, dots, underscores, and hyphens'));
     await expect($(selectors.installConfigConfirmButton)).toBeDisabled();
     await $(selectors.installConfigNameInput).setValue('Release-Test');
+    await expect($(selectors.installConfigNameInput)).toHaveValue('Release-Test');
     await $(selectors.installConfigConfirmButton).waitForClickable({ timeout: 5000 });
     await $(selectors.installConfigConfirmButton).click();
     await waitForDialogToDisappear(selectors.dialog, 20000);

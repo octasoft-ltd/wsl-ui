@@ -4,6 +4,7 @@ import * as fs from "fs";
 import { fileURLToPath } from "url";
 import { spawn, spawnSync, type ChildProcess } from "child_process";
 import video from "wdio-video-reporter";
+import { Key } from "webdriverio";
 import { getWebViewRuntimeVersion } from "./scripts/webview-runtime";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -463,6 +464,35 @@ export const config: WebdriverIO.Config = {
    * Gets executed before test execution begins.
    */
   before: async function () {
+    // WebView2's native elementClear can leave React's controlled value unchanged.
+    // Replace editable values through real keyboard input, including number inputs
+    // whose change handler may restore a default immediately after deletion.
+    const selectEditableValue = async (element: WebdriverIO.Element): Promise<boolean> => {
+      const tag = await element.getTagName();
+      const type = tag === "input" ? (await element.getAttribute("type")) || "text" : "";
+      if (tag !== "textarea" && !(tag === "input" &&
+        ["text", "search", "url", "tel", "email", "password", "number"].includes(type))) {
+        return false;
+      }
+      await element.click();
+      await browser.keys([Key.Ctrl, "a"]);
+      return true;
+    };
+
+    browser.overwriteCommand("clearValue", async function (originalCommand) {
+      if (!(await selectEditableValue(this))) return originalCommand();
+      await browser.keys(Key.Backspace);
+    }, { attachToElement: true });
+
+    browser.overwriteCommand("setValue", async function (originalCommand, value, options) {
+      if (!(await selectEditableValue(this))) return originalCommand(value, options);
+      if (String(value) === "") {
+        await browser.keys(Key.Backspace);
+      } else {
+        await this.addValue(value, options);
+      }
+    }, { attachToElement: true });
+
     // Wait for the app to be ready
     await browser.pause(2000);
   },
