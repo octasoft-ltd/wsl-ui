@@ -97,7 +97,7 @@ describe("WSL Status Features", () => {
       const statusBar = await $(selectors.statusBar);
 
       // Health indicator is a colored dot
-      const healthDot = await statusBar.$('.rounded-full');
+      const healthDot = await statusBar.$('div.cursor-help[title] .rounded-full');
       await expect(healthDot).toBeDisplayed();
     });
 
@@ -105,7 +105,7 @@ describe("WSL Status Features", () => {
       const statusBar = await $(selectors.statusBar);
 
       // Find element with health message tooltip
-      const healthElement = await statusBar.$('[title]');
+      const healthElement = await statusBar.$('div.cursor-help[title]');
       if (await healthElement.isDisplayed()) {
         const tooltip = await healthElement.getAttribute("title");
         // Should have some health message
@@ -142,7 +142,7 @@ describe("WSL Status Features", () => {
       try {
         await browser.waitUntil(
           async () => {
-            const spinner = await statusBar.$('.animate-spin');
+            const spinner = await statusBar.$('[data-testid="wsl-update-spinner"] .animate-spin');
             return await spinner.isDisplayed();
           },
           { timeout: 2000 }
@@ -224,7 +224,7 @@ describe("WSL Status Features", () => {
       try {
         await browser.waitUntil(
           async () => {
-            const spinner = await statusBar.$('.animate-spin');
+            const spinner = await statusBar.$('[role="status"] .animate-spin');
             try {
               return await spinner.isDisplayed();
             } catch {

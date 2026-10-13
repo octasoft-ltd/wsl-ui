@@ -70,7 +70,7 @@ describe("Settings Page", () => {
       await actions.goBackFromSettings();
 
       // Should be back on main page with distro list
-      const distroCard = await $(selectors.distroCard);
+      const distroCard = await $(selectors.distroCardByName("Ubuntu"));
       await expect(distroCard).toBeDisplayed();
     });
   });
@@ -82,7 +82,7 @@ describe("Settings Page", () => {
 
     it("should show App Settings content by default", async () => {
       // Check for IDE Integration section which is in App tab
-      const ideSection = await $("h2");
+      const ideSection = await $("h2*=IDE");
       await ideSection.waitForDisplayed({ timeout: 3000 });
       const text = await ideSection.getText();
       expect(text).toContain("IDE");
@@ -513,7 +513,7 @@ describe("Settings Page", () => {
           // Wait for command to update
           await browser.waitUntil(
             async () => {
-              const code = await $("code");
+              const code = await $("(//section[.//h2[contains(., 'IDE')]]//code)[last()]");
               const text = await code.getText();
               return text === "cursor";
             },
@@ -521,7 +521,7 @@ describe("Settings Page", () => {
           );
 
           // Verify current command shows "cursor"
-          const codeElement = await $("code");
+          const codeElement = await $("(//section[.//h2[contains(., 'IDE')]]//code)[last()]");
           const currentCommand = await codeElement.getText();
           expect(currentCommand).toBe("cursor");
 
@@ -532,7 +532,7 @@ describe("Settings Page", () => {
           // Go to settings and verify
           await actions.goToSettings();
 
-          const codeElementAfter = await $("code");
+          const codeElementAfter = await $("(//section[.//h2[contains(., 'IDE')]]//code)[last()]");
           const persistedCommand = await codeElementAfter.getText();
           expect(persistedCommand).toBe("cursor");
         }

@@ -374,27 +374,27 @@ describe("Distribution-Specific Settings", () => {
     });
 
     it("should display Automount section", async () => {
-      const header = await $(byText("Automount"));
+      const header = await $("//h3[normalize-space()='Automount']");
       await expect(header).toBeDisplayed();
     });
 
     it("should display Network section", async () => {
-      const header = await $(byText("Network"));
+      const header = await $("//h3[normalize-space()='Network']");
       await expect(header).toBeDisplayed();
     });
 
     it("should display Interop section", async () => {
-      const header = await $(byText("Interop"));
+      const header = await $("//h3[normalize-space()='Interop']");
       await expect(header).toBeDisplayed();
     });
 
     it("should display Boot section", async () => {
-      const header = await $(byText("Boot"));
+      const header = await $("//h3[normalize-space()='Boot']");
       await expect(header).toBeDisplayed();
     });
 
     it("should display User section", async () => {
-      const header = await $(byText("User"));
+      const header = await $("//h3[normalize-space()='User']");
       await expect(header).toBeDisplayed();
     });
   });

@@ -76,7 +76,7 @@ describe("Custom Actions Settings", () => {
 
     it("should have target distribution options", async () => {
       // Look for target distribution section (radio buttons)
-      const radioButton = await $("input[type='radio']");
+      const radioButton = await $("input[type='radio'][name='targetDistros']:checked");
       await expect(radioButton).toBeDisplayed();
     });
 

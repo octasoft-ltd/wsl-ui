@@ -316,7 +316,7 @@ describe("Custom Actions CRUD", () => {
 
     it("should update action when saving changes", async () => {
       // Click edit
-      const editButton = await $('button[title="Edit"]');
+      const editButton = await $('[data-testid="action-edit-Action-To-Edit"]');
       await editButton.click();
 
       // Wait for editor to open
@@ -342,7 +342,7 @@ describe("Custom Actions CRUD", () => {
     });
 
     it("should show 'Update Action' button when editing", async () => {
-      const editButton = await $('button[title="Edit"]');
+      const editButton = await $('[data-testid="action-edit-Action-To-Edit"]');
       await editButton.click();
 
       // Wait for editor to open
@@ -377,7 +377,7 @@ describe("Custom Actions CRUD", () => {
     });
 
     it("should have delete button for action", async () => {
-      const deleteButton = await $('button[title="Delete"]');
+      const deleteButton = await $('[data-testid="action-delete-Action-To-Delete"]');
       await expect(deleteButton).toBeDisplayed();
     });
 
@@ -388,18 +388,12 @@ describe("Custom Actions CRUD", () => {
       await expect(actionName).toBeDisplayed();
 
       // Click delete button
-      const deleteButton = await $('button[title="Delete"]');
+      const deleteButton = await $('[data-testid="action-delete-Action-To-Delete"]');
       await deleteButton.waitForClickable({ timeout: 5000 });
       await deleteButton.click();
 
-      // Wait for delete action to complete (button click processed)
-      await browser.waitUntil(
-        async () => true,
-        { timeout: 500 }
-      );
-
-      // Verify delete was attempted (either action disappears or count changes)
-      // This test just confirms the delete button is clickable
+      // Verify the intended action was actually removed.
+      await expect($('[data-testid="action-card-Action-To-Delete"]')).not.toExist();
     });
   });
 

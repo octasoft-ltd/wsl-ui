@@ -231,7 +231,7 @@ describe("Disk Mount Features", () => {
       await waitForTabContent("Physical");
 
       // Should now show physical disk selector
-      const diskSelector = await dialog.$("select");
+      const diskSelector = await dialog.$('[data-testid="disk-mount-physical-selector"]');
       await expect(diskSelector).toBeDisplayed();
 
       // Should have "Select a disk..." placeholder option
@@ -247,7 +247,7 @@ describe("Disk Mount Features", () => {
       await physicalTab.click();
       await waitForTabContent("Physical");
 
-      const diskSelector = await dialog.$("select");
+      const diskSelector = await dialog.$('[data-testid="disk-mount-physical-selector"]');
       const options = await diskSelector.$$("option");
 
       // Should have at least placeholder + mock disks
@@ -326,7 +326,7 @@ describe("Disk Mount Features", () => {
 
       const cancelButton = await dialog.$("button*=Cancel");
       // The submit Mount button has accent color background
-      const mountButton = await dialog.$("button.bg-theme-accent-primary");
+      const mountButton = await dialog.$('[data-testid="disk-mount-submit-button"]');
 
       await expect(cancelButton).toBeDisplayed();
       await expect(mountButton).toBeDisplayed();
@@ -337,7 +337,7 @@ describe("Disk Mount Features", () => {
 
       const dialog = await findDialog();
       // The submit Mount button has accent color background
-      const mountButton = await dialog.$("button.bg-theme-accent-primary");
+      const mountButton = await dialog.$('[data-testid="disk-mount-submit-button"]');
 
       // Mount button should be visible (validation happens on submit)
       await expect(mountButton).toBeDisplayed();
@@ -352,7 +352,7 @@ describe("Disk Mount Features", () => {
       await waitForTabContent("Physical");
 
       // The submit Mount button has accent color background
-      const mountButton = await dialog.$("button.bg-theme-accent-primary");
+      const mountButton = await dialog.$('[data-testid="disk-mount-submit-button"]');
       await expect(mountButton).toBeDisplayed();
     });
 
@@ -385,7 +385,7 @@ describe("Disk Mount Features", () => {
       await waitForTabContent("Physical");
 
       // Select a disk from the dropdown
-      const diskSelector = await dialog.$("select");
+      const diskSelector = await dialog.$('[data-testid="disk-mount-physical-selector"]');
       const options = await diskSelector.$$("option");
 
       if ((await options.length) > 1) {
@@ -453,7 +453,7 @@ describe("Disk Mount Features", () => {
       await openPhysicalDiskTab();
 
       const dialog = await $('[role="dialog"]');
-      const diskSelector = await dialog.$("select");
+      const diskSelector = await dialog.$('[data-testid="disk-mount-physical-selector"]');
 
       const options = await diskSelector.$$("option");
       // Should have placeholder + at least one mock disk
@@ -464,7 +464,7 @@ describe("Disk Mount Features", () => {
       await openPhysicalDiskTab();
 
       const dialog = await $('[role="dialog"]');
-      const diskSelector = await dialog.$("select");
+      const diskSelector = await dialog.$('[data-testid="disk-mount-physical-selector"]');
 
       const selectorText = await diskSelector.getText();
 

@@ -125,7 +125,7 @@ describe("Distribution Creation", () => {
     it("should show distribution selection", async () => {
       const dialog = await $(selectors.dialog);
       // Should show available distributions to install or custom URL option
-      const content = await dialog.$(".overflow-y-auto, .grid, .py-16");
+      const content = await dialog.$('[data-testid="download-content"]');
       await expect(content).toBeDisplayed();
     });
 
@@ -418,7 +418,7 @@ describe("Distribution Creation", () => {
 
       // Dialog might or might not close depending on implementation
       // Just verify the page remains functional
-      const distroCard = await $(selectors.distroCard);
+      const distroCard = await $(selectors.distroCardByName("Ubuntu"));
       await expect(distroCard).toBeDisplayed();
     });
   });
@@ -491,7 +491,7 @@ describe("Distribution Creation", () => {
         await $(selectors.newDistroTabQuickInstall).click();
 
         // Choose an available distro, rather than depending on one mock name.
-        const distro = await $('[data-testid="quick-install-content"] .grid button:not(:disabled)');
+        const distro = await $$('[data-testid="quick-install-content"] .grid button:not(:disabled)')[0];
         await distro.waitForClickable({ timeout: 5000 });
         await distro.click();
         const installButton = await $(selectors.newDistroInstallButton);

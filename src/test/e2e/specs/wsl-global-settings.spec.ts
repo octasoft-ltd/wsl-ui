@@ -359,7 +359,7 @@ describe("WSL Global Settings", () => {
     });
 
     it("should display note about changes requiring restart", async () => {
-      const noteText = await $(byText("require"));
+      const noteText = await $("//p[contains(., 'Changes to global WSL settings require a full WSL restart')]");
       await expect(noteText).toBeDisplayed();
     });
   });
@@ -392,22 +392,22 @@ describe("WSL Global Settings", () => {
     });
 
     it("should display Resources section", async () => {
-      const header = await $(byText("Resources"));
+      const header = await $("//h3[normalize-space()='Resources']");
       await expect(header).toBeDisplayed();
     });
 
     it("should display Features section", async () => {
-      const header = await $(byText("Features"));
+      const header = await $("//h3[normalize-space()='Features']");
       await expect(header).toBeDisplayed();
     });
 
     it("should display Networking section", async () => {
-      const header = await $(byText("Networking"));
+      const header = await $("//h3[normalize-space()='Networking']");
       await expect(header).toBeDisplayed();
     });
 
     it("should display Updates section", async () => {
-      const header = await $(byText("Updates"));
+      const header = await $("//h3[normalize-space()='Updates']");
       await expect(header).toBeDisplayed();
     });
   });
