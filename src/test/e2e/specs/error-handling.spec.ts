@@ -72,7 +72,7 @@ async function handleShutdownDialogIfPresent(): Promise<void> {
       const currentDialog = await findDialog();
       const text = await currentDialog.getText().catch(() => "");
       // Dialog transitioned when it no longer shows "shutdown wsl"
-      return !text.toLowerCase().includes("shutdown wsl");
+      return text.trim().length > 0 && !text.toLowerCase().includes("shutdown wsl");
     },
     { timeout: 5000, timeoutMsg: "Shutdown dialog did not transition" }
   );
@@ -299,10 +299,8 @@ describe("Error Handling and Failure Scenarios", () => {
       await handleShutdownDialogIfPresent();
 
       const dialog = await waitForDialog('[role="dialog"]');
-      const dialogText = await dialog.getText();
-
-      // Move dialog should be displayed (handles shutdown internally)
-      expect(dialogText.toLowerCase()).toContain("move");
+      // Wait for the replacement dialog contents, not just its visible backdrop.
+      await expect(dialog).toHaveText(/move/i);
     });
 
     it("should show shutdown dialog when trying to resize running distribution", async () => {
