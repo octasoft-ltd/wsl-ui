@@ -153,13 +153,25 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY: ""
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ""
 
+      - name: Prepare non-elevated desktop testing
+        shell: pwsh
+        run: |
+          choco install gsudo --version=2.6.1 --yes --no-progress
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $runnerSid = [Security.Principal.WindowsIdentity]::GetCurrent().User.Value
+          icacls "$env:GITHUB_WORKSPACE" /grant "*${runnerSid}:(OI)(CI)M"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
       - name: Run E2E tests
         # wdio.conf.ts owns driver startup, runtime matching, and cleanup.
-        run: npm run test:e2e -- --shard ${{ matrix.shard }}/4
+        # WebView2 150+ ignores WebDriver's debugging arguments in elevated processes.
+        # Run at medium integrity, as Tauri's upstream CI does: tauri-apps/wry#1782.
+        run: gsudo --integrity Medium npm.cmd run test:e2e -- --shard ${{ matrix.shard }}/4
         shell: pwsh
         env:
           CI: true
           WSL_MOCK: "1"
+          VERBOSE: "1"
 
       - name: Upload test results
         if: always()
