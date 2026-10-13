@@ -140,7 +140,7 @@
     "virtualSize": "가상 크기(최대)",
     "fileSize": "파일 크기(현재)",
     "important": "중요:",
-    "warningUac": "이 작업에는 관리자 권한(UAC 프롬프트)이 필요합니다",
+    "warningUac": "이 작업에는 관리자 권한(UAC 프롬프트)이 필요할 수 있습니다",
     "warningShutdown": "이 작업 중에 WSL이 종료됩니다",
     "warningDoNotClose": "앱을 닫거나 컴퓨터를 종료하지 마십시오",
     "optimizing": "디스크 최적화 중...",

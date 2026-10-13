@@ -5,7 +5,7 @@
  * registry values that point `wsl --list --online` / `wsl --install <name>`
  * at community-maintained manifests.
  *
- * Backend in `src-tauri/src/wsl/distro_sources.rs`. All writes require UAC.
+ * Backend in `src-tauri/src/wsl/distro_sources.rs`. Writes request UAC only when existing permissions are insufficient.
  */
 
 import { useCallback, useEffect, useRef, useState } from "react";

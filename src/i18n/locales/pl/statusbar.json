@@ -7,7 +7,7 @@
   "dev": "Dev",
   "disk": "DYSK",
   "updateWsl": {
-    "updating": "Oczekiwanie na zatwierdzenie administratora... Sprawdź, czy pojawił się monit UAC",
+    "updating": "Aktualizowanie WSL…",
     "preRelease": "Aktualizuj WSL (przedpremierowa) - Wymaga uprawnień administratora",
     "default": "Aktualizuj WSL - Wymaga uprawnień administratora",
     "uac": "UAC"

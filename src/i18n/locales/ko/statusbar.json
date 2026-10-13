@@ -7,7 +7,7 @@
   "dev": "Dev",
   "disk": "디스크",
   "updateWsl": {
-    "updating": "관리자 승인 대기 중... UAC 대화 상자를 확인하세요",
+    "updating": "WSL 업데이트 중…",
     "preRelease": "WSL 업데이트(시험판) - 관리자 권한 필요",
     "default": "WSL 업데이트 - 관리자 권한 필요",
     "uac": "UAC"

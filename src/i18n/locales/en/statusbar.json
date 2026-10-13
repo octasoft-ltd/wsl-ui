@@ -7,7 +7,7 @@
   "dev": "Dev",
   "disk": "DISK",
   "updateWsl": {
-    "updating": "Waiting for administrator approval... Check for a UAC dialog",
+    "updating": "Updating WSL…",
     "preRelease": "Update WSL (pre-release) - Requires administrator",
     "default": "Update WSL - Requires administrator",
     "uac": "UAC"

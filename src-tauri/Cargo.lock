@@ -5710,6 +5710,7 @@ dependencies = [
  "tauri-plugin-log",
  "tauri-plugin-shell",
  "tauri-plugin-single-instance",
+ "tempfile",
  "thiserror 2.0.21",
  "tokio",
  "winreg 0.56.0",

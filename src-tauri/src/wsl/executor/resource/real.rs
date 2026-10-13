@@ -9,6 +9,7 @@ use winreg::RegKey;
 
 use super::{DistroRegistryInfo, DistroResourceUsage, RenameRegistryResult, ResourceMonitor, WslHealth, WslHealthStatus};
 use crate::settings::get_executable_paths;
+use crate::permissions::{self, Failure, FailureKind, Operation};
 use crate::utils::hidden_command;
 use crate::wsl::types::{DiskPartition, PhysicalDisk, WslError, WSL_REGISTRY_PATH};
 
@@ -20,180 +21,31 @@ impl RealResourceMonitor {
         Self
     }
 
-    /// Check if Optimize-VHD cmdlet is available (requires Hyper-V module)
-    fn is_optimize_vhd_available(&self) -> bool {
-        // Force diskpart for testing: set FORCE_DISKPART=1
+    /// Try Hyper-V with the caller's existing rights before requesting UAC.
+    fn compact_with_optimize_vhd(&self, vhdx_path: &str) -> Result<(), Failure> {
         if std::env::var("FORCE_DISKPART").is_ok() {
-            log::info!("FORCE_DISKPART set, skipping Optimize-VHD");
-            return false;
+            return Err(Failure { kind: FailureKind::Unavailable, message: "FORCE_DISKPART set".into() });
         }
-
-        let paths = get_executable_paths();
-
-        // Quick check without elevation - just see if the cmdlet exists
-        let output = hidden_command(&paths.powershell)
-            .args([
-                "-NoProfile",
-                "-Command",
-                "if (Get-Command Optimize-VHD -ErrorAction SilentlyContinue) { exit 0 } else { exit 1 }",
-            ])
-            .output();
-
-        match output {
-            Ok(o) => o.status.success(),
-            Err(_) => false,
-        }
+        permissions::run_powershell(Operation::CompactHyperV, &format!(
+            "Optimize-VHD -Path {} -Mode Full -ErrorAction Stop", permissions::quote(vhdx_path)
+        )).map(|_| ())
     }
 
-    /// Compact VHDX using Optimize-VHD PowerShell cmdlet (requires Hyper-V)
-    fn compact_with_optimize_vhd(&self, vhdx_path: &str) -> Result<(), WslError> {
-        let paths = get_executable_paths();
-        log::debug!("Attempting compact with Optimize-VHD: {}", vhdx_path);
-
-        // Check if Optimize-VHD is available before asking for elevation
-        if !self.is_optimize_vhd_available() {
-            log::info!("Optimize-VHD cmdlet not available - Hyper-V module not installed");
-            return Err(WslError::CommandFailed(
-                "Optimize-VHD not available - Hyper-V feature may not be installed".to_string(),
-            ));
-        }
-
-        // Create temp file to capture output from elevated process
-        let temp_dir = std::env::temp_dir();
-        let stderr_file = temp_dir.join("wsl_optimize_output.txt");
-
-        // Optimize-VHD requires admin - use PowerShell elevation pattern
-        // We redirect stdout/stderr to temp files since elevated process output isn't captured
-        let escaped_path = vhdx_path.replace("'", "''").replace("\"", "`\"");
-        let stderr_path = stderr_file.to_str().unwrap_or("").replace("'", "''");
-
-        // GH #102: the catch block writes the .NET exception type name alongside
-        // the (localized) message so failures like CommandNotFoundException stay
-        // detectable on non-English Windows.
-        let ps_script = format!(
-            r#"try {{
-                $proc = Start-Process -FilePath 'powershell' -ArgumentList '-NoProfile','-Command','try {{ Optimize-VHD -Path \"{path}\" -Mode Full 2>&1 | Out-File -FilePath \"{stderr}\" -Encoding UTF8; exit 0 }} catch {{ ($_.Exception.GetType().FullName + '': '' + $_.Exception.Message) | Out-File -FilePath \"{stderr}\" -Encoding UTF8; exit 1 }}' -Verb RunAs -Wait -PassThru -WindowStyle Hidden
-                exit $proc.ExitCode
-            }} catch {{
-                exit 1223
-            }}"#,
-            path = escaped_path,
-            stderr = stderr_path
-        );
-
-        log::info!("Running Optimize-VHD with elevation - UAC dialog will appear");
-        let output = hidden_command(&paths.powershell)
-            .args(["-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", &ps_script])
-            .output()
-            .map_err(|e| WslError::CommandFailed(format!("Failed to start PowerShell: {}", e)))?;
-
-        // Read the captured output from temp file and clean up
-        let captured_output = std::fs::read_to_string(&stderr_file).unwrap_or_default();
-        let _ = std::fs::remove_file(&stderr_file);
-
-        // Handle UAC cancellation (exit code 1223 = ERROR_CANCELLED)
-        if output.status.code() == Some(1223) {
-            return Err(WslError::CommandFailed(
-                "Compact cancelled - administrator approval was not granted".to_string(),
-            ));
-        }
-
-        if !output.status.success() {
-            let error_text = if !captured_output.trim().is_empty() {
-                captured_output.trim().to_string()
-            } else {
-                let stderr = String::from_utf8_lossy(&output.stderr);
-                let stdout = String::from_utf8_lossy(&output.stdout);
-                if !stderr.trim().is_empty() {
-                    stderr.to_string()
-                } else {
-                    stdout.to_string()
-                }
-            };
-
-            // Check if Hyper-V/Optimize-VHD is unavailable (GH #102:
-            // locale-independent detection via exception type name)
-            if optimize_vhd_unavailable(&error_text) {
-                return Err(WslError::CommandFailed(
-                    "Optimize-VHD not available - Hyper-V feature may not be installed".to_string(),
-                ));
-            }
-            return Err(WslError::CommandFailed(error_text));
-        }
-
-        Ok(())
-    }
-
-    /// Compact VHDX using diskpart (built-in, no Hyper-V required)
+    /// DiskPart requires elevation at launch, even when Hyper-V rights are delegated.
     fn compact_with_diskpart(&self, vhdx_path: &str) -> Result<(), WslError> {
-        let paths = get_executable_paths();
-        log::debug!("Attempting compact with diskpart: {}", vhdx_path);
-
-        // Create temp files for script and output
-        let temp_dir = std::env::temp_dir();
-        let script_file = temp_dir.join("wsl_compact_script.txt");
-        let output_file = temp_dir.join("wsl_compact_output.txt");
-
-        // Create diskpart script
-        // Note: We don't need "detach vdisk" - WSL VHDXs aren't attached in diskpart's sense
-        // and trying to detach causes "already detached" errors
-        let script = format!(
-            "select vdisk file=\"{}\"\ncompact vdisk\n",
-            vhdx_path
-        );
-
-        std::fs::write(&script_file, &script).map_err(|e| {
-            WslError::CommandFailed(format!("Failed to create diskpart script: {}", e))
-        })?;
-
-        let script_path = script_file.to_str().unwrap_or("").replace("'", "''");
-        let output_path = output_file.to_str().unwrap_or("").replace("'", "''");
-
-        // Diskpart requires admin - run via elevated PowerShell that captures output
-        // Note: -RedirectStandardOutput doesn't work with -Verb RunAs, so we run
-        // diskpart inside an elevated PowerShell that redirects its own output.
-        // GH #102: diskpart's text output is fully localized, so the wrapper also
-        // appends a machine-readable WSLUI_DISKPART_EXIT=<code> marker carrying
-        // diskpart's real exit code across the UAC boundary.
-        let ps_script = format!(
-            r#"try {{
-                $proc = Start-Process -FilePath 'powershell' -ArgumentList '-NoProfile','-Command','diskpart /s \"{script}\" 2>&1 | Out-File -FilePath \"{output}\" -Encoding UTF8; Add-Content -LiteralPath \"{output}\" -Value (''{marker}'' + $LASTEXITCODE); exit $LASTEXITCODE' -Verb RunAs -Wait -PassThru -WindowStyle Hidden
-                exit $proc.ExitCode
-            }} catch {{
-                $_.Exception.Message | Out-File -FilePath '{output}' -Encoding UTF8
-                exit 1223
-            }}"#,
-            script = script_path,
-            output = output_path,
-            marker = DISKPART_EXIT_MARKER
-        );
-
-        log::info!("Running diskpart with elevation - UAC dialog will appear");
-        let output = hidden_command(&paths.powershell)
-            .args(["-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", &ps_script])
-            .output()
-            .map_err(|e| WslError::CommandFailed(format!("Failed to start PowerShell: {}", e)))?;
-
-        // Read captured output and clean up
-        let captured_output = std::fs::read_to_string(&output_file).unwrap_or_default();
-        let _ = std::fs::remove_file(&script_file);
-        let _ = std::fs::remove_file(&output_file);
-
-        log::info!("Diskpart output: {}", captured_output.trim());
-
-        // Handle UAC cancellation
-        if output.status.code() == Some(1223) {
-            return Err(WslError::CommandFailed(
-                "Compact cancelled - administrator approval was not granted".to_string(),
-            ));
+        if vhdx_path.contains(['\r', '\n', '"']) {
+            return Err(WslError::CommandFailed("Invalid VHDX path for DiskPart".into()));
         }
-
-        // Classify the outcome without relying on localized diskpart text (GH #102)
-        diskpart_compact_outcome(&captured_output, output.status.success())
-            .map_err(WslError::CommandFailed)?;
-
-        log::info!("VHDX compacted successfully using diskpart");
-        Ok(())
+        let directory = tempfile::Builder::new().prefix("wslui-diskpart-").tempdir()
+            .map_err(|e| WslError::CommandFailed(format!("Cannot create DiskPart directory: {e}")))?;
+        let script_file = directory.path().join("compact.txt");
+        std::fs::write(&script_file, format!("select vdisk file=\"{}\"\ncompact vdisk\n", vhdx_path))
+            .map_err(|e| WslError::CommandFailed(format!("Cannot write DiskPart script: {e}")))?;
+        let script = format!("{}\nWrite-Output '{}0'",
+            permissions::native_script("diskpart.exe", &["/s", &script_file.to_string_lossy()]),
+            DISKPART_EXIT_MARKER);
+        let output = permissions::run_powershell(Operation::CompactDiskpart, &script)?;
+        diskpart_compact_outcome(&output, true).map_err(WslError::CommandFailed)
     }
 }
 
@@ -260,15 +112,15 @@ fn diskpart_compact_outcome(captured_output: &str, launcher_success: bool) -> Re
     Ok(())
 }
 
-/// Detect that Optimize-VHD is unavailable (Hyper-V module missing) from an
-/// elevated PowerShell error. GH #102: the error message body is localized, so
-/// match locale-invariant signals first — the .NET exception type name written
-/// by the elevated wrapper and the "Hyper-V" module name. The English "not
-/// recognized" phrase is kept for default-formatted English error records.
-fn optimize_vhd_unavailable(error_text: &str) -> bool {
-    error_text.contains("CommandNotFoundException")
-        || error_text.contains("Hyper-V")
-        || error_text.contains("not recognized")
+fn compact_with_fallback(
+    optimize: impl FnOnce() -> Result<(), crate::permissions::Failure>,
+    diskpart: impl FnOnce() -> Result<(), WslError>,
+) -> Result<(), WslError> {
+    match optimize() {
+        Ok(()) => Ok(()),
+        Err(error) if error.kind == FailureKind::Unavailable => diskpart(),
+        Err(error) => Err(error.into()),
+    }
 }
 
 impl Default for RealResourceMonitor {
@@ -671,17 +523,10 @@ impl ResourceMonitor for RealResourceMonitor {
             )));
         }
 
-        // Try Optimize-VHD first (requires Hyper-V), fall back to diskpart
-        match self.compact_with_optimize_vhd(vhdx_path) {
-            Ok(()) => {
-                log::info!("VHDX compacted successfully using Optimize-VHD");
-                Ok(())
-            }
-            Err(e) => {
-                log::warn!("Optimize-VHD failed ({}), trying diskpart fallback", e);
-                self.compact_with_diskpart(vhdx_path)
-            }
-        }
+        compact_with_fallback(
+            || self.compact_with_optimize_vhd(vhdx_path),
+            || self.compact_with_diskpart(vhdx_path),
+        )
     }
 
     fn list_physical_disks(&self) -> Result<Vec<PhysicalDisk>, WslError> {
@@ -990,20 +835,20 @@ mod tests {
         assert!(diskpart_compact_outcome("", true).is_ok());
     }
 
-    // GH #102: on zh-CN the CommandNotFoundException message body is localized;
-    // the exception type name written by the elevated wrapper is invariant.
     #[test]
-    fn test_optimize_vhd_unavailable_localized_command_not_found() {
-        assert!(optimize_vhd_unavailable(
-            "System.Management.Automation.CommandNotFoundException: 无法将“Optimize-VHD”项识别为 cmdlet、函数、脚本文件或可运行程序的名称。"
-        ));
-        assert!(optimize_vhd_unavailable(
-            "The term 'Optimize-VHD' is not recognized as the name of a cmdlet"
-        ));
-        // Unrelated localized failure must not be misclassified as missing Hyper-V
-        assert!(!optimize_vhd_unavailable(
-            "System.UnauthorizedAccessException: 拒绝访问。"
-        ));
+    fn compaction_only_falls_back_when_hyperv_is_unavailable() {
+        use crate::permissions::{Failure, FailureKind};
+        for kind in [FailureKind::Cancelled, FailureKind::PermissionDenied, FailureKind::Other, FailureKind::Unavailable] {
+            let mut called = false;
+            let result = compact_with_fallback(
+                || Err(Failure { kind, message: "original failure".into() }),
+                || { called = true; Ok(()) },
+            );
+            assert_eq!(called, kind == FailureKind::Unavailable);
+            assert_eq!(result.is_ok(), kind == FailureKind::Unavailable);
+        }
+        let result = compact_with_fallback(|| Ok(()), || panic!("fallback after success"));
+        assert!(result.is_ok());
     }
 
     /// Test performance - winreg should be fast (< 100ms for typical registry)

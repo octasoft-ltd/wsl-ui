@@ -140,7 +140,7 @@
     "virtualSize": "Virtuelle Größe (max.)",
     "fileSize": "Dateigröße (aktuell)",
     "important": "Wichtig:",
-    "warningUac": "Dieser Vorgang erfordert Administratorrechte (UAC-Eingabeaufforderung)",
+    "warningUac": "Dieser Vorgang erfordert möglicherweise Administratorrechte (UAC-Eingabeaufforderung)",
     "warningShutdown": "WSL wird während dieses Vorgangs heruntergefahren",
     "warningDoNotClose": "Schließen Sie die Anwendung nicht und fahren Sie Ihren Computer nicht herunter",
     "optimizing": "Festplatte wird optimiert...",

@@ -33,7 +33,7 @@
     "sparseMode": "Sparse-Modus",
     "sparseModeText": "Aktivieren Sie die automatische Festplattenplatzrückgewinnung. Die virtuelle Festplatte schrumpft, wenn Sie Dateien innerhalb der Distribution löschen.",
     "compactDisk": "Festplatte komprimieren",
-    "compactDiskText": "Ein-Klick-Optimierung zur Rückgewinnung ungenutzten Speicherplatzes von der virtuellen Festplatte einer Distribution. Führt automatisch fstrim aus, fährt WSL herunter und komprimiert die VHDX-Datei. Erfordert Administratorrechte und dauert 1-2 Minuten."
+    "compactDiskText": "Ein-Klick-Optimierung zur Rückgewinnung ungenutzten Speicherplatzes von der virtuellen Festplatte einer Distribution. Führt automatisch fstrim aus, fährt WSL herunter und komprimiert die VHDX-Datei. Erfordert möglicherweise Administratorrechte und dauert 1-2 Minuten."
   },
   "creatingDistros": {
     "title": "Distributionen erstellen",

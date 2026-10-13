@@ -140,7 +140,7 @@
     "virtualSize": "Tamaño virtual (máximo)",
     "fileSize": "Tamaño del archivo (actual)",
     "important": "Importante:",
-    "warningUac": "Esta operación requiere privilegios de administrador (aviso UAC)",
+    "warningUac": "Esta operación puede requerir privilegios de administrador (aviso UAC)",
     "warningShutdown": "WSL se apagará durante esta operación",
     "warningDoNotClose": "No cierre la aplicación ni apague su equipo",
     "optimizing": "Optimizando disco...",

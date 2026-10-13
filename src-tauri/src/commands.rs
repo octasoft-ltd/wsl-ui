@@ -2140,7 +2140,7 @@ pub async fn preview_distro_manifest(url: String) -> Result<ManifestPreview, Str
     .map_err(|e| format!("Task failed: {}", e))?
 }
 
-/// Write a distribution source to HKLM (will prompt for elevation).
+/// Write a distribution source to HKLM (may request elevation if existing permissions are insufficient).
 /// The same call clears the opposite registry value, so we never leave both
 /// `DistributionListUrl` and `DistributionListUrlAppend` set at once.
 #[tauri::command]
@@ -2155,7 +2155,7 @@ pub async fn apply_distro_source(source: DistroSource) -> Result<(), String> {
 }
 
 /// Clear both `DistributionListUrl` and `DistributionListUrlAppend` from
-/// HKLM (will prompt for elevation).
+/// HKLM (may request elevation if existing permissions are insufficient).
 #[tauri::command]
 pub async fn clear_distro_source() -> Result<(), String> {
     tokio::task::spawn_blocking(|| {

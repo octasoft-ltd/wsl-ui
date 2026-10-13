@@ -203,7 +203,6 @@ export function StatusBar() {
               {isUpdating ? (
                 <div className="flex items-center gap-1" data-testid="wsl-update-spinner">
                   <div className="w-3 h-3 border border-theme-status-warning border-t-transparent rounded-full animate-spin" />
-                  <span className="text-[9px] text-theme-status-warning font-medium animate-pulse">{t('updateWsl.uac')}</span>
                 </div>
               ) : (
                 <svg className="w-3 h-3 text-theme-text-muted group-hover:text-theme-accent-primary transition-colors" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">

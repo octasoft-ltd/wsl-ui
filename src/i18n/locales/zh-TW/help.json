@@ -33,7 +33,7 @@
     "sparseMode": "稀疏模式",
     "sparseModeText": "啟用自動磁碟空間回收。當您在發行版內刪除檔案時，虛擬磁碟會自動縮小。",
     "compactDisk": "壓縮磁碟",
-    "compactDiskText": "一鍵最佳化以回收發行版虛擬磁碟中未使用的空間。自動執行 fstrim、關閉 WSL 並壓縮 VHDX 檔案。需要系統管理員權限，約需 1-2 分鐘。"
+    "compactDiskText": "一鍵最佳化以回收發行版虛擬磁碟中未使用的空間。自動執行 fstrim、關閉 WSL 並壓縮 VHDX 檔案。可能需要系統管理員權限，約需 1-2 分鐘。"
   },
   "creatingDistros": {
     "title": "建立發行版",

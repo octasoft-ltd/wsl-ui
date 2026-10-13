@@ -447,54 +447,10 @@ impl WslCommandExecutor for RealWslExecutor {
 
         debug!("WSL version before update: {:?}", version_before);
 
-        // Build the wsl update arguments
-        let wsl_args = if pre_release {
-            "--update --pre-release"
-        } else {
-            "--update"
-        };
-
-        // Use PowerShell to run wsl.exe with elevation via Start-Process -Verb RunAs
-        // This brings the UAC dialog to the foreground and shows "Windows Subsystem for Linux"
-        // as the program requesting elevation (clean and trustworthy looking)
-        // -WindowStyle Hidden prevents the command window from flashing
-        // try-catch handles UAC cancellation which throws an exception
-        let ps_script = format!(
-            r#"try {{ $result = Start-Process -FilePath '{}' -ArgumentList '{}' -Verb RunAs -Wait -PassThru -WindowStyle Hidden -ErrorAction Stop; exit $result.ExitCode }} catch {{ Write-Error $_.Exception.Message; exit 1223 }}"#,
-            paths.wsl.replace('\\', "\\\\"),
-            wsl_args
-        );
-
-        debug!("Running WSL update via PowerShell elevation: {}", wsl_args);
-        info!("WSL update requires administrator privileges - UAC dialog will appear");
-
-        let output = wsl_command(&paths.powershell)
-            .args(["-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", &ps_script])
-            .output()
-            .map_err(|e| {
-                error!("Failed to run PowerShell for WSL update: {}", e);
-                WslError::CommandFailed(e.to_string())
-            })?;
-
-        let success = output.status.success();
-        let stderr = String::from_utf8_lossy(&output.stderr).to_string();
-
-        if !success {
-            debug!("WSL update command failed with exit code: {:?}", output.status.code());
-            // Check if user cancelled UAC - exit code 1223 is ERROR_CANCELLED
-            if output.status.code() == Some(1223) {
-                return Err(WslError::CommandFailed(
-                    "Update cancelled - administrator approval was not granted".to_string()
-                ));
-            }
-            return Err(WslError::CommandFailed(
-                if stderr.is_empty() {
-                    "WSL update failed".to_string()
-                } else {
-                    stderr
-                }
-            ));
-        }
+        let mut arguments = vec!["--update"];
+        if pre_release { arguments.push("--pre-release"); }
+        let script = crate::permissions::native_script(&paths.wsl, &arguments);
+        crate::permissions::run_powershell(crate::permissions::Operation::UpdateWsl, &script)?;
 
         // Get version AFTER update for comparison
         let version_after = self.version()

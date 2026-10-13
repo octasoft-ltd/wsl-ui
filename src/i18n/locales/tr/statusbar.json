@@ -7,7 +7,7 @@
   "dev": "Geliştirme",
   "disk": "DİSK",
   "updateWsl": {
-    "updating": "Yönetici onayı bekleniyor... UAC iletişim kutusunu kontrol edin",
+    "updating": "WSL güncelleniyor…",
     "preRelease": "WSL'yi Güncelle (ön sürüm) - Yönetici gerektirir",
     "default": "WSL'yi Güncelle - Yönetici gerektirir",
     "uac": "UAC"

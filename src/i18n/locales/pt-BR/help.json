@@ -33,7 +33,7 @@
     "sparseMode": "Modo esparso",
     "sparseModeText": "Ative a recuperação automática de espaço em disco. O disco virtual diminuirá à medida que você excluir arquivos dentro da distribuição.",
     "compactDisk": "Compactar disco",
-    "compactDiskText": "Otimização com um clique para recuperar espaço não utilizado do disco virtual de uma distribuição. Executa automaticamente fstrim, desliga o WSL e compacta o arquivo VHDX. Requer privilégios de administrador e leva 1-2 minutos."
+    "compactDiskText": "Otimização com um clique para recuperar espaço não utilizado do disco virtual de uma distribuição. Executa automaticamente fstrim, desliga o WSL e compacta o arquivo VHDX. Pode exigir privilégios de administrador e leva 1-2 minutos."
   },
   "creatingDistros": {
     "title": "Criar distribuições",

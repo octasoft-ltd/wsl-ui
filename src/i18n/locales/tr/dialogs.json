@@ -140,7 +140,7 @@
     "virtualSize": "Sanal Boyut (Maks)",
     "fileSize": "Dosya Boyutu (Geçerli)",
     "important": "Önemli:",
-    "warningUac": "Bu işlem yönetici yetkileri gerektirir (UAC istemi)",
+    "warningUac": "Bu işlem yönetici yetkileri gerektirebilir (UAC istemi)",
     "warningShutdown": "Bu işlem sırasında WSL kapatılacaktır",
     "warningDoNotClose": "Uygulamayı kapatmayın veya bilgisayarınızı kapatmayın",
     "optimizing": "Disk optimize ediliyor...",

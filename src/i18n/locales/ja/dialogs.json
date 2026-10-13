@@ -140,7 +140,7 @@
     "virtualSize": "仮想サイズ（最大）",
     "fileSize": "ファイルサイズ（現在）",
     "important": "重要：",
-    "warningUac": "この操作には管理者権限（UAC プロンプト）が必要です",
+    "warningUac": "この操作には管理者権限（UAC プロンプト）が必要になる場合があります",
     "warningShutdown": "この操作中に WSL がシャットダウンされます",
     "warningDoNotClose": "アプリを閉じたりコンピューターをシャットダウンしないでください",
     "optimizing": "ディスクを最適化中...",

@@ -33,7 +33,7 @@
     "sparseMode": "Seyrek Modu",
     "sparseModeText": "Otomatik disk alanı geri kazanımını etkinleştirin. Dağıtım içindeki dosyaları sildikçe sanal disk küçülecektir.",
     "compactDisk": "Diski Sıkıştır",
-    "compactDiskText": "Bir dağıtımın sanal diskinden kullanılmayan alanı geri kazanmak için tek tıkla optimizasyon. Otomatik olarak fstrim çalıştırır, WSL'yi kapatır ve VHDX dosyasını sıkıştırır. Yönetici yetkileri gerektirir ve 1-2 dakika sürer."
+    "compactDiskText": "Bir dağıtımın sanal diskinden kullanılmayan alanı geri kazanmak için tek tıkla optimizasyon. Otomatik olarak fstrim çalıştırır, WSL'yi kapatır ve VHDX dosyasını sıkıştırır. Yönetici yetkileri gerektirebilir ve 1-2 dakika sürer."
   },
   "creatingDistros": {
     "title": "Dağıtım Oluşturma",

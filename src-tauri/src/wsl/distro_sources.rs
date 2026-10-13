@@ -10,9 +10,8 @@
 //! - `DistributionListUrl` (REG_SZ)        — **replaces** the default manifest URL
 //! - `DistributionListUrlAppend` (REG_SZ)  — **adds** distros from that URL
 //!
-//! Reads of HKLM do not require elevation; writes do. We use the existing
-//! `Start-Process -Verb RunAs` PowerShell pattern (see `executor/resource/real.rs`)
-//! to perform writes and clears.
+//! Writes use existing registry permissions first and request elevation only
+//! after a recognized permission failure. Reads use the current user context.
 
 use serde::{Deserialize, Serialize};
 
@@ -291,7 +290,7 @@ fn read_current_source_windows() -> Result<Option<DistroSource>, WslError> {
 // ---------------------------------------------------------------------------
 
 /// Persist a distribution source to HKLM. Requires elevation; prompts the user
-/// via UAC. Clears the opposite registry value so we never leave both set.
+/// only when existing registry permissions are insufficient. Clears the opposite value.
 pub fn apply_source(source: &DistroSource) -> Result<(), WslError> {
     let normalized = DistroSource {
         url: source.url.trim().to_string(),
@@ -344,113 +343,42 @@ fn store_mock_source(value: Option<DistroSource>) {
 #[cfg(all(target_os = "windows", not(test)))]
 fn store_mock_source(_value: Option<DistroSource>) {}
 
+/// Acquire write access before changing either value. Missing values are harmless;
+/// permission errors and other failures must propagate to the shared runner.
+#[cfg(windows)]
+fn registry_script(hive: &str, path: &str, source: Option<&DistroSource>) -> String {
+    use crate::permissions::quote;
+    let mutations = match source {
+        Some(source) => {
+            let opposite = match source.mode {
+                DistroSourceMode::Append => VALUE_DISTRIBUTION_LIST_URL,
+                DistroSourceMode::Replace => VALUE_DISTRIBUTION_LIST_URL_APPEND,
+            };
+            format!("$key.SetValue({}, {}, [Microsoft.Win32.RegistryValueKind]::String)\n$key.DeleteValue({}, $false)",
+                quote(source.mode.registry_value_name()), quote(&source.url), quote(opposite))
+        }
+        None => format!("$key.DeleteValue({}, $false)\n$key.DeleteValue({}, $false)",
+            quote(VALUE_DISTRIBUTION_LIST_URL), quote(VALUE_DISTRIBUTION_LIST_URL_APPEND)),
+    };
+    format!(r#"
+$key = [Microsoft.Win32.Registry]::{hive}.OpenSubKey({path}, [Microsoft.Win32.RegistryKeyPermissionCheck]::ReadWriteSubTree, [System.Security.AccessControl.RegistryRights]::SetValue)
+if ($null -eq $key) {{ throw [System.IO.DirectoryNotFoundException]::new('WSL registry key was not found') }}
+try {{
+{mutations}
+}} finally {{ $key.Dispose() }}
+"#, path = quote(path))
+}
+
 #[cfg(target_os = "windows")]
 fn apply_source_windows(source: &DistroSource) -> Result<(), WslError> {
-    // Escape single quotes in the URL for embedding inside a PowerShell single-quoted string.
-    let escaped_url = source.url.replace('\'', "''");
-    let value_name = source.mode.registry_value_name();
-    let opposite_name = match source.mode {
-        DistroSourceMode::Append => VALUE_DISTRIBUTION_LIST_URL,
-        DistroSourceMode::Replace => VALUE_DISTRIBUTION_LIST_URL_APPEND,
-    };
-
-    // Inner script: clear opposite value, set chosen value as REG_SZ.
-    let inner = format!(
-        "Remove-ItemProperty -Path 'HKLM:\\{path}' -Name '{opposite}' -ErrorAction SilentlyContinue; \
-         Set-ItemProperty -Path 'HKLM:\\{path}' -Name '{name}' -Value '{url}' -Type String -Force",
-        path = HKLM_LXSS_PATH,
-        opposite = opposite_name,
-        name = value_name,
-        url = escaped_url,
-    );
-
-    run_elevated_powershell(&inner, "apply_distro_source")
+    crate::permissions::run_powershell(crate::permissions::Operation::ApplyDistroSource,
+        &registry_script("LocalMachine", HKLM_LXSS_PATH, Some(source))).map(|_| ()).map_err(Into::into)
 }
 
 #[cfg(target_os = "windows")]
 fn clear_source_windows() -> Result<(), WslError> {
-    let inner = format!(
-        "Remove-ItemProperty -Path 'HKLM:\\{path}' -Name '{a}' -ErrorAction SilentlyContinue; \
-         Remove-ItemProperty -Path 'HKLM:\\{path}' -Name '{b}' -ErrorAction SilentlyContinue",
-        path = HKLM_LXSS_PATH,
-        a = VALUE_DISTRIBUTION_LIST_URL,
-        b = VALUE_DISTRIBUTION_LIST_URL_APPEND,
-    );
-    run_elevated_powershell(&inner, "clear_distro_source")
-}
-
-/// Run a PowerShell script with UAC elevation. Captures stderr/stdout from
-/// the elevated process via a temp file so we can surface meaningful errors.
-#[cfg(target_os = "windows")]
-fn run_elevated_powershell(inner_script: &str, op_tag: &str) -> Result<(), WslError> {
-    use crate::settings::get_executable_paths;
-    use crate::utils::hidden_command;
-
-    let paths = get_executable_paths();
-
-    static NEXT_OUTPUT_ID: std::sync::atomic::AtomicU64 =
-        std::sync::atomic::AtomicU64::new(0);
-    let output_id = NEXT_OUTPUT_ID.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-    let temp_dir = std::env::temp_dir();
-    let output_file = temp_dir.join(format!(
-        "wsl_distro_sources_{}_{}_{}.txt",
-        op_tag,
-        std::process::id(),
-        output_id
-    ));
-    let output_path = output_file.to_str().unwrap_or("").replace('\'', "''");
-
-    // Inner script gets embedded inside the outer PowerShell single-quoted
-    // -Command string. Escape ' -> ''. The inner script writes its own
-    // stderr/stdout to a temp file so we can read it back after UAC.
-    let escaped_inner = inner_script.replace('\'', "''");
-
-    let outer = format!(
-        r#"try {{
-                $proc = Start-Process -FilePath 'powershell' -ArgumentList '-NoProfile','-Command','try {{ {inner} 2>&1 | Out-File -FilePath ''{out}'' -Encoding UTF8; exit 0 }} catch {{ $_.Exception.Message | Out-File -FilePath ''{out}'' -Encoding UTF8; exit 1 }}' -Verb RunAs -Wait -PassThru -WindowStyle Hidden
-                exit $proc.ExitCode
-            }} catch {{
-                exit 1223
-            }}"#,
-        inner = escaped_inner,
-        out = output_path,
-    );
-
-    log::info!(
-        "Running distro_sources op '{}' with elevation - UAC dialog will appear",
-        op_tag
-    );
-
-    let output = hidden_command(&paths.powershell)
-        .args(["-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", &outer])
-        .output()
-        .map_err(|e| WslError::CommandFailed(format!("Failed to start PowerShell: {}", e)))?;
-
-    let captured = std::fs::read_to_string(&output_file).unwrap_or_default();
-    let _ = std::fs::remove_file(&output_file);
-
-    if output.status.code() == Some(1223) {
-        return Err(WslError::CommandFailed(
-            "Operation cancelled - administrator approval was not granted".to_string(),
-        ));
-    }
-
-    if !output.status.success() {
-        let msg = if !captured.trim().is_empty() {
-            captured.trim().to_string()
-        } else {
-            let stderr = String::from_utf8_lossy(&output.stderr);
-            let stdout = String::from_utf8_lossy(&output.stdout);
-            if !stderr.trim().is_empty() {
-                stderr.to_string()
-            } else {
-                stdout.to_string()
-            }
-        };
-        return Err(WslError::CommandFailed(msg));
-    }
-
-    Ok(())
+    crate::permissions::run_powershell(crate::permissions::Operation::ClearDistroSource,
+        &registry_script("LocalMachine", HKLM_LXSS_PATH, None)).map(|_| ()).map_err(Into::into)
 }
 
 // ---------------------------------------------------------------------------
@@ -571,6 +499,55 @@ fn fetch_url_body(url: &str) -> Result<String, WslError> {
 
 #[cfg(test)]
 mod tests {
+    #[cfg(windows)]
+    #[test]
+    fn registry_script_applies_switches_and_clears_without_elevation() {
+        use winreg::{RegKey, enums::*};
+        // Only a disposable HKCU key; never the real WSL configuration.
+        let directory = tempfile::Builder::new().prefix("wslui-registry-test-").tempdir().unwrap();
+        let path = format!(r"Software\{}", directory.path().file_name().unwrap().to_string_lossy());
+        let root = RegKey::predef(HKEY_CURRENT_USER);
+        struct Cleanup<'a>(&'a RegKey, &'a str);
+        impl Drop for Cleanup<'_> { fn drop(&mut self) { let _ = self.0.delete_subkey_all(self.1); } }
+        let _cleanup = Cleanup(&root, &path);
+        let (key, _) = root.create_subkey(&path).unwrap();
+        for mode in [DistroSourceMode::Append, DistroSourceMode::Replace] {
+            let source = DistroSource { url: "https://example.test/O'Brien/$manifest.json".into(), mode };
+            crate::permissions::run_attempt(&registry_script("CurrentUser", &path, Some(&source)), false).unwrap();
+            assert_eq!(key.get_value::<String, _>(mode.registry_value_name()).unwrap(), source.url);
+            let other = if mode == DistroSourceMode::Append { VALUE_DISTRIBUTION_LIST_URL } else { VALUE_DISTRIBUTION_LIST_URL_APPEND };
+            assert!(key.get_value::<String, _>(other).is_err());
+        }
+
+        for _ in 0..2 { crate::permissions::run_attempt(&registry_script("CurrentUser", &path, None), false).unwrap(); }
+        assert!(key.get_value::<String, _>(VALUE_DISTRIBUTION_LIST_URL).is_err());
+        assert!(key.get_value::<String, _>(VALUE_DISTRIBUTION_LIST_URL_APPEND).is_err());
+        assert!(crate::permissions::run_attempt(&registry_script("CurrentUser", &format!(r"{}\missing", path), None), false).is_err());
+        key.set_value(VALUE_DISTRIBUTION_LIST_URL, &"https://example.test/O'Brien/$manifest.json").unwrap();
+        // Deny only SetValue on this disposable key. Its parent retains delete
+        // access; remove the entire test key after verifying the denied write.
+        let denied_source = DistroSource { url: "https://example.test/denied.json".into(), mode: DistroSourceMode::Append };
+        let denied_write = registry_script("CurrentUser", &path, Some(&denied_source));
+        let acl_test = format!(r#"
+$aclKey = [Microsoft.Win32.Registry]::CurrentUser.OpenSubKey({registry_path}, [Microsoft.Win32.RegistryKeyPermissionCheck]::ReadWriteSubTree, ([System.Security.AccessControl.RegistryRights]::ChangePermissions -bor [System.Security.AccessControl.RegistryRights]::ReadPermissions))
+$deniedAcl = $aclKey.GetAccessControl()
+$sid = [Security.Principal.WindowsIdentity]::GetCurrent().User
+$rule = [Security.AccessControl.RegistryAccessRule]::new($sid, [Security.AccessControl.RegistryRights]::SetValue, [Security.AccessControl.AccessControlType]::Deny)
+$deniedAcl.AddAccessRule($rule)
+$aclKey.SetAccessControl($deniedAcl)
+try {{
+{denied_write}
+}} finally {{ $aclKey.Dispose() }}
+"#, registry_path = crate::permissions::quote(&path));
+        let error = crate::permissions::run_attempt(&acl_test, false).unwrap_err();
+        assert_eq!(error.kind, crate::permissions::FailureKind::PermissionDenied, "{}", error.message);
+        assert!(key.get_value::<String, _>(VALUE_DISTRIBUTION_LIST_URL_APPEND).is_err());
+        assert_eq!(key.get_value::<String, _>(VALUE_DISTRIBUTION_LIST_URL).unwrap(), "https://example.test/O'Brien/$manifest.json");
+        drop(key);
+        root.delete_subkey_all(&path).unwrap();
+
+    }
+
     use super::*;
 
     const SAMPLE_MANIFEST: &str = r#"{

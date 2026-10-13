@@ -140,7 +140,7 @@
     "virtualSize": "Rozmiar wirtualny (maks.)",
     "fileSize": "Rozmiar pliku (bieżący)",
     "important": "Ważne:",
-    "warningUac": "Ta operacja wymaga uprawnień administratora (monit UAC)",
+    "warningUac": "Ta operacja może wymagać uprawnień administratora (monit UAC)",
     "warningShutdown": "WSL zostanie zatrzymany podczas tej operacji",
     "warningDoNotClose": "Nie zamykaj aplikacji ani nie wyłączaj komputera",
     "optimizing": "Optymalizowanie dysku...",

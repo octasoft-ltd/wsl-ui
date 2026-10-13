@@ -140,7 +140,7 @@
     "virtualSize": "虛擬大小（最大）",
     "fileSize": "檔案大小（目前）",
     "important": "重要提示：",
-    "warningUac": "此操作需要系統管理員權限（UAC 提示）",
+    "warningUac": "此操作可能需要系統管理員權限（UAC 提示）",
     "warningShutdown": "此操作期間 WSL 將被關閉",
     "warningDoNotClose": "請勿關閉應用程式或關閉電腦",
     "optimizing": "正在最佳化磁碟...",

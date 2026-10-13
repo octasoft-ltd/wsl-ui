@@ -33,7 +33,7 @@
     "sparseMode": "Tryb rzadki",
     "sparseModeText": "Włącz automatyczne odzyskiwanie miejsca na dysku. Dysk wirtualny będzie się zmniejszał w miarę usuwania plików w dystrybucji.",
     "compactDisk": "Kompaktuj dysk",
-    "compactDiskText": "Optymalizacja jednym kliknięciem odzyskująca nieużywaną przestrzeń z dysku wirtualnego dystrybucji. Automatycznie uruchamia fstrim, zamyka WSL i kompaktuje plik VHDX. Wymaga uprawnień administratora i trwa 1-2 minuty."
+    "compactDiskText": "Optymalizacja jednym kliknięciem odzyskująca nieużywaną przestrzeń z dysku wirtualnego dystrybucji. Automatycznie uruchamia fstrim, zamyka WSL i kompaktuje plik VHDX. Może wymagać uprawnień administratora i trwa 1-2 minuty."
   },
   "creatingDistros": {
     "title": "Tworzenie dystrybucji",

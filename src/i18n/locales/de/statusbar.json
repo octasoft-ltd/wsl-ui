@@ -7,7 +7,7 @@
   "dev": "Dev",
   "disk": "FESTPLATTE",
   "updateWsl": {
-    "updating": "Warte auf Administratorgenehmigung... Suchen Sie nach einem UAC-Dialog",
+    "updating": "WSL wird aktualisiert…",
     "preRelease": "WSL aktualisieren (Vorabversion) - Erfordert Administrator",
     "default": "WSL aktualisieren - Erfordert Administrator",
     "uac": "UAC"

@@ -140,7 +140,7 @@
     "virtualSize": "Virtual Size (Max)",
     "fileSize": "File Size (Current)",
     "important": "Important:",
-    "warningUac": "This operation requires administrator privileges (UAC prompt)",
+    "warningUac": "This operation may require administrator privileges (UAC prompt)",
     "warningShutdown": "WSL will be shut down during this operation",
     "warningDoNotClose": "Do not close the app or shut down your computer",
     "optimizing": "Optimizing disk...",

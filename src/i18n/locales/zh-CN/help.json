@@ -33,7 +33,7 @@
     "sparseMode": "稀疏模式",
     "sparseModeText": "启用自动磁盘空间回收。当您在发行版内删除文件时，虚拟磁盘会自动缩小。",
     "compactDisk": "压缩磁盘",
-    "compactDiskText": "一键优化以回收发行版虚拟磁盘中未使用的空间。自动运行 fstrim、关闭 WSL 并压缩 VHDX 文件。需要管理员权限，约需 1-2 分钟。"
+    "compactDiskText": "一键优化以回收发行版虚拟磁盘中未使用的空间。自动运行 fstrim、关闭 WSL 并压缩 VHDX 文件。可能需要管理员权限，约需 1-2 分钟。"
   },
   "creatingDistros": {
     "title": "创建发行版",

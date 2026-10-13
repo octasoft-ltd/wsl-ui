@@ -7,7 +7,7 @@
   "dev": "開発",
   "disk": "ディスク",
   "updateWsl": {
-    "updating": "管理者の承認を待機中... UAC ダイアログを確認してください",
+    "updating": "WSL を更新しています…",
     "preRelease": "WSL を更新（プレリリース）- 管理者権限が必要",
     "default": "WSL を更新 - 管理者権限が必要",
     "uac": "UAC"

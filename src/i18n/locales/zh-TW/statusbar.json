@@ -7,7 +7,7 @@
   "dev": "開發",
   "disk": "磁碟",
   "updateWsl": {
-    "updating": "正在等待系統管理員核准... 請查看 UAC 對話方塊",
+    "updating": "正在更新 WSL…",
     "preRelease": "更新 WSL（預先發行）- 需要系統管理員權限",
     "default": "更新 WSL - 需要系統管理員權限",
     "uac": "UAC"

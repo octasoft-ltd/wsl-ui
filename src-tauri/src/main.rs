@@ -9,6 +9,7 @@ mod download;
 mod error;
 mod metadata;
 mod oci;
+mod permissions;
 mod settings;
 mod temp_file_guard;
 mod utils;
