@@ -32,8 +32,7 @@ describe("Quick Actions Menu", () => {
     const main = await $("main");
     await main.click();
 
-    const quickActionsButton = await $(selectors.distroCardByName("Ubuntu"))
-      .then((card) => card.$(selectors.quickActionsButton));
+    const quickActionsButton = await $(selectors.distroCardByName("Ubuntu")).$(selectors.quickActionsButton);
     await browser.waitUntil(
       async () => (await quickActionsButton.getAttribute("aria-expanded")) === "false",
       { timeout: 3000, timeoutMsg: "Menu did not close" }
@@ -61,8 +60,7 @@ describe("Quick Actions Menu", () => {
       // Click outside to close (testing specific click-outside behavior)
       await closeMenuByClickingOutside();
 
-      const quickActionsButton = await $(selectors.distroCardByName("Ubuntu"))
-        .then((card) => card.$(selectors.quickActionsButton));
+      const quickActionsButton = await $(selectors.distroCardByName("Ubuntu")).$(selectors.quickActionsButton);
       expect(await quickActionsButton.getAttribute("aria-expanded")).toBe("false");
     });
   });
@@ -226,8 +224,7 @@ describe("Quick Actions Menu", () => {
       await defaultAction.click();
       await switchToMainWindow();
 
-      const quickActionsButton = await $(selectors.distroCardByName("Debian"))
-        .then((card) => card.$(selectors.quickActionsButton));
+      const quickActionsButton = await $(selectors.distroCardByName("Debian")).$(selectors.quickActionsButton);
       await browser.waitUntil(
         async () => (await quickActionsButton.getAttribute("aria-expanded")) === "false",
         { timeout: 5000, timeoutMsg: "Menu did not close after action" }

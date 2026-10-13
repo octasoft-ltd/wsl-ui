@@ -39,10 +39,22 @@ jobs:
             throw 'Configure MSIX signing secrets before releasing. See docs/MSIX-SIGNING.md.'
           }
 
+      - name: Resolve Node.js version for release tag
+        id: node-version
+        shell: pwsh
+        run: |
+          # Historical tags predate .node-version and were built with Node 24.
+          $nodeVersion = if (Test-Path -LiteralPath .node-version) {
+            (Get-Content -LiteralPath .node-version -Raw).Trim()
+          } else {
+            "24"
+          }
+          "version=$nodeVersion" >> $env:GITHUB_OUTPUT
+
       - name: Setup Node.js
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
-          node-version: "24"
+          node-version: ${{ steps.node-version.outputs.version }}
           cache: "npm"
 
       - name: Install Rust

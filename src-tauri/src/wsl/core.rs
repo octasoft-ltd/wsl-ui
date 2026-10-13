@@ -934,6 +934,9 @@ fn update_single_terminal_settings(path: &str, profile_guid: &str, new_name: &st
         allow_single_quoted_strings: false,
         allow_hexadecimal_numbers: false,
         allow_unary_plus_numbers: false,
+        allow_bare_decimal_point_numbers: false,
+        allow_extended_string_escapes: false,
+        allow_non_finite_numbers: false,
     }).map_err(|error| format!("Failed to parse settings JSONC: {}", error))?;
 
     let profile = parsed.value.as_ref()
@@ -1209,6 +1212,9 @@ mod tests {
         for original in [
             r#"{"profiles":{"list":[{"guid":"{OTHER}","name":"Old"}]}}"#,
             r#"{"profiles":{"list":[{"guid":"{ABC}" "name":"Old"}]}}"#,
+            r#"{"profiles":{"list":[{"guid":"{ABC}","name":"Old","opacity":.5}]}}"#,
+            r#"{"profiles":{"list":[{"guid":"{ABC}","name":"Old","opacity":Infinity}]}}"#,
+            r#"{"profiles":{"list":[{"guid":"{ABC}","name":"\x4f ld"}]}}"#,
         ] {
             let path = std::env::temp_dir().join(format!("wslui_terminal_invalid_{}.json", super::super::unique_temp_tag()));
             std::fs::write(&path, original).unwrap();

@@ -333,27 +333,6 @@ describe("Stop Before Action Pattern", () => {
   });
 
   describe("Visual Indicators", () => {
-    // This test is redundant - already covered by "should show stop indicator in the Export menu item for running distro"
-    // above. By this point in the test run, Ubuntu may have been stopped by earlier tests.
-    it.skip("should show stop-required indicator on Export for running distro", async () => {
-      await actions.openQuickActionsMenu("Ubuntu");
-
-      const exportAction = await $(selectors.quickAction("export"));
-      // Check for visual indicator (pause icon or different styling)
-      const indicator = await exportAction.$('[data-testid="requires-stop-indicator"]');
-      await expect(indicator).toBeDisplayed();
-    });
-
-    // This test is redundant - already covered by "should show stop indicator in the Clone menu item for running distro"
-    // above. By this point in the test run, Ubuntu may have been stopped by earlier tests.
-    it.skip("should show stop-required indicator on Clone for running distro", async () => {
-      await actions.openQuickActionsMenu("Ubuntu");
-
-      const cloneAction = await $(selectors.cloneAction);
-      const indicator = await cloneAction.$('[data-testid="requires-stop-indicator"]');
-      await expect(indicator).toBeDisplayed();
-    });
-
     it("should NOT show stop-required indicator for stopped distro", async () => {
       await actions.openQuickActionsMenu("Debian");
 

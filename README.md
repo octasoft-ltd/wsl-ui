@@ -67,7 +67,7 @@ trust step. Packages ending `_store.msix` are unsigned and intended for Store su
 
 ### From Source
 
-**Prerequisites:** [Node.js](https://nodejs.org/) 24 LTS (v24.15 or later),
+**Prerequisites:** [Node.js](https://nodejs.org/) 26 (Node 24 remains a tested fallback),
 [Rust](https://rustup.rs/), Windows (not WSL)
 
 ```bash

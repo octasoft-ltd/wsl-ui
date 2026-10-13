@@ -35,7 +35,7 @@ Fix bugs or implement new features by submitting a pull request.
 
 ### Prerequisites
 
-- [Node.js](https://nodejs.org/) 24 LTS (v24.15 or later)
+- [Node.js](https://nodejs.org/) 26 (see `.node-version`); Node 24 remains tested as a fallback
 - [Rust](https://rustup.rs/) latest stable
 - [Tauri CLI](https://tauri.app/v1/guides/getting-started/prerequisites)
 - Windows (the app must be built on Windows, not inside WSL)
@@ -73,6 +73,36 @@ browser helper makes proxy support optional. Remove the override when WebdriverI
 supports that helper version directly; verify a fresh driver download as well as
 the desktop suite when changing it.
 
+### Node runtime and rollback
+
+Release builds and desktop E2E use `.node-version` (currently Node 26). CI runs
+frontend tests and production builds on both Node 24 and 26. Node is build/test
+tooling; the shipped Windows app runs Rust and WebView2, not Node.
+
+CI sets `NODE_OPTIONS=--trace-deprecation` and retains test/build output in
+`node-compatibility-24` and `node-compatibility-26` artifacts for 14 days. For a
+local PowerShell run, set `$env:NODE_OPTIONS='--trace-deprecation'` before running
+the tests, build and desktop checks. Review warnings even when commands pass.
+The Node 26 trace exposed WebdriverIO's transitive `tsx` loader using deprecated
+`module.register()`; the lockfile updates `tsx` to 4.23.15, which uses the newer
+registration API.
+
+To fall back, change `.node-version` to `24`, retain the CI matrix, and rerun the
+build and desktop tests. If Node 24 becomes the long-term target, also return
+`@types/node` to major 24 so type checking cannot admit Node-26-only APIs.
+
+The upgrade review covers the [Node 25](https://nodejs.org/en/blog/release/v25.0.0)
+and [Node 26](https://nodejs.org/en/blog/release/v26.0.0) major release notes.
+Node 26 removes `http.Server.prototype.writeHeader`, legacy `_stream_*` modules,
+and `--experimental-transform-types`, and deprecates `module.register()`.
+Compile success alone does not validate native addons, HTTP behavior or test
+runners: verify dependency installation, frontend tests/build, the native app
+build and desktop tests. Keep mocked WSL results distinct from native WSL tests.
+
+Action updates are pinned to upstream release commits. `setup-node` 7.1.0 adds
+additional version-file formats, absolute-path support and download retries; `upload-artifact` 7.0.2 improves
+rate-limit retries. These are updates within the existing action major versions;
+changing `node-version` does not change the runtime bundled inside each action.
 ### Project Structure
 
 ```

@@ -109,7 +109,7 @@ describe("WSL Status Features", () => {
       if (await healthElement.isDisplayed()) {
         const tooltip = await healthElement.getAttribute("title");
         // Should have some health message
-        expect(tooltip.length).toBeGreaterThan(0);
+        expect(tooltip?.length ?? 0).toBeGreaterThan(0);
       }
     });
   });
