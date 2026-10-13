@@ -64,6 +64,7 @@ export function NotificationBanner({
   const [isVisible, setIsVisible] = useState(false); // Start hidden for enter animation
   const [isClosing, setIsClosing] = useState(false);
   const dismissTimerRef = useRef<number | null>(null);
+  const closingTimerRef = useRef<number | null>(null);
   const onDismissRef = useRef(onDismiss); // Store onDismiss in ref to avoid effect re-runs
   const style = styles[type];
   const Icon = icons[type];
@@ -87,13 +88,18 @@ export function NotificationBanner({
   }, []);
 
   const handleDismiss = () => {
-    if (isClosing) return; // Prevent double-trigger
+    if (closingTimerRef.current !== null) return; // Prevent manual/automatic double-trigger
     setIsClosing(true);
     // Wait for animation to complete before calling onDismiss
-    setTimeout(() => {
-      onDismissRef.current?.();
+    const dismiss = onDismissRef.current;
+    closingTimerRef.current = window.setTimeout(() => {
+      dismiss?.();
     }, 300);
   };
+
+  useEffect(() => () => {
+    if (closingTimerRef.current !== null) clearTimeout(closingTimerRef.current);
+  }, []);
 
   // Auto-dismiss after specified time (with animation)
   // Only depends on autoDismiss - onDismiss is accessed via ref

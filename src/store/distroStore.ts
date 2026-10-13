@@ -20,6 +20,7 @@ interface DistroStore {
   distributions: Distribution[];
   isLoading: boolean;
   error: string | null;
+  errorId: number;
   isTimeoutError: boolean;
   actionInProgress: string | null;
   compactingDistro: string | null;
@@ -50,7 +51,7 @@ interface DistroStore {
   ) => Promise<string | null>;
   setActionInProgress: (action: string | null) => void;
   setCompactingDistro: (name: string | null) => void;
-  clearError: () => void;
+  clearError: (expectedErrorId?: number) => void;
   clearDistributions: () => void;
 
   // Computed
@@ -77,6 +78,7 @@ export const useDistroStore = create<DistroStore>((set, get) => ({
   distributions: [],
   isLoading: true, // Start as loading until first fetch completes
   error: null,
+  errorId: 0,
   isTimeoutError: false,
   actionInProgress: null,
   compactingDistro: null,
@@ -245,7 +247,7 @@ export const useDistroStore = create<DistroStore>((set, get) => ({
         const errorMessage = formatError(appError);
         // Always clear isLoading on error (even for silent fetches to clear initial loading state)
         set({
-          error: errorMessage,
+          error: errorMessage, errorId: get().errorId + 1,
           isTimeoutError: isTimeoutErrorMessage(errorMessage),
           isLoading: false,
         });
@@ -279,7 +281,7 @@ export const useDistroStore = create<DistroStore>((set, get) => ({
       logError(appError, "distroStore.startDistro");
       const errorMessage = formatError(appError);
       set({
-        error: errorMessage,
+        error: errorMessage, errorId: get().errorId + 1,
         isTimeoutError: isTimeoutErrorMessage(errorMessage),
       });
     } finally {
@@ -298,7 +300,7 @@ export const useDistroStore = create<DistroStore>((set, get) => ({
       logError(appError, "distroStore.stopDistro");
       const errorMessage = formatError(appError);
       set({
-        error: errorMessage,
+        error: errorMessage, errorId: get().errorId + 1,
         isTimeoutError: isTimeoutErrorMessage(errorMessage),
       });
       return false;
@@ -316,7 +318,7 @@ export const useDistroStore = create<DistroStore>((set, get) => ({
     } catch (error) {
       const appError = parseError(error);
       logError(appError, "distroStore.deleteDistro");
-      set({ error: formatError(appError) });
+      set({ error: formatError(appError), errorId: get().errorId + 1 });
     } finally {
       set({ actionInProgress: null });
     }
@@ -334,7 +336,7 @@ export const useDistroStore = create<DistroStore>((set, get) => ({
       logError(appError, "distroStore.shutdownAll");
       const errorMessage = formatError(appError);
       set({
-        error: errorMessage,
+        error: errorMessage, errorId: get().errorId + 1,
         isTimeoutError: isTimeoutErrorMessage(errorMessage),
       });
       return false;
@@ -363,7 +365,7 @@ export const useDistroStore = create<DistroStore>((set, get) => ({
     } catch (error) {
       const appError = parseError(error);
       logError(appError, "distroStore.forceKillWsl");
-      set({ error: formatError(appError) });
+      set({ error: formatError(appError), errorId: get().errorId + 1 });
     } finally {
       set({ actionInProgress: null });
     }
@@ -377,7 +379,7 @@ export const useDistroStore = create<DistroStore>((set, get) => ({
     } catch (error) {
       const appError = parseError(error);
       logError(appError, "distroStore.setDefault");
-      set({ error: formatError(appError) });
+      set({ error: formatError(appError), errorId: get().errorId + 1 });
     } finally {
       set({ actionInProgress: null });
     }
@@ -394,7 +396,7 @@ export const useDistroStore = create<DistroStore>((set, get) => ({
     } catch (error) {
       const appError = parseError(error);
       logError(appError, "distroStore.openTerminal");
-      set({ error: formatError(appError) });
+      set({ error: formatError(appError), errorId: get().errorId + 1 });
     } finally {
       set({ actionInProgress: null });
     }
@@ -470,7 +472,7 @@ export const useDistroStore = create<DistroStore>((set, get) => ({
     } catch (error) {
       const appError = parseError(error);
       logError(appError, "distroStore.openRemoteDesktop");
-      set({ error: formatError(appError) });
+      set({ error: formatError(appError), errorId: get().errorId + 1 });
       return {
         success: false,
         error: formatError(appError),
@@ -487,7 +489,7 @@ export const useDistroStore = create<DistroStore>((set, get) => ({
     } catch (error) {
       const appError = parseError(error);
       logError(appError, "distroStore.openSystemTerminal");
-      set({ error: formatError(appError) });
+      set({ error: formatError(appError), errorId: get().errorId + 1 });
     } finally {
       set({ actionInProgress: null });
     }
@@ -504,7 +506,7 @@ export const useDistroStore = create<DistroStore>((set, get) => ({
     } catch (error) {
       const appError = parseError(error);
       logError(appError, "distroStore.openFileExplorer");
-      set({ error: formatError(appError) });
+      set({ error: formatError(appError), errorId: get().errorId + 1 });
     } finally {
       set({ actionInProgress: null });
     }
@@ -521,7 +523,7 @@ export const useDistroStore = create<DistroStore>((set, get) => ({
     } catch (error) {
       const appError = parseError(error);
       logError(appError, "distroStore.openIDE");
-      set({ error: formatError(appError) });
+      set({ error: formatError(appError), errorId: get().errorId + 1 });
     } finally {
       set({ actionInProgress: null });
     }
@@ -553,7 +555,7 @@ export const useDistroStore = create<DistroStore>((set, get) => ({
       logError(appError, "distroStore.restartDistro");
       const errorMessage = formatError(appError);
       set({
-        error: errorMessage,
+        error: errorMessage, errorId: get().errorId + 1,
         isTimeoutError: isTimeoutErrorMessage(errorMessage),
       });
     } finally {
@@ -569,7 +571,7 @@ export const useDistroStore = create<DistroStore>((set, get) => ({
     } catch (error) {
       const appError = parseError(error);
       logError(appError, "distroStore.exportDistro");
-      set({ error: formatError(appError) });
+      set({ error: formatError(appError), errorId: get().errorId + 1 });
       return null;
     } finally {
       set({ actionInProgress: null });
@@ -587,7 +589,7 @@ export const useDistroStore = create<DistroStore>((set, get) => ({
     } catch (error) {
       const appError = parseError(error);
       logError(appError, "distroStore.importDistro");
-      set({ error: formatError(appError) });
+      set({ error: formatError(appError), errorId: get().errorId + 1 });
       return null;
     } finally {
       set({ actionInProgress: null });
@@ -613,7 +615,7 @@ export const useDistroStore = create<DistroStore>((set, get) => ({
     } catch (error) {
       const appError = parseError(error);
       logError(appError, "distroStore.renameDistro");
-      set({ error: formatError(appError) });
+      set({ error: formatError(appError), errorId: get().errorId + 1 });
       return null;
     } finally {
       set({ actionInProgress: null });
@@ -628,7 +630,9 @@ export const useDistroStore = create<DistroStore>((set, get) => ({
     set({ compactingDistro: name });
   },
 
-  clearError: () => {
+  clearError: (expectedErrorId) => {
+    // A dismissal animation must not clear a newer failure, even with identical text.
+    if (expectedErrorId !== undefined && expectedErrorId !== get().errorId) return;
     set({ error: null, isTimeoutError: false });
   },
 

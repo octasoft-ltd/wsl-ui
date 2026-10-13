@@ -31,7 +31,7 @@ type AppPage = "main" | "settings";
 
 function App() {
   const { t, i18n } = useTranslation("errors");
-  const { distributions, fetchDistros, error, isTimeoutError, clearError, forceKillWsl, actionInProgress, isLoading: distrosLoading } = useDistroStore();
+  const { distributions, fetchDistros, error, errorId, isTimeoutError, clearError, forceKillWsl, actionInProgress, isLoading: distrosLoading } = useDistroStore();
   const { showMountDialog, closeMountDialog, loadMountedDisks } = useMountStore();
   const { settings, loadSettings, updateSetting, hasLoaded } = useSettingsStore();
   const { notifications, removeNotification } = useNotificationStore();
@@ -283,7 +283,8 @@ function App() {
               type="error"
               title={t('system.title')}
               message={error}
-              onDismiss={clearError}
+              key={errorId}
+              onDismiss={() => clearError(errorId)}
               testId="error-banner"
             >
               {isTimeoutError && (

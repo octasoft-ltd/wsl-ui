@@ -1553,3 +1553,19 @@ describe("distroStore", () => {
   });
 });
 
+
+describe("error dismissal identity", () => {
+  it.each(["second failure", "first failure"])("preserves a later failure with message %s", async (nextMessage) => {
+    vi.mocked(wslService.startDistribution).mockRejectedValueOnce(new Error("first failure"));
+    await useDistroStore.getState().startDistro("Ubuntu");
+    const firstErrorId = useDistroStore.getState().errorId;
+    vi.mocked(wslService.startDistribution).mockRejectedValueOnce(new Error(nextMessage));
+    await useDistroStore.getState().startDistro("Ubuntu");
+    const nextError = useDistroStore.getState().error;
+    useDistroStore.getState().clearError(firstErrorId);
+    expect(useDistroStore.getState().error).toBe(nextError);
+    expect(useDistroStore.getState().error).not.toBeNull();
+    useDistroStore.getState().clearError(useDistroStore.getState().errorId);
+    expect(useDistroStore.getState().error).toBeNull();
+  });
+});
