@@ -127,7 +127,7 @@ async function createSudoAction(): Promise<void> {
 
   // Wait for main view to load
   await browser.waitUntil(
-    async () => isElementDisplayed(selectors.distroCard),
+    async () => isElementDisplayed(selectors.distroCardByName(TEST_DISTRO)),
     { timeout: 5000, timeoutMsg: "Main view did not load" }
   );
 }

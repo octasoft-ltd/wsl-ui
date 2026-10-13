@@ -687,7 +687,9 @@ export async function waitForErrorBannerToDisappear(timeout: number = 5000): Pro
   await browser.waitUntil(
     async () => {
       const banner = await $(selectors.errorBanner);
-      return !(await banner.isDisplayed().catch(() => false));
+      // Opacity reaches zero before NotificationBanner's dismissal callback runs.
+      // Wait for unmount so that callback cannot clear the next operation's error.
+      return !(await banner.isExisting());
     },
     {
       timeout,
