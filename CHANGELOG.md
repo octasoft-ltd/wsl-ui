@@ -10,12 +10,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Features
 
-* **install:** sign MSIX downloads and validate new WSL names ([#197](https://github.com/octasoft-ltd/wsl-ui/issues/197)) ([9ccddf9](https://github.com/octasoft-ltd/wsl-ui/commit/9ccddf95845c379429ff1f25d56b3b8e37e4b2c2))
+- Signed MSIX downloads and a PowerShell sideload installer, with a public certificate supplied for installation outside Microsoft Store. Store submission packages remain separate and unsigned (#197).
 
+### Fixes
 
-### Bug Fixes
+- Validate new distribution names consistently before create, import, clone and rename operations, including rejecting spaces and other names WSL cannot register (#197).
+- Restore empty Quick Install lists, surface download and native WSL errors, and show progress for downloads without a known size (#191).
+- Preserve existing WSL and Windows Terminal configuration, including Terminal JSONC comments (#191).
+- Improve cloning, terminal launch arguments, disk discovery/mounting, sparse-disk actions and long-running disk operations (#191).
+- Verify built-in downloads against publisher checksums and improve OCI archive handling (#191).
+- Improve tray responsiveness, stale-state handling, and custom action/RDP error reporting (#191).
+- Preserve new errors that arrive while an earlier error banner is being dismissed (#199).
 
-* update release dependencies and harden desktop error handling and tests ([#199](https://github.com/octasoft-ltd/wsl-ui/issues/199)) ([3ae2765](https://github.com/octasoft-ltd/wsl-ui/commit/3ae2765d8865878f07648afe2e49faa61e789b64))
+### Maintenance
+
+- Update application dependencies and GitHub Actions; build and test with Node 26 while retaining Node 24 compatibility (#176, #194, #199).
+- Upgrade the desktop test runner to WebdriverIO 10 and strengthen regression coverage.
+
+WSL container management is not included in this release.
 
 ## [0.20.0](https://github.com/octasoft-ltd/wsl-ui/compare/v0.19.0...v0.20.0) (2026-09-03)
 
