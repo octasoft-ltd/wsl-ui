@@ -29,6 +29,16 @@ jobs:
         with:
           ref: ${{ inputs.tag }}
 
+      - name: Check MSIX signing configuration
+        shell: pwsh
+        env:
+          MSIX_SIGNING_CERTIFICATE: ${{ secrets.MSIX_SIGNING_CERTIFICATE }}
+          MSIX_SIGNING_PASSWORD: ${{ secrets.MSIX_SIGNING_PASSWORD }}
+        run: |
+          if (-not $env:MSIX_SIGNING_CERTIFICATE -or -not $env:MSIX_SIGNING_PASSWORD) {
+            throw 'Configure MSIX signing secrets before releasing. See docs/MSIX-SIGNING.md.'
+          }
+
       - name: Resolve Node.js version for release tag
         id: node-version
         shell: pwsh
@@ -80,6 +90,8 @@ jobs:
             **Standard Installation:** Download the `.msi` installer below and run it.
 
             **Microsoft Store:** Also available on the [Microsoft Store](https://apps.microsoft.com/detail/9P8548KNJ2M9).
+
+            **MSIX sideloading:** Download the `.msix`, matching `.cer`, and `Install-WSL-UI_<arch>.ps1`. Follow the [MSIX installation instructions](https://github.com/${{ github.repository }}/blob/main/docs/MSIX-SIGNING.md). Files ending `_store.msix` are unsigned Store submission packages.
           releaseDraft: false
           prerelease: false
           args: --target ${{ matrix.target }}
@@ -105,6 +117,15 @@ jobs:
         run: |
           .\scripts\build-msix.ps1 -Version "${{ steps.msix-version.outputs.msix_version }}" -Architecture "${{ matrix.arch }}"
 
+      - name: Sign MSIX and export public certificate
+        shell: pwsh
+        env:
+          MSIX_SIGNING_CERTIFICATE: ${{ secrets.MSIX_SIGNING_CERTIFICATE }}
+          MSIX_SIGNING_PASSWORD: ${{ secrets.MSIX_SIGNING_PASSWORD }}
+        run: |
+          .\scripts\sign-msix.ps1 -PackagePath "dist/WSL.UI_${{ steps.msix-version.outputs.msix_version }}_${{ matrix.arch }}.msix"
+          Copy-Item scripts/Install-WSL-UI.ps1 "dist/Install-WSL-UI_${{ matrix.arch }}.ps1"
+
       - name: Prepare portable exe
         shell: pwsh
         run: |
@@ -120,4 +141,6 @@ jobs:
           tag_name: ${{ inputs.tag }}
           files: |
             dist/*.msix
+            dist/*.cer
+            dist/Install-WSL-UI_*.ps1
             dist/*_portable.exe

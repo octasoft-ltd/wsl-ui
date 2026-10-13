@@ -27,7 +27,8 @@ pub enum ValidationError {
     InvalidConfigValue { field: String, reason: String },
 }
 
-/// Validate WSL distribution name
+/// Validate an existing WSL distribution name for safe command use.
+/// This permits legacy/externally renamed names; registration is stricter.
 ///
 /// Rules:
 /// - Not empty
@@ -69,6 +70,19 @@ pub fn validate_distro_name(name: &str) -> Result<(), ValidationError> {
         ));
     }
 
+    Ok(())
+}
+
+/// Validate a new name before registration or rename.
+/// WSL's LxssUserSessionImpl::s_ValidateDistroName permits only ASCII
+/// letters, digits, dots, underscores and hyphens (not spaces).
+pub fn validate_new_distro_name(name: &str) -> Result<(), ValidationError> {
+    validate_distro_name(name)?;
+    if !name.chars().all(|c| c.is_ascii_alphanumeric() || matches!(c, '-' | '_' | '.')) {
+        return Err(ValidationError::InvalidDistroName(
+            "new names can only contain ASCII letters, numbers, dots, underscores, and hyphens; spaces are not allowed".into(),
+        ));
+    }
     Ok(())
 }
 
@@ -436,6 +450,16 @@ mod tests {
     fn test_distro_name_with_spaces() {
         assert!(validate_distro_name("Ubuntu 22.04 LTS").is_ok());
         assert!(validate_distro_name("My Distro").is_ok());
+    }
+
+    #[test]
+    fn test_new_distro_names_follow_wsl_registration_rules() {
+        for name in ["Rocky Test", "Ubuntu 22.04 LTS", "NötVeryEnglish", "Release\tTest"] {
+            assert!(validate_new_distro_name(name).is_err(), "accepted {name:?}");
+        }
+        for name in ["Rocky-Test", "Ubuntu-22.04", "my_distro"] {
+            assert!(validate_new_distro_name(name).is_ok(), "rejected {name:?}");
+        }
     }
 
     #[test]

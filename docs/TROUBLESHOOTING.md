@@ -4,6 +4,21 @@ This guide documents known issues and their solutions encountered during develop
 
 ---
 
+## MSIX installation: untrusted publisher or missing certificate
+
+For GitHub MSIX releases, download the matching `.cer` and
+`Install-WSL-UI_<arch>.ps1` alongside the signed package. Follow the
+[MSIX installation guide](MSIX-SIGNING.md) to trust the certificate once as an
+administrator, then install as your normal user. Windows may describe the same
+untrusted-root condition as `NotTrusted` or `UnknownError`; the helper verifies
+the signature again after trust is established.
+
+If the helper reports an unsigned package, use the regular `.msix`, not the
+`_store.msix` copy intended for Partner Center. Older unsigned releases cannot
+be installed by importing a newer release's certificate. If the signer does not
+match the supplied certificate, download both files again from the same release.
+Corporate policy may require your IT administrator to approve sideloading.
+
 ## GPU Containers — NVIDIA CUDA passthrough setup {#gpu-containers}
 
 WSL-UI detects whether NVIDIA CUDA is available in a distro and whether the NVIDIA Container Toolkit and CDI spec are configured. This section explains what each status means and how to fix common problems.
@@ -1649,3 +1664,16 @@ How we fixed it or workaround steps.
 ### Related
 - Links to external issues, documentation, etc.
 ```
+
+## New distribution name rejected by WSL
+
+If registration fails with `Invalid distribution name` and
+`Wsl/Service/RegisterDistro/E_INVALIDARG`, use ASCII letters, numbers, dots,
+underscores or hyphens in the new name. For example, use `Rocky-Test` instead of
+`Rocky Test`. Quoting a name does not make spaces valid for registration.
+
+Microsoft's [`s_ValidateDistroName` implementation](https://github.com/microsoft/WSL/blob/master/src/windows/service/exe/LxssUserSession.cpp)
+checks this character restriction. WSL UI validates new names before starting
+imports or downloads. Handling an existing externally assigned name is a separate
+compatibility concern; a parser accepting spaces does not establish that WSL can
+register a new name containing them.

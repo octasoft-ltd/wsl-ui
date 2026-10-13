@@ -60,6 +60,11 @@ Don't see your language?
 Download the latest installer from the
 [Releases](https://github.com/octasoft-ltd/wsl-ui/releases) page.
 
+For MSIX installation outside the Store, download the signed `.msix`, matching
+`.cer`, and `Install-WSL-UI_<arch>.ps1`. Follow the
+[MSIX installation instructions](docs/MSIX-SIGNING.md) for the one-time certificate
+trust step. Packages ending `_store.msix` are unsigned and intended for Store submission.
+
 ### From Source
 
 **Prerequisites:** [Node.js](https://nodejs.org/) 26 (Node 24 remains a tested fallback),

@@ -8,7 +8,7 @@ use crate::temp_file_guard::TempFileGuard;
 use crate::utils::{self, is_mock_mode};
 use crate::validation::{
     validate_action_id, validate_disk_path, validate_distro_name, validate_file_path,
-    validate_url, validate_wsl_version,
+    validate_new_distro_name, validate_url, validate_wsl_version,
 };
 use crate::wsl::resources::parse_memory_string;
 use crate::wsl::{reset_mock_state, set_mock_error, clear_mock_errors, set_stubborn_shutdown, was_force_shutdown_used, MockErrorType, CompactResult, Distribution, DistroResourceUsage, VhdSizeInfo, WslResourceUsage, WslService, WslVersionInfo, WslPreflightStatus, MountedDisk, MountDiskOptions, PhysicalDisk, InstalledTerminal};
@@ -757,7 +757,7 @@ pub async fn import_distribution(
     install_location: String,
     tar_path: String,
 ) -> Result<(), String> {
-    validate_distro_name(&name).map_err(|e| e.to_string())?;
+    validate_new_distro_name(&name).map_err(|e| e.to_string())?;
     validate_file_path(&install_location).map_err(|e| e.to_string())?;
     validate_file_path(&tar_path).map_err(|e| e.to_string())?;
 
@@ -797,7 +797,7 @@ pub async fn import_distribution(
 #[tauri::command]
 pub async fn clone_distribution(source: String, new_name: String, install_location: Option<String>) -> Result<(), String> {
     validate_distro_name(&source).map_err(|e| e.to_string())?;
-    validate_distro_name(&new_name).map_err(|e| e.to_string())?;
+    validate_new_distro_name(&new_name).map_err(|e| e.to_string())?;
     tokio::task::spawn_blocking(move || {
         WslService::clone_distribution(&source, &new_name, install_location.as_deref()).map_err(|e| e.to_string())
     })
@@ -1136,7 +1136,7 @@ pub async fn custom_install_with_progress(
     install_location: Option<String>,
     wsl_version: Option<u8>,
 ) -> Result<(), String> {
-    validate_distro_name(&custom_name).map_err(|e| e.to_string())?;
+    validate_new_distro_name(&custom_name).map_err(|e| e.to_string())?;
     if let Some(ref loc) = install_location {
         validate_file_path(loc).map_err(|e| e.to_string())?;
     }
@@ -1395,7 +1395,7 @@ pub async fn install_from_rootfs_url(
     wsl_version: Option<u8>,
 ) -> Result<(), String> {
     validate_url(&url).map_err(|e| e.to_string())?;
-    validate_distro_name(&name).map_err(|e| e.to_string())?;
+    validate_new_distro_name(&name).map_err(|e| e.to_string())?;
     if let Some(ref loc) = install_location {
         validate_file_path(loc).map_err(|e| e.to_string())?;
     }
@@ -1706,7 +1706,7 @@ pub async fn rename_distribution(
     update_shortcut: bool,
 ) -> Result<String, String> {
     // Validate the new name
-    validate_distro_name(&new_name).map_err(|e| e.to_string())?;
+    validate_new_distro_name(&new_name).map_err(|e| e.to_string())?;
     tokio::task::spawn_blocking(move || {
         WslService::rename_distribution(&id, &new_name, update_terminal_profile, update_shortcut)
             .map_err(|e| e.to_string())

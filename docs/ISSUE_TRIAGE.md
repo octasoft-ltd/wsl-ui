@@ -30,7 +30,7 @@ Reviewed all 39 issues open at the start of this audit in `octasoft-ltd/wsl-ui`,
 | [#104](https://github.com/octasoft-ltd/wsl-ui/issues/104) | In this PR | Select the host's Linux OCI architecture; validate the selected image configuration. |
 | [#107](https://github.com/octasoft-ltd/wsl-ui/issues/107) | In this PR | Transport action scripts without corrupting quotes, backslashes or Unicode across Windows/Bash parsing. |
 | [#121](https://github.com/octasoft-ltd/wsl-ui/issues/121) | In this PR | Quote distribution and executable arguments in action terminals. |
-| [#124](https://github.com/octasoft-ltd/wsl-ui/issues/124) | In this PR | Allow interior spaces in distribution names while retaining unsafe-character validation. |
+| [#124](https://github.com/octasoft-ltd/wsl-ui/issues/124) | In this PR | Allow management of existing names containing interior spaces. Correction from native WSL testing: new registrations reject spaces; the audit claim that `wsl --import "My Distro"` works was incorrect. New-name validation remains restricted to ASCII letters, digits, dots, underscores and hyphens. |
 | [#137](https://github.com/octasoft-ltd/wsl-ui/issues/137) | In this PR | Parse quoted terminal templates without splitting paths or placeholder values. |
 | [#105](https://github.com/octasoft-ltd/wsl-ui/issues/105) | In this PR | Normalize automount option quotes so repeated saves do not accumulate them. |
 | [#126](https://github.com/octasoft-ltd/wsl-ui/issues/126) | In this PR | Read/write autoMemoryReclaim in `[experimental]`; migrate the legacy location. |

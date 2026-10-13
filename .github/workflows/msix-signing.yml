@@ -1,0 +1,30 @@
+name: MSIX signing tests
+
+on:
+  pull_request:
+    paths:
+      - 'scripts/*msix*'
+      - 'scripts/Install-WSL-UI.ps1'
+      - 'scripts/tests/**'
+      - '.github/workflows/msix-signing.yml'
+      - '.github/workflows/release*.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/*msix*'
+      - 'scripts/Install-WSL-UI.ps1'
+      - 'scripts/tests/**'
+      - '.github/workflows/msix-signing.yml'
+      - '.github/workflows/release*.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  signing:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Test MSIX signing with a disposable certificate
+        shell: pwsh
+        run: ./scripts/tests/msix-signing.Tests.ps1 -TestTrust

@@ -40,6 +40,16 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
+      - name: Check MSIX signing configuration
+        shell: pwsh
+        env:
+          MSIX_SIGNING_CERTIFICATE: ${{ secrets.MSIX_SIGNING_CERTIFICATE }}
+          MSIX_SIGNING_PASSWORD: ${{ secrets.MSIX_SIGNING_PASSWORD }}
+        run: |
+          if (-not $env:MSIX_SIGNING_CERTIFICATE -or -not $env:MSIX_SIGNING_PASSWORD) {
+            throw 'Configure MSIX signing secrets before releasing. See docs/MSIX-SIGNING.md.'
+          }
+
       - name: Setup Node.js
         uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
@@ -101,6 +111,15 @@ jobs:
         run: |
           .\scripts\build-msix.ps1 -Version "${{ steps.msix-version.outputs.msix_version }}" -Architecture "${{ matrix.arch }}"
 
+      - name: Sign MSIX and export public certificate
+        shell: pwsh
+        env:
+          MSIX_SIGNING_CERTIFICATE: ${{ secrets.MSIX_SIGNING_CERTIFICATE }}
+          MSIX_SIGNING_PASSWORD: ${{ secrets.MSIX_SIGNING_PASSWORD }}
+        run: |
+          .\scripts\sign-msix.ps1 -PackagePath "dist/WSL.UI_${{ steps.msix-version.outputs.msix_version }}_${{ matrix.arch }}.msix"
+          Copy-Item scripts/Install-WSL-UI.ps1 "dist/Install-WSL-UI_${{ matrix.arch }}.ps1"
+
       - name: Prepare portable exe
         shell: pwsh
         run: |
@@ -116,6 +135,8 @@ jobs:
           tag_name: ${{ needs.release-please.outputs.tag_name }}
           files: |
             dist/*.msix
+            dist/*.cer
+            dist/Install-WSL-UI_*.ps1
             dist/*_portable.exe
 
   publish-winget:
