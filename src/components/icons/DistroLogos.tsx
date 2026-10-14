@@ -30,6 +30,7 @@ const DISTRO_BRAND_COLORS = {
   nixos: '#5277C3',
   mint: '#87CF3E',
   rocky: '#10B981',
+  rlc: '#10B981',
   alma: '#0F4266',
   oracle: '#F80000',
   centos: '#262577',
@@ -237,6 +238,24 @@ function RockyLogo({ size = defaultSize, className = '', ...props }: DistroLogoP
   );
 }
 
+// Rocky Linux from CIQ (RLC) - official RLC mark
+function RlcLogo({ size = defaultSize, className = '', ...props }: DistroLogoProps) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 49 49"
+      fill={DISTRO_BRAND_COLORS.rlc}
+      className={className}
+      role="img"
+      aria-label="Rocky Linux from CIQ"
+      {...props}
+    >
+      <path d="M24.8701 0.209961C38.1001 0.209961 48.8701 10.98 48.8701 24.21C48.8701 37.44 38.1001 48.21 24.8701 48.21C11.6401 48.21 0.870117 37.44 0.870117 24.21C0.87015 10.98 11.6401 0.209961 24.8701 0.209961ZM24.8701 2.95996C13.1501 2.95996 3.62015 12.49 3.62012 24.21C3.62012 35.93 13.1501 45.46 24.8701 45.46C36.5901 45.46 46.1201 35.93 46.1201 24.21C46.1201 12.49 36.5901 2.95996 24.8701 2.95996ZM42.0918 27.9268L42.1865 28.0312C42.6271 28.5712 42.5951 29.3686 42.0918 29.8721C41.5885 30.3752 40.792 30.4069 40.252 29.9668L40.1475 29.8721L33.5273 23.2539L16.6143 40.1719C16.0773 40.7087 15.2069 40.7087 14.6699 40.1719C14.1333 39.6349 14.1332 38.7644 14.6699 38.2275L33.5273 19.3652L42.0918 27.9268ZM22.7676 26.2285C23.3147 26.755 23.3311 27.6257 22.8047 28.1729C22.2781 28.7201 21.4076 28.7365 20.8604 28.21L15.6904 23.2354L8.6123 30.3213C8.0756 30.8585 7.2052 30.8589 6.66797 30.3223C6.13115 29.7855 6.13045 28.915 6.66699 28.3779L15.6533 19.3828L22.7676 26.2285Z" />
+    </svg>
+  );
+}
+
 // AlmaLinux - Simplified A icon
 function AlmaLogo({ size = defaultSize, className = '', ...props }: DistroLogoProps) {
   return (
@@ -416,6 +435,13 @@ const DISTRO_LOGOS: Record<string, React.ComponentType<DistroLogoProps>> = {
   rocky: RockyLogo,
   'rocky-9': RockyLogo,
   'Rocky': RockyLogo,
+  // Rocky Linux from CIQ (RLC)
+  rlc: RlcLogo,
+  'RLC': RlcLogo,
+  'rlc-8': RlcLogo,
+  'rlc-9': RlcLogo,
+  'rlc-10': RlcLogo,
+  ciq: RlcLogo,
   // AlmaLinux
   almalinux: AlmaLogo,
   'almalinux-9': AlmaLogo,
@@ -451,6 +477,12 @@ export function getDistroLogo(distroId: string): React.ComponentType<DistroLogoP
   const lowerDistro = distroId.toLowerCase();
   if (DISTRO_LOGOS[lowerDistro]) {
     return DISTRO_LOGOS[lowerDistro];
+  }
+
+  // RLC (Rocky Linux from CIQ) must win over the generic "rocky" substring
+  // match in the loop below (e.g. "CIQ-RockyLinux" contains both).
+  if (lowerDistro.includes('rlc') || lowerDistro.includes('ciq')) {
+    return RlcLogo;
   }
 
   // Try to match by prefix/contains

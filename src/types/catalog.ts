@@ -75,6 +75,8 @@ const ID_TO_FAMILY: Record<string, DistroFamily> = {
   rhel: "redhat",
   centos: "redhat",
   rocky: "redhat",
+  rlc: "redhat",
+  ciq: "redhat",
   almalinux: "redhat",
   oracle: "redhat",
 
@@ -109,7 +111,8 @@ export function getDistroFamily(distroId: string): DistroFamily {
     return "debian";
   }
   if (lower.includes("fedora") || lower.includes("rhel") || lower.includes("centos") ||
-      lower.includes("rocky") || lower.includes("alma") || lower.includes("oracle")) {
+      lower.includes("rocky") || lower.includes("rlc") || lower.includes("ciq") ||
+      lower.includes("alma") || lower.includes("oracle")) {
     return "redhat";
   }
   if (lower.includes("arch") || lower.includes("manjaro")) {

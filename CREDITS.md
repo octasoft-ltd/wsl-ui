@@ -28,6 +28,7 @@ Some logos are simplified representations based on official brand guidelines:
 
 - **Linux Mint** - [github.com/linuxmint/brand-logo](https://github.com/linuxmint/brand-logo) (CC-BY 3.0)
 - **Rocky Linux** - [github.com/rocky-linux/brand-kit](https://github.com/rocky-linux/brand-kit) (CC-BY-SA 4.0)
+- **Rocky Linux from CIQ (RLC)** - official RLC mark, used for identification of CIQ's RHEL-compatible builds
 
 ## Trademark Notice
 
@@ -42,6 +43,7 @@ All trademarks, logos, and brand names are the property of their respective owne
 - **Kali Linux** is a trademark of OffSec Services Limited.
 - **Manjaro** is a registered trademark of Manjaro GmbH & Co. KG.
 - **Oracle** is a registered trademark of Oracle Corporation.
+- **Rocky Linux** is a registered trademark of the Rocky Enterprise Software Foundation; **CIQ** and **RLC** are trademarks of CIQ, Inc.
 - **Docker** is a registered trademark of Docker, Inc.
 - **Linux** is a registered trademark of Linus Torvalds.
 
